@@ -1,0 +1,18 @@
+.button {
+    transition: 0.2s ease all;
+    margin: 0.5rem 0;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    background-color: var(--color-button);
+    padding: 0.7rem 2rem;
+    color: #23471d;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+    user-select: none;
+    text-align: center;
+}
+
+.button:hover {
+    box-shadow: 0 0 8px var(--color-button-hover);
+    background-color: var(--color-button-hover);
+}
