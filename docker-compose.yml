@@ -1,18 +1,20 @@
-#FIXME: make the env loading from the .env file
-#FIXME: mount the drive to datbase (2 diffrent places 1 for backup)
-
 services:
   koala-postgres:
     image: postgres:16
     container_name: koala-postgres
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     networks:
       - koalaNETWORK
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   koala-backend:
     build:
@@ -20,14 +22,15 @@ services:
       dockerfile: Dockerfile
     container_name: koala-backend
     depends_on:
-      - koala-postgres
+      koala-postgres:
+        condition: service_healthy
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      DB_HOST: koala-postgres
-      DB_PORT: 5432
-      DB_USER: myuser
-      DB_PASSWORD: mypassword
-      DB_NAME: mydb
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
     ports:
       - "8080:8080"
       - "8081:8081"
