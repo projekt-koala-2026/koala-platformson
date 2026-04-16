@@ -1,27 +1,42 @@
-import { isSpecialUser, clearAuth } from "./authService";
+import { isSpecialUser } from "./authService.js";
 
-export const apiRequest = async (url, options, navigate) => {
+const apiUrl = import.meta.env.VITE_API_URL;
+
+export const apiRequest = async (url, options, method, navigate) => {
     try {
-        const response = await fetch(url, options);
+        const fetchConfig = {
+            method: method,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        };
 
-        if (response.status === 401) {
+        if (options && method !== "GET" && method !== "HEAD") {
+            fetchConfig.body = JSON.stringify(options);
+        }
+
+        const response = await fetch(apiUrl + url, fetchConfig);
+
+        if (response.status !== 200) {
             const special = isSpecialUser();
-            clearAuth();
-
-            if (special) navigate("/admin/login");
-            else navigate("/login");
-
+            navigate("/admin/login");
             return null;
         }
 
-        const json = await response.json();
-
-        if (json.meta) {
-            localStorage.setItem("_k_r_", json.meta.role);
-            localStorage.setItem("_k_l_", String(json.meta.isLogged));
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `Error: ${response.status}`);
         }
 
-        return json.data;
+        const contentType = response.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+            const json = await response.json();
+            return json.data || json;
+        }
+
+        return await response.text();
     } catch (error) {
         console.error("Network / server error: ", error);
         return null;
