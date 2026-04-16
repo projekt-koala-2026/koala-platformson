@@ -2,6 +2,7 @@ using koala.Data;
 using koala.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,12 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseNpgsql(connectionString);
 });
 
+builder.Services
+    .AddAuthentication("AdminPanelKoalaScheme")
+    .AddScheme<AuthenticationSchemeOptions, KoalaAuthHandler>("AdminPanelKoalaScheme", options => {});
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddTransient<AuthServices>();
 builder.Services.AddTransient<ValidationService>();
 
@@ -31,7 +38,21 @@ builder.Services.AddRouting(options =>
     options.LowercaseUrls = true;
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
 var app = builder.Build();
+
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {
@@ -41,9 +62,12 @@ if (app.Environment.IsDevelopment())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.EnsureCreated();
+        var authService = scope.ServiceProvider.GetRequiredService<AuthServices>();
+        await authService.InicializeDB();
     }
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -4,6 +4,7 @@ using koala.Data.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 namespace koala.Services
 {
@@ -16,10 +17,45 @@ namespace koala.Services
             _factory = factory;
         }
 
-        // public ValidateEndpoint()
-        // {
+        public bool ValidateUserVMEmail(UserVM user)
+        {
+            if(string.IsNullOrEmpty(user.Email))
+            {
+                return false;
+            }
+            if(!Regex.IsMatch(user.Email, @"^\S+@\S+\.\S+$"))
+            {
+                return false;
+            }
+            return true;
+        }
 
-        // }
+        public bool ValidateUserVMPassword(UserVM user)
+        {
+            if(string.IsNullOrEmpty(user.Password))
+            {
+                return false;
+            }
+            if(!Regex.IsMatch(user.Password, @"^(?=.*[A-Z])(?=.*\d).{8,}$"))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public async Task<bool> ValidateUserVMRoles(UserVM user)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+
+            var existingRoles = await context.Roles
+                .Select(r => r.Value)
+                .ToListAsync();
+
+            var existingSet = existingRoles.ToHashSet();
+
+            return user.Roles.All(r => existingSet.Contains(r));
+        }
 
     }
 }

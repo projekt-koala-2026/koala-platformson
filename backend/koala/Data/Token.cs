@@ -12,7 +12,7 @@ namespace koala.Data
         
         public string? Value { get; set; } = null;
         public DateTime? CreatedAt { get; set; } = null;
-        public DateTime? LastsFor { get; set; } = null;
+        public DateTime? ExpiresAt { get; set; } = null;
 
         
         public User User { get; set; } = null!;
