@@ -4,7 +4,7 @@ import Button from "../../components/Button";
 import { useLoading } from "../../contexts/LoadingContext";
 import { apiRequest } from "../../utils/apiFetcher";
 
-export default function LoginScreen({}) {
+const LoginScreen = () => {
     const navigate = useNavigate();
     const { startLoading, stopLoading } = useLoading();
     const [password, setPassword] = useState("");
@@ -45,4 +45,6 @@ export default function LoginScreen({}) {
             <Button text={"Zaloguj"} onClick={handleLogin} />
         </div>
     );
-}
+};
+
+export default LoginScreen;

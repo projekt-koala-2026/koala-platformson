@@ -1,10 +1,10 @@
 :root {
-    --color-bg: #3c7731;
-    --color-bg-text: #f1e7e0;
-    --color-input: #f7f3ef;
+    --color-bg: hsl(111, 42%, 33%);
+    --color-bg-text: hsl(25, 38%, 91%);
+    --color-input: hsl(30, 33%, 95%);
 
-    --color-button: #84a98c;
-    --color-button-hover: #92c29a;
+    --color-button: hsl(133, 18%, 59%);
+    --color-button-hover: hsl(130, 27%, 65%);
 }
 
 * {

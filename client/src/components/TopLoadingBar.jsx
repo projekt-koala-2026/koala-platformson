@@ -1,6 +1,6 @@
 import { useLoading } from "../contexts/LoadingContext";
 
-export default function TopLoadingBar() {
+const TopLoadingBar = () => {
     const { progress } = useLoading();
 
     const barStyle = {
@@ -9,4 +9,6 @@ export default function TopLoadingBar() {
     };
 
     return <div className="topLoadingBar" style={barStyle} />;
-}
+};
+
+export default TopLoadingBar;

@@ -1,0 +1,17 @@
+.tile {
+    box-shadow: 0 0 8px var(--color-button);
+    border-radius: 5px;
+    padding: 1rem 2rem;
+    width: 100%;
+    min-height: 3rem;
+}
+
+.box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    width: 100%;
+}

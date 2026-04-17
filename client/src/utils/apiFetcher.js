@@ -1,5 +1,3 @@
-import { isSpecialUser } from "./authService.js";
-
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export const apiRequest = async (url, options, method, navigate) => {
@@ -19,7 +17,7 @@ export const apiRequest = async (url, options, method, navigate) => {
         const response = await fetch(apiUrl + url, fetchConfig);
 
         if (response.status !== 200) {
-            const special = isSpecialUser();
+            console.log("Error occured!\nerror status: " + response.status);
             navigate("/admin/login");
             return null;
         }
