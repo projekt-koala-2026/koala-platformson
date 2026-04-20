@@ -31,10 +31,18 @@ namespace koala.Data
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
 
+            modelBuilder.Entity<Role>()
+                .HasIndex(r => r.Value)
+                .IsUnique();
+
             modelBuilder.Entity<Token>()
                 .HasOne(t => t.User)
                 .WithOne(u => u.token)
                 .HasForeignKey<Token>(t => t.UserId);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
         }
     }
 }

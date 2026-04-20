@@ -86,6 +86,37 @@ namespace koala.Controllers
         }
 
         [Authorize(Roles = "ADMIN")]
+        [HttpDelete("user")]
+        public async Task<IActionResult> AdminPanelDeleteUser([FromBody] UserVM user)
+        {
+            bool notEmpty_email = _validationService.USERVM_IsEmailNotEmpty(user);
+            if(!notEmpty_email)
+            {
+                return BadRequest("Email data inavlid");
+            }
+            await _userService.AdminPanelDeleteUser(user);
+            return Ok();
+        }
+
+        [Authorize(Roles = "ADMIN")]
+        [HttpPut("roles")]
+        public async Task<IActionResult> AdminPanelChangeUserRoles([FromBody] UserVM user)
+        {
+            bool notEmpty_email = _validationService.USERVM_IsEmailNotEmpty(user);
+            bool valid_roles = await _validationService.USERVM_IsRolesValidAsync(user);
+            if(!notEmpty_email)
+            {
+                return BadRequest("Email data inavlid");
+            }
+            if(!valid_roles)
+            {
+                return BadRequest("Roles not valid");
+            }
+            var ruser = await _userService.AdminPanelChangeUserRoles(user);
+            return Ok(ruser);
+        }
+
+        [Authorize(Roles = "ADMIN")]
         [HttpGet("users")]
         public async Task<IActionResult> AdminPanelGetUsersInfo()
         {

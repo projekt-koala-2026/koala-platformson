@@ -116,6 +116,74 @@ namespace koala.Services
             return userVM;
         }
 
+        public async Task AdminPanelDeleteUser(UserVM userToDelete)
+        {
+            //NOTE: ASUME ALL DATA IS VALID HERE
+            //TODO: ADD RETURN VALUES CORECTLY
+            var context = await _factory.CreateDbContextAsync();
+
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.Email == userToDelete.Email);
+
+            if (user == null)
+            {
+                return;
+            }
+
+            var affectedRowsUserRoles = await context.UserRoles
+                .Where(ur => ur.UserId == user.Id)
+                .ExecuteDeleteAsync();
+
+            var affectedRowsUser = await context.Users
+                .Where(u => u.Id == user.Id)
+                .ExecuteDeleteAsync();
+
+            //TODO: CHECK WHAT HAPPEND WITH DELETION AND MAKE CORECT RETURN VALUES
+
+            return;
+        }
+
+        public async Task<UserVM> AdminPanelChangeUserRoles(UserVM newUserData)
+        {
+            //NOTE: ASUME ALL DATA IS VALID HERE
+            //TODO: ADD RETURN VALUES CORECTLY
+            var context = await _factory.CreateDbContextAsync();
+
+            var userDB = context.Users
+            .FirstOrDefault(u => u.Email == newUserData.Email);
+
+            if (userDB == null)
+            {
+                return null;
+            }
+
+            var rolesFromDb = await context.Roles
+                .Where(r => newUserData.Roles.Contains(r.Value))
+                .ToListAsync();
+
+            var userRoles = rolesFromDb.Select(r => new UserRole
+            {
+                UserId = userDB.Id,
+                RoleId = r.Id
+            });
+
+            var resultRoles = rolesFromDb.Select(r => r.Value).ToList();
+
+            await context.UserRoles
+                .Where(ur => ur.UserId == userDB.Id)
+                .ExecuteDeleteAsync();
+
+            context.UserRoles.AddRange(userRoles);
+            await context.SaveChangesAsync();
+
+            var userVM = new UserVM 
+            {   Email = userDB.Email,
+                Roles = resultRoles
+            };
+
+            return userVM;
+        }
+
         public async Task<List<UserVM>> AdminPanelGetUsersInfo()
         {
             //NOTE: ASUME ALL DATA IS VALID HERE

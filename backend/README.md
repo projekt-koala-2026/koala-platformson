@@ -8,6 +8,7 @@ The api is available at http://localhost:8080/...
 - FIXME:
     - fix speling
     - use API response wraper
+    - figure out how to handle the validation better
 - TODO:
     - make API response wraper
     - make sure the queries are as specific as possible
