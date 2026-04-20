@@ -1,5 +1,4 @@
-﻿
-using koala.Data;
+﻿using koala.Data;
 using koala.Data.ViewModels;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +14,11 @@ using System.Web;
 namespace koala.Services
 {
     //FIXME: DECIDE ON THE ENDPOINT STYLE (POST, PUT, GET OR DELETE) !!!
-    public class AuthServices
+    public class AuthService
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
 
-        public AuthServices(IDbContextFactory<AppDbContext> factory)
+        public AuthService(IDbContextFactory<AppDbContext> factory)
         {
             _factory = factory;
         }
@@ -118,7 +117,7 @@ namespace koala.Services
 
             var userVM = new UserVM 
             {   Email = newUser.Email,
-                Password = newUser.Password,
+                Password = newUser.Password, //FIXME: decide if remove password here?
                 Roles = resultRoles
             };
 
@@ -193,32 +192,6 @@ namespace koala.Services
 
             await context.SaveChangesAsync();
             return;
-        }
-
-        public async Task<List<UserVM>> UserList()
-        {
-            using var context = await _factory.CreateDbContextAsync();
-
-            var userVMs = await context.Users
-                .Select(user => new UserVM
-                {
-                    Email = user.Email,
-                    Password = null
-                })
-                .ToListAsync();
-
-            return userVMs;
-        }
-
-        public async Task<List<string>> RoleList()
-        {
-            using var context = await _factory.CreateDbContextAsync();
-
-            var roles = await context.Roles
-                .Select(role => role.Value)
-                .ToListAsync();
-
-            return roles;
         }
     }
 }

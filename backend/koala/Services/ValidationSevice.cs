@@ -17,7 +17,7 @@ namespace koala.Services
             _factory = factory;
         }
 
-        public bool ValidateUserVMEmail(UserVM user)
+        public bool USERVM_IsEmailValid(UserVM user)
         {
             if(string.IsNullOrEmpty(user.Email))
             {
@@ -30,7 +30,7 @@ namespace koala.Services
             return true;
         }
 
-        public bool ValidateUserVMPassword(UserVM user)
+        public bool USERVM_IsPasswordValid(UserVM user)
         {
             if(string.IsNullOrEmpty(user.Password))
             {
@@ -44,7 +44,7 @@ namespace koala.Services
             return true;
         }
 
-        public async Task<bool> ValidateUserVMRoles(UserVM user)
+        public async Task<bool> USERVM_IsRolesValidAsync(UserVM user)
         {
             using var context = await _factory.CreateDbContextAsync();
 
@@ -57,13 +57,17 @@ namespace koala.Services
             return user.Roles.All(r => existingSet.Contains(r));
         }
 
-        public bool ValidateUserVMLogin(UserVM user)
+        public bool USERVM_IsAnyFieldEmpty(UserVM user)
         {
             if(string.IsNullOrEmpty(user.Email))
             {
                 return false;
             }
             if(string.IsNullOrEmpty(user.Password))
+            {
+                return false;
+            }
+            if(user.Roles == null)
             {
                 return false;
             }

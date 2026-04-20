@@ -43,7 +43,8 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddTransient<AuthServices>();
+builder.Services.AddTransient<AuthService>();
+builder.Services.AddTransient<UserService>();
 builder.Services.AddTransient<ValidationService>();
 
 builder.Services.AddRouting(options =>
@@ -76,7 +77,7 @@ if (app.Environment.IsDevelopment())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         db.Database.EnsureCreated();
-        var authService = scope.ServiceProvider.GetRequiredService<AuthServices>();
+        var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
         await authService.InicializeDB();
     }
 }

@@ -16,12 +16,12 @@ namespace koala.Controllers
     [Route("api/admin/auth")]
     public class AdminAuthController : ControllerBase
     {
-        public AuthServices _authServices;
+        public AuthService _authService;
         public ValidationService _validationService;
 
-        public AdminAuthController(AuthServices authServices, ValidationService validationService)
+        public AdminAuthController(AuthService authService, ValidationService validationService)
         {
-            _authServices = authServices;
+            _authService = authService;
             _validationService = validationService;
         }
         
@@ -29,9 +29,9 @@ namespace koala.Controllers
         [HttpPost("user")]
         public async Task<IActionResult> AdminPanelAddUser([FromBody] UserVM user)
         {
-            bool valid_email = _validationService.ValidateUserVMEmail(user);
-            bool valid_password = _validationService.ValidateUserVMPassword(user);
-            bool valid_roles = await _validationService.ValidateUserVMRoles(user);
+            bool valid_email = _validationService.USERVM_IsEmailValid(user);
+            bool valid_password = _validationService.USERVM_IsPasswordValid(user);
+            bool valid_roles = await _validationService.USERVM_IsRolesValidAsync(user);
             if(!valid_email)
             {
                 return BadRequest("Email not valid");
@@ -44,7 +44,7 @@ namespace koala.Controllers
             {
                 return BadRequest("Roles not valid");
             }
-            var added_user = await _authServices.AdminPanelAddUser(user);
+            var added_user = await _authService.AdminPanelAddUser(user);
             if( added_user == null)
             {
                 return BadRequest("User already exists");
@@ -56,12 +56,12 @@ namespace koala.Controllers
         [HttpPost("session")]
         public async Task<IActionResult> AdminPanelLogin([FromBody] UserVM user)
         {
-            bool valid_user = _validationService.ValidateUserVMLogin(user);
+            bool valid_user = _validationService.USERVM_IsAnyFieldEmpty(user);
             if(!valid_user)
             {
                 return BadRequest(new UserVM());
             } 
-            var (tokenValue, ruser) = await _authServices.AdminPanelLogin(user);
+            var (tokenValue, ruser) = await _authService.AdminPanelLogin(user);
             
             if(string.IsNullOrEmpty(tokenValue))
             {
@@ -87,7 +87,7 @@ namespace koala.Controllers
             {
                 return NotFound("No session found");
             }
-            await _authServices.AdminPanelLogout(tokenValue);
+            await _authService.AdminPanelLogout(tokenValue);
             Response.Cookies.Delete("KOALA_auth_token", new CookieOptions
             {
                 HttpOnly = true,                //TODO: change to true
@@ -97,22 +97,6 @@ namespace koala.Controllers
                 Path = "/",
             });
             return Ok("Succesful logout");
-        }
-
-        [Authorize(Roles = "ADMIN")]
-        [HttpGet("users")]
-        public async Task<ActionResult<List<UserVM>>> UserList()
-        {
-            var users = await _authServices.UserList(); 
-            return Ok(users);
-        }
-
-        [Authorize(Roles = "ADMIN")]
-        [HttpGet("roles")]
-        public async Task<ActionResult<List<string>>> RoleList()
-        {
-            var roles = await _authServices.RoleList(); 
-            return Ok(roles);
         }
     }
 }
