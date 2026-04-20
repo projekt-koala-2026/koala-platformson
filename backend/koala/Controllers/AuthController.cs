@@ -24,33 +24,6 @@ namespace koala.Controllers
             _authService = authService;
             _validationService = validationService;
         }
-        
-        [Authorize(Roles = "ADMIN")]
-        [HttpPost("user")]
-        public async Task<IActionResult> AdminPanelAddUser([FromBody] UserVM user)
-        {
-            bool valid_email = _validationService.USERVM_IsEmailValid(user);
-            bool valid_password = _validationService.USERVM_IsPasswordValid(user);
-            bool valid_roles = await _validationService.USERVM_IsRolesValidAsync(user);
-            if(!valid_email)
-            {
-                return BadRequest("Email not valid");
-            }
-            if(!valid_password)
-            {
-                return BadRequest("Password not valid");
-            }
-            if(!valid_roles)
-            {
-                return BadRequest("Roles not valid");
-            }
-            var added_user = await _authService.AdminPanelAddUser(user);
-            if( added_user == null)
-            {
-                return BadRequest("User already exists");
-            }
-            return Ok(added_user);
-        }
 
         [AllowAnonymous]
         [HttpPost("session")]

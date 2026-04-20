@@ -7,7 +7,8 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 
 namespace koala.Services
-{
+{   
+    //FIXME: MAKE SURE QUERIES ARE OPTIMAL AND AS SPECIFIC AS POSSIBLE !!!
     public class ValidationService
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
@@ -15,6 +16,24 @@ namespace koala.Services
         public ValidationService(IDbContextFactory<AppDbContext> factory)
         {
             _factory = factory;
+        }
+
+        public bool USERVM_IsEmailNotEmpty(UserVM user)
+        {
+            if(string.IsNullOrEmpty(user.Email))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool USERVM_IsPasswordNotEmpty(UserVM user)
+        {
+            if(string.IsNullOrEmpty(user.Password))
+            {
+                return false;
+            }
+            return true;
         }
 
         public bool USERVM_IsEmailValid(UserVM user)

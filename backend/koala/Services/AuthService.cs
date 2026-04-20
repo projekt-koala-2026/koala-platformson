@@ -14,6 +14,7 @@ using System.Web;
 namespace koala.Services
 {
     //FIXME: DECIDE ON THE ENDPOINT STYLE (POST, PUT, GET OR DELETE) !!!
+    //FIXME: MAKE SURE QUERIES ARE OPTIMAL AND AS SPECIFIC AS POSSIBLE !!!
     public class AuthService
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
@@ -75,53 +76,6 @@ namespace koala.Services
 
                 await context.SaveChangesAsync();
             }
-        }
-
-        public async Task<UserVM> AdminPanelAddUser(UserVM user)
-        {
-
-            //NOTE: ASUME ALL DATA IS VALID HERE
-            //TODO: ADD RETURN VALUES CORECTLY AND ROLES ADDING
-            var context = await _factory.CreateDbContextAsync();
-            
-            var newUser = context.Users
-            .FirstOrDefault(u => u.Email == user.Email);
-
-            if (newUser != null)
-            {
-                return null;
-            }
-            
-            newUser = new User
-            {
-                Id = Guid.NewGuid(),
-                Email = user.Email,
-                Password = user.Password
-            };
-
-            var rolesFromDb = await context.Roles
-                .Where(r => user.Roles.Contains(r.Value))
-                .ToListAsync();
-
-            var userRoles = rolesFromDb.Select(r => new UserRole
-            {
-                UserId = newUser.Id,
-                RoleId = r.Id
-            });
-
-            var resultRoles = rolesFromDb.Select(r => r.Value).ToList();
-
-            context.Users.Add(newUser);
-            context.UserRoles.AddRange(userRoles);
-            await context.SaveChangesAsync();
-
-            var userVM = new UserVM 
-            {   Email = newUser.Email,
-                Password = newUser.Password, //FIXME: decide if remove password here?
-                Roles = resultRoles
-            };
-
-            return userVM;
         }
 
         public async Task<(string Token, UserVM user)> AdminPanelLogin(UserVM user)
