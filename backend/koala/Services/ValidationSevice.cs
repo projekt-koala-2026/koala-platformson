@@ -57,5 +57,18 @@ namespace koala.Services
             return user.Roles.All(r => existingSet.Contains(r));
         }
 
+        public bool ValidateUserVMLogin(UserVM user)
+        {
+            if(string.IsNullOrEmpty(user.Email))
+            {
+                return false;
+            }
+            if(string.IsNullOrEmpty(user.Password))
+            {
+                return false;
+            }
+            return true;
+        }
+
     }
 }

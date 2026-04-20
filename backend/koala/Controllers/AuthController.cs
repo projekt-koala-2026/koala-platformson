@@ -13,13 +13,13 @@ namespace koala.Controllers
 {
     //FIXME: make sure params are passed corectly (VALIDATION!!!!)
     [ApiController]
-    [Route("api/admin/[controller]")]
-    public class AuthController : ControllerBase
+    [Route("api/admin/auth")]
+    public class AdminAuthController : ControllerBase
     {
         public AuthServices _authServices;
         public ValidationService _validationService;
 
-        public AuthController(AuthServices authServices, ValidationService validationService)
+        public AdminAuthController(AuthServices authServices, ValidationService validationService)
         {
             _authServices = authServices;
             _validationService = validationService;
@@ -56,22 +56,16 @@ namespace koala.Controllers
         [HttpPost("session")]
         public async Task<IActionResult> AdminPanelLogin([FromBody] UserVM user)
         {
-            bool valid_email = _validationService.ValidateUserVMEmail(user);
-            bool valid_password = _validationService.ValidateUserVMPassword(user);
-            if(!valid_email)
+            bool valid_user = _validationService.ValidateUserVMLogin(user);
+            if(!valid_user)
             {
-                return BadRequest("Email not valid");
-            }
-            if(!valid_password)
-            {
-                return BadRequest("Password not valid");
-            }
-            
-            var tokenValue = await _authServices.AdminPanelLogin(user);
+                return BadRequest(new UserVM());
+            } 
+            var (tokenValue, ruser) = await _authServices.AdminPanelLogin(user);
             
             if(string.IsNullOrEmpty(tokenValue))
             {
-                return NotFound("User not found");
+                return BadRequest(ruser);
             }
             Response.Cookies.Append("KOALA_auth_token", tokenValue, new CookieOptions
             {
@@ -81,7 +75,7 @@ namespace koala.Controllers
                 Expires = DateTimeOffset.UtcNow.AddHours(1),
                 Path = "/"
             });
-            return Ok("Succesful login");
+            return Ok(ruser);
         }
 
         [AllowAnonymous]

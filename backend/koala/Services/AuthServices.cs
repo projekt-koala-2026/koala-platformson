@@ -57,8 +57,8 @@ namespace koala.Services
                 var adminUser = new User
                 {
                     Id = Guid.NewGuid(),
-                    Email = "admin@admin.admin",
-                    Password = "Admin**8"
+                    Email = "admin",
+                    Password = "admin"
                 };
 
                 context.Users.Add(adminUser);
@@ -125,7 +125,7 @@ namespace koala.Services
             return userVM;
         }
 
-        public async Task<string> AdminPanelLogin(UserVM user)
+        public async Task<(string Token, UserVM user)> AdminPanelLogin(UserVM user)
         {
             //NOTE: ASUME ALL DATA IS VALID HERE
             //TODO: ADD RETURN VALUES CORECTLY
@@ -134,7 +134,7 @@ namespace koala.Services
             var userDB = context.Users.FirstOrDefault(u => u.Email == user.Email && u.Password == user.Password);
             if(userDB == null)
             {
-                return "";
+                return ("", new UserVM());
             }
 
             var token = await context.Tokens.FirstOrDefaultAsync(t => t.UserId == userDB.Id);
@@ -154,7 +154,23 @@ namespace koala.Services
             token.ExpiresAt = DateTime.UtcNow.AddHours(1);
 
             await context.SaveChangesAsync();
-            return token.Value;
+            
+            var resultRoles = await context.UserRoles
+                .Where(ur => ur.UserId == userDB.Id)
+                .Join(context.Roles, 
+                      ur => ur.RoleId, 
+                      r => r.Id, 
+                      (ur, r) => r.Value)
+                .ToListAsync();
+
+            var ruser = new UserVM
+            {
+                Email = user.Email,
+                Password = null,
+                Roles = resultRoles 
+            };
+
+            return (token.Value, ruser);
         }
 
         public async Task AdminPanelLogout(string tokenValue)
@@ -187,7 +203,7 @@ namespace koala.Services
                 .Select(user => new UserVM
                 {
                     Email = user.Email,
-                    Password = user.Password
+                    Password = null
                 })
                 .ToListAsync();
 
