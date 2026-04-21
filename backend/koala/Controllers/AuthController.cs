@@ -17,24 +17,17 @@ namespace koala.Controllers
     public class AdminAuthController : ControllerBase
     {
         public AuthService _authService;
-        public ValidationService _validationService;
 
-        public AdminAuthController(AuthService authService, ValidationService validationService)
+        public AdminAuthController(AuthService authService)
         {
             _authService = authService;
-            _validationService = validationService;
         }
 
         [AllowAnonymous]
         [HttpPost("session")]
-        public async Task<IActionResult> AdminPanelLogin([FromBody] UserVM user)
+        public async Task<IActionResult> AdminPanelLogin([FromBody] UserLoginVM userLoginVM)
         {
-            bool valid_user = _validationService.USERVM_IsAnyFieldEmpty(user);
-            if(!valid_user)
-            {
-                return BadRequest(new UserVM());
-            } 
-            var (tokenValue, ruser) = await _authService.AdminPanelLogin(user);
+            var (tokenValue, ruser) = await _authService.AdminPanelLogin(userLoginVM!);
             
             if(string.IsNullOrEmpty(tokenValue))
             {

@@ -78,16 +78,16 @@ namespace koala.Services
             }
         }
 
-        public async Task<(string Token, UserVM user)> AdminPanelLogin(UserVM user)
+        public async Task<(string Token, UserInfoVM userInfoVM)> AdminPanelLogin(UserLoginVM userLoginVM)
         {
             //NOTE: ASUME ALL DATA IS VALID HERE
             //TODO: ADD RETURN VALUES CORECTLY
             var context = await _factory.CreateDbContextAsync();
 
-            var userDB = context.Users.FirstOrDefault(u => u.Email == user.Email && u.Password == user.Password);
+            var userDB = context.Users.FirstOrDefault(u => u.Email == userLoginVM.Email && u.Password == userLoginVM.Password);
             if(userDB == null)
             {
-                return ("", new UserVM());
+                return ("", null);
             }
 
             var token = await context.Tokens.FirstOrDefaultAsync(t => t.UserId == userDB.Id);
@@ -116,10 +116,10 @@ namespace koala.Services
                       (ur, r) => r.Value)
                 .ToListAsync();
 
-            var ruser = new UserVM
+            var ruser = new UserInfoVM
             {
-                Email = user.Email,
-                Password = null,
+                Id = userDB.Id,
+                Email = userLoginVM.Email,
                 Roles = resultRoles 
             };
 

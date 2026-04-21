@@ -25,7 +25,7 @@ namespace koala.Services
             _factory = factory;
         }
 
-        public async Task<UserVM> AdminPanelAddUser(UserVM user)
+        public async Task<UserInfoVM> AdminPanelAddUser(UserCreateVM userCreateVM)
         {
 
             //NOTE: ASUME ALL DATA IS VALID HERE
@@ -33,7 +33,7 @@ namespace koala.Services
             var context = await _factory.CreateDbContextAsync();
             
             var newUser = context.Users
-            .FirstOrDefault(u => u.Email == user.Email);
+            .FirstOrDefault(u => u.Email == userCreateVM.Email);
 
             if (newUser != null)
             {
@@ -43,12 +43,12 @@ namespace koala.Services
             newUser = new User
             {
                 Id = Guid.NewGuid(),
-                Email = user.Email,
-                Password = user.Password
+                Email = userCreateVM.Email,
+                Password = userCreateVM.Password
             };
 
             var rolesFromDb = await context.Roles
-                .Where(r => user.Roles.Contains(r.Value))
+                .Where(r => userCreateVM.Roles.Contains(r.Value))
                 .ToListAsync();
 
             var userRoles = rolesFromDb.Select(r => new UserRole
@@ -63,46 +63,40 @@ namespace koala.Services
             context.UserRoles.AddRange(userRoles);
             await context.SaveChangesAsync();
 
-            var userVM = new UserVM 
-            {   Email = newUser.Email,
-                Password = newUser.Password, //FIXME: decide if remove password here?
+            var userInfoVM = new UserInfoVM 
+            {   
+                Id = newUser.Id,
+                Email = newUser.Email,
                 Roles = resultRoles
             };
 
-            return userVM;
+            return userInfoVM;
         }
-        public async Task<UserVM> AdminPanelChangeUser(UserVM newUserData, Guid userId)
+
+        public async Task<UserInfoVM> AdminPanelChangeUserEmail(UserChangeEmailVM userChangeEmailVM)
         {
             //NOTE: ASUME ALL DATA IS VALID HERE
             //TODO: ADD RETURN VALUES CORECTLY
             var context = await _factory.CreateDbContextAsync();
             
             var user = context.Users
-            .FirstOrDefault(u => u.Id == userId);
+            .FirstOrDefault(u => u.Id == userChangeEmailVM.Id && u.Password == userChangeEmailVM.Password);
 
             if (user == null)
             {
                 return null;
             }
+            
+            user.Email = userChangeEmailVM.NewEmail;
 
-            if(!string.IsNullOrEmpty(newUserData.Email))
-            {
-                user.Email = newUserData.Email;
-            }
+            await context.SaveChangesAsync();
 
-            if(!string.IsNullOrEmpty(newUserData.Password))
-            {
-                user.Password = newUserData.Password;
-            }
-
-            context.SaveChangesAsync();
-
-            var userVM = await context.Users
-                .Where(u => u.Id == userId)
-                .Select(user => new UserVM
+            var userInfoVM = await context.Users
+                .Where(u => u.Id == userChangeEmailVM.Id)
+                .Select(user => new UserInfoVM
                 {
+                    Id = user.Id,
                     Email = user.Email,
-                    Password = user.Password, //TODO: DECIDE IF TO RETURN THE NEW PASSWORD
                     Roles = context.UserRoles
                     .Where(ur => ur.UserId == user.Id)
                     .Join(context.Roles, 
@@ -113,17 +107,54 @@ namespace koala.Services
                 })
                 .FirstOrDefaultAsync();
 
-            return userVM;
+            return userInfoVM;
         }
 
-        public async Task AdminPanelDeleteUser(UserVM userToDelete)
+        public async Task<UserInfoVM> AdminPanelChangeUserPassword(UserChangePasswordVM userChangePasswordVM)
+        {
+            //NOTE: ASUME ALL DATA IS VALID HERE
+            //TODO: ADD RETURN VALUES CORECTLY
+            var context = await _factory.CreateDbContextAsync();
+            
+            var user = context.Users
+            .FirstOrDefault(u => u.Id == userChangePasswordVM.Id && u.Password == userChangePasswordVM.Password);
+
+            if (user == null)
+            {
+                return null;
+            }
+            
+            user.Password = userChangePasswordVM.NewPassword;
+
+            await context.SaveChangesAsync();
+
+            var userInfoVM = await context.Users
+                .Where(u => u.Id == userChangePasswordVM.Id)
+                .Select(user => new UserInfoVM
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Roles = context.UserRoles
+                    .Where(ur => ur.UserId == user.Id)
+                    .Join(context.Roles, 
+                          ur => ur.RoleId, 
+                          r => r.Id, 
+                          (ur, r) => r.Value)
+                    .ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            return userInfoVM;
+        }
+
+        public async Task AdminPanelDeleteUser(UserDeleteVM userDeleteVM)
         {
             //NOTE: ASUME ALL DATA IS VALID HERE
             //TODO: ADD RETURN VALUES CORECTLY
             var context = await _factory.CreateDbContextAsync();
 
             var user = await context.Users
-                .FirstOrDefaultAsync(u => u.Email == userToDelete.Email);
+                .FirstOrDefaultAsync(u => u.Id == userDeleteVM.Id);
 
             if (user == null)
             {
@@ -143,14 +174,14 @@ namespace koala.Services
             return;
         }
 
-        public async Task<UserVM> AdminPanelChangeUserRoles(UserVM newUserData)
+        public async Task<UserInfoVM> AdminPanelChangeUserRoles(UserChangeRolesVM userChangeRolesVM)
         {
             //NOTE: ASUME ALL DATA IS VALID HERE
             //TODO: ADD RETURN VALUES CORECTLY
             var context = await _factory.CreateDbContextAsync();
 
             var userDB = context.Users
-            .FirstOrDefault(u => u.Email == newUserData.Email);
+            .FirstOrDefault(u => u.Id == userChangeRolesVM.Id);
 
             if (userDB == null)
             {
@@ -158,7 +189,7 @@ namespace koala.Services
             }
 
             var rolesFromDb = await context.Roles
-                .Where(r => newUserData.Roles.Contains(r.Value))
+                .Where(r => userChangeRolesVM.NewRoles.Contains(r.Value))
                 .ToListAsync();
 
             var userRoles = rolesFromDb.Select(r => new UserRole
@@ -176,25 +207,27 @@ namespace koala.Services
             context.UserRoles.AddRange(userRoles);
             await context.SaveChangesAsync();
 
-            var userVM = new UserVM 
-            {   Email = userDB.Email,
+            var userInfoVM = new UserInfoVM 
+            {   
+                Id = userDB.Id,
+                Email = userDB.Email,
                 Roles = resultRoles
             };
 
-            return userVM;
+            return userInfoVM;
         }
 
-        public async Task<List<UserVM>> AdminPanelGetUsersInfo()
+        public async Task<List<UserInfoVM>> AdminPanelGetUsersInfo()
         {
             //NOTE: ASUME ALL DATA IS VALID HERE
             //TODO: ADD RETURN VALUES CORECTLY
             using var context = await _factory.CreateDbContextAsync();
 
-            var userVMs = await context.Users
-                .Select(user => new UserVM
+            var userInfoVMs = await context.Users
+                .Select(user => new UserInfoVM
                 {
+                    Id = user.Id,
                     Email = user.Email,
-                    Password = null,
                     Roles = context.UserRoles
                     .Where(ur => ur.UserId == user.Id)
                     .Join(context.Roles, 
@@ -205,7 +238,7 @@ namespace koala.Services
                 })
                 .ToListAsync();
 
-            return userVMs;
+            return userInfoVMs;
         }
     }
 }

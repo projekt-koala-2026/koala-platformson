@@ -17,33 +17,16 @@ namespace koala.Controllers
     public class AdminUserController : ControllerBase
     {
         public UserService _userService;
-        public ValidationService _validationService;
 
-        public AdminUserController(UserService userService, ValidationService validationService)
+        public AdminUserController(UserService userService)
         {
             _userService = userService;
-            _validationService = validationService;
         }
 
         [Authorize(Roles = "ADMIN")]
         [HttpPost("user")]
-        public async Task<IActionResult> AdminPanelAddUser([FromBody] UserVM user)
+        public async Task<IActionResult> AdminPanelAddUser([FromBody] UserCreateVM user)
         {
-            bool valid_email = _validationService.USERVM_IsEmailValid(user);
-            bool valid_password = _validationService.USERVM_IsPasswordValid(user);
-            bool valid_roles = await _validationService.USERVM_IsRolesValidAsync(user);
-            if(!valid_email)
-            {
-                return BadRequest("Email not valid");
-            }
-            if(!valid_password)
-            {
-                return BadRequest("Password not valid");
-            }
-            if(!valid_roles)
-            {
-                return BadRequest("Roles not valid");
-            }
             var added_user = await _userService.AdminPanelAddUser(user);
             if( added_user == null)
             {
@@ -53,66 +36,42 @@ namespace koala.Controllers
         }
 
         [Authorize(Roles = "ADMIN,EDITOR")]
-        [HttpPut("user")]
-        public async Task<IActionResult> AdminPanelChangeUser([FromBody] UserVM user)
+        [HttpPut("email")]
+        public async Task<IActionResult> AdminPanelChangeUserEmail([FromBody] UserChangeEmailVM userChangeEmailVM)
         {
-            bool valid_email = _validationService.USERVM_IsEmailValid(user);
-            bool valid_password = _validationService.USERVM_IsPasswordValid(user);
-            bool notEmpty_email = _validationService.USERVM_IsEmailNotEmpty(user);
-            bool notEmpty_password = _validationService.USERVM_IsPasswordNotEmpty(user);
-            if(!notEmpty_email && !notEmpty_password)
+            var changed_user = await _userService.AdminPanelChangeUserEmail(userChangeEmailVM);
+            if(changed_user == null)
             {
-                return BadRequest("Empty data");
+                return BadRequest("Could not change the user data");
             }
-            if(notEmpty_email && !valid_email)
+            return Ok(changed_user);
+        }
+
+        [Authorize(Roles = "ADMIN,EDITOR")]
+        [HttpPut("password")]
+        public async Task<IActionResult> AdminPanelChangeUserPassword([FromBody] UserChangePasswordVM userChangePasswordVM)
+        {
+            var changed_user = await _userService.AdminPanelChangeUserPassword(userChangePasswordVM);
+            if(changed_user == null)
             {
-                return BadRequest("Email data inavlid");
+                return BadRequest("Could not change the user data");
             }
-            if(notEmpty_password && !valid_password)
-            {
-                return BadRequest("Password data inavlid");
-            }
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(userIdString, out var userId))
-            {
-                var changed_user = await _userService.AdminPanelChangeUser(user,userId);
-                if(changed_user == null)
-                {
-                    return BadRequest("Could not change the user data");
-                }
-                return Ok(changed_user);
-            }
-            return BadRequest("Incorect session");
+            return Ok(changed_user);
         }
 
         [Authorize(Roles = "ADMIN")]
         [HttpDelete("user")]
-        public async Task<IActionResult> AdminPanelDeleteUser([FromBody] UserVM user)
+        public async Task<IActionResult> AdminPanelDeleteUser([FromBody] UserDeleteVM userDeleteVM)
         {
-            bool notEmpty_email = _validationService.USERVM_IsEmailNotEmpty(user);
-            if(!notEmpty_email)
-            {
-                return BadRequest("Email data inavlid");
-            }
-            await _userService.AdminPanelDeleteUser(user);
+            await _userService.AdminPanelDeleteUser(userDeleteVM);
             return Ok();
         }
 
         [Authorize(Roles = "ADMIN")]
         [HttpPut("roles")]
-        public async Task<IActionResult> AdminPanelChangeUserRoles([FromBody] UserVM user)
+        public async Task<IActionResult> AdminPanelChangeUserRoles([FromBody] UserChangeRolesVM userChangeRolesVM)
         {
-            bool notEmpty_email = _validationService.USERVM_IsEmailNotEmpty(user);
-            bool valid_roles = await _validationService.USERVM_IsRolesValidAsync(user);
-            if(!notEmpty_email)
-            {
-                return BadRequest("Email data inavlid");
-            }
-            if(!valid_roles)
-            {
-                return BadRequest("Roles not valid");
-            }
-            var ruser = await _userService.AdminPanelChangeUserRoles(user);
+            var ruser = await _userService.AdminPanelChangeUserRoles(userChangeRolesVM);
             return Ok(ruser);
         }
 

@@ -1,9 +1,11 @@
 using koala.Data;
+using koala.Data.ViewModels;
 using koala.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
-
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,14 @@ builder.Services.AddCors(options =>
         });
 });
 
+//NOTE: VALIDATORS
+builder.Services.AddValidatorsFromAssemblyContaining<UserCreateValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UserChangeEmailValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UserChangePasswordValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UserChangeRolesValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<UserLoginValidator>();
+
+builder.Services.AddFluentValidationAutoValidation();
 
 var connectionString =
     $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword}";
@@ -45,7 +55,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddTransient<UserService>();
-builder.Services.AddTransient<ValidationService>();
+//builder.Services.AddTransient<ValidationService>();
 
 builder.Services.AddRouting(options =>
 {
