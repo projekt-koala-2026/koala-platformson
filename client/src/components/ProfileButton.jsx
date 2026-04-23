@@ -12,7 +12,13 @@ const ProfileButton = ({ options }) => {
             <div className={`${styles.profileMenu} ${isMenu ? styles.show : ""}`}>
                 {options &&
                     options.map((item, idx) => {
-                        return <Button text={item[0]} onClick={item[1]} />;
+                        return (
+                            <Button
+                                key={"profile-button-" + idx}
+                                text={item[0]}
+                                onClick={item[1]}
+                            />
+                        );
                     })}
             </div>
         </div>

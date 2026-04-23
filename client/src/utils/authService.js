@@ -1,6 +1,13 @@
-export const getRole = () => localStorage.getItem("_k_r_");
-export const isLogged = () => localStorage.getItem("_k_l_") === "true";
-export const isSpecialUser = () => {
-    const role = getRole();
-    return ["admin", "editor", "reviewer"].includes(role);
+const getUserRoles = () => {
+    try {
+        return JSON.parse(localStorage.getItem("userRoles")) || {};
+    } catch {
+        return {};
+    }
 };
+
+export const isAdmin = () => getUserRoles().isAdmin || false;
+export const isEditor = () => getUserRoles().isEditor || false;
+export const isReviewer = () => getUserRoles().isReviewer || false;
+export const isGuardian = () => getUserRoles().isGuardian || false;
+export const isCaptain = () => getUserRoles().isCaptain || false;

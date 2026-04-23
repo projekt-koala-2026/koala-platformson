@@ -18,6 +18,7 @@ export const apiRequest = async (url, options, method, navigate) => {
 
         if (response.status !== 200) {
             console.log("Error occured!\nerror status: " + response.status);
+            console.log(response.body);
             navigate("/admin/login");
             return null;
         }
