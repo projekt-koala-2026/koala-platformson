@@ -3,6 +3,7 @@ WORKDIR /app
 
 COPY . ./
 RUN dotnet restore
+#FIXME: MAKE IT REALEASE ON REALEASE AND FIX ALL WARNINGS !!!
 RUN dotnet publish -c Debug -o /out
 
 # Runtime stage

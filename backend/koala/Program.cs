@@ -45,6 +45,8 @@ builder.Services.AddAuthorization();
 //NOTE: ADDING SERVICES
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddTransient<UserService>();
+builder.Services.AddTransient<FileService>();
+builder.Services.AddTransient<EditionService>();
 
 //NOTE: ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>

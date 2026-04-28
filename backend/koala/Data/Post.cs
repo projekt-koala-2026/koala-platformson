@@ -9,11 +9,9 @@ namespace koala.Data
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Title { get; set; }
-        public string Body { get; set; }
-        public Guid PublicFileId { get; set; }
+        public string MarkdownBody { get; set; }
         public DateTime CreatedAt { get; set; }
-
-        public PublicFile PublicFiles {get; set;}
+        public Edition Edition { get; set; }
     }
 
 }

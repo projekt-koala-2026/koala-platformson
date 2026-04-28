@@ -15,6 +15,7 @@ namespace koala.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<PublicFile> PublicFiles { get; set; }
         public DbSet<Post> Posts { get; set; }
+        public DbSet<Edition> Editions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
