@@ -1,4 +1,14 @@
-const apiUrl = import.meta.env.VITE_API_URL;
+export const apiUrl = import.meta.env.VITE_API_URL;
+
+const authMiddleware = (response, navigate) => {
+    if (response.status !== 200) {
+        console.log("Error occured!\nerror status: " + response.status);
+        console.log(response.body);
+        navigate("/admin/login");
+        return null;
+    }
+    return true;
+};
 
 export const apiRequest = async (url, options, method, navigate) => {
     try {
@@ -16,12 +26,7 @@ export const apiRequest = async (url, options, method, navigate) => {
 
         const response = await fetch(apiUrl + url, fetchConfig);
 
-        if (response.status !== 200) {
-            console.log("Error occured!\nerror status: " + response.status);
-            console.log(response.body);
-            navigate("/admin/login");
-            return null;
-        }
+        if (!authMiddleware(response, navigate)) return null;
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -40,4 +45,20 @@ export const apiRequest = async (url, options, method, navigate) => {
         console.error("Network / server error: ", error);
         return null;
     }
+};
+
+export const uploadFile = async (file, title, navigate) => {
+    const formData = new FormData();
+    formData.append("File", file);
+    formData.append("Title", title);
+
+    const response = await fetch(apiUrl + "/api/admin/file/public/file", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+    });
+
+    if (!authMiddleware(response, navigate)) return null;
+
+    return response.ok;
 };
