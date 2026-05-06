@@ -12,6 +12,7 @@ using System.Security.Claims;
 namespace koala.Controllers
 {
     //FIXME: make sure params are passed corectly (VALIDATION!!!!)
+    //FIXME: fix the fromroute validations :)
     [ApiController]
     [Route("api/admin/file")]
     public class AdminFileController : ControllerBase
@@ -27,15 +28,15 @@ namespace koala.Controllers
         [HttpPost("public/file")]
         public async Task<IActionResult> AdminPanelSavePublicFile([FromForm] FileCreateVM newFile)
         {
-            var file = await _fileService.SavePublicFile(newFile.Title, newFile.File);
+            var file = await _fileService.SavePublicFile(newFile.Folder ,newFile.Title, newFile.File);
             return Ok(file);
         }
 
         [AllowAnonymous]
         [HttpGet("public/files")]
-        public async Task<IActionResult> GetPublicFilesList()
+        public async Task<IActionResult> GetPublicFilesList([FromQuery] FileGetVM? getFile = null)
         {
-            var files = await _fileService.ListPublicFiles();
+            var files = await _fileService.ListPublicFiles(getFile);
             return Ok(files);
         }
 
@@ -62,9 +63,9 @@ namespace koala.Controllers
 
         [AllowAnonymous]
         [HttpGet("public/files")]
-        public async Task<IActionResult> GetPublicFilesList()
+        public async Task<IActionResult> GetPublicFilesList([FromQuery] FileGetVM? getFile = null)
         {
-            var files = await _fileService.ListPublicFiles();
+            var files = await _fileService.ListPublicFiles(getFile);
             return Ok(files);
         }
 

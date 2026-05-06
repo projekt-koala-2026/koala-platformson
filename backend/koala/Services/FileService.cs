@@ -19,23 +19,63 @@ namespace koala.Services
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly string _publicFilesPath;
+        private readonly List<string> _publicFilesFolders;
 
         public FileService(IDbContextFactory<AppDbContext> factory)
         {
             _factory = factory;
             _publicFilesPath = Environment.GetEnvironmentVariable("PUBLIC_STORAGE_PATH");
+            _publicFilesFolders = new List<string>
+            {
+                "posts",
+                "problems",
+                "images"
+            };
         }
 
-        public async Task<FileInfoVM> SavePublicFile(string fileTitle, IFormFile file)
+        public async Task CreateFolderStructure()
         {
+             var folders = new List<string>
+            {
+                "posts",
+                "problems",
+                "images"
+            };
+
+            var basePath = _publicFilesPath;
+
+            if (string.IsNullOrWhiteSpace(basePath))
+                throw new Exception("PUBLIC_STORAGE_PATH is not set");
+
+            foreach (var folder in _publicFilesFolders)
+            {
+                var fullPath = Path.Combine(basePath, folder);
+
+                if (!Directory.Exists(fullPath))
+                {
+                    Directory.CreateDirectory(fullPath);
+                }
+            }
+
+            await Task.CompletedTask;
+        }
+
+        public async Task<FileInfoVM> SavePublicFile(string folder, string fileTitle, IFormFile file)
+        {
+            if(!_publicFilesFolders.Contains(folder))
+            {
+                return null;
+            }
+
             using var context = await _factory.CreateDbContextAsync();
 
             Guid newId = Guid.NewGuid(); 
             string extension = Path.GetExtension(file.FileName);
             string fileName = $"{newId}{extension}";
-            string publicUrl = $"/content/{fileName}";
+            string publicUrl = $"/content/{folder}/{fileName}";
         
-            var filePath = Path.Combine(_publicFilesPath, fileName);
+            var filePath = Path.Combine(_publicFilesPath, folder);
+            filePath = Path.Combine(filePath, fileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
@@ -47,6 +87,7 @@ namespace koala.Services
             {
                 Id = newId,
                 Title = fileTitle,
+                Folder = folder,
                 FilePath = publicUrl
             };
         
@@ -63,14 +104,15 @@ namespace koala.Services
             return fileInfoVM;
         }
 
-
-        public async Task<List<FileInfoVM>> ListPublicFiles()
+        public async Task<List<FileInfoVM>> ListPublicFiles(FileGetVM getFile)
         {
             //NOTE: ASUME ALL DATA IS VALID HERE
             //TODO: ADD RETURN VALUES CORECTLY
             using var context = await _factory.CreateDbContextAsync();
 
-            var fileInfoVMs = await context.PublicFiles
+            if(string.IsNullOrWhiteSpace(getFile.Folder))
+            {
+                var fileInfoVMs = await context.PublicFiles
                 .Select(file => new FileInfoVM
                 {
                     Id = file.Id,
@@ -79,7 +121,22 @@ namespace koala.Services
                 })
                 .ToListAsync();
 
-            return fileInfoVMs;
+                return fileInfoVMs;
+            }
+            else
+            {
+                var fileInfoVMs = await context.PublicFiles
+                .Where(file => file.Folder == getFile.Folder)
+                .Select(file => new FileInfoVM
+                {
+                    Id = file.Id,
+                    Title = file.Title,
+                    FilePath = file.FilePath
+                })
+                .ToListAsync();
+
+                return fileInfoVMs;
+            }
         }
 
         public async Task DeletePublicFile(Guid Id)

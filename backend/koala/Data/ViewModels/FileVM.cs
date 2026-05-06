@@ -10,9 +10,15 @@ namespace koala.Data.ViewModels
         public string FilePath { get; set; }
     }
 
+    public class FileGetVM
+    {
+        public string? Folder { get; set; }
+    }
+
     public class FileCreateVM
     {
         public string Title { get; set; }
+        public string Folder { get; set; }
         public IFormFile File { get; set; }
     }
 

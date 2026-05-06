@@ -81,6 +81,8 @@ if (app.Environment.IsDevelopment())
         db.Database.EnsureCreated();
         var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
         await authService.InicializeDB();
+        var fileService = scope.ServiceProvider.GetRequiredService<FileService>();
+        await fileService.CreateFolderStructure();
     }
 }
 
