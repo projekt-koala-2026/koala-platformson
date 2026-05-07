@@ -4,6 +4,8 @@ import { LoadingProvider } from "./contexts/LoadingContext";
 import ImageHandlingScreen from "./screens/admin/ImageHandlingScreen";
 import LoginScreen from "./screens/admin/LoginScreen";
 import PanelScreen from "./screens/admin/PanelScreen";
+import ChangePassScreen from "./screens/admin/ChangePassScreen";
+import AddUserScreen from "./screens/admin/AddUserScreen";
 
 export default function App() {
     return (
@@ -13,6 +15,8 @@ export default function App() {
                 <Routes>
                     <Route path="/admin/login" element={<LoginScreen />} />
                     <Route path="/admin" element={<PanelScreen />} />
+                    <Route path="/admin/changepass" element={<ChangePassScreen />} />
+                    <Route path="/admin/adduser" element={<AddUserScreen />} />
                     <Route path="/admin/images" element={<ImageHandlingScreen />} />
                 </Routes>
             </BrowserRouter>

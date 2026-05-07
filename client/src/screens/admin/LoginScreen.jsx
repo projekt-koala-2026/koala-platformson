@@ -28,7 +28,9 @@ const LoginScreen = () => {
                 isGuardian: data.roles.includes("GUARDIAN"),
                 isCaptain: data.roles.includes("CAPTAIN"),
             };
+            const id = data.id;
             localStorage.setItem("userRoles", JSON.stringify(state));
+            localStorage.setItem("userId", id);
             navigate("/admin");
         }
         stopLoading();

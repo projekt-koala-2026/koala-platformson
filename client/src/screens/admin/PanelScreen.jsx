@@ -5,6 +5,7 @@ import Hamburger from "../../components/Hamburger";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import ProfileButton from "../../components/ProfileButton";
+import Button from "../../components/Button";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
 
@@ -18,8 +19,17 @@ const PanelScreen = () => {
         const data = await apiRequest("/api/admin/auth/session", {}, "DELETE", navigate);
         if (data) {
             localStorage.removeItem("userRoles");
+            localStorage.removeItem("userId");
             navigate("/admin/login");
         }
+    };
+
+    const AddUser = async () => {
+        navigate("/admin/adduser");
+    };
+
+    const ChangePassword = async () => {
+        navigate("/admin/changepass");
     };
 
     useEffect(() => {
@@ -33,7 +43,7 @@ const PanelScreen = () => {
 
     return (
         <div className="container" style={{ minWidth: "50%" }}>
-            <ProfileButton options={[["Logout", handleLogout]]} />
+            <ProfileButton options={[["Logout", handleLogout],["Zmień Hasło", ChangePassword]]} />
             <Hamburger options={[["Dodaj plik", () => navigate("/admin/images")]]} />
             <h1>Panel administracyjny</h1>
             {users && isAdminEditor && (
@@ -46,6 +56,7 @@ const PanelScreen = () => {
                             </ContentsListTile>
                         ))}
                     </ContentsListBox>
+                    <Button text={"Dodaj nowego użytkownika"} onClick={AddUser} />
                 </>
             )}
 
