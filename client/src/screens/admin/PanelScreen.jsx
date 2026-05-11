@@ -33,6 +33,11 @@ const PanelScreen = () => {
     };
 
     useEffect(() => {
+        if (!isAdminEditor) {
+            navigate("/admin/login");
+            return;
+        }
+
         const getData = async () => {
             const data = await apiRequest("/api/admin/user/users", null, "GET", navigate);
             setUsers(data);
@@ -44,7 +49,7 @@ const PanelScreen = () => {
     return (
         <div className="container" style={{ minWidth: "50%" }}>
             <ProfileButton options={[["Logout", handleLogout],["Zmień Hasło", ChangePassword]]} />
-            <Hamburger options={[["Dodaj plik", () => navigate("/admin/images")]]} />
+            <Hamburger options={[["Zarządzanie plikami", () => navigate("/admin/images")]]} />
             <h1>Panel administracyjny</h1>
             {users && isAdminEditor && (
                 <>

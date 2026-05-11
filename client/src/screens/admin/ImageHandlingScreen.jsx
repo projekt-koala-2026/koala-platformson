@@ -11,13 +11,15 @@ const ImageHandlingScreen = () => {
     const pickerRef = useRef(null);
 
     const handleAddFile = async (file) => {
-        await uploadFile(file, file.name, navigate);
+        await uploadFile(file, file.name, "images", navigate);
         pickerRef.current.refresh();
     };
 
     const handleDeleteFile = async (file) => {
         if (!window.confirm("Usunąć to zdjęcie?")) return;
+
         await apiRequest("/api/admin/file/public/files", { id: file.id }, "DELETE", navigate);
+        
         pickerRef.current.refresh();
     };
 
@@ -26,8 +28,9 @@ const ImageHandlingScreen = () => {
             <h1>Zarządzanie zdjęciami</h1>
             <Button text={"Dodaj zdjęcie"} onClick={() => uploaderRef.current.open()} />
             <FileUploader ref={uploaderRef} onFileSelect={handleAddFile} />
-            <h1>Zarządzanie zdjęciami</h1>
-            <ImagePicker ref={pickerRef} onSelect={handleDeleteFile} />
+            <div style={{ marginTop: "40px" }}>
+                <ImagePicker ref={pickerRef} onSelect={handleDeleteFile} />
+            </div>
         </div>
     );
 };

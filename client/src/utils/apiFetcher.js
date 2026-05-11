@@ -47,10 +47,11 @@ export const apiRequest = async (url, options, method, navigate) => {
     }
 };
 
-export const uploadFile = async (file, title, navigate) => {
+export const uploadFile = async (file, title, folder, navigate) => {
     const formData = new FormData();
     formData.append("File", file);
     formData.append("Title", title);
+    formData.append("Folder", folder);
 
     const response = await fetch(apiUrl + "/api/admin/file/public/file", {
         method: "POST",
