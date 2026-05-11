@@ -11,6 +11,7 @@ namespace koala.Data
         public string Title { get; set; }
         public string MarkdownBody { get; set; }
         public DateTime CreatedAt { get; set; }
+        public Guid EditionId { get; set; }
         public Edition Edition { get; set; }
     }
 
