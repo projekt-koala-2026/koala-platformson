@@ -48,6 +48,7 @@ builder.Services.AddTransient<UserService>();
 builder.Services.AddTransient<FileService>();
 builder.Services.AddTransient<EditionService>();
 builder.Services.AddTransient<PostService>();
+builder.Services.AddTransient<SponsorService>();
 
 //NOTE: ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>
