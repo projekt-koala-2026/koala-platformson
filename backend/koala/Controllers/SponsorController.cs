@@ -44,15 +44,27 @@ namespace koala.Controllers
             return NoContent();
         }
 
-        // Dodatkowy pomocniczy endpoint do pobierania jednego sponsora
-        /*
+        [HttpGet]
+
+        public async Task<ActionResult<IEnumerable<Sponsor>>> GetSponsors()
+        {
+            var sponsors = await _sponsorService.GetAllAsync();
+            if (sponsors == null || !sponsors.Any())
+            {
+                return NotFound("Nie znaleziono żadnych sponsorów.");
+            }
+            return Ok(sponsors);
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Sponsor>> GetSponsor(Guid id)
         {
-            var sponsor = await _sponsorService.Sponsors.FindAsync(id);
-            if (sponsor == null) return NotFound();
-            return sponsor;
+            var sponsor = await _sponsorService.GetByIdAsync(id);
+            
+            if (sponsor == null) 
+                return NotFound($"Sponsor o ID {id} nie istnieje.");
+
+            return Ok(sponsor);
         }
-        */
     }
 }
