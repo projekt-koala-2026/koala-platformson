@@ -35,7 +35,7 @@ namespace koala.Services
                 Description = model.Description
             };
 
-            context.Koalicjanci.Add(koalicjant);
+            context.Koalicjants.Add(koalicjant);
             await context.SaveChangesAsync();
 
             return koalicjant;
@@ -44,7 +44,7 @@ namespace koala.Services
         public async Task<bool> UpdateAsync(Guid id, KoalicjantUpdateVM model)
         {
             using var context = await _factory.CreateDbContextAsync();
-            var koalicjant = await context.Koalicjanci.FindAsync(id);
+            var koalicjant = await context.Koalicjants.FindAsync(id);
             if (koalicjant == null) return false;
 
             koalicjant.Name = model.Name;
@@ -57,17 +57,22 @@ namespace koala.Services
         public async Task<bool> DeleteAsync(Guid id)
         {
             using var context = await _factory.CreateDbContextAsync();
-            var koalicjant = await context.Koalicjanci.FindAsync(id);
+            var koalicjant = await context.Koalicjants.FindAsync(id);
             if (koalicjant == null) return false;
 
-            context.Koalicjanci.Remove(koalicjant);
+            context.Koalicjants.Remove(koalicjant);
             return await context.SaveChangesAsync() > 0;
         }
 
         public async Task<Koalicjant?> GetByIdAsync(Guid id)
         {
             using var context = await _factory.CreateDbContextAsync();
-            return await context.Koalicjanci.FindAsync(id);
+            return await context.Koalicjants.FindAsync(id);
+        }
+        public async Task<IEnumerable<Sponsor>> GetAllAsync()
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Sponsors.ToListAsync();
         }
     
     }
