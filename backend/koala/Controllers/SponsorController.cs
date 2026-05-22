@@ -45,14 +45,9 @@ namespace koala.Controllers
         }
 
         [HttpGet]
-
         public async Task<ActionResult<IEnumerable<Sponsor>>> GetSponsors()
         {
             var sponsors = await _sponsorService.GetAllAsync();
-            if (sponsors == null || !sponsors.Any())
-            {
-                return NotFound("Nie znaleziono żadnych sponsorów.");
-            }
             return Ok(sponsors);
         }
 
