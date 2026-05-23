@@ -41,4 +41,10 @@ namespace koala.Data.ViewModels
         public Guid Id { get; set; }
     }
 
+    public class EditionUpdateHistoryVM
+    {
+        public Guid Id { get; set; }
+        public string History { get; set; }
+    }
+
 }

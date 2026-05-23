@@ -56,7 +56,6 @@ namespace koala.Services
             };
         }
 
-        // Zmiana nazwy i sygnatury, aby idealnie pasowała do Twojego modelu tytułu
         public async Task<EditionInfoVM?> UpdateEditionTitle(EditionUpdateTitleVM model)
         {
             using var context = await _factory.CreateDbContextAsync();
@@ -75,7 +74,6 @@ namespace koala.Services
             };
         }
 
-        // Dodatkowa metoda obsługująca aktualizację samej daty startu
         public async Task<EditionInfoVM?> UpdateEditionStartDate(EditionUpdateStartDateVM model)
         {
             using var context = await _factory.CreateDbContextAsync();
@@ -94,7 +92,6 @@ namespace koala.Services
             };
         }
 
-        // Dodatkowa metoda obsługująca aktualizację samej daty końca (konwersja DateTime -> DateTimeOffset)
         public async Task<EditionInfoVM?> UpdateEditionEndDate(EditionUpdateEndDateVM model)
         {
             using var context = await _factory.CreateDbContextAsync();
@@ -114,7 +111,6 @@ namespace koala.Services
             };
         }
 
-        // Poprawiono typ parametru wejściowego z int na Guid (zgodnie z bazą i EditionDeleteVM)
         public async Task<bool> DeleteEdition(Guid id)
         {
             using var context = await _factory.CreateDbContextAsync();
@@ -124,6 +120,29 @@ namespace koala.Services
             context.Editions.Remove(edition);
             await context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<EditionInfoVM?> UpdateEditionHistory(EditionUpdateHistoryVM updatedHistory)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var edition = await context.Editions
+                .FirstOrDefaultAsync(e => e.Id == updatedHistory.Id);
+
+            if (edition == null)
+                return null;
+
+            edition.History = updatedHistory.History;
+
+            context.Editions.Update(edition);
+            await context.SaveChangesAsync();
+
+            return new EditionInfoVM
+            {
+                Id = edition.Id,
+                Title = edition.Title,
+                StartDate = edition.StartDate,
+                EndDate = edition.EndDate
+            };
         }
     }
 }

@@ -93,6 +93,23 @@ namespace koala.Controllers
 
             return NoContent();
         }
+
+        [Authorize(Roles = "ADMIN")]
+        [HttpPut("history")]
+        public async Task<IActionResult> AdminPanelUpdateHistory([FromBody] EditionUpdateHistoryVM updatedHistory)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _editionService.UpdateEditionHistory(updatedHistory);
+            
+            if (result == null)
+            {
+                return NotFound(new { message = $"Edycja o ID {updatedHistory.Id} nie istnieje." });
+            }
+
+            return Ok(result);
+        }
     }
 
     [ApiController]
