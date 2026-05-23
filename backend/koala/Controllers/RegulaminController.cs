@@ -13,28 +13,31 @@ namespace koala.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private readonly string _filePath;
+        private const string ContentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        private const string DownloadName = "Regulamin_do_edycji.docx";
 
         public RegulaminController(IWebHostEnvironment env)
         {
             _env = env;
-            _filePath = Path.Combine(_env.ContentRootPath, "Assets", "regulamin_wzor.docx");
+            _filePath = Path.GetFullPath(Path.Combine(_env.ContentRootPath, "Assets", "regulamin_wzor.docx"));
         }
 
-        [HttpGet("edit")]
-        public IActionResult GetTermsForEdit()
+        [HttpGet]
+        public IActionResult GetRegulamin()
         {
-            if (!System.IO.File.Exists(_filePath))
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Files", "regulamin.pdf");
+
+            if (!System.IO.File.Exists(filePath))
             {
-                return NotFound(new { message = $"Plik regulaminu nie istnieje na serwerze pod ścieżką: {_filePath}" });
+                return NotFound("The regulations file was not found.");
             }
 
-            const string downloadName = "Regulamin_do_edycji.docx";
-            const string contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-            return PhysicalFile(_filePath, contentType, downloadName);
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            
+            return File(fileStream, "application/pdf", "regulamin.pdf");
         }
 
-        [HttpPost("save")]
+        [HttpPost]
         public async Task<IActionResult> SaveTerms(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -51,12 +54,12 @@ namespace koala.Controllers
             try
             {
                 var directoryPath = Path.GetDirectoryName(_filePath);
-                if (!Directory.Exists(directoryPath) && directoryPath != null)
+                if (directoryPath != null && !Directory.Exists(directoryPath))
                 {
                     Directory.CreateDirectory(directoryPath);
                 }
 
-                using (var stream = new FileStream(_filePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var stream = new FileStream(_filePath, FileMode.Create, FileAccess.Write, FileShare.Read))
                 {
                     await file.CopyToAsync(stream);
                 }
