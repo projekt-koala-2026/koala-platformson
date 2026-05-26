@@ -56,5 +56,13 @@ namespace koala.Controllers
             var post = await _postService.GetPostByIdAsync(id);
             return post == null ? NotFound() : Ok(post);
         }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetPosts()
+        {
+            var posts = await _postService.GetAllPostsAsync();
+            return Ok(posts);
+        }
     }
 }
