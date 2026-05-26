@@ -20,16 +20,18 @@ namespace koala.Services
         public async Task<IEnumerable<EditionInfoVM>> GetAllEditions()
         {
             using var context = await _factory.CreateDbContextAsync();
-            return await context.Editions
-                .AsNoTracking()
-                .Select(e => new EditionInfoVM
-                {
-                    Id = e.Id,
-                    Title = e.Title,
-                    StartDate = e.StartDate,
-                    EndDate = e.EndDate
-                })
-                .ToListAsync();
+            
+            var databaseEditions = await context.Editions.ToListAsync();
+
+            var viewModels = databaseEditions.Select(e => new EditionInfoVM
+            {
+                Id = e.Id,
+                Title = e.Title,
+                StartDate = e.StartDate,
+                EndDate = e.EndDate
+            });
+
+            return viewModels;
         }
 
         public async Task<EditionInfoVM> AddEdition(EditionCreateVM newEdition)
@@ -144,5 +146,6 @@ namespace koala.Services
                 EndDate = edition.EndDate
             };
         }
+
     }
 }
