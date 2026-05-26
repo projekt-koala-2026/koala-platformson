@@ -71,6 +71,12 @@ namespace koala.Services
             using var context = await _factory.CreateDbContextAsync();
             return await context.Sponsors.FindAsync(id);
         }
+
+        public async Task<IEnumerable<Sponsor>> GetAllAsync()
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Sponsors.ToListAsync();
+        }
     
     }
 }

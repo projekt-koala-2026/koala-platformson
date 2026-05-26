@@ -49,6 +49,7 @@ builder.Services.AddTransient<FileService>();
 builder.Services.AddTransient<EditionService>();
 builder.Services.AddTransient<PostService>();
 builder.Services.AddTransient<SponsorService>();
+builder.Services.AddTransient<KoalicjantService>();
 
 //NOTE: ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>

@@ -1,20 +1,13 @@
 using koala.Data;
 using koala.Data.ViewModels;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Web;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace koala.Services
 {
-    //FIXME: DECIDE ON THE ENDPOINT STYLE (POST, PUT, GET OR DELETE) !!!
-    //FIXME: MAKE SURE QUERIES ARE OPTIMAL AND AS SPECIFIC AS POSSIBLE !!!
     public class EditionService
     {
         private readonly IDbContextFactory<AppDbContext> _factory;
@@ -22,6 +15,23 @@ namespace koala.Services
         public EditionService(IDbContextFactory<AppDbContext> factory)
         {
             _factory = factory;
+        }
+
+        public async Task<IEnumerable<EditionInfoVM>> GetAllEditions()
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            
+            var databaseEditions = await context.Editions.ToListAsync();
+
+            var viewModels = databaseEditions.Select(e => new EditionInfoVM
+            {
+                Id = e.Id,
+                Title = e.Title,
+                StartDate = e.StartDate,
+                EndDate = e.EndDate
+            });
+
+            return viewModels;
         }
 
         public async Task<EditionInfoVM> AddEdition(EditionCreateVM newEdition)
@@ -39,15 +49,103 @@ namespace koala.Services
             context.Editions.Add(edition);
             await context.SaveChangesAsync();
 
-            var editionInfoVM = new EditionInfoVM
+            return new EditionInfoVM
             {
                 Id = edition.Id,
                 Title = edition.Title,
                 StartDate = edition.StartDate,
                 EndDate = edition.EndDate
             };
-
-            return editionInfoVM;
         }
+
+        public async Task<EditionInfoVM?> UpdateEditionTitle(EditionUpdateTitleVM model)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var edition = await context.Editions.FirstOrDefaultAsync(e => e.Id == model.Id);
+            if (edition == null) return null;
+
+            edition.Title = model.Title;
+            await context.SaveChangesAsync();
+
+            return new EditionInfoVM
+            {
+                Id = edition.Id,
+                Title = edition.Title,
+                StartDate = edition.StartDate,
+                EndDate = edition.EndDate
+            };
+        }
+
+        public async Task<EditionInfoVM?> UpdateEditionStartDate(EditionUpdateStartDateVM model)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var edition = await context.Editions.FirstOrDefaultAsync(e => e.Id == model.Id);
+            if (edition == null) return null;
+
+            edition.StartDate = model.StartDate;
+            await context.SaveChangesAsync();
+
+            return new EditionInfoVM
+            {
+                Id = edition.Id,
+                Title = edition.Title,
+                StartDate = edition.StartDate,
+                EndDate = edition.EndDate
+            };
+        }
+
+        public async Task<EditionInfoVM?> UpdateEditionEndDate(EditionUpdateEndDateVM model)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var edition = await context.Editions.FirstOrDefaultAsync(e => e.Id == model.Id);
+            if (edition == null) return null;
+
+            // Twój model wymusza DateTime, konwertujemy go bezpiecznie na DateTimeOffset zachowując lokalną strefę
+            edition.EndDate = DateTime.SpecifyKind(model.EndDate, DateTimeKind.Local);
+            await context.SaveChangesAsync();
+
+            return new EditionInfoVM
+            {
+                Id = edition.Id,
+                Title = edition.Title,
+                StartDate = edition.StartDate,
+                EndDate = edition.EndDate
+            };
+        }
+
+        public async Task<bool> DeleteEdition(Guid id)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var edition = await context.Editions.FirstOrDefaultAsync(e => e.Id == id);
+            if (edition == null) return false;
+
+            context.Editions.Remove(edition);
+            await context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<EditionInfoVM?> UpdateEditionHistory(EditionUpdateHistoryVM updatedHistory)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var edition = await context.Editions
+                .FirstOrDefaultAsync(e => e.Id == updatedHistory.Id);
+
+            if (edition == null)
+                return null;
+
+            edition.History = updatedHistory.History;
+
+            context.Editions.Update(edition);
+            await context.SaveChangesAsync();
+
+            return new EditionInfoVM
+            {
+                Id = edition.Id,
+                Title = edition.Title,
+                StartDate = edition.StartDate,
+                EndDate = edition.EndDate
+            };
+        }
+
     }
 }

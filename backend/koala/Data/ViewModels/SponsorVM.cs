@@ -17,8 +17,6 @@ namespace koala.Data.ViewModels
         public string Description { get; set; }
     }
 
-    // Model używany przy edycji (często identyczny z Create, 
-    // ale pozwala na opcjonalność niektórych pól)
     public class SponsorUpdateVM
     {
         [Required(ErrorMessage = "Nazwa sponsora jest wymagana.")]

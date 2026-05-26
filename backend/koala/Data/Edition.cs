@@ -13,6 +13,7 @@ namespace koala.Data
         public DateTimeOffset EndDate { get; set; }
 
         public ICollection<Post> Posts { get; set; }
+        public string History { get; set; }
     }
 
 }
