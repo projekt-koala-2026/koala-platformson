@@ -13,7 +13,8 @@ import { isAdmin, isEditor } from "../../utils/authService";
 const PanelScreen = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState(null);
-    const isAdminEditor = useMemo(() => isAdmin() || isEditor(), []);
+    const isAdminEditor = useMemo(() => isAdmin() || isEditor(), []);    
+    const isAdminUser = useMemo(() => isAdmin(), []);
     const [posts, setPosts] = useState([]);
     const [editingUser, setEditingUser] = useState(null);
     const [selectedRoles, setSelectedRoles] = useState([]);
@@ -43,7 +44,9 @@ const PanelScreen = () => {
     };
 
     const EditUser = (user) => {
-        setEditingUser(user);
+        setEditingUser(
+            editingUser === user ? null : user
+        );
         setSelectedRoles(user.roles || []);
     };
 
@@ -95,7 +98,15 @@ const PanelScreen = () => {
     return (
         <div className="container" style={{ minWidth: "50%" }}>
             <ProfileButton options={[["Logout", handleLogout],["Zmień Hasło", ChangePassword]]} />
-            <Hamburger options={[["Zarządzanie plikami", () => navigate("/admin/images")]]} />
+            <Hamburger
+                options={[
+                    ["Zarządzanie plikami", () => navigate("/admin/images")],
+
+                    ...(isAdminUser
+                        ? [["Zarządzanie Sponsorami", () => navigate("/admin/sponsors")], ["Zarządzanie Koalicjantami", () => navigate("/admin/koalicjants")], ["Posty", () => navigate("/admin/posts")], ["Regulamin", () => navigate("/admin/rules")]]
+                        : [])
+                ]}
+            />
             <h1>Panel administracyjny</h1>
             {users && isAdminEditor && (
                 <>
@@ -138,7 +149,9 @@ const PanelScreen = () => {
                             </ContentsListTile>
                         ))}          
                     </ContentsListBox>
-                    <Button text={"Dodaj nowego użytkownika"} onClick={AddUser} />
+                    {users && isAdminUser && (
+                        <Button text={"Dodaj nowego użytkownika"} onClick={AddUser} />
+                    )}
                 </>
             )}
 
