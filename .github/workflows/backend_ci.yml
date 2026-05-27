@@ -1,0 +1,55 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - "**"
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  docker-compose-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create .env
+        run: |
+          cat <<EOF > .env
+          DB_USER=postgres
+          DB_PASSWORD=postgres
+          DB_NAME=koala
+          DB_HOST=koala-postgres
+          DB_PORT=5432
+          ASPNETCORE_ENVIRONMENT=Development
+          DB_DATA_PATH=/tmp/postgres-data
+          BACKEND_PUBLIC_DATA_PATH=/tmp/public
+          BACKEND_PRIVATE_DATA_PATH=/tmp/private
+          CONTAINER_PUBLIC_DATA_PATH=/app/public
+          CONTAINER_PRIVATE_DATA_PATH=/app/private
+          EOF
+
+      - name: Build containers
+        run: docker compose build
+
+      - name: Start containers
+        run: docker compose up -d
+
+      - name: Wait for backend
+        run: |
+          timeout 60 bash -c '
+            until [ "$(docker inspect -f "{{.State.Health.Status}}" koala-backend)" = "healthy" ]; do
+              sleep 2
+            done
+          '
+
+      - name: Check logs
+        run: docker compose logs koala-backend
+
+      - name: Shutdown
+        if: always()
+        run: docker compose down
