@@ -1,7 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
-RUN apt-get update && apt-get install -y curl
-
 WORKDIR /app
 
 COPY . ./
@@ -13,5 +11,7 @@ RUN dotnet publish -c Debug -o /out
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /out .
+
+RUN apt-get update && apt-get install -y curl
 
 ENTRYPOINT ["dotnet", "koala.dll"]
