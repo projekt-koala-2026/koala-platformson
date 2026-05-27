@@ -4,7 +4,6 @@ namespace koala.Data.ViewModels
 {
     public class KoalicjantCreateVM
     {
-        public Guid Id { get; set; }
         public string Name { get; set; }
 
         public string ProfilePicture {get; set; }
