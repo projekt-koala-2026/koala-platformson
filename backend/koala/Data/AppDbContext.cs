@@ -16,12 +16,9 @@ namespace koala.Data
         public DbSet<PublicFile> PublicFiles { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Edition> Editions { get; set; }
-<<<<<<< HEAD
         public DbSet<Sponsor> Sponsors { get; set; }
         public DbSet<Koalicjant> Koalicjants { get; set; }
-=======
         public DbSet<School> Schools { get; set; }
->>>>>>> school_management_feature
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
