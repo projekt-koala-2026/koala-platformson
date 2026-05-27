@@ -23,7 +23,7 @@ namespace koala.Controllers
         {
             var koalicjant = await _koalicjantService.CreateAsync(newKoalicjant);
             
-            return CreatedAtAction(nameof(GetKoalicjant), new { id = koalicjant.Id }, koalicjant);
+            return koalicjant == null ? NotFound() : Ok(koalicjant);
         }
 
         [HttpPut("{id}")]
@@ -33,7 +33,7 @@ namespace koala.Controllers
             if (!updated)
                 return NotFound($"Koalicjant o ID {id} nie istnieje.");
 
-            return NoContent();
+            return Ok(updated);
         }
 
         [HttpDelete("{id}")]
@@ -42,7 +42,7 @@ namespace koala.Controllers
             if (!await _koalicjantService.DeleteAsync(id))
                 return NotFound();
 
-            return NoContent();
+            return Ok();
         }
 
         [HttpGet]

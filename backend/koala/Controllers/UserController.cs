@@ -17,10 +17,12 @@ namespace koala.Controllers
     public class AdminUserController : ControllerBase
     {
         public UserService _userService;
+        public KoalicjantService _koalicjantService;
 
-        public AdminUserController(UserService userService)
+        public AdminUserController(UserService userService, KoalicjantService koalicjantService)
         {
             _userService = userService;
+            _koalicjantService = koalicjantService;
         }
 
         [Authorize(Roles = "ADMIN")]
@@ -32,6 +34,7 @@ namespace koala.Controllers
             {
                 return BadRequest("User already exists");
             }
+            await _koalicjantService.AutoCreateAsync(user.Email);
             return Ok(added_user);
         }
 
