@@ -47,9 +47,13 @@ builder.Services.AddTransient<AuthService>();
 builder.Services.AddTransient<UserService>();
 builder.Services.AddTransient<FileService>();
 builder.Services.AddTransient<EditionService>();
+<<<<<<< HEAD
 builder.Services.AddTransient<PostService>();
 builder.Services.AddTransient<SponsorService>();
 builder.Services.AddTransient<KoalicjantService>();
+=======
+builder.Services.AddTransient<SchoolService>();
+>>>>>>> school_management_feature
 
 //NOTE: ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>
