@@ -107,6 +107,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok("Healthy"));
 
 app.Urls.Add("http://0.0.0.0:8080");
 
