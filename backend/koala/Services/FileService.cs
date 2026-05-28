@@ -29,19 +29,14 @@ namespace koala.Services
             {
                 "posts",
                 "problems",
+                "history",
+                "rules",
                 "images"
             };
         }
 
         public async Task CreateFolderStructure()
         {
-             var folders = new List<string>
-            {
-                "posts",
-                "problems",
-                "images"
-            };
-
             var basePath = _publicFilesPath;
 
             if (string.IsNullOrWhiteSpace(basePath))
@@ -55,6 +50,24 @@ namespace koala.Services
                 {
                     Directory.CreateDirectory(fullPath);
                 }
+            }
+            
+            var rulesFile = Path.Combine(basePath, "rules/rules.txt");
+            if (!File.Exists(rulesFile))
+            {
+                await File.WriteAllTextAsync(rulesFile, string.Empty);
+            }
+
+            var historyFile = Path.Combine(basePath, "history/history.txt");
+            if (!File.Exists(historyFile))
+            {
+                await File.WriteAllTextAsync(historyFile, string.Empty);
+            }
+
+            var problemsFile = Path.Combine(basePath, "problems/problems.txt");
+            if (!File.Exists(problemsFile))
+            {
+                await File.WriteAllTextAsync(problemsFile, string.Empty);
             }
 
             await Task.CompletedTask;

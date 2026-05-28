@@ -51,6 +51,7 @@ builder.Services.AddTransient<PostService>();
 builder.Services.AddTransient<SponsorService>();
 builder.Services.AddTransient<KoalicjantService>();
 builder.Services.AddTransient<SchoolService>();
+builder.Services.AddTransient<StaticPagesService>();
 
 //NOTE: ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>
