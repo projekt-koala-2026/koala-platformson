@@ -3,12 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 
 //FIXME: MAKE SURE THE ROLES ARE VALIDATED LATTER
 
-//public static readonly HashSet<string> AllowedRoles = new()
-//    {
-//        "ADMIN",
-//        "EDITOR"
-//    };
-//
 namespace koala.Data.ViewModels
 {
     public class UserInfoVM
@@ -54,6 +48,51 @@ namespace koala.Data.ViewModels
     {
         public string Email { get; set; }
         public string Password { get; set; }
+    }
+
+    public class UserCreateNormalVM
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public List<string> Roles { get; set; }
+    }
+
+    public class UserCreateNormalValidator : AbstractValidator<UserCreateNormalVM>
+    {
+        private static readonly string[] AllowedRoles =
+        {
+            "CAPTAIN",
+            "GUARDIAN"
+        };
+
+        public UserCreateNormalValidator()
+        {
+            RuleFor(x => x.Email)
+                .NotEmpty()
+                .EmailAddress()
+                .WithMessage("This is not a valid email");
+
+            RuleFor(x => x.Password)
+                .NotEmpty()
+                .MinimumLength(8)
+                .Matches(@"[a-z]")
+                .Matches(@"[A-Z]")
+                .Matches(@"\d")
+                .Matches(@"[\W_]")
+                .WithMessage("This is not a valid password");
+
+            RuleFor(x => x.Roles)
+                .NotNull()
+                .NotEmpty()
+                .Must(roles =>
+                    roles.Count == 1 &&
+                    AllowedRoles.Contains(roles[0]))
+                .WithMessage("Role must be either CAPTAIN or GUARDIAN");
+
+            RuleForEach(x => x.Roles)
+                .NotNull()
+                .NotEmpty();
+        }
     }
 
     public class UserCreateValidator : AbstractValidator<UserCreateVM>

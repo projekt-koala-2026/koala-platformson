@@ -25,6 +25,19 @@ namespace koala.Controllers
             _koalicjantService = koalicjantService;
         }
 
+        [AllowAnonymous]
+        [HttpPost("create-account")]
+        public async Task<IActionResult> CreateNormalUser([FromBody] UserCreateNormalVM user)
+        {
+            var added_user = await _userService.CreateNormalUser(user);
+            if( added_user == null)
+            {
+                return BadRequest("User already exists");
+            }
+            return Ok(added_user);
+        }
+
+
         [Authorize(Roles = "ADMIN")]
         [HttpPost("user")]
         public async Task<IActionResult> AdminPanelAddUser([FromBody] UserCreateVM user)
