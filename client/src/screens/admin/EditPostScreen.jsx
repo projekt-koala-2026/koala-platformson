@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useRef } from "react";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useLoading } from "../../contexts/LoadingContext";
 import Button from "../../components/Button";
+import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
-import { apiRequest, uploadFile } from "../../utils/apiFetcher";
+import { useLoading } from "../../contexts/LoadingContext";
+import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
-import { FaEdit, FaTrash } from "react-icons/fa";
-import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 
 const EditPosts = () => {
     const navigate = useNavigate();
@@ -19,7 +18,10 @@ const EditPosts = () => {
     const [postId, setPostId] = useState(null);
     const [title, setTitle] = useState("");
     const [markdownBody, setMarkdownBody] = useState("");
-    const [editionId, setEditionId] = useState(null);
+
+    const [editions, setEditions] = useState([]);
+    const [editionId, setEditionId] = useState("");
+
     const [editingPost, setEditingPost] = useState(null);
 
     const handleBack = () => {
@@ -31,6 +33,13 @@ const EditPosts = () => {
 
         if (!title || title.trim() === "" || title.length < 3) {
             alert("Podaj tytuł posta, który ma ponad 2 znaki");
+            stopLoading();
+            return;
+        }
+
+        if (!editionId || editionId === "") {
+            alert("Wybierz edycję, do której ma zostać przypisany post");
+            stopLoading();
             return;
         }
 
@@ -43,77 +52,64 @@ const EditPosts = () => {
                 navigate
             );
 
-            setPosts(prev =>
-                prev.map(p =>
+            setPosts((prev) =>
+                prev.map((p) =>
                     p.id === postId
                         ? {
-                            ...p,
-                            title: title,
-                            markdownBody: text,
-                            editionId: editionId
-                        }
+                              ...p,
+                              title: title,
+                              markdownBody: text,
+                              editionId: editionId,
+                          }
                         : p
                 )
             );
-            
+
             setEditingPost(null);
             setTitle("");
             setMarkdownBody("");
+            setEditionId("");
+            stopLoading();
             return;
         }
 
-        const newPost = {
-            title,
-            text,
-        };
-        
         const data = await apiRequest(
             "/api/admin/post",
-            { title: title, markdownBody: text, editionId: editionId},
+            { title: title, markdownBody: text, editionId: editionId },
             "POST",
             navigate
-        );        
+        );
 
         await new Promise((resolve) => setTimeout(resolve, 500));
-        
+
         if (data) {
-            setPosts(prev => [...prev, data]);
+            setPosts((prev) => [...prev, data]);
             navigate("/admin/posts");
         }
 
         setTitle("");
         setMarkdownBody("");
+        setEditionId("");
         stopLoading();
     };
 
     const EditPost = (post) => {
-        setEditingPost(
-            editingPost === post ? null : post,
-        );
-        setPostId(
-            postId === post.id ? null : post.id,
-        );
-        setTitle(
-            title === post.title ? "" : post.title,
-        );
-        setMarkdownBody(
-            markdownBody === post.markdownBody ? "" : post.markdownBody
-        );
+        const isCurrent = editingPost === post;
+        setEditingPost(isCurrent ? null : post);
+        setPostId(isCurrent ? null : post.id);
+        setTitle(isCurrent ? "" : post.title);
+        setMarkdownBody(isCurrent ? "" : post.markdownBody);
+        setEditionId(isCurrent ? "" : post.editionId || "");
     };
 
-
     const DeletePost = async (post) => {
-        const confirmed = window.confirm(
-            `Czy na pewno chcesz usunąć post ${post.title}?`
-        );
+        const confirmed = window.confirm(`Czy na pewno chcesz usunąć post ${post.title}?`);
 
         if (!confirmed) return;
-        
+
         const apiLink = `/api/admin/post/${post.id}`;
-        const data = await apiRequest(apiLink, {}, "DELETE", navigate);
-        setPosts(prev =>
-            prev.filter(p => p.id !== post.id)
-        );
+        await apiRequest(apiLink, {}, "DELETE", navigate);
+        setPosts((prev) => prev.filter((p) => p.id !== post.id));
     };
 
     useEffect(() => {
@@ -123,20 +119,19 @@ const EditPosts = () => {
         }
 
         const getData = async () => {
-            const data = await apiRequest("/api/admin/post", null, "GET", navigate);
-            const edition = false ;//await apiRequest("/api/edition", null, "GET", navigate);
+            startLoading();
+            const postsData = await apiRequest("/api/admin/post", null, "GET", navigate);
 
-            if (!edition){
-                setEditionId("efc1b74d-24f3-48c5-8c74-d30cb0ffd1f8");
+            const editionsData = await apiRequest("/api/admin/edition", null, "GET", navigate);
+
+            if (postsData) setPosts(postsData);
+            if (editionsData) {
+                setEditions(editionsData);
+                if (editionsData.length > 0) {
+                    setEditionId(editionsData[0].id);
+                }
             }
-
-            if (!data || data.length === 0) {
-                navigate("/admin/posts");
-                return;
-            }
-
-            setEditionId(edition);
-            setPosts(data);
+            stopLoading();
         };
 
         if (isAdminUser) getData();
@@ -145,49 +140,133 @@ const EditPosts = () => {
     return (
         <div className="container">
             {isAdminUser && (
-                <><div className="container-near">
+                <>
+                    <div className="container-near">
                         <div className="container">
-                            {editingPost === null && <h1>Dodaj Post {title}</h1> }
-                            {editingPost !== null && <h1>Edytuj Post {title}</h1> }
+                            {editingPost === null && <h1>Dodaj Post {title}</h1>}
+                            {editingPost !== null && <h1>Edytuj Post {title}</h1>}
                             <div>
                                 <Button text={"Wróć do panelu"} onClick={handleBack} />
                                 <input
-                                                type="text"
-                                                placeholder="Tytuł posta"
-                                                value={title}
-                                                onChange={(e) => setTitle(e.target.value)}
-                                                required
-                                            />
-                                <MarkdownEditor key={markdownBody} initialValue={markdownBody} onChange={setMarkdownBody} onSave={(text) => {savePost(text); setEditingPost(null); setMarkdownBody(""); setTitle("")}} />
+                                    type="text"
+                                    placeholder="Tytuł posta"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    required
+                                />
+
+                                {/* Lista rozwijana wyboru edycji pobranej z bazy danych */}
+                                <select
+                                    value={editionId}
+                                    onChange={(e) => setEditionId(e.target.value)}
+                                    style={{
+                                        display: "block",
+                                        margin: "10px 0",
+                                        padding: "5px",
+                                        width: "100%",
+                                    }}
+                                    required
+                                >
+                                    <option value="">-- Wybierz edycję konkursu --</option>
+                                    {editions.map((e) => (
+                                        <option key={e.id} value={e.id}>
+                                            {e.title}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <MarkdownEditor
+                                    key={markdownBody}
+                                    initialValue={markdownBody}
+                                    onChange={setMarkdownBody}
+                                    onSave={(text) => {
+                                        savePost(text);
+                                        setEditingPost(null);
+                                        setMarkdownBody("");
+                                        setTitle("");
+                                        setEditionId("");
+                                    }}
+                                />
                             </div>
                         </div>
                         <div className="container">
                             <h1>Posty z Edycji</h1>
                             <ContentsListBox>
-                                    {posts.map((item, idx) => (
+                                {posts.map((item, idx) => {
+                                    const linkedEdition = editions.find(
+                                        (e) => e.id === item.editionId
+                                    );
+
+                                    return (
                                         <ContentsListTile key={item.id}>
-                                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                            <div
+                                                style={{ display: "flex", flexDirection: "column" }}
+                                            >
                                                 <h3>Tytuł: {item.title}</h3>
-                                                <h6>Data: {new Date(item.createdAt).toLocaleString("pl-PL", {year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"})}</h6>
-                                                <hr style={{ border: "none", height: "2px", backgroundColor: "#054e0b", margin: "3px 0" }}/>
+                                                <h6>
+                                                    Data:{" "}
+                                                    {new Date(item.createdAt).toLocaleString(
+                                                        "pl-PL",
+                                                        {
+                                                            year: "numeric",
+                                                            month: "long",
+                                                            day: "numeric",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit",
+                                                        }
+                                                    )}
+                                                </h6>
+                                                <hr
+                                                    style={{
+                                                        border: "none",
+                                                        height: "2px",
+                                                        backgroundColor: "#054e0b",
+                                                        margin: "3px 0",
+                                                    }}
+                                                />
                                             </div>
-                                            <MarkdownRenderer key={idx} content={item.markdownBody} />
-                                            <hr style={{ border: "none", height: "2px", backgroundColor: "#054e0b", margin: "3px 0" }}/>
-                                            <h6>Edycja:  | Edytowany???</h6>
-                                            <div style={{display: "flex", gap: "4px", marginLeft: "auto",}}>
-                                                <Button text={<FaEdit />} onClick={() => EditPost(item)} />
-                                                <Button text={<FaTrash />} onClick={() => DeletePost(item)} />
+                                            <MarkdownRenderer
+                                                key={idx}
+                                                content={item.markdownBody}
+                                            />
+                                            <hr
+                                                style={{
+                                                    border: "none",
+                                                    height: "2px",
+                                                    backgroundColor: "#054e0b",
+                                                    margin: "3px 0",
+                                                }}
+                                            />
+                                            <h6>
+                                                Edycja:{" "}
+                                                {linkedEdition
+                                                    ? linkedEdition.title
+                                                    : "Nieprzypisana"}
+                                            </h6>
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    gap: "4px",
+                                                    marginLeft: "auto",
+                                                }}
+                                            >
+                                                <Button
+                                                    text={<FaEdit />}
+                                                    onClick={() => EditPost(item)}
+                                                />
+                                                <Button
+                                                    text={<FaTrash />}
+                                                    onClick={() => DeletePost(item)}
+                                                />
                                             </div>
-                                                
                                         </ContentsListTile>
-                                    ))}
-                                </ContentsListBox>
+                                    );
+                                })}
+                            </ContentsListBox>
                         </div>
                     </div>
-                    
                 </>
             )}
-            
         </div>
     );
 };
