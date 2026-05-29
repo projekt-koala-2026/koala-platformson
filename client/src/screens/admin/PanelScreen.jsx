@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import Hamburger from "../../components/Hamburger";
-import MarkdownEditor from "../../components/MarkdownEditor";
-import MarkdownRenderer from "../../components/MarkdownRenderer";
 import ProfileButton from "../../components/ProfileButton";
-import Button from "../../components/Button";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
 
@@ -14,7 +12,7 @@ const PanelScreen = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState(null);
     const isAdminEditor = useMemo(() => isAdmin() || isEditor(), []);
-    const [posts, setPosts] = useState([]);
+    const isAdminUser = useMemo(() => isAdmin(), []);
     const [editingUser, setEditingUser] = useState(null);
     const [selectedRoles, setSelectedRoles] = useState([]);
 
@@ -32,26 +30,22 @@ const PanelScreen = () => {
     };
 
     const DeleteUser = async (user) => {
-        const confirmed = window.confirm(
-            `Czy na pewno chcesz usunąć użytkownika ${user.email}?`
-        );
+        const confirmed = window.confirm(`Czy na pewno chcesz usunąć użytkownika ${user.email}?`);
 
         if (!confirmed) return;
 
-        const data = await apiRequest("/api/admin/user/user", { id: user.id}, "DELETE", navigate);
-        setUsers(prev => prev.filter(u => u.id !== user.id));
+        const data = await apiRequest("/api/admin/user/user", { id: user.id }, "DELETE", navigate);
+        setUsers((prev) => prev.filter((u) => u.id !== user.id));
     };
 
     const EditUser = (user) => {
-        setEditingUser(user);
+        setEditingUser(editingUser === user ? null : user);
         setSelectedRoles(user.roles || []);
     };
 
     const toggleRole = (role) => {
-        setSelectedRoles(prev =>
-            prev.includes(role)
-                ? prev.filter(r => r !== role)
-                : [...prev, role]
+        setSelectedRoles((prev) =>
+            prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
         );
     };
 
@@ -63,12 +57,8 @@ const PanelScreen = () => {
             navigate
         );
 
-        setUsers(prev =>
-            prev.map(u =>
-                u.id === editingUser.id
-                    ? { ...u, roles: selectedRoles }
-                    : u
-            )
+        setUsers((prev) =>
+            prev.map((u) => (u.id === editingUser.id ? { ...u, roles: selectedRoles } : u))
         );
 
         setEditingUser(null);
@@ -93,60 +83,110 @@ const PanelScreen = () => {
     }, [navigate]);
 
     return (
-        <div className="container" style={{ minWidth: "50%" }}>
-            <ProfileButton options={[["Logout", handleLogout],["Zmień Hasło", ChangePassword]]} />
-            <Hamburger options={[["Zarządzanie plikami", () => navigate("/admin/images")]]} />
-            <h1>Panel administracyjny</h1>
-            {users && isAdminEditor && (
-                <>
-                    <h1>Lista użytkowników</h1>
-                    <ContentsListBox>
-                        {users.map((item, idx) => (
-                            <ContentsListTile key={"users-list" + idx}>
-                                <div style={{ display: "flex"}}>
-                                    <div style={{ display: "flex", flexDirection: "column" }}>
-                                        <span>{item.email}</span>
-                                        <p>Role to: <span style={{textTransform: "lowercase"}}>{item.roles.join(", ")}</span></p>
-                                    </div>
-                                    
-                                    <div style={{display: "flex", gap: "4px", marginLeft: "auto",}}>
-                                        <Button text={<FaEdit />} onClick={() => EditUser(item)} />
-                                        <Button text={<FaTrash />} onClick={() => DeleteUser(item)} />
-                                    </div>
-                                </div>
-                                {editingUser?.id === item.id && (
-                                    <div>
-                                        <h3>Edytuj Rolę dla {editingUser.email}</h3>
+        <>
+            <header>
+                <h1>Panel administracyjny</h1>
+                <ProfileButton
+                    options={[
+                        ["Logout", handleLogout],
+                        ["Zmień Hasło", ChangePassword],
+                    ]}
+                />
+                <Hamburger
+                    options={[
+                        ["Zarządzanie plikami", () => navigate("/admin/images")],
 
-                                        {["ADMIN", "EDITOR", "REVIEWER"].map(role => (
-                                            <label key={role} style={{ display: "block" }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedRoles.includes(role)}
-                                                    onChange={() => toggleRole(role)}
-                                                />
-                                                {role.toLowerCase()}
-                                            </label>
-                                        ))}
+                        ...(isAdminUser
+                            ? [
+                                  ["Zarządzanie Sponsorami", () => navigate("/admin/sponsors")],
+                                  [
+                                      "Zarządzanie Koalicjantami",
+                                      () => navigate("/admin/koalicjants"),
+                                  ],
+                                  ["Posty", () => navigate("/admin/posts")],
+                                  ["Regulamin", () => navigate("/admin/rules")],
+                                  ["Zarządzanie Edycjami", () => navigate("/admin/editions")],
+                              ]
+                            : []),
+                    ]}
+                />
+            </header>
 
-                                        <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                                            <Button text={"Zapisz"} onClick={saveRoles} />
-                                            <Button text={"Anuluj"} onClick={() => setEditingUser(null)} />
+            <div className="container" style={{ minWidth: "50%" }}>
+                {users && isAdminEditor && (
+                    <>
+                        <h1>Lista użytkowników</h1>
+                        <ContentsListBox>
+                            {users.map((item, idx) => (
+                                <ContentsListTile key={"users-list" + idx}>
+                                    <div style={{ display: "flex" }}>
+                                        <div style={{ display: "flex", flexDirection: "column" }}>
+                                            <span>{item.email}</span>
+                                            <p>
+                                                Role to:{" "}
+                                                <span style={{ textTransform: "lowercase" }}>
+                                                    {item.roles.join(", ")}
+                                                </span>
+                                            </p>
+                                        </div>
+
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                gap: "8px",
+                                                marginLeft: "auto",
+                                            }}
+                                        >
+                                            <Button
+                                                text={<FaEdit />}
+                                                onClick={() => EditUser(item)}
+                                            />
+                                            <Button
+                                                text={<FaTrash />}
+                                                onClick={() => DeleteUser(item)}
+                                            />
                                         </div>
                                     </div>
-                                )}
-                            </ContentsListTile>
-                        ))}          
-                    </ContentsListBox>
-                    <Button text={"Dodaj nowego użytkownika"} onClick={AddUser} />
-                </>
-            )}
+                                    {editingUser?.id === item.id && (
+                                        <div>
+                                            <h3>Edytuj Rolę dla {editingUser.email}</h3>
 
-            {posts.map((text, idx) => (
-                <MarkdownRenderer key={idx} content={text} />
-            ))}
-            <MarkdownEditor onSave={(text) => setPosts((prev) => [...prev, text])} />
-        </div>
+                                            {["ADMIN", "EDITOR", "REVIEWER"].map((role) => (
+                                                <label key={role} style={{ display: "block" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedRoles.includes(role)}
+                                                        onChange={() => toggleRole(role)}
+                                                    />
+                                                    {role.toLowerCase()}
+                                                </label>
+                                            ))}
+
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    gap: "10px",
+                                                    marginTop: "10px",
+                                                }}
+                                            >
+                                                <Button text={"Zapisz"} onClick={saveRoles} />
+                                                <Button
+                                                    text={"Anuluj"}
+                                                    onClick={() => setEditingUser(null)}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </ContentsListTile>
+                            ))}
+                        </ContentsListBox>
+                        {users && isAdminUser && (
+                            <Button text={"Dodaj nowego użytkownika"} onClick={AddUser} />
+                        )}
+                    </>
+                )}
+            </div>
+        </>
     );
 };
 
