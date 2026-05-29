@@ -25,6 +25,52 @@ namespace koala.Services
             _factory = factory;
         }
 
+        //TODO: MAKE SURE ADMIN / EDITOR ROLES CANOT BE ADDED THROUGH IT
+        public async Task<UserInfoVM> CreateNormalUser(UserCreateNormalVM userCreateVM)
+        {
+            var context = await _factory.CreateDbContextAsync();
+            
+            var newUser = context.Users
+            .FirstOrDefault(u => u.Email == userCreateVM.Email);
+
+            if (newUser != null)
+            {
+                return null;
+            }
+            
+            newUser = new User
+            {
+                Id = Guid.NewGuid(),
+                Email = userCreateVM.Email,
+                Password = userCreateVM.Password
+            };
+
+            var rolesFromDb = await context.Roles
+                .Where(r => userCreateVM.Roles.Contains(r.Value))
+                .ToListAsync();
+
+            var userRoles = rolesFromDb.Select(r => new UserRole
+            {
+                UserId = newUser.Id,
+                RoleId = r.Id
+            });
+
+            var resultRoles = rolesFromDb.Select(r => r.Value).ToList();
+
+            context.Users.Add(newUser);
+            context.UserRoles.AddRange(userRoles);
+            await context.SaveChangesAsync();
+
+            var userInfoVM = new UserInfoVM 
+            {   
+                Id = newUser.Id,
+                Email = newUser.Email,
+                Roles = resultRoles
+            };
+
+            return userInfoVM;
+        }
+
         public async Task<UserInfoVM> AdminPanelAddUser(UserCreateVM userCreateVM)
         {
 
@@ -223,18 +269,28 @@ namespace koala.Services
             //TODO: ADD RETURN VALUES CORECTLY
             using var context = await _factory.CreateDbContextAsync();
 
+            var excludedRoles = new[] { "CAPTAIN", "GUARDIAN" };
+
+            //FIXME: OPTIMIZE THIS ATROCITY
             var userInfoVMs = await context.Users
+                .Where(user => !context.UserRoles
+                    .Where(ur => ur.UserId == user.Id)
+                    .Join(context.Roles,
+                          ur => ur.RoleId,
+                          r => r.Id,
+                          (ur, r) => r.Value)
+                    .Any(role => excludedRoles.Contains(role)))
                 .Select(user => new UserInfoVM
                 {
                     Id = user.Id,
                     Email = user.Email,
                     Roles = context.UserRoles
-                    .Where(ur => ur.UserId == user.Id)
-                    .Join(context.Roles, 
-                          ur => ur.RoleId, 
-                          r => r.Id, 
-                          (ur, r) => r.Value)
-                    .ToList()
+                        .Where(ur => ur.UserId == user.Id)
+                        .Join(context.Roles,
+                              ur => ur.RoleId,
+                              r => r.Id,
+                              (ur, r) => r.Value)
+                        .ToList()
                 })
                 .ToListAsync();
 

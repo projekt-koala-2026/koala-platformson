@@ -50,6 +50,8 @@ builder.Services.AddTransient<EditionService>();
 builder.Services.AddTransient<PostService>();
 builder.Services.AddTransient<SponsorService>();
 builder.Services.AddTransient<KoalicjantService>();
+builder.Services.AddTransient<SchoolService>();
+builder.Services.AddTransient<StaticPagesService>();
 
 //NOTE: ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>
@@ -106,6 +108,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok("Healthy"));
 
 app.Urls.Add("http://0.0.0.0:8080");
 

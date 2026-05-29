@@ -24,12 +24,31 @@ namespace koala.Services
             _factory = factory;
         }
 
+        public async Task<Koalicjant> AutoCreateAsync(string email)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            
+            var koalicjant = new Koalicjant
+            {
+                Id = Guid.NewGuid(),
+                Name = email,
+                ProfilePicture = "",
+                Description = ""
+            };
+
+            context.Koalicjants.Add(koalicjant);
+            await context.SaveChangesAsync();
+
+            return koalicjant;
+        }
+
         public async Task<Koalicjant> CreateAsync(KoalicjantCreateVM model)
         {
             using var context = await _factory.CreateDbContextAsync();
             
             var koalicjant = new Koalicjant
             {
+                Id = Guid.NewGuid(),
                 Name = model.Name,
                 ProfilePicture = model.ProfilePicture,
                 Description = model.Description
