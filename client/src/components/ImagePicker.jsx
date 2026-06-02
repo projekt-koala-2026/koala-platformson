@@ -5,9 +5,15 @@ const ImagePicker = forwardRef(({ onSelect, navigate }, ref) => {
     const [images, setImages] = useState([]);
 
     const fetchImages = async () => {
-        const data = await apiRequest("/api/admin/file/public/files", null, "GET", navigate);
+        const data = await apiRequest(
+            "/api/admin/file/public/files?Folder=images",
+            null,
+            "GET",
+            navigate
+        );
         if (data) {
             setImages(data);
+            console.log(data);
         }
     };
 

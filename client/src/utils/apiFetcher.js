@@ -5,7 +5,7 @@ const authMiddleware = (response, navigate) => {
     if (!allowedStatus.includes(response.status)) {
         console.log("Error occured!\nerror status: " + response.status);
         console.log(response.body);
-        //navigate("/admin/login");
+        navigate("/admin/login");
         return null;
     }
     return true;
@@ -66,5 +66,9 @@ export const uploadFile = async (file, title, folder, navigate) => {
 
     if (!authMiddleware(response, navigate)) return null;
 
-    return response.ok;
+    if (response.ok) {
+        const json = await response.json();
+        return json.data || json;
+    }
+    return null;
 };
