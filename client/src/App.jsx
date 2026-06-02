@@ -6,6 +6,7 @@ import ChangePassScreen from "./screens/admin/ChangePassScreen";
 import EditionsScreen from "./screens/admin/EditEditionScreen.jsx";
 import EditKoalicjantInfo from "./screens/admin/EditKoalicjantInfoScreen.jsx";
 import EditPost from "./screens/admin/EditPostScreen.jsx";
+import EditProblemsScreen from "./screens/admin/EditProblemsScreen.jsx";
 import EditRule from "./screens/admin/EditRuleScreen.jsx";
 import EditSponsorInfo from "./screens/admin/EditSponsorInfoScreen.jsx";
 import ImageHandlingScreen from "./screens/admin/ImageHandlingScreen";
@@ -29,6 +30,7 @@ export default function App() {
                     <Route path="/admin/rules" element={<EditRule />} />
                     <Route path="/admin/posts" element={<EditPost />} />
                     <Route path="/admin/editions" element={<EditionsScreen />} />
+                    <Route path="/admin/problems" element={<EditProblemsScreen />} />
                     <Route path="/" element={<HomeScreen />} />
                 </Routes>
             </BrowserRouter>
