@@ -101,7 +101,7 @@ namespace koala.Services
 
         public async Task<StaticPageInfoVM> GetProblems()
         {
-            string path = Path.Combine(_publicFilesPath,"rules/rules.txt");
+            string path = Path.Combine(_publicFilesPath,"problems/problems.txt");
 
             if (!File.Exists(path))
             {
