@@ -30,7 +30,7 @@ namespace koala.Services
 
         public async Task<StaticPageInfoVM> UpdateRules(string content)
         {
-            string path = Path.Combine(_publicFilesPath,"rules/rules.txt");
+            string path = Path.Combine(_publicFilesPath,"rules/rules.json");
 
             if (!File.Exists(path))
             {
@@ -45,7 +45,7 @@ namespace koala.Services
 
         public async Task<StaticPageInfoVM> UpdateHistory(string content)
         {
-            string path = Path.Combine(_publicFilesPath,"history/history.txt");
+            string path = Path.Combine(_publicFilesPath,"history/history.json");
 
             if (!File.Exists(path))
             {
@@ -60,7 +60,7 @@ namespace koala.Services
 
         public async Task<StaticPageInfoVM> UpdateProblems(string content)
         {
-            string path = Path.Combine(_publicFilesPath,"problems/problems.txt");
+            string path = Path.Combine(_publicFilesPath,"problems/problems.json");
 
             if (!File.Exists(path))
             {
@@ -75,7 +75,7 @@ namespace koala.Services
 
         public async Task<StaticPageInfoVM> GetRules()
         {
-            string path = Path.Combine(_publicFilesPath,"rules/rules.txt");
+            string path = Path.Combine(_publicFilesPath,"rules/rules.json");
 
             if (!File.Exists(path))
             {
@@ -88,7 +88,7 @@ namespace koala.Services
 
         public async Task<StaticPageInfoVM> GetHistory()
         {
-            string path = Path.Combine(_publicFilesPath,"history/history.txt");
+            string path = Path.Combine(_publicFilesPath,"history/history.json");
 
             if (!File.Exists(path))
             {
@@ -101,7 +101,7 @@ namespace koala.Services
 
         public async Task<StaticPageInfoVM> GetProblems()
         {
-            string path = Path.Combine(_publicFilesPath,"problems/problems.txt");
+            string path = Path.Combine(_publicFilesPath,"problems/problems.json");
 
             if (!File.Exists(path))
             {

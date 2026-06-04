@@ -52,19 +52,19 @@ namespace koala.Services
                 }
             }
             
-            var rulesFile = Path.Combine(basePath, "rules/rules.txt");
+            var rulesFile = Path.Combine(basePath, "rules/rules.json");
             if (!File.Exists(rulesFile))
             {
                 await File.WriteAllTextAsync(rulesFile, string.Empty);
             }
 
-            var historyFile = Path.Combine(basePath, "history/history.txt");
+            var historyFile = Path.Combine(basePath, "history/history.json");
             if (!File.Exists(historyFile))
             {
                 await File.WriteAllTextAsync(historyFile, string.Empty);
             }
 
-            var problemsFile = Path.Combine(basePath, "problems/problems.txt");
+            var problemsFile = Path.Combine(basePath, "problems/problems.json");
             if (!File.Exists(problemsFile))
             {
                 await File.WriteAllTextAsync(problemsFile, string.Empty);
