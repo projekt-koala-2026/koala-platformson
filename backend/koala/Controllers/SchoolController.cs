@@ -26,10 +26,10 @@ namespace koala.Controllers
 
         [Authorize(Roles = "ADMIN")]
         [HttpPost("import/csv")]
-        public async Task<IActionResult> AdminPanelImportSchoolsFromCSV()
+        public async Task<IActionResult> AdminPanelImportSchoolsFromCSV([FromForm] SchoolFileCreate csvFile)
         {
-            await _schoolService.ImportSchoolsFromCSV();
-            return Ok();
+            var schools = await _schoolService.ImportSchoolsFromCSV(csvFile);
+            return Ok(schools);
         }
 
         [Authorize(Roles = "ADMIN")]
@@ -61,6 +61,14 @@ namespace koala.Controllers
         {
             await _schoolService.DeleteSchool(deleteSchool);
             return Ok();
+        }
+
+        [AllowAnonymous]
+        [HttpGet("school")]
+        public async Task<IActionResult> GetSchools()
+        {
+            var schools = await _schoolService.GetSchools();
+            return Ok(schools);
         }
     }
 }
