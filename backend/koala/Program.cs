@@ -101,7 +101,7 @@ app.UseStaticFiles(new StaticFileOptions
     OnPrepareResponse = ctx =>
     {
         ctx.Context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=604800");
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=60");
     }
 });
 
