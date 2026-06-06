@@ -1,5 +1,19 @@
 namespace koala.Data.ViewModels
 {
+
+    public class SchoolFileCreate
+    {
+        public string Title { get; set; }
+        public IFormFile File { get; set; }
+    }
+
+    //NOTE:
+    // maybe store the schools files later on for versioning?
+    // public class SchoolFileInfo
+    // {
+
+    // }
+
     public class SchoolInfoVM
     {
         public int RSPO { get; set; }
