@@ -4,11 +4,11 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import { apiRequest, apiUrl, uploadFile } from "../../utils/apiFetcher";
-import { isAdmin } from "../../utils/authService";
+import { isAdmin, isEditor } from "../../utils/authService";
 
 const EditProblemsScreen = () => {
     const navigate = useNavigate();
-    const isAdminUser = useMemo(() => isAdmin(), []);
+    const isAdminUser = useMemo(() => isAdmin() || isEditor(), []);
 
     const [editions, setEditions] = useState([]);
     const [selectedEditionId, setSelectedEditionId] = useState("");
