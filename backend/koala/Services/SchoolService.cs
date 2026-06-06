@@ -103,7 +103,11 @@ namespace koala.Services
 
             await context.Schools.AddRangeAsync(schools);
 
-            return await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+            
+            Console.WriteLine($"Schools to add: {schools.Count}");
+
+            return schools.Count;
         }
         
         public async Task<SchoolInfoVM> AddSchool(SchoolCreateVM newSchoolVM)
@@ -218,6 +222,18 @@ namespace koala.Services
             var affectedRowsSchools = await context.Schools
                 .Where(s => s.RSPO == school.RSPO)
                 .ExecuteDeleteAsync();
+
+            //TODO: CHECK WHAT HAPPEND WITH DELETION AND MAKE CORECT RETURN VALUES
+
+            return;
+        }
+
+        public async Task DeleteSchools()
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var school = await context.Schools.ToListAsync();
+
+            await context.Schools.ExecuteDeleteAsync();
 
             //TODO: CHECK WHAT HAPPEND WITH DELETION AND MAKE CORECT RETURN VALUES
 

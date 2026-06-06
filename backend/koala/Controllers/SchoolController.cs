@@ -63,6 +63,14 @@ namespace koala.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "ADMIN")]
+        [HttpDelete("schools")]
+        public async Task<IActionResult> AdminPanelDeleteSchools()
+        {
+            await _schoolService.DeleteSchools();
+            return Ok();
+        }
+
         [AllowAnonymous]
         [HttpGet("school")]
         public async Task<IActionResult> GetSchools()
