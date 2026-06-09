@@ -1,9 +1,7 @@
 import pytest
 import requests
 
-BASE_URL = "http://localhost:8080"
-
-def test_admin_getUsersEndpoint(admin_session):
+def test_admin_getUsersEndpoint(BASE_URL, admin_session):
     session = admin_session
 
     response = session.get(f"{BASE_URL}/api/admin/user/users")

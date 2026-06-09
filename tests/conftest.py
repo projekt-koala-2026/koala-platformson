@@ -1,15 +1,16 @@
 import pytest
 import requests
 
-BASE_URL = "http://localhost:8080"
-
+@pytest.fixture(scope="session")
+def BASE_URL():
+    return "http://localhost:8082"
 
 """
     Created once per test run.
     Shared across all tests.
 """
 @pytest.fixture(scope="session")
-def admin_session():
+def admin_session(BASE_URL):
     session = requests.Session()
 
     response = session.post(

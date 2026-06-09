@@ -1,0 +1,46 @@
+services:
+  koala-postgres-test:
+    image: postgres:16
+    container_name: koala-postgres-test
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+      POSTGRES_DB: test_db
+    ports:
+      - "5433:5432"
+    networks:
+      - koala-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  koala-backend-test:
+    build:
+      context: ./../backend/koala
+      dockerfile: Dockerfile
+    container_name: koala-backend-test
+    depends_on:
+      koala-postgres-test:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      PUBLIC_STORAGE_PATH: /app/public/InternalStorage
+      DB_HOST: koala-postgres-test
+      DB_PORT: 5432
+      DB_USER: test_user
+      DB_PASSWORD: test_pass
+      DB_NAME: test_db
+    ports:
+      - "8082:8080"
+    networks:
+      - koala-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  koala-test-network:
