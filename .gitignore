@@ -26,3 +26,6 @@ dist-ssr
 
 postgres_data/*
 backend_data/*
+
+test/pytest_cache/*
+test/__pycache__/*

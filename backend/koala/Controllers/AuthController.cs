@@ -35,8 +35,8 @@ namespace koala.Controllers
             }
             Response.Cookies.Append("KOALA_auth_token", tokenValue, new CookieOptions
             {
-                HttpOnly = true,                //TODO: change to true
-                Secure = true,                  //TODO: change to true
+                HttpOnly = false,                //TODO: change to true
+                Secure = false,                  //TODO: change to true
                 SameSite = SameSiteMode.Strict, //TODO: change to SameSiteMode.Strict
                 Expires = DateTimeOffset.UtcNow.AddHours(1),
                 Path = "/"
@@ -56,8 +56,8 @@ namespace koala.Controllers
             await _authService.AdminPanelLogout(tokenValue);
             Response.Cookies.Delete("KOALA_auth_token", new CookieOptions
             {
-                HttpOnly = true,                //TODO: change to true
-                Secure = true,                  //TODO: change to true
+                HttpOnly = false,                //TODO: change to true
+                Secure = false,                  //TODO: change to true
                 SameSite = SameSiteMode.Strict, //TODO: change to SameSiteMode.Strict
                 Expires = DateTimeOffset.UtcNow.AddHours(0),
                 Path = "/",
