@@ -20,16 +20,18 @@ namespace koala.Services
         public async Task<IEnumerable<EditionInfoVM>> GetAllEditions()
         {
             using var context = await _factory.CreateDbContextAsync();
-            return await context.Editions
-                .AsNoTracking()
-                .Select(e => new EditionInfoVM
-                {
-                    Id = e.Id,
-                    Title = e.Title,
-                    StartDate = e.StartDate,
-                    EndDate = e.EndDate
-                })
-                .ToListAsync();
+            
+            var databaseEditions = await context.Editions.ToListAsync();
+
+            var viewModels = databaseEditions.Select(e => new EditionInfoVM
+            {
+                Id = e.Id,
+                Title = e.Title,
+                StartDate = e.StartDate,
+                EndDate = e.EndDate
+            });
+
+            return viewModels;
         }
 
         public async Task<EditionInfoVM> AddEdition(EditionCreateVM newEdition)
@@ -98,7 +100,6 @@ namespace koala.Services
             var edition = await context.Editions.FirstOrDefaultAsync(e => e.Id == model.Id);
             if (edition == null) return null;
 
-            // Twój model wymusza DateTime, konwertujemy go bezpiecznie na DateTimeOffset zachowując lokalną strefę
             edition.EndDate = DateTime.SpecifyKind(model.EndDate, DateTimeKind.Local);
             await context.SaveChangesAsync();
 
@@ -120,29 +121,6 @@ namespace koala.Services
             context.Editions.Remove(edition);
             await context.SaveChangesAsync();
             return true;
-        }
-
-        public async Task<EditionInfoVM?> UpdateEditionHistory(EditionUpdateHistoryVM updatedHistory)
-        {
-            using var context = await _factory.CreateDbContextAsync();
-            var edition = await context.Editions
-                .FirstOrDefaultAsync(e => e.Id == updatedHistory.Id);
-
-            if (edition == null)
-                return null;
-
-            edition.History = updatedHistory.History;
-
-            context.Editions.Update(edition);
-            await context.SaveChangesAsync();
-
-            return new EditionInfoVM
-            {
-                Id = edition.Id,
-                Title = edition.Title,
-                StartDate = edition.StartDate,
-                EndDate = edition.EndDate
-            };
         }
     }
 }

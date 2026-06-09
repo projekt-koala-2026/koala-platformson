@@ -26,7 +26,7 @@ namespace koala.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = await _postService.CreatePostAsync(newPost);
-            return CreatedAtAction(nameof(GetPostById), new { id = result.Id }, result);
+            return Ok(result);
         }
 
         [Authorize(Roles = "ADMIN,EDITOR")]
@@ -38,7 +38,7 @@ namespace koala.Controllers
             var result = await _postService.UpdatePostAsync(id, updatedPost);
             if (result == null) return NotFound();
 
-            return Ok(result);
+            return result == null ? NotFound() : Ok(result);
         }
 
         [Authorize(Roles = "ADMIN")]
@@ -55,6 +55,14 @@ namespace koala.Controllers
         {
             var post = await _postService.GetPostByIdAsync(id);
             return post == null ? NotFound() : Ok(post);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetPosts()
+        {
+            var posts = await _postService.GetAllPostsAsync();
+            return Ok(posts);
         }
     }
 }

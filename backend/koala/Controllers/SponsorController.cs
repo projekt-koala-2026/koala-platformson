@@ -22,7 +22,7 @@ namespace koala.Controllers
         public async Task<ActionResult<Sponsor>> AddSponsor([FromBody] SponsorCreateVM newSponsor)
         {
             var sponsor = await _sponsorService.CreateAsync(newSponsor);
-            return CreatedAtAction(nameof(SponsorCreateVM), new { id = sponsor.Id }, sponsor);
+            return sponsor == null ? NotFound() : Ok(sponsor);
         }
 
         [HttpPut("{id}")]
@@ -32,7 +32,7 @@ namespace koala.Controllers
             if (!updated)
                 return NotFound($"Sponsor o ID {id} nie istnieje.");
 
-            return NoContent();
+            return Ok(updated);
         }
 
         [HttpDelete("{id}")]
@@ -41,7 +41,7 @@ namespace koala.Controllers
             if (!await _sponsorService.DeleteAsync(id))
                 return NotFound();
 
-            return NoContent();
+            return Ok();
         }
 
         [HttpGet]

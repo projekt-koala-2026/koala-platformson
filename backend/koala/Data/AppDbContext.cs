@@ -18,6 +18,8 @@ namespace koala.Data
         public DbSet<Edition> Editions { get; set; }
         public DbSet<Sponsor> Sponsors { get; set; }
         public DbSet<Koalicjant> Koalicjants { get; set; }
+        public DbSet<School> Schools { get; set; }
+        public DbSet<Team> Teams { get; set; } 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

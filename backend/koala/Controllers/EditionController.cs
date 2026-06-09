@@ -29,7 +29,7 @@ namespace koala.Controllers
             return Ok(edition);
         }
 
-        // Aktualizacja samego tytułu za pomocą Twojego modelu EditionUpdateTitleVM
+
         [Authorize(Roles = "ADMIN")]
         [HttpPut("title")]
         public async Task<IActionResult> AdminPanelUpdateTitle([FromBody] EditionUpdateTitleVM updatedTitle)
@@ -46,7 +46,6 @@ namespace koala.Controllers
             return Ok(result);
         }
 
-        // Aktualizacja daty rozpoczęcia za pomocą Twojego modelu EditionUpdateStartDateVM
         [Authorize(Roles = "ADMIN")]
         [HttpPut("start-date")]
         public async Task<IActionResult> AdminPanelUpdateStartDate([FromBody] EditionUpdateStartDateVM updatedStartDate)
@@ -63,7 +62,6 @@ namespace koala.Controllers
             return Ok(result);
         }
 
-        // Aktualizacja daty zakończenia za pomocą Twojego modelu EditionUpdateEndDateVM
         [Authorize(Roles = "ADMIN")]
         [HttpPut("end-date")]
         public async Task<IActionResult> AdminPanelUpdateEndDate([FromBody] EditionUpdateEndDateVM updatedEndDate)
@@ -80,7 +78,6 @@ namespace koala.Controllers
             return Ok(result);
         }
 
-        // Usunięcie zasobu - zmieniono z int na guid na trasie url
         [Authorize(Roles = "ADMIN")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> AdminPanelDeleteEdition([FromRoute] Guid id)
@@ -93,22 +90,14 @@ namespace koala.Controllers
 
             return NoContent();
         }
-
+        
         [Authorize(Roles = "ADMIN")]
-        [HttpPut("history")]
-        public async Task<IActionResult> AdminPanelUpdateHistory([FromBody] EditionUpdateHistoryVM updatedHistory)
+        [HttpGet]
+        public async Task<IActionResult> GetAllEditions()
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var editions = await _editionService.GetAllEditions();
 
-            var result = await _editionService.UpdateEditionHistory(updatedHistory);
-            
-            if (result == null)
-            {
-                return NotFound(new { message = $"Edycja o ID {updatedHistory.Id} nie istnieje." });
-            }
-
-            return Ok(result);
+            return Ok(editions);
         }
     }
 
@@ -127,6 +116,7 @@ namespace koala.Controllers
         public async Task<IActionResult> GetAllEditions()
         {
             var editions = await _editionService.GetAllEditions();
+            
             return Ok(editions);
         }
     }

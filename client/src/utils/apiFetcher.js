@@ -1,10 +1,11 @@
 export const apiUrl = import.meta.env.VITE_API_URL;
 
 const authMiddleware = (response, navigate) => {
-    if (response.status !== 200) {
+    const allowedStatus = [200, 201, 203, 204];
+    if (!allowedStatus.includes(response.status)) {
         console.log("Error occured!\nerror status: " + response.status);
         console.log(response.body);
-        navigate("/admin/login");
+        if (response.status === 401) navigate("/admin/login");
         return null;
     }
     return true;
@@ -40,6 +41,10 @@ export const apiRequest = async (url, options, method, navigate) => {
             return json.data || json;
         }
 
+        if (response.status === 204) {
+            return true;
+        }
+
         return await response.text();
     } catch (error) {
         console.error("Network / server error: ", error);
@@ -61,5 +66,9 @@ export const uploadFile = async (file, title, folder, navigate) => {
 
     if (!authMiddleware(response, navigate)) return null;
 
-    return response.ok;
+    if (response.ok) {
+        const json = await response.json();
+        return json.data || json;
+    }
+    return null;
 };

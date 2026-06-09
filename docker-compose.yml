@@ -43,6 +43,11 @@ services:
       - "8081:8081"
     networks:
       - koalaNETWORK
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 networks:
   koalaNETWORK:

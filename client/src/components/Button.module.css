@@ -5,7 +5,7 @@
     border-radius: 5px;
     background-color: var(--color-button);
     padding: 0.7rem 1.5rem;
-    color: #23471d;
+    color: var(--color-bg);
     font-size: 1.25rem;
     letter-spacing: 1px;
     user-select: none;

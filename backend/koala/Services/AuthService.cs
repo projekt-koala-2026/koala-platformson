@@ -42,6 +42,12 @@ namespace koala.Services
             if (!existingRoles.Contains("EDITOR"))
                 roles.Add(new Role { Value = "EDITOR" });
 
+            if (!existingRoles.Contains("CAPTAIN"))
+                roles.Add(new Role { Value = "CAPTAIN" });
+
+            if (!existingRoles.Contains("GUARDIAN"))
+                roles.Add(new Role { Value = "GUARDIAN" });
+
             if (roles.Any())
             {
                 context.Roles.AddRange(roles);

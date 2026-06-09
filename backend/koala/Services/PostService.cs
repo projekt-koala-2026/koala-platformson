@@ -60,5 +60,23 @@ namespace koala.Services
             var context = await _factory.CreateDbContextAsync();
             return await context.Posts.FirstOrDefaultAsync(p => p.Id == id);
         }
+
+        public async Task<IEnumerable<Post>> GetAllPostsAsync()
+        {
+            using var context = await _factory.CreateDbContextAsync(); // Note: Wrap in 'using' so it disposes correctly!
+            
+            return await context.Posts
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new Post
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    MarkdownBody = p.MarkdownBody,
+                    CreatedAt = p.CreatedAt,
+                    EditionId = p.EditionId,
+                    Edition = p.Edition 
+                })
+                .ToListAsync();
+        }
     }
 }

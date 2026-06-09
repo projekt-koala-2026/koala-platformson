@@ -1,9 +1,13 @@
 :root {
-    --color-bg: hsl(111, 42%, 33%);
+    --color-bg: #eff3ef;
+    --color-container: #ffffff;
     --color-bg-text: hsl(25, 38%, 91%);
     --color-input: hsl(30, 33%, 95%);
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --border-color: #d8dee6;
 
-    --color-button: hsl(133, 18%, 59%);
+    --color-button: hsl(135, 32%, 40%);
     --color-button-hover: hsl(130, 27%, 65%);
 }
 
@@ -19,8 +23,13 @@ body {
     width: 100%;
     min-height: 100vh;
     overflow-x: hidden;
-    color: var(--color-bg-text);
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-muted);
+    font-family:
+        "Segoe UI",
+        -apple-system,
+        BlinkMacSystemFont,
+        Roboto,
+        sans-serif;
 }
 
 #root {
@@ -43,7 +52,7 @@ input[type="password"] {
     background-color: var(--color-input);
     padding: 0.25rem 1rem;
     width: 100%;
-    color: black;
+    color: var(--text-main);
     font-size: 1.25rem;
     letter-spacing: 1px;
     text-align: center;
@@ -51,10 +60,19 @@ input[type="password"] {
 
 h1 {
     margin-bottom: 1rem;
-    color: var(--color-border);
+    color: var(--text-main);
     font-weight: 400;
     font-size: 2rem;
     letter-spacing: 1px;
+    text-align: center;
+}
+
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+    width: calc(80vw);
 }
 
 .container {
@@ -64,21 +82,21 @@ h1 {
     align-items: center;
     gap: 1.25rem;
     margin-top: 5vh;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.43);
-    border-radius: 5px;
-    background-color: var(--color-bg);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.01);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background-color: var(--color-container);
     padding: 3rem;
     width: auto;
-    min-width: 300px;
-    max-width: 1000px;
+    min-width: 100px;
+    max-width: 1400px;
     min-height: 500px;
 }
 
 .container-near {
     display: flex;
-    gap: 40px;
     align-items: flex-start;
+    gap: 40px;
 }
 
 .roles-container {
@@ -86,9 +104,9 @@ h1 {
 }
 
 .role-checkbox {
-    width: 120px;
     display: flex;
     gap: 8px;
+    width: 120px;
 }
 
 .topLoadingBar {

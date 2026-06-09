@@ -17,11 +17,26 @@ namespace koala.Controllers
     public class AdminUserController : ControllerBase
     {
         public UserService _userService;
+        public KoalicjantService _koalicjantService;
 
-        public AdminUserController(UserService userService)
+        public AdminUserController(UserService userService, KoalicjantService koalicjantService)
         {
             _userService = userService;
+            _koalicjantService = koalicjantService;
         }
+
+        [AllowAnonymous]
+        [HttpPost("create-account")]
+        public async Task<IActionResult> CreateNormalUser([FromBody] UserCreateNormalVM user)
+        {
+            var added_user = await _userService.CreateNormalUser(user);
+            if( added_user == null)
+            {
+                return BadRequest("User already exists");
+            }
+            return Ok(added_user);
+        }
+
 
         [Authorize(Roles = "ADMIN")]
         [HttpPost("user")]
@@ -32,6 +47,7 @@ namespace koala.Controllers
             {
                 return BadRequest("User already exists");
             }
+            await _koalicjantService.AutoCreateAsync(user.Email);
             return Ok(added_user);
         }
 
