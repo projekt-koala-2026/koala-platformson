@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Hamburger from "../../components/Hamburger";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +31,7 @@ const HomeScreen = () => {
         <>
             <header style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <h1>Koala</h1>
+                <Hamburger options={[["Zadania", () => navigate("/problems")]]} />
                 <h2>
                     <span style={{ color: "#458756" }}>KO</span>mbinatoryka{" "}
                     <span style={{ color: "#458756" }}>A</span>lgorytmika{" "}

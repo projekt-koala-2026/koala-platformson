@@ -107,6 +107,8 @@ const PanelScreen = () => {
                                   ["Historia", () => navigate("/admin/history")],
                                   ["Regulamin", () => navigate("/admin/rules")],
                                   ["Zarządzanie Edycjami", () => navigate("/admin/editions")],
+                                  ["Zarządzanie Zadaniami", () => navigate("/admin/problems")],
+                                  ["Zarządzanie Szkołami", () => navigate("/admin/schools")],
                               ]
                             : []),
                     ]}

@@ -52,6 +52,7 @@ builder.Services.AddTransient<SponsorService>();
 builder.Services.AddTransient<KoalicjantService>();
 builder.Services.AddTransient<SchoolService>();
 builder.Services.AddTransient<StaticPagesService>();
+builder.Services.AddTransient<TeamService>();
 
 //NOTE: ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>
@@ -100,7 +101,7 @@ app.UseStaticFiles(new StaticFileOptions
     OnPrepareResponse = ctx =>
     {
         ctx.Context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=604800");
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=60");
     }
 });
 

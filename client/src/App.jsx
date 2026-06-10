@@ -6,13 +6,16 @@ import ChangePassScreen from "./screens/admin/ChangePassScreen";
 import EditionsScreen from "./screens/admin/EditEditionScreen.jsx";
 import EditKoalicjantInfo from "./screens/admin/EditKoalicjantInfoScreen.jsx";
 import EditPost from "./screens/admin/EditPostScreen.jsx";
+import EditProblemsScreen from "./screens/admin/EditProblemsScreen.jsx";
 import EditRule from "./screens/admin/EditRuleScreen.jsx";
+import EditSchoolsScreen from "./screens/admin/EditSchoolsScreen.jsx";
 import EditHistory from "./screens/admin/EditHistoryScreen.jsx";
 import EditSponsorInfo from "./screens/admin/EditSponsorInfoScreen.jsx";
 import ImageHandlingScreen from "./screens/admin/ImageHandlingScreen";
 import LoginScreen from "./screens/admin/LoginScreen";
 import PanelScreen from "./screens/admin/PanelScreen";
 import HomeScreen from "./screens/public/HomeScreen";
+import ProblemsPublicScreen from "./screens/public/ProblemsPublicScreen.jsx";
 
 export default function App() {
     return (
@@ -31,7 +34,10 @@ export default function App() {
                     <Route path="/admin/history" element={<EditHistory />} />
                     <Route path="/admin/posts" element={<EditPost />} />
                     <Route path="/admin/editions" element={<EditionsScreen />} />
+                    <Route path="/admin/problems" element={<EditProblemsScreen />} />
+                    <Route path="/admin/schools" element={<EditSchoolsScreen />} />
                     <Route path="/" element={<HomeScreen />} />
+                    <Route path="/problems" element={<ProblemsPublicScreen />} />
                 </Routes>
             </BrowserRouter>
         </LoadingProvider>
