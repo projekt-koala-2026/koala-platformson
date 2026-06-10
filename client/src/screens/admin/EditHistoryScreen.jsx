@@ -1,48 +1,47 @@
 import { useEffect, useMemo, useState } from "react";
-import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
-import { apiRequest, uploadFile } from "../../utils/apiFetcher";
-import { isAdmin } from "../../utils/authService";
+import { apiRequest } from "../../utils/apiFetcher";
+import { isAdmin, isEditor } from "../../utils/authService";
 
-const EditRule = () => {
+const EditHistory = () => {
     const navigate = useNavigate();
-    const isAdminUser = useMemo(() => isAdmin(), []);
+    const isAdminEditor = useMemo(() => isAdmin() || isEditor(), []);
     const [markdownBody, setMarkdownBody] = useState("");
 
     const handleBack = () => {
         navigate("/admin");
     };
 
-    const AddNewRules = async (rules) => {
-        const data = await apiRequest("/api/static-pages/rules", { markdownBody: rules }, "PUT", navigate);
+    const UpdateHistory = async (rules) => {
+        const data = await apiRequest("/api/static-pages/history", { markdownBody: rules }, "PUT", navigate);
 
-        if (data) alert("Zapisano nowy regulamin");
+        if (data) alert("Zapisano edycję historii");
 
         await new Promise((resolve) => setTimeout(resolve, 500));
     };
 
     useEffect(() => {
-        if (!isAdminUser) {
+        if (!isAdminEditor) {
             navigate("/admin/login");
             return;
         }
 
         const getData = async () => {
-            const data = await apiRequest("/api/static-pages/rules", null, "GET", navigate);
+            const data = await apiRequest("/api/static-pages/history", null, "GET", navigate);
             setMarkdownBody(data.markdownBody);
         };
 
-        if (isAdminUser) getData();
+        if (isAdminEditor) getData();
     }, [navigate]);
 
     return (
         <div className="container">
-            {isAdminUser && (
+            {isAdminEditor && (
                 <>
-                    <h1>Regulamin</h1>
+                    <h1>Historia konkursu</h1>
                     <div>
                         <Button text={"Wróć do panelu"} onClick={handleBack} />
                         <MarkdownEditor
@@ -50,15 +49,14 @@ const EditRule = () => {
                             initialValue={markdownBody}
                             onChange={setMarkdownBody}
                             onSave={(text) => {
-                                AddNewRules(text);
+                                UpdateHistory(text);
                             }}
                         />
                     </div>
                 </>
             )}
-            
         </div>
     );
 };
 
-export default EditRule;
+export default EditHistory;
