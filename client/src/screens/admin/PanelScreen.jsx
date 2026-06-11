@@ -104,6 +104,7 @@ const PanelScreen = () => {
                                       () => navigate("/admin/koalicjants"),
                                   ],
                                   ["Posty", () => navigate("/admin/posts")],
+                                  ["Historia", () => navigate("/admin/history")],
                                   ["Regulamin", () => navigate("/admin/rules")],
                                   ["Zarządzanie Edycjami", () => navigate("/admin/editions")],
                                   ["Zarządzanie Zadaniami", () => navigate("/admin/problems")],
