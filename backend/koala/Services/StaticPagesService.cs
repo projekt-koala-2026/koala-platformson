@@ -40,7 +40,7 @@ namespace koala.Services
             await File.WriteAllTextAsync(path, content);
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = content};
-            return result;
+            return content;
         }
 
         public async Task<StaticPageInfoVM> UpdateHistory(string content)
@@ -55,7 +55,7 @@ namespace koala.Services
             await File.WriteAllTextAsync(path, content);
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = content};
-            return result;
+            return content;
         }
 
         public async Task<StaticPageInfoVM> UpdateProblems(string content)
@@ -70,7 +70,7 @@ namespace koala.Services
             await File.WriteAllTextAsync(path, content);
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = content};
-            return result;
+            return content;
         }
 
         public async Task<StaticPageInfoVM> GetRules()
@@ -83,7 +83,7 @@ namespace koala.Services
             }
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = await File.ReadAllTextAsync(path)};
-            return result;
+            return result.MarkdownBody;
         }
 
         public async Task<StaticPageInfoVM> GetHistory()
@@ -96,7 +96,7 @@ namespace koala.Services
             }
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = await File.ReadAllTextAsync(path)};
-            return result;
+            return result.MarkdownBody;
         }
 
         public async Task<StaticPageInfoVM> GetProblems()
@@ -109,7 +109,7 @@ namespace koala.Services
             }
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = await File.ReadAllTextAsync(path)};
-            return result;
+            return result.MarkdownBody;
         }
     }
 }
