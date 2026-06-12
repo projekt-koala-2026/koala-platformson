@@ -28,7 +28,7 @@ namespace koala.Services
             _publicFilesPath = Environment.GetEnvironmentVariable("PUBLIC_STORAGE_PATH");
         }
 
-        public async Task<StaticPageInfoVM> UpdateRules(string content)
+        public async Task<string> UpdateRules(string content)
         {
             string path = Path.Combine(_publicFilesPath,"rules/rules.json");
 
