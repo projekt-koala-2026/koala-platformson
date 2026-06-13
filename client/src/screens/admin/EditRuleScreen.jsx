@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import MarkdownEditor from "../../components/MarkdownEditor";
-import MarkdownRenderer from "../../components/MarkdownRenderer";
-import { apiRequest, uploadFile } from "../../utils/apiFetcher";
+import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
 
 const EditRule = () => {
@@ -17,7 +15,14 @@ const EditRule = () => {
     };
 
     const AddNewRules = async (rules) => {
-        const data = await apiRequest("/api/static-pages/rules", { markdownBody: rules }, "PUT", navigate);
+        const apiData = { markdownBody: rules };
+
+        const data = await apiRequest(
+            "/api/static-pages/rules",
+            { markdownBody: JSON.stringify(apiData) },
+            "PUT",
+            navigate
+        );
 
         if (data) alert("Zapisano nowy regulamin");
 
@@ -32,7 +37,9 @@ const EditRule = () => {
 
         const getData = async () => {
             const data = await apiRequest("/api/static-pages/rules", null, "GET", navigate);
-            setMarkdownBody(data.markdownBody);
+            const data_json = JSON.parse(data);
+
+            setMarkdownBody(data_json.markdownBody);
         };
 
         if (isAdminUser) getData();
@@ -56,7 +63,6 @@ const EditRule = () => {
                     </div>
                 </>
             )}
-            
         </div>
     );
 };

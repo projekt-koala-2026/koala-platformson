@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLoading } from "../../contexts/LoadingContext";
 import { FaEdit, FaTrash } from "react-icons/fa";
-import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
+import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
+import { useLoading } from "../../contexts/LoadingContext";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
 
@@ -11,7 +11,7 @@ const EditKoalicjantInfo = () => {
     const navigate = useNavigate();
     const { startLoading, stopLoading } = useLoading();
     const isAdminEditor = useMemo(() => isAdmin() || isEditor(), []);
-    
+
     const [koalicjants, setKoalicjants] = useState(null);
     const [name, setName] = useState(null);
     const [profilePicture, setProfilePicture] = useState(null);
@@ -29,13 +29,18 @@ const EditKoalicjantInfo = () => {
         clearForm();
         setAddingKoalicjant(true);
     };
-    
+
     const saveKoalicjant = async () => {
         startLoading();
 
         const data = await apiRequest(
             "/api/admin/koalicjants",
-            { id: "019e647a-3bfc-7a71-baf5-3dfd0571b71c", name: name, profilePicture: profilePicture, description: description },
+            {
+                id: "019e647a-3bfc-7a71-baf5-3dfd0571b71c",
+                name: name,
+                profilePicture: profilePicture,
+                description: description,
+            },
             "POST",
             navigate
         );
@@ -43,12 +48,12 @@ const EditKoalicjantInfo = () => {
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         if (data) {
-            setKoalicjants(prev => [...prev, data]);
+            setKoalicjants((prev) => [...prev, data]);
             clearForm();
             navigate("/admin/koalicjants");
         }
-        
-        setAddingKoalicjant(false)
+
+        setAddingKoalicjant(false);
         stopLoading();
     };
 
@@ -58,18 +63,14 @@ const EditKoalicjantInfo = () => {
         );
 
         if (!confirmed) return;
-        
+
         const apiLink = `/api/admin/koalicjants/${koalicjant.id}`;
         const data = await apiRequest(apiLink, {}, "DELETE", navigate);
-        setKoalicjants(prev =>
-            prev.filter(k => k.id !== koalicjant.id)
-        );
+        setKoalicjants((prev) => prev.filter((k) => k.id !== koalicjant.id));
     };
 
     const EditKoalicjant = (koalicjant) => {
-        setEditingKoalicjant(
-            editingKoalicjant === koalicjant ? null : koalicjant
-        );
+        setEditingKoalicjant(editingKoalicjant === koalicjant ? null : koalicjant);
         setName(koalicjant.name);
         setProfilePicture(koalicjant.profilePicture);
         setDescription(koalicjant.description);
@@ -79,20 +80,25 @@ const EditKoalicjantInfo = () => {
         const apiLink = `/api/admin/koalicjants/${koalicjant.id}`;
         await apiRequest(
             apiLink,
-            { id: "019e647a-3bfc-7a71-baf5-3dfd0571b71c", name: name, profilePicture: profilePicture, description: description },
+            {
+                id: "019e647a-3bfc-7a71-baf5-3dfd0571b71c",
+                name: name,
+                profilePicture: profilePicture,
+                description: description,
+            },
             "PUT",
             navigate
         );
 
-        setKoalicjants(prev =>
-            prev.map(k =>
+        setKoalicjants((prev) =>
+            prev.map((k) =>
                 k.id === koalicjant.id
                     ? {
-                        ...k,
-                        name: name,
-                        profilePicture: profilePicture,
-                        description: description,
-                    }
+                          ...k,
+                          name: name,
+                          profilePicture: profilePicture,
+                          description: description,
+                      }
                     : k
             )
         );
@@ -117,7 +123,7 @@ const EditKoalicjantInfo = () => {
                 navigate("/admin/koalicjants");
                 return;
             }
-            
+
             setKoalicjants(data);
         };
 
@@ -158,7 +164,12 @@ const EditKoalicjantInfo = () => {
                             />
                             <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
                                 <Button text={"Zapisz"} onClick={saveKoalicjant} />
-                                <Button text={"Anuluj"} onClick={() => {setAddingKoalicjant(false), clearForm}} />
+                                <Button
+                                    text={"Anuluj"}
+                                    onClick={() => {
+                                        (setAddingKoalicjant(false), clearForm);
+                                    }}
+                                />
                             </div>
                         </div>
                     )}
@@ -166,17 +177,35 @@ const EditKoalicjantInfo = () => {
                         <ContentsListBox>
                             {koalicjants.map((item, idx) => (
                                 <ContentsListTile key={item.id}>
-                                    <div style={{ display: "flex", gap: "4px"}}>
-                                        <div style={{ display: "flex", gap: "4px"}}>
-                                            <img src={item.profilePicture} height="62" style={{ borderRadius: "12px" }}/>
-                                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <div style={{ display: "flex", gap: "4px" }}>
+                                        <div style={{ display: "flex", gap: "4px" }}>
+                                            <img
+                                                src={item.profilePicture}
+                                                height="62"
+                                                style={{ borderRadius: "12px" }}
+                                            />
+                                            <div
+                                                style={{ display: "flex", flexDirection: "column" }}
+                                            >
                                                 <h3>{item.name}</h3>
                                                 <span>{item.description}</span>
                                             </div>
                                         </div>
-                                        <div style={{display: "flex", gap: "4px", marginLeft: "auto",}}>
-                                            <Button text={<FaEdit />} onClick={() => EditKoalicjant(item)} />
-                                            <Button text={<FaTrash />} onClick={() => DeleteKoalicjant(item)} />
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                gap: "4px",
+                                                marginLeft: "auto",
+                                            }}
+                                        >
+                                            <Button
+                                                text={<FaEdit />}
+                                                onClick={() => EditKoalicjant(item)}
+                                            />
+                                            <Button
+                                                text={<FaTrash />}
+                                                onClick={() => DeleteKoalicjant(item)}
+                                            />
                                         </div>
                                     </div>
                                     {editingKoalicjant?.id === item.id && (
@@ -202,14 +231,28 @@ const EditKoalicjantInfo = () => {
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
                                             />
-                                            <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                                                <Button text={"Zapisz"} onClick={() => updateKoalicjant(item)} />
-                                                <Button text={"Anuluj"} onClick={() => {setEditingKoalicjant(false), clearForm}} />
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    gap: "10px",
+                                                    marginTop: "10px",
+                                                }}
+                                            >
+                                                <Button
+                                                    text={"Zapisz"}
+                                                    onClick={() => updateKoalicjant(item)}
+                                                />
+                                                <Button
+                                                    text={"Anuluj"}
+                                                    onClick={() => {
+                                                        (setEditingKoalicjant(false), clearForm);
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                     )}
                                 </ContentsListTile>
-                            ))}          
+                            ))}
                         </ContentsListBox>
                     )}
                 </>
