@@ -1,0 +1,12 @@
+.markdownRender {
+    width: 100%;
+}
+
+.image {
+    display: block;
+    margin: 10px 0;
+    border-radius: 8px;
+    max-width: 50%;
+    height: auto;
+    max-height: 50%;
+}

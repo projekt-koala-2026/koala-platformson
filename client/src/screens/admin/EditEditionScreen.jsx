@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
+import styles from "./EditEditionScreen.module.css";
 
 const EditionsScreen = () => {
     const navigate = useNavigate();
@@ -122,89 +123,44 @@ const EditionsScreen = () => {
     }, [navigate, isAdminUser]);
 
     return (
-        <div className="container" style={{ minWidth: "50%" }}>
+        <div className={`container ${styles.container}`}>
             <h1>Zarządzanie Edycjami</h1>
             <Button text={"Wróć do panelu"} onClick={handleBack} />
 
             {/* Panel dodawania nowej edycji */}
-            <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+            <div className={styles.formSection}>
                 {isAdding ? (
-                    <div
-                        style={{
-                            border: "1px solid var(--border-color)",
-                            padding: "15px",
-                            borderRadius: "8px",
-                        }}
-                    >
+                    <div className={styles.formBox}>
                         <h3>Dodaj nową edycję</h3>
-                        <div style={{ marginBottom: "10px" }}>
-                            <label
-                                style={{
-                                    display: "block",
-                                    fontSize: "0.85rem",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                Tytuł edycji:
-                            </label>
+                        <div className={styles.fieldGroup}>
+                            <label className={styles.label}>Tytuł edycji:</label>
                             <input
                                 type="text"
                                 placeholder="np. Edycja II"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                style={{
-                                    width: "100%",
-                                    padding: "6px",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ccc",
-                                }}
+                                className={styles.input}
                             />
                         </div>
-                        <div style={{ marginBottom: "10px" }}>
-                            <label
-                                style={{
-                                    display: "block",
-                                    fontSize: "0.85rem",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                Data rozpoczęcia:
-                            </label>
+                        <div className={styles.fieldGroup}>
+                            <label className={styles.label}>Data rozpoczęcia:</label>
                             <input
                                 type="datetime-local"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                style={{
-                                    width: "100%",
-                                    padding: "6px",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ccc",
-                                }}
+                                className={styles.input}
                             />
                         </div>
-                        <div style={{ marginBottom: "10px" }}>
-                            <label
-                                style={{
-                                    display: "block",
-                                    fontSize: "0.85rem",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                Data zakończenia:
-                            </label>
+                        <div className={styles.fieldGroup}>
+                            <label className={styles.label}>Data zakończenia:</label>
                             <input
                                 type="datetime-local"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                style={{
-                                    width: "100%",
-                                    padding: "6px",
-                                    borderRadius: "4px",
-                                    border: "1px solid #ccc",
-                                }}
+                                className={styles.input}
                             />
                         </div>
-                        <div style={{ display: "flex", gap: "10px" }}>
+                        <div className={styles.buttonRow}>
                             <Button text={"Zapisz edycję"} onClick={handleCreate} />
                             <Button
                                 text={"Anuluj"}
@@ -226,35 +182,19 @@ const EditionsScreen = () => {
 
             {/* Listowanie zasobów z bazy danych */}
             {editions && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div className={styles.list}>
                     {editions.map((item, idx) => (
-                        <div
-                            key={"edition-tile-" + idx}
-                            style={{
-                                border: "1px solid var(--border-color)",
-                                padding: "15px",
-                                borderRadius: "8px",
-                                background: "#fff",
-                            }}
-                        >
-                            <div style={{ display: "flex", alignItems: "center" }}>
-                                <div style={{ display: "flex", flexDirection: "column" }}>
-                                    <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
-                                        {item.title}
-                                    </span>
-                                    <span
-                                        style={{
-                                            fontSize: "0.85rem",
-                                            color: "#666",
-                                            marginTop: "4px",
-                                        }}
-                                    >
+                        <div key={"edition-tile-" + idx} className={styles.tile}>
+                            <div className={styles.tileHeader}>
+                                <div className={styles.tileInfo}>
+                                    <span className={styles.tileTitle}>{item.title}</span>
+                                    <span className={styles.tileMeta}>
                                         Od: {new Date(item.startDate).toLocaleString()} | Do:{" "}
                                         {new Date(item.endDate).toLocaleString()}
                                     </span>
                                 </div>
 
-                                <div style={{ display: "flex", gap: "6px", marginLeft: "auto" }}>
+                                <div className={styles.tileActions}>
                                     <Button
                                         text={<FaEdit />}
                                         onClick={() => handleEditClick(item)}
@@ -265,81 +205,36 @@ const EditionsScreen = () => {
 
                             {/* Formularz edycji konkretnego rekordu */}
                             {editingEdition?.id === item.id && (
-                                <div
-                                    style={{
-                                        marginTop: "15px",
-                                        paddingTop: "15px",
-                                        borderTop: "1px solid var(--border-color)",
-                                    }}
-                                >
+                                <div className={styles.editBox}>
                                     <h3>Modyfikacja edycji: {editingEdition.title}</h3>
-                                    <div style={{ marginBottom: "10px" }}>
-                                        <label
-                                            style={{
-                                                display: "block",
-                                                fontSize: "0.85rem",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Zmień tytuł:
-                                        </label>
+                                    <div className={styles.fieldGroup}>
+                                        <label className={styles.label}>Zmień tytuł:</label>
                                         <input
                                             type="text"
                                             value={title}
                                             onChange={(e) => setTitle(e.target.value)}
-                                            style={{
-                                                width: "100%",
-                                                padding: "6px",
-                                                borderRadius: "4px",
-                                                border: "1px solid #ccc",
-                                            }}
+                                            className={styles.input}
                                         />
                                     </div>
-                                    <div style={{ marginBottom: "10px" }}>
-                                        <label
-                                            style={{
-                                                display: "block",
-                                                fontSize: "0.85rem",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Zmień datę startu:
-                                        </label>
+                                    <div className={styles.fieldGroup}>
+                                        <label className={styles.label}>Zmień datę startu:</label>
                                         <input
                                             type="datetime-local"
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            style={{
-                                                width: "100%",
-                                                padding: "6px",
-                                                borderRadius: "4px",
-                                                border: "1px solid #ccc",
-                                            }}
+                                            className={styles.input}
                                         />
                                     </div>
-                                    <div style={{ marginBottom: "10px" }}>
-                                        <label
-                                            style={{
-                                                display: "block",
-                                                fontSize: "0.85rem",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Zmień datę końca:
-                                        </label>
+                                    <div className={styles.fieldGroup}>
+                                        <label className={styles.label}>Zmień datę końca:</label>
                                         <input
                                             type="datetime-local"
                                             value={endDate}
                                             onChange={(e) => setEndDate(e.target.value)}
-                                            style={{
-                                                width: "100%",
-                                                padding: "6px",
-                                                borderRadius: "4px",
-                                                border: "1px solid #ccc",
-                                            }}
+                                            className={styles.input}
                                         />
                                     </div>
-                                    <div style={{ display: "flex", gap: "10px" }}>
+                                    <div className={styles.buttonRow}>
                                         <Button text={"Zapisz zmiany"} onClick={handleSaveEdit} />
                                         <Button
                                             text={"Anuluj"}

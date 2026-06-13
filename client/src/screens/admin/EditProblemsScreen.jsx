@@ -5,6 +5,7 @@ import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import { apiRequest, apiUrl, uploadFile } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
+import styles from "./EditProblemsScreen.module.css";
 
 const EditProblemsScreen = () => {
     const navigate = useNavigate();
@@ -13,7 +14,6 @@ const EditProblemsScreen = () => {
     const [editions, setEditions] = useState([]);
     const [selectedEditionId, setSelectedEditionId] = useState("");
     const [allProblemsData, setAllProblemsData] = useState({});
-
     const [subpointInputValue, setSubpointInputValue] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
 
@@ -25,10 +25,9 @@ const EditProblemsScreen = () => {
         const cleanData = { ...data };
         delete cleanData.markdownBody;
 
-        const fileContent = JSON.stringify(cleanData);
         await apiRequest(
             "/api/static-pages/problems",
-            { markdownBody: fileContent },
+            { markdownBody: JSON.stringify(cleanData) },
             "PUT",
             navigate
         );
@@ -58,17 +57,12 @@ const EditProblemsScreen = () => {
                 serverFileData.url ||
                 `/content/problems/${fileGuid}.pdf`;
             const finalFileName = fileUrl.split("/").pop();
-
             const updatedData = { ...allProblemsData };
             const subpoint = subpointInputValue.trim();
 
-            if (!updatedData[selectedEditionId]) {
-                updatedData[selectedEditionId] = {};
-            }
-
-            if (!updatedData[selectedEditionId][subpoint]) {
+            if (!updatedData[selectedEditionId]) updatedData[selectedEditionId] = {};
+            if (!updatedData[selectedEditionId][subpoint])
                 updatedData[selectedEditionId][subpoint] = [];
-            }
 
             updatedData[selectedEditionId][subpoint].push({
                 id: fileGuid,
@@ -138,20 +132,16 @@ const EditProblemsScreen = () => {
                         }
                     }
                 }
-            } catch (err) {}
+            } catch {
+                // Missing or invalid problem metadata should fall back to an empty structure.
+            }
 
-            if (fileJson.markdownBody !== undefined) {
-                delete fileJson.markdownBody;
-            }
-            if (fileJson.id !== undefined) {
-                delete fileJson.id;
-            }
+            delete fileJson.markdownBody;
+            delete fileJson.id;
 
             if (editionsData && editionsData.length > 0) {
                 editionsData.forEach((edition) => {
-                    if (!fileJson[edition.id]) {
-                        fileJson[edition.id] = {};
-                    }
+                    if (!fileJson[edition.id]) fileJson[edition.id] = {};
                 });
                 setEditions(editionsData);
                 setSelectedEditionId(editionsData[0].id);
@@ -165,55 +155,17 @@ const EditProblemsScreen = () => {
 
     const currentEditionData = allProblemsData[selectedEditionId] || {};
 
-    const inlineStyles = {
-        selectSection: { marginTop: "20px", marginBottom: "20px" },
-        selectInput: { display: "block", marginTop: "5px", padding: "8px", width: "100%" },
-        formBox: {
-            marginTop: "20px",
-            padding: "15px",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            background: "#fff",
-        },
-        limitNotice: {
-            fontSize: "0.85rem",
-            color: "#b35c00",
-            fontWeight: "500",
-            margin: "2px 0 10px 0",
-        },
-        flexGroup: { display: "flex", gap: "10px", marginTop: "10px", alignItems: "center" },
-        inputField: { flexGrow: 1, padding: "8px", border: "1px solid #ccc", borderRadius: "4px" },
-        fileInput: { padding: "5px" },
-        card: {
-            marginBottom: "25px",
-            padding: "15px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            background: "#fff",
-        },
-        cardHeader: {
-            display: "flex",
-            alignItems: "center",
-            paddingBottom: "8px",
-            borderBottom: "1px solid #ccc",
-            marginBottom: "15px",
-        },
-        pdfRow: { display: "flex", alignItems: "center", width: "100%" },
-        pdfIconGroup: { display: "flex", alignItems: "center", gap: "10px" },
-        link: { color: "#de1414", textDecoration: "none", fontWeight: "bold" },
-    };
-
     return (
-        <div className="container" style={{ padding: "2rem" }}>
+        <div className={`container ${styles.container}`}>
             <h1>Zarządzanie Zadaniami (PDF)</h1>
             <Button text={"Wróć do panelu"} onClick={handleBack} />
 
-            <div style={inlineStyles.selectSection}>
-                <label style={{ fontWeight: "bold" }}>Wybierz Edycję:</label>
+            <div className={styles.selectSection}>
+                <label className={styles.label}>Wybierz Edycję:</label>
                 <select
                     value={selectedEditionId}
                     onChange={(e) => setSelectedEditionId(e.target.value)}
-                    style={inlineStyles.selectInput}
+                    className={styles.selectInput}
                 >
                     {editions.map((e) => (
                         <option key={e.id} value={e.id}>
@@ -223,48 +175,46 @@ const EditProblemsScreen = () => {
                 </select>
             </div>
 
-            <div style={inlineStyles.formBox}>
-                <h3 style={{ margin: "0 0 2px 0" }}>Utwórz nowy podpunkt i dodaj PDF</h3>
-                <p style={inlineStyles.limitNotice}>
+            <div className={styles.formBox}>
+                <h3 className={styles.formTitle}>Utwórz nowy podpunkt i dodaj PDF</h3>
+                <p className={styles.limitNotice}>
                     Maksymalny rozmiar przesyłanego pliku to 64 MB.
                 </p>
-                <div style={inlineStyles.flexGroup}>
+                <div className={styles.flexGroup}>
                     <input
                         type="text"
                         placeholder="Nazwa podpunktu (np. Etap Szkolny)"
                         value={subpointInputValue}
                         onChange={(e) => setSubpointInputValue(e.target.value)}
-                        style={inlineStyles.inputField}
+                        className={styles.inputField}
                     />
                     <input
                         id="pdfFileInput"
                         type="file"
                         accept=".pdf"
                         onChange={(e) => setSelectedFile(e.target.files[0])}
-                        style={inlineStyles.fileInput}
+                        className={styles.fileInput}
                     />
                     <Button text={"Zapisz"} onClick={handleAddEntry} />
                 </div>
             </div>
 
-            <div style={{ marginTop: "30px" }}>
+            <div className={styles.structureSection}>
                 <h2>Struktura dokumentacji</h2>
                 {Object.keys(currentEditionData).length === 0 ? (
-                    <p style={{ color: "#666" }}>Brak podpunktów dla tej edycji.</p>
+                    <p className={styles.emptyText}>Brak podpunktów dla tej edycji.</p>
                 ) : (
                     Object.keys(currentEditionData).map((subpoint) => (
-                        <div key={subpoint} style={inlineStyles.card}>
-                            <div style={inlineStyles.cardHeader}>
-                                <h3 style={{ margin: 0 }}>{subpoint}</h3>
+                        <div key={subpoint} className={styles.card}>
+                            <div className={styles.cardHeader}>
+                                <h3 className={styles.cardTitle}>{subpoint}</h3>
                             </div>
                             <ContentsListBox>
                                 {currentEditionData[subpoint].map((pdf) => (
                                     <ContentsListTile key={pdf.id}>
-                                        <div style={inlineStyles.pdfRow}>
-                                            <div style={inlineStyles.pdfIconGroup}>
-                                                <FaFilePdf
-                                                    style={{ color: "#de1414", fontSize: "1.4rem" }}
-                                                />
+                                        <div className={styles.pdfRow}>
+                                            <div className={styles.pdfIconGroup}>
+                                                <FaFilePdf className={styles.pdfIcon} />
                                                 <a
                                                     href={
                                                         pdf.url.startsWith("http")
@@ -273,12 +223,12 @@ const EditProblemsScreen = () => {
                                                     }
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    style={inlineStyles.link}
+                                                    className={styles.link}
                                                 >
                                                     {pdf.title}
                                                 </a>
                                             </div>
-                                            <div style={{ marginLeft: "auto" }}>
+                                            <div className={styles.rowActions}>
                                                 <Button
                                                     text={<FaTrash />}
                                                     onClick={() =>

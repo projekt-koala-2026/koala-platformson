@@ -7,6 +7,7 @@ import Hamburger from "../../components/Hamburger";
 import ProfileButton from "../../components/ProfileButton";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
+import styles from "./PanelScreen.module.css";
 
 const PanelScreen = () => {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ const PanelScreen = () => {
 
         if (!confirmed) return;
 
-        const data = await apiRequest("/api/admin/user/user", { id: user.id }, "DELETE", navigate);
+        await apiRequest("/api/admin/user/user", { id: user.id }, "DELETE", navigate);
         setUsers((prev) => prev.filter((u) => u.id !== user.id));
     };
 
@@ -115,31 +116,25 @@ const PanelScreen = () => {
                 />
             </header>
 
-            <div className="container" style={{ minWidth: "50%" }}>
+            <div className={`container ${styles.container}`}>
                 {users && isAdminEditor && (
                     <>
                         <h1>Lista użytkowników</h1>
                         <ContentsListBox>
                             {users.map((item, idx) => (
                                 <ContentsListTile key={"users-list" + idx}>
-                                    <div style={{ display: "flex" }}>
-                                        <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <div className={styles.userRow}>
+                                        <div className={styles.userInfo}>
                                             <span>{item.email}</span>
                                             <p>
                                                 Role to:{" "}
-                                                <span style={{ textTransform: "lowercase" }}>
+                                                <span className={styles.rolesText}>
                                                     {item.roles.join(", ")}
                                                 </span>
                                             </p>
                                         </div>
 
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                gap: "8px",
-                                                marginLeft: "auto",
-                                            }}
-                                        >
+                                        <div className={styles.actions}>
                                             <Button
                                                 text={<FaEdit />}
                                                 onClick={() => EditUser(item)}
@@ -155,7 +150,7 @@ const PanelScreen = () => {
                                             <h3>Edytuj Rolę dla {editingUser.email}</h3>
 
                                             {["ADMIN", "EDITOR", "REVIEWER"].map((role) => (
-                                                <label key={role} style={{ display: "block" }}>
+                                                <label key={role} className={styles.roleLabel}>
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedRoles.includes(role)}
@@ -165,13 +160,7 @@ const PanelScreen = () => {
                                                 </label>
                                             ))}
 
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    gap: "10px",
-                                                    marginTop: "10px",
-                                                }}
-                                            >
+                                            <div className={styles.editActions}>
                                                 <Button text={"Zapisz"} onClick={saveRoles} />
                                                 <Button
                                                     text={"Anuluj"}

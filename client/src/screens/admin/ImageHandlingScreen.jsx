@@ -4,6 +4,7 @@ import Button from "../../components/Button";
 import FileUploader from "../../components/FileUploader";
 import ImagePicker from "../../components/ImagePicker";
 import { apiRequest, uploadFile } from "../../utils/apiFetcher";
+import styles from "./ImageHandlingScreen.module.css";
 
 const ImageHandlingScreen = () => {
     const navigate = useNavigate();
@@ -28,7 +29,7 @@ const ImageHandlingScreen = () => {
             <h1>Zarządzanie zdjęciami</h1>
             <Button text={"Dodaj zdjęcie"} onClick={() => uploaderRef.current.open()} />
             <FileUploader ref={uploaderRef} onFileSelect={handleAddFile} />
-            <div style={{ marginTop: "40px" }}>
+            <div className={styles.pickerSection}>
                 <ImagePicker ref={pickerRef} onSelect={handleDeleteFile} />
             </div>
         </div>

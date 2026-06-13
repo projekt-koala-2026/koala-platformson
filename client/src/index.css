@@ -108,14 +108,3 @@ header {
     gap: 8px;
     width: 120px;
 }
-
-.topLoadingBar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 9999;
-    transition: width 0.4s ease;
-    box-shadow: 0 0 10px var(--color-button-hover);
-    background-color: var(--color-button);
-    height: 4px;
-}

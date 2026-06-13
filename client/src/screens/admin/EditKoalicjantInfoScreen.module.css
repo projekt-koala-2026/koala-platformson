@@ -1,0 +1,34 @@
+.container {
+    min-width: 50%;
+}
+
+.formActions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.listRow,
+.personInfo,
+.actions {
+    display: flex;
+}
+
+.listRow,
+.personInfo {
+    gap: 4px;
+}
+
+.avatar {
+    border-radius: 12px;
+}
+
+.textColumn {
+    display: flex;
+    flex-direction: column;
+}
+
+.actions {
+    gap: 4px;
+    margin-left: auto;
+}

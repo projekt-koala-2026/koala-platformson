@@ -6,6 +6,7 @@ import { ContentsListBox, ContentsListTile } from "../../components/ContentsList
 import { useLoading } from "../../contexts/LoadingContext";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
+import styles from "./EditSponsorInfoScreen.module.css";
 
 const EditSponsorInfo = () => {
     const navigate = useNavigate();
@@ -54,7 +55,7 @@ const EditSponsorInfo = () => {
 
         const data = await apiRequest(
             "/api/admin/sponsors",
-            { name: name, websiteUrl: websiteUrl, logoUrl: logoUrl, description: description },
+            { name, websiteUrl, logoUrl, description },
             "POST",
             navigate
         );
@@ -63,7 +64,10 @@ const EditSponsorInfo = () => {
 
         if (data) {
             setSponsors((prev) => [...prev, data]);
+        }
 
+        if (data) {
+            setSponsors((prev) => [...prev, data]);
             clearForm();
             setAddingSponsor(false);
         }
@@ -92,12 +96,7 @@ const EditSponsorInfo = () => {
 
     const UpdateSponsor = async (sponsor) => {
         const apiLink = `/api/admin/sponsors/${sponsor.id}`;
-        await apiRequest(
-            apiLink,
-            { name: name, websiteUrl: websiteUrl, logoUrl: logoUrl, description: description },
-            "PUT",
-            navigate
-        );
+        await apiRequest(apiLink, { name, websiteUrl, logoUrl, description }, "PUT", navigate);
 
         setSponsors((prev) =>
             prev.map((s) =>
@@ -128,7 +127,6 @@ const EditSponsorInfo = () => {
 
         const getData = async () => {
             const data = await apiRequest("/api/admin/sponsors", null, "GET", navigate);
-
             if (!data || data.length === 0) {
                 navigate("/admin/sponsors");
                 return;
@@ -138,10 +136,10 @@ const EditSponsorInfo = () => {
         };
 
         if (isAdminEditor) getData();
-    }, [navigate]);
+    }, [navigate, isAdminEditor]);
 
     return (
-        <div className="container" style={{ minWidth: "50%" }}>
+        <div className={`container ${styles.container}`}>
             {isAdminEditor && (
                 <>
                     <h1>Lista Sponsorów</h1>
@@ -179,7 +177,7 @@ const EditSponsorInfo = () => {
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                             />
-                            <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                            <div className={styles.formActions}>
                                 <Button text={"Zapisz"} onClick={SaveSponsor} />
                                 <Button
                                     text={"Anuluj"}
@@ -193,10 +191,10 @@ const EditSponsorInfo = () => {
                     )}
                     {sponsors && (
                         <ContentsListBox>
-                            {sponsors.map((item, idx) => (
+                            {sponsors.map((item) => (
                                 <ContentsListTile key={item.id}>
-                                    <div style={{ display: "flex" }}>
-                                        <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <div className={styles.listRow}>
+                                        <div className={styles.textColumn}>
                                             <h3>
                                                 <a
                                                     href={item.websiteUrl}
@@ -208,14 +206,7 @@ const EditSponsorInfo = () => {
                                             </h3>
                                             <span>{item.description}</span>
                                         </div>
-
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                gap: "4px",
-                                                marginLeft: "auto",
-                                            }}
-                                        >
+                                        <div className={styles.actions}>
                                             <Button
                                                 text={<FaEdit />}
                                                 onClick={() => EditSponsor(item)}
@@ -232,7 +223,7 @@ const EditSponsorInfo = () => {
                                             <img
                                                 src={item.logoUrl}
                                                 width="200"
-                                                style={{ borderRadius: "12px" }}
+                                                className={styles.logo}
                                             />
                                             <h2>Edytuj Dane Sponsora {item.name}</h2>
                                             <input
@@ -262,14 +253,7 @@ const EditSponsorInfo = () => {
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
                                             />
-
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    gap: "10px",
-                                                    marginTop: "10px",
-                                                }}
-                                            >
+                                            <div className={styles.formActions}>
                                                 <Button
                                                     text={"Zapisz"}
                                                     onClick={() => UpdateSponsor(item)}
@@ -278,7 +262,7 @@ const EditSponsorInfo = () => {
                                                     text={"Anuluj"}
                                                     onClick={() => {
                                                         setEditingSponsor(false);
-                                                        clearForm;
+                                                        clearForm();
                                                     }}
                                                 />
                                             </div>

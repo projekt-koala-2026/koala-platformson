@@ -14,7 +14,7 @@
         visibility 0.2s;
     box-shadow: 4px 0 25px rgba(0, 0, 0, 0.05);
     border-right: 1px solid var(--border-color);
-    background: #ffffff;
+    background: var(--color-container);
     padding: 6rem 1.5rem 1.5rem 1.5rem;
     width: 280px;
     height: 100vh;
@@ -47,7 +47,7 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--border-color);
     border-radius: 50%;
-    background: #ffffff;
+    background: var(--color-container);
     width: 3.5rem;
     height: 3.5rem;
 }

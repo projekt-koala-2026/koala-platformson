@@ -3,13 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import Hamburger from "../../components/Hamburger";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
-import { apiRequest } from "../../utils/apiFetcher";
+import styles from "./HomeScreen.module.css";
 
 const HomeScreen = () => {
     const navigate = useNavigate();
     const [posts, setPosts] = useState([]);
     const [editions, setEditions] = useState([]);
-    const [editionId, setEditionId] = useState("");
 
     useEffect(() => {
         const getData = async () => {
@@ -26,9 +25,10 @@ const HomeScreen = () => {
 
         getData();
     }, [navigate]);
+
     return (
         <>
-            <header style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <header className={styles.header}>
                 <h1>Koala</h1>
                 <Hamburger
                     options={[
@@ -40,15 +40,15 @@ const HomeScreen = () => {
                     ]}
                 />
                 <h2>
-                    <span style={{ color: "#458756" }}>KO</span>mbinatoryka{" "}
-                    <span style={{ color: "#458756" }}>A</span>lgorytmika{" "}
-                    <span style={{ color: "#458756" }}>L</span>ogik
-                    <span style={{ color: "#458756" }}>A</span>
+                    <span className={styles.brandAccent}>KO</span>mbinatoryka{" "}
+                    <span className={styles.brandAccent}>A</span>lgorytmika{" "}
+                    <span className={styles.brandAccent}>L</span>ogik
+                    <span className={styles.brandAccent}>A</span>
                 </h2>
                 <h5>Wielkopolski konkurs grup szkolnych</h5>
             </header>
 
-            <div className="container" style={{ minWidth: "50%" }}>
+            <div className={`container ${styles.container}`}>
                 <h1>Aktualności</h1>
                 <ContentsListBox>
                     {posts.map((item, idx) => {
@@ -56,9 +56,9 @@ const HomeScreen = () => {
 
                         return (
                             <ContentsListTile key={item.id}>
-                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                <div className={styles.postHeader}>
                                     <h3>Tytuł: {item.title}</h3>
-                                    <div style={{ display: "flex" }}>
+                                    <div className={styles.postMeta}>
                                         <h6>
                                             Data:{" "}
                                             {new Date(item.createdAt).toLocaleString("pl-PL", {
@@ -69,19 +69,12 @@ const HomeScreen = () => {
                                                 minute: "2-digit",
                                             })}
                                         </h6>
-                                        <h6 style={{ marginLeft: "auto" }}>
+                                        <h6 className={styles.editionMeta}>
                                             Edycja:{" "}
                                             {linkedEdition ? linkedEdition.title : "Nieprzypisana"}
                                         </h6>
                                     </div>
-                                    <hr
-                                        style={{
-                                            border: "none",
-                                            height: "2px",
-                                            backgroundColor: "#054e0b",
-                                            margin: "3px 0",
-                                        }}
-                                    />
+                                    <hr className={styles.divider} />
                                 </div>
                                 <MarkdownRenderer key={idx} content={item.markdownBody} />
                             </ContentsListTile>

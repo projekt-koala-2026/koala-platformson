@@ -1,0 +1,28 @@
+.container {
+    min-width: 50%;
+}
+
+.formActions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.listRow,
+.actions {
+    display: flex;
+}
+
+.textColumn {
+    display: flex;
+    flex-direction: column;
+}
+
+.actions {
+    gap: 4px;
+    margin-left: auto;
+}
+
+.logo {
+    border-radius: 12px;
+}
