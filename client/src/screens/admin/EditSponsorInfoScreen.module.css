@@ -11,6 +11,7 @@
 .listRow,
 .actions {
     display: flex;
+    gap: 16px;
 }
 
 .textColumn {
@@ -25,4 +26,12 @@
 
 .logo {
     border-radius: 12px;
+}
+
+.listLogo {
+    flex-shrink: 0;
+    margin-right: 15px;
+    width: 100px;
+    height: auto;
+    object-fit: contain;
 }

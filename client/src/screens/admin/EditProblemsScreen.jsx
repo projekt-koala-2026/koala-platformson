@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaFilePdf, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import { apiRequest, apiUrl, uploadFile } from "../../utils/apiFetcher";
@@ -16,10 +17,6 @@ const EditProblemsScreen = () => {
     const [allProblemsData, setAllProblemsData] = useState({});
     const [subpointInputValue, setSubpointInputValue] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);
-
-    const handleBack = () => {
-        navigate("/admin");
-    };
 
     const saveToServer = async (data) => {
         const cleanData = { ...data };
@@ -157,8 +154,8 @@ const EditProblemsScreen = () => {
 
     return (
         <div className={`container ${styles.container}`}>
+            <AdminHeader navigate={navigate} />
             <h1>Zarządzanie Zadaniami (PDF)</h1>
-            <Button text={"Wróć do panelu"} onClick={handleBack} />
 
             <div className={styles.selectSection}>
                 <label className={styles.label}>Wybierz Edycję:</label>

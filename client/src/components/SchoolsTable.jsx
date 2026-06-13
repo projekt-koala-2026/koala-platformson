@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Button from "./Button";
 import styles from "./SchoolsTable.module.css";
 
 const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateSchool }) => {
+    const ITEMS_PER_PAGE = 50;
+
     const [filters, setFilters] = useState({
         rspo: "",
         name: "",
@@ -28,6 +30,12 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
         name: "",
         nameShort: "",
     });
+
+    const [currentPage, setCurrentPage] = useState(1);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [schools, filters]);
 
     const handleFilterChange = (column, value) => {
         setFilters((prev) => ({ ...prev, [column]: value }));
@@ -128,6 +136,13 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
             );
         });
     }, [schools, filters]);
+
+    const totalPages = Math.ceil(filteredSchools.length / ITEMS_PER_PAGE) || 1;
+
+    const paginatedSchools = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredSchools.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredSchools, currentPage]);
 
     return (
         <div className={styles.scrollContainer}>
@@ -279,14 +294,56 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
                         </td>
                     </tr>
 
-                    {filteredSchools.length === 0 ? (
+                    <tr className={styles.paginationRow}>
+                        <td colSpan={8} style={{ padding: 0 }}>
+                            <div className={styles.paginationBar}>
+                                <button
+                                    className={styles.pageBtn}
+                                    onClick={() => setCurrentPage(1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    &lt;&lt;
+                                </button>
+                                <button
+                                    className={styles.pageBtn}
+                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    Poprzednia
+                                </button>
+                                <span className={styles.pageInfo}>
+                                    Strona <strong>{currentPage}</strong> z{" "}
+                                    <strong>{totalPages}</strong> (Filtrowanych:{" "}
+                                    {filteredSchools.length})
+                                </span>
+                                <button
+                                    className={styles.pageBtn}
+                                    onClick={() =>
+                                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                                    }
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Następna
+                                </button>
+                                <button
+                                    className={styles.pageBtn}
+                                    onClick={() => setCurrentPage(totalPages)}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    &gt;&gt;
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    {paginatedSchools.length === 0 ? (
                         <tr>
                             <td colSpan={8} className={`${styles.td} ${styles.emptyCell}`}>
                                 Brak danych spełniających kryteria.
                             </td>
                         </tr>
                     ) : (
-                        filteredSchools.map((school) => {
+                        paginatedSchools.map((school) => {
                             const isEditing = editingRspo === school.rspo;
                             return (
                                 <tr key={school.rspo}>

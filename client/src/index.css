@@ -37,6 +37,7 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
+    gap: 2rem;
     width: 100%;
     min-height: 100vh;
 }
@@ -59,20 +60,21 @@ input[type="password"] {
 }
 
 h1 {
-    margin-bottom: 1rem;
     color: var(--text-main);
     font-weight: 400;
-    font-size: 2rem;
     letter-spacing: 1px;
     text-align: center;
 }
 
 header {
     display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
     justify-content: center;
     align-items: center;
     padding: 3rem;
-    width: calc(80vw);
+    width: 100vw;
 }
 
 .container {
@@ -80,15 +82,15 @@ header {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    gap: 1.25rem;
+    gap: 1rem;
     margin-top: 5vh;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.01);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     background-color: var(--color-container);
-    padding: 3rem;
+    padding: 1.5rem;
     width: auto;
-    min-width: 100px;
+    min-width: 600px;
     max-width: 1400px;
     min-height: 500px;
 }

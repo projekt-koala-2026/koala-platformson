@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
-import Hamburger from "../../components/Hamburger";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
+import PublicFooter from "../../components/PublicFooter";
+import PublicHeader from "../../components/PublicHeader";
 import { apiRequest } from "../../utils/apiFetcher";
 
 const HistoryScreen = () => {
@@ -37,25 +38,7 @@ const HistoryScreen = () => {
     }, [navigate]);
     return (
         <>
-            <header style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <h1>Koala</h1>
-                <h2>
-                    <span style={{ color: "#458756" }}>KO</span>mbinatoryka{" "}
-                    <span style={{ color: "#458756" }}>A</span>lgorytmika{" "}
-                    <span style={{ color: "#458756" }}>L</span>ogik
-                    <span style={{ color: "#458756" }}>A</span>
-                </h2>
-                <h5>Wielkopolski konkurs grup szkolnych</h5>
-                <Hamburger
-                    options={[
-                        ["Aktualności", () => navigate("/")],
-                        ["Zadania", () => navigate("/problems")],
-                        ["Regulamin", () => navigate("/rules")],
-                        ["Historia", () => navigate("/history")],
-                        ["KOALicjA", () => navigate("/koalicja")],
-                    ]}
-                />
-            </header>
+            <PublicHeader navigate={navigate} />
 
             <div className="container" style={{ minWidth: "50%" }}>
                 <h1>Historia</h1>
@@ -110,6 +93,7 @@ const HistoryScreen = () => {
                     </ContentsListBox>
                 )}
             </div>
+            <PublicFooter />
         </>
     );
 };

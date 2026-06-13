@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
-import Hamburger from "../../components/Hamburger";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
+import PublicFooter from "../../components/PublicFooter";
+import PublicHeader from "../../components/PublicHeader";
+import { apiRequest } from "../../utils/apiFetcher";
 import styles from "./HomeScreen.module.css";
 
 const HomeScreen = () => {
@@ -28,25 +30,7 @@ const HomeScreen = () => {
 
     return (
         <>
-            <header className={styles.header}>
-                <h1>Koala</h1>
-                <Hamburger
-                    options={[
-                        ["Aktualności", () => navigate("/")],
-                        ["Zadania", () => navigate("/problems")],
-                        ["Regulamin", () => navigate("/rules")],
-                        ["Historia", () => navigate("/history")],
-                        ["KOALicjA", () => navigate("/koalicja")],
-                    ]}
-                />
-                <h2>
-                    <span className={styles.brandAccent}>KO</span>mbinatoryka{" "}
-                    <span className={styles.brandAccent}>A</span>lgorytmika{" "}
-                    <span className={styles.brandAccent}>L</span>ogik
-                    <span className={styles.brandAccent}>A</span>
-                </h2>
-                <h5>Wielkopolski konkurs grup szkolnych</h5>
-            </header>
+            <PublicHeader navigate={navigate} />
 
             <div className={`container ${styles.container}`}>
                 <h1>Aktualności</h1>
@@ -82,6 +66,7 @@ const HomeScreen = () => {
                     })}
                 </ContentsListBox>
             </div>
+            <PublicFooter />
         </>
     );
 };

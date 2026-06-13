@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import MarkdownEditor from "../../components/MarkdownEditor";
@@ -24,10 +25,6 @@ const EditPosts = () => {
     const [editionId, setEditionId] = useState("");
 
     const [editingPost, setEditingPost] = useState(null);
-
-    const handleBack = () => {
-        navigate("/admin");
-    };
 
     const savePost = async (text) => {
         startLoading();
@@ -140,6 +137,7 @@ const EditPosts = () => {
 
     return (
         <div className="container">
+            <AdminHeader navigate={navigate} />
             {isAdminUser && (
                 <>
                     <div className="container-near">
@@ -147,7 +145,6 @@ const EditPosts = () => {
                             {editingPost === null && <h1>Dodaj Post {title}</h1>}
                             {editingPost !== null && <h1>Edytuj Post {title}</h1>}
                             <div>
-                                <Button text={"Wróć do panelu"} onClick={handleBack} />
                                 <input
                                     type="text"
                                     placeholder="Tytuł posta"

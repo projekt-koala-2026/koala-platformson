@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import { useLoading } from "../../contexts/LoadingContext";
@@ -106,10 +107,6 @@ const EditKoalicjantInfo = () => {
         setEditingKoalicjant(false);
     };
 
-    const handleBack = () => {
-        navigate("/admin");
-    };
-
     useEffect(() => {
         if (!isAdminEditor) {
             navigate("/admin/login");
@@ -131,11 +128,11 @@ const EditKoalicjantInfo = () => {
 
     return (
         <div className={`container ${styles.container}`}>
+            <AdminHeader navigate={navigate} />
             {isAdminEditor && (
                 <>
                     <h1>Lista Koalicjantów</h1>
                     <div>
-                        <Button text={"Wróć do panelu"} onClick={handleBack} />
                         <Button text={"Dodaj nowego/ą Koalicjanta/kę"} onClick={AddKoalicjant} />
                     </div>
                     {addingKoalicjant === true && (
