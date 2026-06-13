@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { useLoading } from "../../contexts/LoadingContext";
-import useKeyboardShortcuts from "../../hooks/UseKeyboardShortcuts";
 import { apiRequest } from "../../utils/apiFetcher";
 
 const AddUserScreen = () => {
@@ -69,7 +68,9 @@ const AddUserScreen = () => {
                         </label>
                     ))}
                 </div>
-                <p>Wybrane role dla {email}: {roles.join(", ")}</p>
+                <p>
+                    Wybrane role dla {email}: {roles.join(", ")}
+                </p>
                 <Button text={"Dodaj Użytkownika"} onClick={handleAddUser} />
                 <Button text={"Wróć do panelu"} onClick={handleBack} />
             </div>

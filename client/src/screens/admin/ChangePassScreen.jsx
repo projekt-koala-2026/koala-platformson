@@ -1,8 +1,7 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { useLoading } from "../../contexts/LoadingContext";
-import useKeyboardShortcuts from "../../hooks/UseKeyboardShortcuts";
 import { apiRequest } from "../../utils/apiFetcher";
 
 const ChangePassScreen = () => {
@@ -71,7 +70,6 @@ const ChangePassScreen = () => {
                 </ul>
             </div>
         </div>
-        
     );
 };
 
