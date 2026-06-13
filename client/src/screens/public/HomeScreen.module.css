@@ -1,0 +1,33 @@
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.brandAccent {
+    color: var(--color-button);
+}
+
+.container {
+    min-width: 50%;
+}
+
+.postHeader {
+    display: flex;
+    flex-direction: column;
+}
+
+.postMeta {
+    display: flex;
+}
+
+.editionMeta {
+    margin-left: auto;
+}
+
+.divider {
+    margin: 3px 0;
+    border: none;
+    background-color: var(--color-button);
+    height: 2px;
+}

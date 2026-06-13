@@ -1,0 +1,112 @@
+.container {
+    margin: 0 auto;
+    padding: 2rem;
+    max-width: 900px;
+    font-family: inherit;
+}
+
+.title {
+    margin-bottom: 5px;
+    color: var(--color-button);
+}
+
+.description {
+    margin-bottom: 25px;
+    color: var(--text-muted);
+}
+
+.selectBox {
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--color-bg);
+    padding: 15px;
+}
+
+.label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-main);
+    font-weight: bold;
+}
+
+.select {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--color-container);
+    padding: 10px;
+    width: 100%;
+    font-size: 1rem;
+}
+
+.problemsList {
+    margin-top: 20px;
+}
+
+.subpointSection {
+    margin-bottom: 25px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--color-container);
+    overflow: hidden;
+}
+
+.subpointHeader {
+    margin: 0;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--color-bg);
+    padding: 12px 20px;
+    color: var(--color-button);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.fileList {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+
+.fileItem {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.fileLink {
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+    padding: 14px 20px;
+    color: var(--text-main);
+    text-decoration: none;
+}
+
+.fileLink:hover {
+    background-color: var(--color-bg);
+}
+
+.iconPdf {
+    flex-shrink: 0;
+    margin-right: 12px;
+    color: #de1414;
+    font-size: 1.3rem;
+}
+
+.fileName {
+    flex-grow: 1;
+    font-weight: 500;
+}
+
+.iconArrow {
+    color: var(--border-color);
+    font-size: 0.9rem;
+}
+
+.noData {
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    background-color: var(--color-bg);
+    padding: 40px;
+    color: var(--text-muted);
+    text-align: center;
+}

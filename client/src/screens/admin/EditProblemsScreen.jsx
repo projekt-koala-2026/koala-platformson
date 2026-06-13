@@ -43,18 +43,26 @@ const EditProblemsScreen = () => {
             return alert("Wybrany plik jest za duży! Maksymalny rozmiar to 64 MB.");
         }
 
-        const serverFileData = await uploadFile(selectedFile, selectedFile.name, "problems", navigate);
+        const serverFileData = await uploadFile(
+            selectedFile,
+            selectedFile.name,
+            "problems",
+            navigate
+        );
 
         if (serverFileData) {
             const fileGuid = serverFileData.id || Date.now().toString();
             const fileUrl =
-                serverFileData.filePath || serverFileData.url || `/content/problems/${fileGuid}.pdf`;
+                serverFileData.filePath ||
+                serverFileData.url ||
+                `/content/problems/${fileGuid}.pdf`;
             const finalFileName = fileUrl.split("/").pop();
             const updatedData = { ...allProblemsData };
             const subpoint = subpointInputValue.trim();
 
             if (!updatedData[selectedEditionId]) updatedData[selectedEditionId] = {};
-            if (!updatedData[selectedEditionId][subpoint]) updatedData[selectedEditionId][subpoint] = [];
+            if (!updatedData[selectedEditionId][subpoint])
+                updatedData[selectedEditionId][subpoint] = [];
 
             updatedData[selectedEditionId][subpoint].push({
                 id: fileGuid,
@@ -169,7 +177,9 @@ const EditProblemsScreen = () => {
 
             <div className={styles.formBox}>
                 <h3 className={styles.formTitle}>Utwórz nowy podpunkt i dodaj PDF</h3>
-                <p className={styles.limitNotice}>Maksymalny rozmiar przesyłanego pliku to 64 MB.</p>
+                <p className={styles.limitNotice}>
+                    Maksymalny rozmiar przesyłanego pliku to 64 MB.
+                </p>
                 <div className={styles.flexGroup}>
                     <input
                         type="text"
@@ -221,7 +231,9 @@ const EditProblemsScreen = () => {
                                             <div className={styles.rowActions}>
                                                 <Button
                                                     text={<FaTrash />}
-                                                    onClick={() => handleDeletePdf(subpoint, pdf.id)}
+                                                    onClick={() =>
+                                                        handleDeletePdf(subpoint, pdf.id)
+                                                    }
                                                 />
                                             </div>
                                         </div>

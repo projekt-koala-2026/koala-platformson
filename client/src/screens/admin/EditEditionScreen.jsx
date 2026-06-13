@@ -133,9 +133,7 @@ const EditionsScreen = () => {
                     <div className={styles.formBox}>
                         <h3>Dodaj nową edycję</h3>
                         <div className={styles.fieldGroup}>
-                            <label className={styles.label}>
-                                Tytuł edycji:
-                            </label>
+                            <label className={styles.label}>Tytuł edycji:</label>
                             <input
                                 type="text"
                                 placeholder="np. Edycja II"
@@ -145,9 +143,7 @@ const EditionsScreen = () => {
                             />
                         </div>
                         <div className={styles.fieldGroup}>
-                            <label className={styles.label}>
-                                Data rozpoczęcia:
-                            </label>
+                            <label className={styles.label}>Data rozpoczęcia:</label>
                             <input
                                 type="datetime-local"
                                 value={startDate}
@@ -156,9 +152,7 @@ const EditionsScreen = () => {
                             />
                         </div>
                         <div className={styles.fieldGroup}>
-                            <label className={styles.label}>
-                                Data zakończenia:
-                            </label>
+                            <label className={styles.label}>Data zakończenia:</label>
                             <input
                                 type="datetime-local"
                                 value={endDate}
@@ -193,9 +187,7 @@ const EditionsScreen = () => {
                         <div key={"edition-tile-" + idx} className={styles.tile}>
                             <div className={styles.tileHeader}>
                                 <div className={styles.tileInfo}>
-                                    <span className={styles.tileTitle}>
-                                        {item.title}
-                                    </span>
+                                    <span className={styles.tileTitle}>{item.title}</span>
                                     <span className={styles.tileMeta}>
                                         Od: {new Date(item.startDate).toLocaleString()} | Do:{" "}
                                         {new Date(item.endDate).toLocaleString()}
@@ -216,9 +208,7 @@ const EditionsScreen = () => {
                                 <div className={styles.editBox}>
                                     <h3>Modyfikacja edycji: {editingEdition.title}</h3>
                                     <div className={styles.fieldGroup}>
-                                        <label className={styles.label}>
-                                            Zmień tytuł:
-                                        </label>
+                                        <label className={styles.label}>Zmień tytuł:</label>
                                         <input
                                             type="text"
                                             value={title}
@@ -227,9 +217,7 @@ const EditionsScreen = () => {
                                         />
                                     </div>
                                     <div className={styles.fieldGroup}>
-                                        <label className={styles.label}>
-                                            Zmień datę startu:
-                                        </label>
+                                        <label className={styles.label}>Zmień datę startu:</label>
                                         <input
                                             type="datetime-local"
                                             value={startDate}
@@ -238,9 +226,7 @@ const EditionsScreen = () => {
                                         />
                                     </div>
                                     <div className={styles.fieldGroup}>
-                                        <label className={styles.label}>
-                                            Zmień datę końca:
-                                        </label>
+                                        <label className={styles.label}>Zmień datę końca:</label>
                                         <input
                                             type="datetime-local"
                                             value={endDate}

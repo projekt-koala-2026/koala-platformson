@@ -1,0 +1,83 @@
+.container {
+    min-width: 50%;
+}
+
+.formSection {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.formBox,
+.tile {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.tile {
+    background: var(--color-container);
+}
+
+.fieldGroup {
+    margin-bottom: 10px;
+}
+
+.label {
+    display: block;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.input {
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px;
+    width: 100%;
+}
+
+.buttonRow,
+.tileHeader,
+.tileActions {
+    display: flex;
+}
+
+.buttonRow {
+    gap: 10px;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tileHeader {
+    align-items: center;
+}
+
+.tileInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.tileTitle {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.tileMeta {
+    margin-top: 4px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.tileActions {
+    gap: 6px;
+    margin-left: auto;
+}
+
+.editBox {
+    margin-top: 15px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+}

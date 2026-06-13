@@ -1,0 +1,24 @@
+.editionSelect {
+    display: block;
+    margin: 10px 0;
+    padding: 5px;
+    width: 100%;
+}
+
+.postHeader {
+    display: flex;
+    flex-direction: column;
+}
+
+.divider {
+    margin: 3px 0;
+    border: none;
+    background-color: var(--color-button);
+    height: 2px;
+}
+
+.actions {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+}

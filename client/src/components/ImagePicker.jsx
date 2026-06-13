@@ -31,16 +31,8 @@ const ImagePicker = forwardRef(({ onSelect, navigate }, ref) => {
     return (
         <div className={styles.grid}>
             {images.map((img) => (
-                <div
-                    key={img.id}
-                    onClick={() => onSelect(img)}
-                    className={styles.item}
-                >
-                    <img
-                        src={apiUrl + img.filePath}
-                        alt={img.title}
-                        className={styles.image}
-                    />
+                <div key={img.id} onClick={() => onSelect(img)} className={styles.item}>
+                    <img src={apiUrl + img.filePath} alt={img.title} className={styles.image} />
                     <p className={styles.title}>{img.title}</p>
                 </div>
             ))}

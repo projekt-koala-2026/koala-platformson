@@ -1,0 +1,55 @@
+.container {
+    padding: 2rem;
+}
+
+.headerBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.toolsetGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.card {
+    flex-grow: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--color-container);
+    padding: 15px;
+    min-width: 300px;
+}
+
+.dangerCard {
+    border-color: #de1414;
+    background-color: rgba(222, 20, 20, 0.05);
+}
+
+.cardTitle {
+    margin: 0 0 5px;
+}
+
+.dangerTitle {
+    color: #de1414;
+}
+
+.cardDescription {
+    margin: 5px 0;
+    font-size: 0.85rem;
+}
+
+.flexInline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.cardActions {
+    margin-top: 10px;
+}

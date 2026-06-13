@@ -7,13 +7,7 @@ const MarkdownRenderer = ({ content }) => {
         img: ({ src, alt }) => {
             const fullUrl = src.startsWith("http") ? src : `${apiUrl}${src}`;
 
-            return (
-                <img
-                    src={fullUrl}
-                    alt={alt}
-                    className={styles.image}
-                />
-            );
+            return <img src={fullUrl} alt={alt} className={styles.image} />;
         },
         a: ({ href, children }) => (
             <a href={href} target="_blank" rel="noopener noreferrer">

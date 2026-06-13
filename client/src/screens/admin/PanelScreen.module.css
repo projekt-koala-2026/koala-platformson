@@ -1,0 +1,32 @@
+.container {
+    min-width: 50%;
+}
+
+.userRow,
+.actions,
+.editActions {
+    display: flex;
+}
+
+.userInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.rolesText {
+    text-transform: lowercase;
+}
+
+.actions {
+    gap: 8px;
+    margin-left: auto;
+}
+
+.roleLabel {
+    display: block;
+}
+
+.editActions {
+    gap: 10px;
+    margin-top: 10px;
+}

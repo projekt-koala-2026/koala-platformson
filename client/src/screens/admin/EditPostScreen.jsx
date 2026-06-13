@@ -210,17 +210,13 @@ const EditPosts = () => {
                                                         }
                                                     )}
                                                 </h6>
-                                                <hr
-                                                    className={styles.divider}
-                                                />
+                                                <hr className={styles.divider} />
                                             </div>
                                             <MarkdownRenderer
                                                 key={idx}
                                                 content={item.markdownBody}
                                             />
-                                            <hr
-                                                className={styles.divider}
-                                            />
+                                            <hr className={styles.divider} />
                                             <h6>
                                                 Edycja:{" "}
                                                 {linkedEdition

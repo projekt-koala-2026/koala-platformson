@@ -1,0 +1,115 @@
+.container {
+    padding: 2rem;
+}
+
+.selectSection {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.label {
+    font-weight: bold;
+}
+
+.selectInput {
+    display: block;
+    margin-top: 5px;
+    padding: 8px;
+    width: 100%;
+}
+
+.formBox,
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--color-container);
+    padding: 15px;
+}
+
+.formBox {
+    margin-top: 20px;
+}
+
+.formTitle {
+    margin: 0 0 2px;
+}
+
+.limitNotice {
+    margin: 2px 0 10px;
+    color: #b35c00;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.flexGroup,
+.pdfRow,
+.pdfIconGroup {
+    display: flex;
+    align-items: center;
+}
+
+.flexGroup {
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.inputField {
+    flex-grow: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.fileInput {
+    padding: 5px;
+}
+
+.structureSection {
+    margin-top: 30px;
+}
+
+.emptyText {
+    color: var(--text-muted);
+}
+
+.card {
+    margin-bottom: 25px;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.cardTitle {
+    margin: 0;
+}
+
+.pdfRow {
+    width: 100%;
+}
+
+.pdfIconGroup {
+    gap: 10px;
+}
+
+.pdfIcon,
+.link {
+    color: #de1414;
+}
+
+.pdfIcon {
+    font-size: 1.4rem;
+}
+
+.link {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.rowActions {
+    margin-left: auto;
+}

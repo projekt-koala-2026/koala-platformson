@@ -281,10 +281,7 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
 
                     {filteredSchools.length === 0 ? (
                         <tr>
-                            <td
-                                colSpan={8}
-                                className={`${styles.td} ${styles.emptyCell}`}
-                            >
+                            <td colSpan={8} className={`${styles.td} ${styles.emptyCell}`}>
                                 Brak danych spełniających kryteria.
                             </td>
                         </tr>
