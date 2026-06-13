@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import Button from "./Button";
 import styles from "./SchoolsTable.module.css";
 
-const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateSchool }) => {
+const SchoolsTable = ({
+    schools = [],
+    actionsRenderer,
+    onAddNewSchool,
+    onUpdateSchool,
+    hideActions = false,
+}) => {
     const ITEMS_PER_PAGE = 50;
 
     const [filters, setFilters] = useState({
@@ -219,83 +225,16 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        <th className={styles.th}>Akcje</th>
+                        {!hideActions && <th className={styles.th}>Akcje</th>}
                     </tr>
                 </thead>
                 <tbody>
-                    <tr className={styles.createRow}>
-                        <td className={styles.td}>
-                            <input
-                                type="text"
-                                placeholder="Nowy RSPO"
-                                value={newSchool.rspo}
-                                onChange={(e) => handleNewSchoolChange("rspo", e.target.value)}
-                                className={styles.createInput}
-                            />
-                        </td>
-                        <td className={styles.td}>
-                            <input
-                                type="text"
-                                placeholder="Pełna nazwa placówki"
-                                value={newSchool.name}
-                                onChange={(e) => handleNewSchoolChange("name", e.target.value)}
-                                className={styles.createInput}
-                            />
-                        </td>
-                        <td className={styles.td}>
-                            <input
-                                type="text"
-                                placeholder="Skrót (np. SP1)"
-                                value={newSchool.nameShort}
-                                onChange={(e) => handleNewSchoolChange("nameShort", e.target.value)}
-                                className={styles.createInput}
-                            />
-                        </td>
-                        <td className={styles.td}>
-                            <input
-                                type="text"
-                                placeholder="Województwo"
-                                value={newSchool.state}
-                                onChange={(e) => handleNewSchoolChange("state", e.target.value)}
-                                className={styles.createInput}
-                            />
-                        </td>
-                        <td className={styles.td}>
-                            <input
-                                type="text"
-                                placeholder="Miasto"
-                                value={newSchool.city}
-                                onChange={(e) => handleNewSchoolChange("city", e.target.value)}
-                                className={styles.createInput}
-                            />
-                        </td>
-                        <td className={styles.td}>
-                            <input
-                                type="text"
-                                placeholder="Typ"
-                                value={newSchool.type}
-                                onChange={(e) => handleNewSchoolChange("type", e.target.value)}
-                                className={styles.createInput}
-                            />
-                        </td>
-                        <td className={styles.td}>
-                            <input
-                                type="text"
-                                placeholder="Adres"
-                                value={newSchool.addres}
-                                onChange={(e) => handleNewSchoolChange("addres", e.target.value)}
-                                className={styles.createInput}
-                            />
-                        </td>
-                        <td className={styles.td}>
-                            <button onClick={handleCreateClick} className={styles.btnSuccess}>
-                                Dodaj +
-                            </button>
-                        </td>
-                    </tr>
-
                     <tr className={styles.paginationRow}>
-                        <td colSpan={8} style={{ padding: 0 }}>
+                        <td
+                            colSpan={hideActions ? 7 : 8}
+                            className={styles.td}
+                            style={{ padding: 0 }}
+                        >
                             <div className={styles.paginationBar}>
                                 <button
                                     className={styles.pageBtn}
@@ -336,9 +275,89 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
                         </td>
                     </tr>
 
+                    {onAddNewSchool && (
+                        <tr className={styles.createRow}>
+                            <td className={styles.td}>
+                                <input
+                                    type="text"
+                                    placeholder="Nowy RSPO"
+                                    value={newSchool.rspo}
+                                    onChange={(e) => handleNewSchoolChange("rspo", e.target.value)}
+                                    className={styles.createInput}
+                                />
+                            </td>
+                            <td className={styles.td}>
+                                <input
+                                    type="text"
+                                    placeholder="Pełna nazwa placówki"
+                                    value={newSchool.name}
+                                    onChange={(e) => handleNewSchoolChange("name", e.target.value)}
+                                    className={styles.createInput}
+                                />
+                            </td>
+                            <td className={styles.td}>
+                                <input
+                                    type="text"
+                                    placeholder="Skrót (np. SP1)"
+                                    value={newSchool.nameShort}
+                                    onChange={(e) =>
+                                        handleNewSchoolChange("nameShort", e.target.value)
+                                    }
+                                    className={styles.createInput}
+                                />
+                            </td>
+                            <td className={styles.td}>
+                                <input
+                                    type="text"
+                                    placeholder="Województwo"
+                                    value={newSchool.state}
+                                    onChange={(e) => handleNewSchoolChange("state", e.target.value)}
+                                    className={styles.createInput}
+                                />
+                            </td>
+                            <td className={styles.td}>
+                                <input
+                                    type="text"
+                                    placeholder="Miasto"
+                                    value={newSchool.city}
+                                    onChange={(e) => handleNewSchoolChange("city", e.target.value)}
+                                    className={styles.createInput}
+                                />
+                            </td>
+                            <td className={styles.td}>
+                                <input
+                                    type="text"
+                                    placeholder="Typ"
+                                    value={newSchool.type}
+                                    onChange={(e) => handleNewSchoolChange("type", e.target.value)}
+                                    className={styles.createInput}
+                                />
+                            </td>
+                            <td className={styles.td}>
+                                <input
+                                    type="text"
+                                    placeholder="Adres"
+                                    value={newSchool.addres}
+                                    onChange={(e) =>
+                                        handleNewSchoolChange("addres", e.target.value)
+                                    }
+                                    className={styles.createInput}
+                                />
+                            </td>
+                            <td className={styles.td}>
+                                <button onClick={handleCreateClick} className={styles.btnSuccess}>
+                                    Dodaj +
+                                </button>
+                            </td>
+                        </tr>
+                    )}
+
                     {paginatedSchools.length === 0 ? (
                         <tr>
-                            <td colSpan={8} className={`${styles.td} ${styles.emptyCell}`}>
+                            <td
+                                colSpan={hideActions ? 7 : 8}
+                                className={`${styles.td} ${styles.emptyCell}`}
+                            >
                                 Brak danych spełniających kryteria.
                             </td>
                         </tr>
@@ -387,32 +406,34 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
                                     <td className={styles.td}>{school.city}</td>
                                     <td className={styles.td}>{school.type}</td>
                                     <td className={styles.td}>{school.addres}</td>
-                                    <td className={styles.td}>
-                                        {isEditing ? (
-                                            <div className={styles.actions}>
-                                                <button
-                                                    onClick={() => handleEditSave(school)}
-                                                    className={styles.btnPrimary}
-                                                >
-                                                    Zapisz
-                                                </button>
-                                                <button
-                                                    onClick={handleEditCancel}
-                                                    className={styles.btnSecondary}
-                                                >
-                                                    Anuluj
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className={styles.actions}>
-                                                <Button
-                                                    onClick={() => handleEditStart(school)}
-                                                    text={"Edytuj"}
-                                                />
-                                                {actionsRenderer(school)}
-                                            </div>
-                                        )}
-                                    </td>
+                                    {!hideActions && (
+                                        <td className={styles.td}>
+                                            {isEditing ? (
+                                                <div className={styles.actions}>
+                                                    <button
+                                                        onClick={() => handleEditSave(school)}
+                                                        className={styles.btnPrimary}
+                                                    >
+                                                        Zapisz
+                                                    </button>
+                                                    <button
+                                                        onClick={handleEditCancel}
+                                                        className={styles.btnSecondary}
+                                                    >
+                                                        Anuluj
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className={styles.actions}>
+                                                    <Button
+                                                        onClick={() => handleEditStart(school)}
+                                                        text={"Edytuj"}
+                                                    />
+                                                    {actionsRenderer && actionsRenderer(school)}
+                                                </div>
+                                            )}
+                                        </td>
+                                    )}
                                 </tr>
                             );
                         })

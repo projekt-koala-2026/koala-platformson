@@ -19,7 +19,7 @@
 .th {
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 3;
     border-bottom: 2px solid var(--border-color);
     background-color: var(--color-bg);
     padding: 10px;
@@ -60,9 +60,6 @@
 }
 
 .createRow {
-    position: sticky;
-    top: 75px;
-    z-index: 1;
     background-color: color-mix(in srgb, var(--color-button) 5%, transparent);
 }
 
@@ -104,8 +101,8 @@
 
 .paginationRow {
     position: sticky;
-    top: 148px;
-    z-index: 1;
+    top: 73px;
+    z-index: 2;
     background-color: var(--color-bg);
 }
 
