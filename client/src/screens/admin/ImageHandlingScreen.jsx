@@ -19,7 +19,7 @@ const ImageHandlingScreen = () => {
         if (!window.confirm("Usunąć to zdjęcie?")) return;
 
         await apiRequest("/api/admin/file/public/files", { id: file.id }, "DELETE", navigate);
-        
+
         pickerRef.current.refresh();
     };
 

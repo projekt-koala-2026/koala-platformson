@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import MarkdownEditor from "../../components/MarkdownEditor";
-import MarkdownRenderer from "../../components/MarkdownRenderer";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
 
@@ -15,8 +14,15 @@ const EditHistory = () => {
         navigate("/admin");
     };
 
-    const UpdateHistory = async (rules) => {
-        const data = await apiRequest("/api/static-pages/history", { markdownBody: rules }, "PUT", navigate);
+    const UpdateHistory = async (history) => {
+        const apiData = { markdownBody: history };
+
+        const data = await apiRequest(
+            "/api/static-pages/history",
+            { markdownBody: JSON.stringify(apiData) },
+            "PUT",
+            navigate
+        );
 
         if (data) alert("Zapisano edycję historii");
 
@@ -31,7 +37,9 @@ const EditHistory = () => {
 
         const getData = async () => {
             const data = await apiRequest("/api/static-pages/history", null, "GET", navigate);
-            setMarkdownBody(data.markdownBody);
+            const data_json = JSON.parse(data);
+
+            setMarkdownBody(data_json.markdownBody);
         };
 
         if (isAdminEditor) getData();

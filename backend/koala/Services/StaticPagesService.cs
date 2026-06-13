@@ -28,7 +28,7 @@ namespace koala.Services
             _publicFilesPath = Environment.GetEnvironmentVariable("PUBLIC_STORAGE_PATH");
         }
 
-        public async Task<StaticPageInfoVM> UpdateRules(string content)
+        public async Task<string> UpdateRules(string content)
         {
             string path = Path.Combine(_publicFilesPath,"rules/rules.json");
 
@@ -40,10 +40,10 @@ namespace koala.Services
             await File.WriteAllTextAsync(path, content);
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = content};
-            return result;
+            return content;
         }
 
-        public async Task<StaticPageInfoVM> UpdateHistory(string content)
+        public async Task<string> UpdateHistory(string content)
         {
             string path = Path.Combine(_publicFilesPath,"history/history.json");
 
@@ -55,10 +55,10 @@ namespace koala.Services
             await File.WriteAllTextAsync(path, content);
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = content};
-            return result;
+            return content;
         }
 
-        public async Task<StaticPageInfoVM> UpdateProblems(string content)
+        public async Task<string> UpdateProblems(string content)
         {
             string path = Path.Combine(_publicFilesPath,"problems/problems.json");
 
@@ -70,10 +70,10 @@ namespace koala.Services
             await File.WriteAllTextAsync(path, content);
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = content};
-            return result;
+            return content;
         }
 
-        public async Task<StaticPageInfoVM> GetRules()
+        public async Task<string> GetRules()
         {
             string path = Path.Combine(_publicFilesPath,"rules/rules.json");
 
@@ -83,10 +83,10 @@ namespace koala.Services
             }
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = await File.ReadAllTextAsync(path)};
-            return result;
+            return result.MarkdownBody;
         }
 
-        public async Task<StaticPageInfoVM> GetHistory()
+        public async Task<string> GetHistory()
         {
             string path = Path.Combine(_publicFilesPath,"history/history.json");
 
@@ -96,10 +96,10 @@ namespace koala.Services
             }
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = await File.ReadAllTextAsync(path)};
-            return result;
+            return result.MarkdownBody;
         }
 
-        public async Task<StaticPageInfoVM> GetProblems()
+        public async Task<string> GetProblems()
         {
             string path = Path.Combine(_publicFilesPath,"problems/problems.json");
 
@@ -109,7 +109,7 @@ namespace koala.Services
             }
 
             StaticPageInfoVM result = new StaticPageInfoVM { MarkdownBody = await File.ReadAllTextAsync(path)};
-            return result;
+            return result.MarkdownBody;
         }
     }
 }
