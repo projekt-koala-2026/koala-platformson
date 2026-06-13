@@ -8,6 +8,7 @@ import MarkdownRenderer from "../../components/MarkdownRenderer";
 import { useLoading } from "../../contexts/LoadingContext";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
+import styles from "./EditPostScreen.module.css";
 
 const EditPosts = () => {
     const navigate = useNavigate();
@@ -159,12 +160,7 @@ const EditPosts = () => {
                                 <select
                                     value={editionId}
                                     onChange={(e) => setEditionId(e.target.value)}
-                                    style={{
-                                        display: "block",
-                                        margin: "10px 0",
-                                        padding: "5px",
-                                        width: "100%",
-                                    }}
+                                    className={styles.editionSelect}
                                     required
                                 >
                                     <option value="">-- Wybierz edycję konkursu --</option>
@@ -199,9 +195,7 @@ const EditPosts = () => {
 
                                     return (
                                         <ContentsListTile key={item.id}>
-                                            <div
-                                                style={{ display: "flex", flexDirection: "column" }}
-                                            >
+                                            <div className={styles.postHeader}>
                                                 <h3>Tytuł: {item.title}</h3>
                                                 <h6>
                                                     Data:{" "}
@@ -217,12 +211,7 @@ const EditPosts = () => {
                                                     )}
                                                 </h6>
                                                 <hr
-                                                    style={{
-                                                        border: "none",
-                                                        height: "2px",
-                                                        backgroundColor: "#054e0b",
-                                                        margin: "3px 0",
-                                                    }}
+                                                    className={styles.divider}
                                                 />
                                             </div>
                                             <MarkdownRenderer
@@ -230,12 +219,7 @@ const EditPosts = () => {
                                                 content={item.markdownBody}
                                             />
                                             <hr
-                                                style={{
-                                                    border: "none",
-                                                    height: "2px",
-                                                    backgroundColor: "#054e0b",
-                                                    margin: "3px 0",
-                                                }}
+                                                className={styles.divider}
                                             />
                                             <h6>
                                                 Edycja:{" "}
@@ -243,13 +227,7 @@ const EditPosts = () => {
                                                     ? linkedEdition.title
                                                     : "Nieprzypisana"}
                                             </h6>
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    gap: "4px",
-                                                    marginLeft: "auto",
-                                                }}
-                                            >
+                                            <div className={styles.actions}>
                                                 <Button
                                                     text={<FaEdit />}
                                                     onClick={() => EditPost(item)}

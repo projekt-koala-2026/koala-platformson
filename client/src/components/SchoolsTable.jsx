@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import Button from "./Button";
+import styles from "./SchoolsTable.module.css";
 
 const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateSchool }) => {
     const [filters, setFilters] = useState({
@@ -128,241 +129,151 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
         });
     }, [schools, filters]);
 
-    const styles = {
-        scrollContainer: {
-            width: "100%",
-            maxHeight: "600px",
-            overflowX: "auto",
-            overflowY: "auto",
-            marginTop: "15px",
-            border: "1px solid #ddd",
-            borderRadius: "6px",
-        },
-        table: {
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "0.9rem",
-            textAlign: "left",
-            minWidth: "1100px",
-        },
-        th: {
-            backgroundColor: "#f5f5f5",
-            padding: "10px",
-            borderBottom: "2px solid #ddd",
-            fontWeight: "bold",
-            position: "sticky",
-            top: 0,
-            zIndex: 2,
-        },
-        td: {
-            padding: "10px",
-            borderBottom: "1px solid #ddd",
-            verticalAlign: "middle",
-        },
-        input: {
-            width: "100%",
-            padding: "5px",
-            marginTop: "5px",
-            boxSizing: "border-box",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "0.8rem",
-        },
-        createInput: {
-            width: "100%",
-            padding: "6px",
-            boxSizing: "border-box",
-            border: "1px solid #2D8A4E",
-            borderRadius: "4px",
-            fontSize: "0.85rem",
-        },
-        editInput: {
-            width: "100%",
-            padding: "6px",
-            boxSizing: "border-box",
-            border: "1px solid #007bff",
-            borderRadius: "4px",
-            fontSize: "0.85rem",
-        },
-        createRow: {
-            backgroundColor: "rgba(45, 138, 78, 0.05)",
-            position: "sticky",
-            top: "75px",
-            zIndex: 1,
-        },
-        btnSuccess: {
-            backgroundColor: "#2D8A4E",
-            color: "#fff",
-            border: "none",
-            padding: "6px 12px",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            width: "100%",
-        },
-        btnPrimary: {
-            backgroundColor: "#007bff",
-            color: "#fff",
-            border: "none",
-            padding: "6px 10px",
-            borderRadius: "4px",
-            cursor: "pointer",
-        },
-        btnSecondary: {
-            backgroundColor: "#6c757d",
-            color: "#fff",
-            border: "none",
-            padding: "6px 10px",
-            borderRadius: "4px",
-            cursor: "pointer",
-        },
-    };
-
     return (
-        <div style={styles.scrollContainer}>
-            <table style={styles.table}>
+        <div className={styles.scrollContainer}>
+            <table className={styles.table}>
                 <thead>
                     <tr>
-                        <th style={styles.th}>
+                        <th className={styles.th}>
                             <div>RSPO</div>
                             <input
                                 type="text"
                                 value={filters.rspo}
                                 onChange={(e) => handleFilterChange("rspo", e.target.value)}
-                                style={styles.input}
+                                className={styles.input}
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        <th style={styles.th}>
+                        <th className={styles.th}>
                             <div>Nazwa</div>
                             <input
                                 type="text"
                                 value={filters.name}
                                 onChange={(e) => handleFilterChange("name", e.target.value)}
-                                style={styles.input}
+                                className={styles.input}
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        <th style={styles.th}>
+                        <th className={styles.th}>
                             <div>Skrócona nazwa</div>
                             <input
                                 type="text"
                                 value={filters.nameShort}
                                 onChange={(e) => handleFilterChange("nameShort", e.target.value)}
-                                style={styles.input}
+                                className={styles.input}
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        <th style={styles.th}>
+                        <th className={styles.th}>
                             <div>Województwo</div>
                             <input
                                 type="text"
                                 value={filters.state}
                                 onChange={(e) => handleFilterChange("state", e.target.value)}
-                                style={styles.input}
+                                className={styles.input}
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        <th style={styles.th}>
+                        <th className={styles.th}>
                             <div>Miasto</div>
                             <input
                                 type="text"
                                 value={filters.city}
                                 onChange={(e) => handleFilterChange("city", e.target.value)}
-                                style={styles.input}
+                                className={styles.input}
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        <th style={styles.th}>
+                        <th className={styles.th}>
                             <div>Typ</div>
                             <input
                                 type="text"
                                 value={filters.type}
                                 onChange={(e) => handleFilterChange("type", e.target.value)}
-                                style={styles.input}
+                                className={styles.input}
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        <th style={styles.th}>
+                        <th className={styles.th}>
                             <div>Adres</div>
                             <input
                                 type="text"
                                 value={filters.addres}
                                 onChange={(e) => handleFilterChange("addres", e.target.value)}
-                                style={styles.input}
+                                className={styles.input}
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        <th style={styles.th}>Akcje</th>
+                        <th className={styles.th}>Akcje</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr style={styles.createRow}>
-                        <td style={styles.td}>
+                    <tr className={styles.createRow}>
+                        <td className={styles.td}>
                             <input
                                 type="text"
                                 placeholder="Nowy RSPO"
                                 value={newSchool.rspo}
                                 onChange={(e) => handleNewSchoolChange("rspo", e.target.value)}
-                                style={styles.createInput}
+                                className={styles.createInput}
                             />
                         </td>
-                        <td style={styles.td}>
+                        <td className={styles.td}>
                             <input
                                 type="text"
                                 placeholder="Pełna nazwa placówki"
                                 value={newSchool.name}
                                 onChange={(e) => handleNewSchoolChange("name", e.target.value)}
-                                style={styles.createInput}
+                                className={styles.createInput}
                             />
                         </td>
-                        <td style={styles.td}>
+                        <td className={styles.td}>
                             <input
                                 type="text"
                                 placeholder="Skrót (np. SP1)"
                                 value={newSchool.nameShort}
                                 onChange={(e) => handleNewSchoolChange("nameShort", e.target.value)}
-                                style={styles.createInput}
+                                className={styles.createInput}
                             />
                         </td>
-                        <td style={styles.td}>
+                        <td className={styles.td}>
                             <input
                                 type="text"
                                 placeholder="Województwo"
                                 value={newSchool.state}
                                 onChange={(e) => handleNewSchoolChange("state", e.target.value)}
-                                style={styles.createInput}
+                                className={styles.createInput}
                             />
                         </td>
-                        <td style={styles.td}>
+                        <td className={styles.td}>
                             <input
                                 type="text"
                                 placeholder="Miasto"
                                 value={newSchool.city}
                                 onChange={(e) => handleNewSchoolChange("city", e.target.value)}
-                                style={styles.createInput}
+                                className={styles.createInput}
                             />
                         </td>
-                        <td style={styles.td}>
+                        <td className={styles.td}>
                             <input
                                 type="text"
                                 placeholder="Typ"
                                 value={newSchool.type}
                                 onChange={(e) => handleNewSchoolChange("type", e.target.value)}
-                                style={styles.createInput}
+                                className={styles.createInput}
                             />
                         </td>
-                        <td style={styles.td}>
+                        <td className={styles.td}>
                             <input
                                 type="text"
                                 placeholder="Adres"
                                 value={newSchool.addres}
                                 onChange={(e) => handleNewSchoolChange("addres", e.target.value)}
-                                style={styles.createInput}
+                                className={styles.createInput}
                             />
                         </td>
-                        <td style={styles.td}>
-                            <button onClick={handleCreateClick} style={styles.btnSuccess}>
+                        <td className={styles.td}>
+                            <button onClick={handleCreateClick} className={styles.btnSuccess}>
                                 Dodaj +
                             </button>
                         </td>
@@ -372,7 +283,7 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
                         <tr>
                             <td
                                 colSpan={8}
-                                style={{ ...styles.td, textAlign: "center", color: "#666" }}
+                                className={`${styles.td} ${styles.emptyCell}`}
                             >
                                 Brak danych spełniających kryteria.
                             </td>
@@ -382,8 +293,8 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
                             const isEditing = editingRspo === school.rspo;
                             return (
                                 <tr key={school.rspo}>
-                                    <td style={styles.td}>{school.rspo}</td>
-                                    <td style={styles.td}>
+                                    <td className={styles.td}>{school.rspo}</td>
+                                    <td className={styles.td}>
                                         {isEditing ? (
                                             <input
                                                 type="text"
@@ -394,13 +305,13 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
                                                         name: e.target.value,
                                                     }))
                                                 }
-                                                style={styles.editInput}
+                                                className={styles.editInput}
                                             />
                                         ) : (
                                             school.name
                                         )}
                                     </td>
-                                    <td style={styles.td}>
+                                    <td className={styles.td}>
                                         {isEditing ? (
                                             <input
                                                 type="text"
@@ -411,35 +322,35 @@ const SchoolsTable = ({ schools = [], actionsRenderer, onAddNewSchool, onUpdateS
                                                         nameShort: e.target.value,
                                                     }))
                                                 }
-                                                style={styles.editInput}
+                                                className={styles.editInput}
                                                 placeholder="Brak skrótu"
                                             />
                                         ) : (
                                             school.nameShort || "-"
                                         )}
                                     </td>
-                                    <td style={styles.td}>{school.state}</td>
-                                    <td style={styles.td}>{school.city}</td>
-                                    <td style={styles.td}>{school.type}</td>
-                                    <td style={styles.td}>{school.addres}</td>
-                                    <td style={styles.td}>
+                                    <td className={styles.td}>{school.state}</td>
+                                    <td className={styles.td}>{school.city}</td>
+                                    <td className={styles.td}>{school.type}</td>
+                                    <td className={styles.td}>{school.addres}</td>
+                                    <td className={styles.td}>
                                         {isEditing ? (
-                                            <div style={{ display: "flex", gap: "5px" }}>
+                                            <div className={styles.actions}>
                                                 <button
                                                     onClick={() => handleEditSave(school)}
-                                                    style={styles.btnPrimary}
+                                                    className={styles.btnPrimary}
                                                 >
                                                     Zapisz
                                                 </button>
                                                 <button
                                                     onClick={handleEditCancel}
-                                                    style={styles.btnSecondary}
+                                                    className={styles.btnSecondary}
                                                 >
                                                     Anuluj
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div style={{ display: "flex", gap: "5px" }}>
+                                            <div className={styles.actions}>
                                                 <Button
                                                     onClick={() => handleEditStart(school)}
                                                     text={"Edytuj"}

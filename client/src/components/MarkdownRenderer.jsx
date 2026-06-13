@@ -1,5 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import { apiUrl } from "../utils/apiFetcher";
+import styles from "./MarkdownRenderer.module.css";
 
 const MarkdownRenderer = ({ content }) => {
     const customComponents = {
@@ -10,14 +11,7 @@ const MarkdownRenderer = ({ content }) => {
                 <img
                     src={fullUrl}
                     alt={alt}
-                    style={{
-                        maxWidth: "50%",
-                        height: "auto",
-                        maxHeight: "50%",
-                        borderRadius: "8px",
-                        display: "block",
-                        margin: "10px 0",
-                    }}
+                    className={styles.image}
                 />
             );
         },
@@ -29,7 +23,7 @@ const MarkdownRenderer = ({ content }) => {
     };
 
     return (
-        <div className="markdownRender">
+        <div className={styles.markdownRender}>
             <ReactMarkdown components={customComponents}>{content}</ReactMarkdown>
         </div>
     );

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import SchoolsTable from "../../components/SchoolsTable";
 import { apiRequest, apiUrl } from "../../utils/apiFetcher";
+import styles from "./EditSchoolsScreen.module.css";
 
 const AdminSchoolsScreen = () => {
     const navigate = useNavigate();
@@ -11,9 +12,7 @@ const AdminSchoolsScreen = () => {
 
     const loadSchools = async () => {
         const response = await apiRequest("/api/admin/school/school", null, "GET", navigate);
-        if (response) {
-            setSchools(response);
-        }
+        if (response) setSchools(response);
     };
 
     useEffect(() => {
@@ -46,16 +45,14 @@ const AdminSchoolsScreen = () => {
             } else {
                 alert("Błąd podczas przetwarzania pliku CSV przez serwer.");
             }
-        } catch (error) {
+        } catch {
             alert("Błąd sieci podczas wysyłania formularza.");
         }
     };
 
     const handleCreateManualSchool = async (payload) => {
         const success = await apiRequest("/api/admin/school/school", payload, "POST", navigate);
-        if (success) {
-            await loadSchools();
-        }
+        if (success) await loadSchools();
     };
 
     const handleUpdateInlineSchool = async (updatedSchool) => {
@@ -76,9 +73,7 @@ const AdminSchoolsScreen = () => {
                 "PUT",
                 navigate
             );
-            if (successShort) {
-                await loadSchools();
-            }
+            if (successShort) await loadSchools();
         }
     };
 
@@ -92,9 +87,7 @@ const AdminSchoolsScreen = () => {
             "DELETE",
             navigate
         );
-        if (success) {
-            await loadSchools();
-        }
+        if (success) await loadSchools();
     };
 
     const handleDeleteAll = async () => {
@@ -115,50 +108,17 @@ const AdminSchoolsScreen = () => {
         }
     };
 
-    const styles = {
-        container: {
-            padding: "2rem",
-        },
-        headerBox: {
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "between",
-            alignItems: "center",
-            marginBottom: "20px",
-        },
-        toolsetGrid: {
-            display: "flex",
-            gap: "20px",
-            marginBottom: "30px",
-            flexWrap: "wrap",
-        },
-        card: {
-            padding: "15px",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            background: "#fff",
-            flexGrow: 1,
-            minWidth: "300px",
-        },
-        flexInline: {
-            display: "flex",
-            gap: "10px",
-            marginTop: "10px",
-            alignItems: "center",
-        },
-    };
-
     return (
-        <div className="container" style={styles.container}>
-            <div style={styles.headerBox}>
+        <div className={`container ${styles.container}`}>
+            <div className={styles.headerBox}>
                 <h1>Zarządzanie Bazą Szkół</h1>
                 <Button text={"Wróć do panelu"} onClick={handleBack} />
             </div>
 
-            <div style={styles.toolsetGrid}>
-                <div style={styles.card}>
-                    <h3 style={{ margin: "0 0 5px 0" }}>Import bazy z kuratorium (CSV)</h3>
-                    <div style={styles.flexInline}>
+            <div className={styles.toolsetGrid}>
+                <div className={styles.card}>
+                    <h3 className={styles.cardTitle}>Import bazy z kuratorium (CSV)</h3>
+                    <div className={styles.flexInline}>
                         <input
                             id="csvFileInput"
                             type="file"
@@ -169,18 +129,14 @@ const AdminSchoolsScreen = () => {
                     </div>
                 </div>
 
-                <div
-                    style={{
-                        ...styles.card,
-                        border: "1px solid #de1414",
-                        backgroundColor: "rgba(222, 20, 20, 0.05)",
-                    }}
-                >
-                    <h3 style={{ margin: "0 0 5px 0", color: "#de1414" }}>Czyszczenie rejestru</h3>
-                    <p style={{ fontSize: "0.85rem", margin: "5px 0" }}>
+                <div className={`${styles.card} ${styles.dangerCard}`}>
+                    <h3 className={`${styles.cardTitle} ${styles.dangerTitle}`}>
+                        Czyszczenie rejestru
+                    </h3>
+                    <p className={styles.cardDescription}>
                         Usuwa wszystkie rekordy szkół z bazy danych.
                     </p>
-                    <div style={{ marginTop: "10px" }}>
+                    <div className={styles.cardActions}>
                         <Button text={"Wyczyść całą bazę"} onClick={handleDeleteAll} />
                     </div>
                 </div>

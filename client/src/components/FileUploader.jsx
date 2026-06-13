@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { uploadFile } from "../utils/apiFetcher";
+import styles from "./FileUploader.module.css";
 
 const FileUploader = forwardRef(({ onUploadSuccess, onFileSelect }, ref) => {
     const navigate = useNavigate();
@@ -32,7 +33,7 @@ const FileUploader = forwardRef(({ onUploadSuccess, onFileSelect }, ref) => {
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            style={{ display: "none" }}
+            className={styles.input}
         />
     );
 });

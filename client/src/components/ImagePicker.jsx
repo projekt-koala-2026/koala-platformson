@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { apiRequest, apiUrl } from "../utils/apiFetcher";
+import styles from "./ImagePicker.module.css";
 
 const ImagePicker = forwardRef(({ onSelect, navigate }, ref) => {
     const [images, setImages] = useState([]);
@@ -28,46 +29,19 @@ const ImagePicker = forwardRef(({ onSelect, navigate }, ref) => {
     }, []);
 
     return (
-        <div
-            style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
-                gap: "10px",
-                padding: "10px",
-                background: "#333",
-                borderRadius: "8px",
-                maxHeight: "300px",
-                overflowY: "auto",
-            }}
-        >
+        <div className={styles.grid}>
             {images.map((img) => (
                 <div
                     key={img.id}
                     onClick={() => onSelect(img)}
-                    style={{ cursor: "pointer", border: "2px solid transparent" }}
-                    onMouseOver={(e) => (e.currentTarget.style.borderColor = "#ffcc00")}
-                    onMouseOut={(e) => (e.currentTarget.style.borderColor = "transparent")}
+                    className={styles.item}
                 >
                     <img
                         src={apiUrl + img.filePath}
                         alt={img.title}
-                        style={{
-                            width: "100%",
-                            height: "80px",
-                            objectFit: "cover",
-                            borderRadius: "4px",
-                        }}
+                        className={styles.image}
                     />
-                    <p
-                        style={{
-                            fontSize: "10px",
-                            color: "white",
-                            margin: "2px 0",
-                            overflow: "hidden",
-                        }}
-                    >
-                        {img.title}
-                    </p>
+                    <p className={styles.title}>{img.title}</p>
                 </div>
             ))}
         </div>

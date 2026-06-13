@@ -6,6 +6,7 @@ import { ContentsListBox, ContentsListTile } from "../../components/ContentsList
 import { useLoading } from "../../contexts/LoadingContext";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
+import styles from "./EditKoalicjantInfoScreen.module.css";
 
 const EditKoalicjantInfo = () => {
     const navigate = useNavigate();
@@ -61,7 +62,6 @@ const EditKoalicjantInfo = () => {
         const confirmed = window.confirm(
             `Czy na pewno chcesz usunąć Koalicjanta ${koalicjant.name}?`
         );
-
         if (!confirmed) return;
 
         const apiLink = `/api/admin/koalicjants/${koalicjant.id}`;
@@ -118,7 +118,6 @@ const EditKoalicjantInfo = () => {
 
         const getData = async () => {
             const data = await apiRequest("/api/admin/koalicjants", null, "GET", navigate);
-
             if (!data || data.length === 0) {
                 navigate("/admin/koalicjants");
                 return;
@@ -128,20 +127,20 @@ const EditKoalicjantInfo = () => {
         };
 
         if (isAdminEditor) getData();
-    }, [navigate]);
+    }, [navigate, isAdminEditor]);
 
     return (
-        <div className="container" style={{ minWidth: "50%" }}>
+        <div className={`container ${styles.container}`}>
             {isAdminEditor && (
                 <>
                     <h1>Lista Koalicjantów</h1>
                     <div>
                         <Button text={"Wróć do panelu"} onClick={handleBack} />
-                        <Button text={"Dodaj nowego/ą Koalicjanta/ke"} onClick={AddKoalicjant} />
+                        <Button text={"Dodaj nowego/ą Koalicjanta/kę"} onClick={AddKoalicjant} />
                     </div>
                     {addingKoalicjant === true && (
                         <div className="container">
-                            <h2>Dodaj Koalicjanta/ke</h2>
+                            <h2>Dodaj Koalicjanta/kę</h2>
                             <input
                                 type="text"
                                 placeholder="Imię i Nazwisko"
@@ -162,7 +161,7 @@ const EditKoalicjantInfo = () => {
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                             />
-                            <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+                            <div className={styles.formActions}>
                                 <Button text={"Zapisz"} onClick={saveKoalicjant} />
                                 <Button
                                     text={"Anuluj"}
@@ -175,29 +174,21 @@ const EditKoalicjantInfo = () => {
                     )}
                     {koalicjants && (
                         <ContentsListBox>
-                            {koalicjants.map((item, idx) => (
+                            {koalicjants.map((item) => (
                                 <ContentsListTile key={item.id}>
-                                    <div style={{ display: "flex", gap: "4px" }}>
-                                        <div style={{ display: "flex", gap: "4px" }}>
+                                    <div className={styles.listRow}>
+                                        <div className={styles.personInfo}>
                                             <img
                                                 src={item.profilePicture}
                                                 height="62"
-                                                style={{ borderRadius: "12px" }}
+                                                className={styles.avatar}
                                             />
-                                            <div
-                                                style={{ display: "flex", flexDirection: "column" }}
-                                            >
+                                            <div className={styles.textColumn}>
                                                 <h3>{item.name}</h3>
                                                 <span>{item.description}</span>
                                             </div>
                                         </div>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                gap: "4px",
-                                                marginLeft: "auto",
-                                            }}
-                                        >
+                                        <div className={styles.actions}>
                                             <Button
                                                 text={<FaEdit />}
                                                 onClick={() => EditKoalicjant(item)}
@@ -231,13 +222,7 @@ const EditKoalicjantInfo = () => {
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
                                             />
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    gap: "10px",
-                                                    marginTop: "10px",
-                                                }}
-                                            >
+                                            <div className={styles.formActions}>
                                                 <Button
                                                     text={"Zapisz"}
                                                     onClick={() => updateKoalicjant(item)}
@@ -245,7 +230,8 @@ const EditKoalicjantInfo = () => {
                                                 <Button
                                                     text={"Anuluj"}
                                                     onClick={() => {
-                                                        (setEditingKoalicjant(false), clearForm);
+                                                        setEditingKoalicjant(false);
+                                                        clearForm();
                                                     }}
                                                 />
                                             </div>
