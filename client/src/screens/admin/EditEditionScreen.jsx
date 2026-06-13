@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
@@ -18,8 +19,12 @@ const EditionsScreen = () => {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
-    const handleBack = () => {
-        navigate("/admin");
+    const formatToLocalISO = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const offset = date.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(date.getTime() - offset).toISOString().slice(0, 16);
+        return localISOTime;
     };
 
     const handleDelete = async (edition) => {
@@ -42,31 +47,34 @@ const EditionsScreen = () => {
             setIsAdding(false);
             setEditingEdition(edition);
             setTitle(edition.title || "");
-            setStartDate(edition.startDate ? edition.startDate.substring(0, 16) : "");
-            setEndDate(edition.endDate ? edition.endDate.substring(0, 16) : "");
+            setStartDate(formatToLocalISO(edition.startDate));
+            setEndDate(formatToLocalISO(edition.endDate));
         }
     };
 
     const handleSaveEdit = async () => {
         const id = editingEdition.id;
 
+        const formattedStartDate = new Date(startDate).toISOString();
+        const formattedEndDate = new Date(endDate).toISOString();
+
         if (title !== editingEdition.title) {
             await apiRequest("/api/admin/edition/title", { id, title }, "PUT", navigate);
         }
 
-        if (startDate !== editingEdition.startDate) {
+        if (formattedStartDate !== editingEdition.startDate) {
             await apiRequest(
                 "/api/admin/edition/start-date",
-                { id, startDate: new Date(startDate).toISOString() },
+                { id, startDate: formattedStartDate },
                 "PUT",
                 navigate
             );
         }
 
-        if (endDate !== editingEdition.endDate) {
+        if (formattedEndDate !== editingEdition.endDate) {
             await apiRequest(
                 "/api/admin/edition/end-date",
-                { id, endDate: new Date(endDate).toISOString() },
+                { id, endDate: formattedEndDate },
                 "PUT",
                 navigate
             );
@@ -78,8 +86,8 @@ const EditionsScreen = () => {
                     ? {
                           ...e,
                           title,
-                          startDate: new Date(startDate).toISOString(),
-                          endDate: new Date(endDate).toISOString(),
+                          startDate: formattedStartDate,
+                          endDate: formattedEndDate,
                       }
                     : e
             )
@@ -124,10 +132,8 @@ const EditionsScreen = () => {
 
     return (
         <div className={`container ${styles.container}`}>
+            <AdminHeader navigate={navigate} />
             <h1>Zarządzanie Edycjami</h1>
-            <Button text={"Wróć do panelu"} onClick={handleBack} />
-
-            {/* Panel dodawania nowej edycji */}
             <div className={styles.formSection}>
                 {isAdding ? (
                     <div className={styles.formBox}>
@@ -179,8 +185,6 @@ const EditionsScreen = () => {
                     )
                 )}
             </div>
-
-            {/* Listowanie zasobów z bazy danych */}
             {editions && (
                 <div className={styles.list}>
                     {editions.map((item, idx) => (
@@ -202,8 +206,6 @@ const EditionsScreen = () => {
                                     <Button text={<FaTrash />} onClick={() => handleDelete(item)} />
                                 </div>
                             </div>
-
-                            {/* Formularz edycji konkretnego rekordu */}
                             {editingEdition?.id === item.id && (
                                 <div className={styles.editBox}>
                                     <h3>Modyfikacja edycji: {editingEdition.title}</h3>

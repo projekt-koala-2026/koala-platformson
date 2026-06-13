@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "../../components/Button";
+import AdminHeader from "../../components/AdminHeader";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
@@ -9,10 +9,6 @@ const EditHistory = () => {
     const navigate = useNavigate();
     const isAdminEditor = useMemo(() => isAdmin() || isEditor(), []);
     const [markdownBody, setMarkdownBody] = useState("");
-
-    const handleBack = () => {
-        navigate("/admin");
-    };
 
     const UpdateHistory = async (history) => {
         const apiData = { markdownBody: history };
@@ -47,11 +43,11 @@ const EditHistory = () => {
 
     return (
         <div className="container">
+            <AdminHeader navigate={navigate} />
             {isAdminEditor && (
                 <>
                     <h1>Historia konkursu</h1>
                     <div>
-                        <Button text={"Wróć do panelu"} onClick={handleBack} />
                         <MarkdownEditor
                             key={markdownBody}
                             initialValue={markdownBody}

@@ -5,7 +5,7 @@ const authMiddleware = (response, navigate) => {
     if (!allowedStatus.includes(response.status)) {
         console.log("Error occured!\nerror status: " + response.status);
         console.log(response.body);
-        if (response.status === 401) navigate("/admin/login");
+        if (response.status === 401 || response.status === 403) navigate("/admin/login");
         return null;
     }
     return true;

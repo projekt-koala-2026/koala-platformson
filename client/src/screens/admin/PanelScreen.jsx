@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
-import Hamburger from "../../components/Hamburger";
-import ProfileButton from "../../components/ProfileButton";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
 import styles from "./PanelScreen.module.css";
@@ -65,10 +64,6 @@ const PanelScreen = () => {
         setEditingUser(null);
     };
 
-    const ChangePassword = async () => {
-        navigate("/admin/changepass");
-    };
-
     useEffect(() => {
         if (!isAdminEditor) {
             navigate("/admin/login");
@@ -85,40 +80,11 @@ const PanelScreen = () => {
 
     return (
         <>
-            <header>
-                <h1>Panel administracyjny</h1>
-                <ProfileButton
-                    options={[
-                        ["Logout", handleLogout],
-                        ["Zmień Hasło", ChangePassword],
-                    ]}
-                />
-                <Hamburger
-                    options={[
-                        ["Zarządzanie plikami", () => navigate("/admin/images")],
-
-                        ...(isAdminUser
-                            ? [
-                                  ["Zarządzanie Sponsorami", () => navigate("/admin/sponsors")],
-                                  [
-                                      "Zarządzanie Koalicjantami",
-                                      () => navigate("/admin/koalicjants"),
-                                  ],
-                                  ["Posty", () => navigate("/admin/posts")],
-                                  ["Historia", () => navigate("/admin/history")],
-                                  ["Regulamin", () => navigate("/admin/rules")],
-                                  ["Zarządzanie Edycjami", () => navigate("/admin/editions")],
-                                  ["Zarządzanie Zadaniami", () => navigate("/admin/problems")],
-                                  ["Zarządzanie Szkołami", () => navigate("/admin/schools")],
-                              ]
-                            : []),
-                    ]}
-                />
-            </header>
-
+            <AdminHeader navigate={navigate} />
             <div className={`container ${styles.container}`}>
                 {users && isAdminEditor && (
                     <>
+                        <h1>Panel administracyjny</h1>
                         <h1>Lista użytkowników</h1>
                         <ContentsListBox>
                             {users.map((item, idx) => (

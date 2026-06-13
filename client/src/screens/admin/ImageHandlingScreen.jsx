@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import FileUploader from "../../components/FileUploader";
 import ImagePicker from "../../components/ImagePicker";
@@ -26,6 +27,7 @@ const ImageHandlingScreen = () => {
 
     return (
         <div className="container">
+            <AdminHeader navigate={navigate} />
             <h1>Zarządzanie zdjęciami</h1>
             <Button text={"Dodaj zdjęcie"} onClick={() => uploaderRef.current.open()} />
             <FileUploader ref={uploaderRef} onFileSelect={handleAddFile} />

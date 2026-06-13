@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import SchoolsTable from "../../components/SchoolsTable";
 import { apiRequest, apiUrl } from "../../utils/apiFetcher";
@@ -18,10 +19,6 @@ const AdminSchoolsScreen = () => {
     useEffect(() => {
         loadSchools();
     }, [navigate]);
-
-    const handleBack = () => {
-        navigate("/admin");
-    };
 
     const handleImportCsv = async () => {
         if (!csvFile) return alert("Wybierz plik CSV przed importem!");
@@ -110,9 +107,9 @@ const AdminSchoolsScreen = () => {
 
     return (
         <div className={`container ${styles.container}`}>
+            <AdminHeader navigate={navigate} />
             <div className={styles.headerBox}>
                 <h1>Zarządzanie Bazą Szkół</h1>
-                <Button text={"Wróć do panelu"} onClick={handleBack} />
             </div>
 
             <div className={styles.toolsetGrid}>

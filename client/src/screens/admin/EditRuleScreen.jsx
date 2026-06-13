@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "../../components/Button";
+import AdminHeader from "../../components/AdminHeader";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
@@ -9,10 +9,6 @@ const EditRule = () => {
     const navigate = useNavigate();
     const isAdminUser = useMemo(() => isAdmin(), []);
     const [markdownBody, setMarkdownBody] = useState("");
-
-    const handleBack = () => {
-        navigate("/admin");
-    };
 
     const AddNewRules = async (rules) => {
         const apiData = { markdownBody: rules };
@@ -47,11 +43,11 @@ const EditRule = () => {
 
     return (
         <div className="container">
+            <AdminHeader navigate={navigate} />
             {isAdminUser && (
                 <>
                     <h1>Regulamin</h1>
                     <div>
-                        <Button text={"Wróć do panelu"} onClick={handleBack} />
                         <MarkdownEditor
                             key={markdownBody}
                             initialValue={markdownBody}

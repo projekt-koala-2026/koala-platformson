@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import { useLoading } from "../../contexts/LoadingContext";
 import { apiRequest } from "../../utils/apiFetcher";
@@ -28,12 +29,9 @@ const AddUserScreen = () => {
         stopLoading();
     };
 
-    const handleBack = () => {
-        navigate("/admin");
-    };
-
     return (
         <div className="container-near">
+            <AdminHeader navigate={navigate} />
             <div className="container">
                 <h1>Dodaj Użytkownika</h1>
                 <input
@@ -72,7 +70,6 @@ const AddUserScreen = () => {
                     Wybrane role dla {email}: {roles.join(", ")}
                 </p>
                 <Button text={"Dodaj Użytkownika"} onClick={handleAddUser} />
-                <Button text={"Wróć do panelu"} onClick={handleBack} />
             </div>
             <div className="container">
                 <h1>Wymagania hasła</h1>

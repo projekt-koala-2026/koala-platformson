@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import { ContentsListBox, ContentsListTile } from "../../components/ContentsList";
 import { useLoading } from "../../contexts/LoadingContext";
@@ -64,10 +65,6 @@ const EditSponsorInfo = () => {
 
         if (data) {
             setSponsors((prev) => [...prev, data]);
-        }
-
-        if (data) {
-            setSponsors((prev) => [...prev, data]);
             clearForm();
             setAddingSponsor(false);
         }
@@ -115,10 +112,6 @@ const EditSponsorInfo = () => {
         setEditingSponsor(false);
     };
 
-    const handleBack = () => {
-        navigate("/admin");
-    };
-
     useEffect(() => {
         if (!isAdminEditor) {
             navigate("/admin/login");
@@ -140,13 +133,12 @@ const EditSponsorInfo = () => {
 
     return (
         <div className={`container ${styles.container}`}>
+            <AdminHeader navigate={navigate} />
             {isAdminEditor && (
                 <>
                     <h1>Lista Sponsorów</h1>
-                    <div>
-                        <Button text={"Wróć do panelu"} onClick={handleBack} />
-                        <Button text={"Dodaj nowego Sponsora"} onClick={AddSponsor} />
-                    </div>
+                    <Button text={"Dodaj nowego Sponsora"} onClick={AddSponsor} />
+
                     {addingSponsor === true && (
                         <div className="container">
                             <h2>Dodaj Sponsora</h2>
@@ -183,7 +175,7 @@ const EditSponsorInfo = () => {
                                     text={"Anuluj"}
                                     onClick={() => {
                                         setAddingSponsor(false);
-                                        clearForm;
+                                        clearForm();
                                     }}
                                 />
                             </div>
@@ -206,6 +198,11 @@ const EditSponsorInfo = () => {
                                             </h3>
                                             <span>{item.description}</span>
                                         </div>
+                                        <img
+                                            src={item.logoUrl}
+                                            alt={item.name}
+                                            className={styles.listLogo}
+                                        />
                                         <div className={styles.actions}>
                                             <Button
                                                 text={<FaEdit />}
@@ -224,6 +221,7 @@ const EditSponsorInfo = () => {
                                                 src={item.logoUrl}
                                                 width="200"
                                                 className={styles.logo}
+                                                alt={item.name}
                                             />
                                             <h2>Edytuj Dane Sponsora {item.name}</h2>
                                             <input

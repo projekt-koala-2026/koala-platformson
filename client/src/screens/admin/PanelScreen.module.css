@@ -1,11 +1,8 @@
-.container {
-    min-width: 50%;
-}
-
 .userRow,
 .actions,
 .editActions {
     display: flex;
+    gap: 16px;
 }
 
 .userInfo {
