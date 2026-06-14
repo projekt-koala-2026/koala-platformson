@@ -29,3 +29,4 @@ backend_data/*
 
 tests/pytest_cache/*
 tests/__pycache__/*
+tests/nill

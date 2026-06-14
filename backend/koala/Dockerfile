@@ -11,7 +11,7 @@ RUN dotnet publish -c Debug -o /out
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /out .
-
+RUN mkdir -p /app/public/InternalStorage/
 RUN apt-get update && apt-get install -y curl
 
 ENTRYPOINT ["dotnet", "koala.dll"]
