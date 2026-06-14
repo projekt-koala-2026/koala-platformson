@@ -77,6 +77,15 @@ header {
     width: 100vw;
 }
 
+::-webkit-scrollbar {
+    border-radius: 8px;
+    width: 16px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-button);
+}
+
 .container {
     display: flex;
     flex-direction: column;

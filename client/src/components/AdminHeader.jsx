@@ -36,6 +36,7 @@ const AdminHeader = ({ navigate }) => {
                     ["Zarządzanie Zadaniami", () => navigate("/admin/problems")],
                     ["Zarządzanie Szkołami", () => navigate("/admin/schools")],
                     ["Zarządzanie plikami", () => navigate("/admin/images")],
+                    ["Zarządzanie drużynami", () => navigate("/admin/teams")],
                 ]}
             />
         </header>
