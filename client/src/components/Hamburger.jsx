@@ -8,13 +8,20 @@ const Hamburger = ({ options }) => {
     return (
         <div className={`${styles.hamburgerContainer} ${isMenu ? styles.active : ""}`}>
             <div className={`${styles.hamburgerMenu} ${isMenu ? styles.show : ""}`}>
-                {options &&
-                    options.map((item, idx) => (
-                        <Button key={"hamburger-item-" + idx} text={item[0]} onClick={item[1]} />
-                    ))}
+                <div className={styles.menuHeaderSpace}></div>
+                <div className={styles.menuContent}>
+                    {options &&
+                        options.map((item, idx) => (
+                            <Button
+                                key={"hamburger-item-" + idx}
+                                text={item[0]}
+                                onClick={item[1]}
+                            />
+                        ))}
+                </div>
             </div>
             <div className={styles.hamburgerCircle} onClick={() => setIsMenu((prev) => !prev)}>
-                <div class={styles.burgerIcon}>
+                <div className={styles.burgerIcon}>
                     <span></span>
                     <span></span>
                     <span></span>

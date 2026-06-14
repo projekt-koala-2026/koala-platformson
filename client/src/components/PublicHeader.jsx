@@ -1,6 +1,52 @@
+import { useMemo } from "react";
+import { useLoading } from "../contexts/LoadingContext";
+import { apiRequest } from "../utils/apiFetcher";
+import { isCaptain } from "../utils/authService";
 import Hamburger from "./Hamburger";
 
 const PublicHeader = ({ navigate }) => {
+    const isCaptainUser = useMemo(() => isCaptain(), []);
+    const { startLoading, stopLoading } = useLoading();
+    const handleLogin = async () => {
+        startLoading();
+
+        await apiRequest(
+            "/api/admin/user/create-account",
+            {
+                email: "captain@example.com",
+                password: "Aaaaa11#",
+                roles: ["CAPTAIN"],
+            },
+            "POST",
+            navigate
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const data = await apiRequest(
+            "/api/admin/auth/session",
+            { email: "captain@example.com", password: "Aaaaa11#" },
+            "POST",
+            navigate
+        );
+
+        if (data) {
+            const state = {
+                isAdmin: data.roles.includes("ADMIN"),
+                isEditor: data.roles.includes("EDITOR"),
+                isReviewer: data.roles.includes("REVIEWER"),
+                isGuardian: data.roles.includes("GUARDIAN"),
+                isCaptain: data.roles.includes("CAPTAIN"),
+            };
+            const id = data.id;
+            localStorage.setItem("userRoles", JSON.stringify(state));
+            localStorage.setItem("userId", id);
+            navigate("/");
+        }
+
+        stopLoading();
+    };
+
     return (
         <div
             style={{
@@ -25,6 +71,8 @@ const PublicHeader = ({ navigate }) => {
                     ["Regulamin", () => navigate("/rules")],
                     ["Historia", () => navigate("/history")],
                     ["KOALicjA", () => navigate("/koalicja")],
+                    ["Login tymczasowy", handleLogin],
+                    ...(isCaptainUser ? [["Dla kapitana", () => navigate("/captain")]] : []),
                 ]}
             />
         </div>

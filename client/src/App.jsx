@@ -2,6 +2,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import TopLoadingBar from "./components/TopLoadingBar";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import AddUserScreen from "./screens/admin/AddUserScreen";
+import AdminLoginScreen from "./screens/admin/AdminLoginScreen";
+import AdminTeamsScreen from "./screens/admin/AdminTeamsScreen.jsx";
 import ChangePassScreen from "./screens/admin/ChangePassScreen";
 import EditionsScreen from "./screens/admin/EditEditionScreen.jsx";
 import EditHistory from "./screens/admin/EditHistoryScreen.jsx";
@@ -12,8 +14,8 @@ import EditRule from "./screens/admin/EditRuleScreen.jsx";
 import EditSchoolsScreen from "./screens/admin/EditSchoolsScreen.jsx";
 import EditSponsorInfo from "./screens/admin/EditSponsorInfoScreen.jsx";
 import ImageHandlingScreen from "./screens/admin/ImageHandlingScreen";
-import LoginScreen from "./screens/admin/LoginScreen";
 import PanelScreen from "./screens/admin/PanelScreen";
+import CaptainHomeScreen from "./screens/public/CaptainHomeScreen.jsx";
 import HistoryScreen from "./screens/public/HistoryScreen.jsx";
 import HomeScreen from "./screens/public/HomeScreen";
 import KoalicjaScreen from "./screens/public/KoalicjaScreen.jsx";
@@ -26,7 +28,7 @@ export default function App() {
             <TopLoadingBar />
             <BrowserRouter>
                 <Routes>
-                    <Route path="/admin/login" element={<LoginScreen />} />
+                    <Route path="/admin/login" element={<AdminLoginScreen />} />
                     <Route path="/admin" element={<PanelScreen />} />
                     <Route path="/admin/changepass" element={<ChangePassScreen />} />
                     <Route path="/admin/adduser" element={<AddUserScreen />} />
@@ -39,11 +41,13 @@ export default function App() {
                     <Route path="/admin/editions" element={<EditionsScreen />} />
                     <Route path="/admin/problems" element={<EditProblemsScreen />} />
                     <Route path="/admin/schools" element={<EditSchoolsScreen />} />
+                    <Route path="/admin/teams" element={<AdminTeamsScreen />} />
                     <Route path="/" element={<HomeScreen />} />
                     <Route path="/problems" element={<ProblemsPublicScreen />} />
                     <Route path="/rules" element={<RuleScreen />} />
                     <Route path="/history" element={<HistoryScreen />} />
                     <Route path="/koalicja" element={<KoalicjaScreen />} />
+                    <Route path="/captain" element={<CaptainHomeScreen />} />
                 </Routes>
             </BrowserRouter>
         </LoadingProvider>

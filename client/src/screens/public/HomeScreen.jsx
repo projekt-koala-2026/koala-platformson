@@ -19,9 +19,9 @@ const HomeScreen = () => {
             if (data) setPosts(data);
             if (editionsData) {
                 setEditions(editionsData);
-                if (editionsData.length > 0) {
-                    setEditionId(editionsData[0].id);
-                }
+                // if (editionsData.length > 0) {
+                //     setEditionId(editionsData[0].id);
+                // }
             }
         };
 

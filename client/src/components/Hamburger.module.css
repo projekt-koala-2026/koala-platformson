@@ -1,29 +1,45 @@
 .hamburgerMenu {
+    display: flex;
     position: fixed;
     top: 0;
     left: 0;
-
+    flex-direction: column;
     transform: translateX(-100%);
     visibility: hidden;
     opacity: 0;
     z-index: 1000;
-
     transition:
         transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         opacity 0.2s ease,
         visibility 0.2s;
+    box-sizing: border-box;
     box-shadow: 4px 0 25px rgba(0, 0, 0, 0.05);
     border-right: 1px solid var(--border-color);
     background: var(--color-container);
-    padding: 6rem 1.5rem 1.5rem 1.5rem;
     width: 280px;
     height: 100vh;
+    overflow: hidden;
 }
 
 .hamburgerMenu.show {
     transform: translateX(0);
     visibility: visible;
     opacity: 1;
+}
+
+.menuHeaderSpace {
+    flex-shrink: 0;
+    width: 100%;
+    height: 6.5rem;
+}
+
+.menuContent {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    overflow-y: auto;
 }
 
 .hamburgerContainer {

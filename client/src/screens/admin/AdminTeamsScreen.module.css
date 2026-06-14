@@ -1,0 +1,142 @@
+.scrollContainer {
+    margin-top: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 100%;
+    max-height: 600px;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+.loader {
+    padding: 30px;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 1000px;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--color-bg);
+    padding: 10px;
+    font-weight: bold;
+}
+
+.td {
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px;
+}
+
+.input,
+.editInput {
+    box-sizing: border-box;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.input {
+    margin-top: 5px;
+    border: 1px solid var(--border-color);
+    padding: 5px;
+    font-size: 0.8rem;
+}
+
+.editInput {
+    border: 1px solid var(--color-button-hover);
+    padding: 6px;
+    font-size: 0.85rem;
+}
+
+.btnPrimary,
+.btnSecondary,
+.btnEdit,
+.btnDelete {
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.btnPrimary {
+    background-color: var(--color-button);
+}
+
+.btnSecondary {
+    background-color: var(--text-muted);
+}
+
+.btnEdit {
+    background-color: var(--color-button);
+}
+
+.btnDelete {
+    background-color: #d32f2f;
+}
+
+.emptyCell {
+    padding: 20px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+.paginationRow {
+    position: sticky;
+    top: 73px;
+    z-index: 2;
+    background-color: var(--color-bg);
+}
+
+.paginationBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--color-bg);
+    padding: 10px;
+}
+
+.pageBtn {
+    transition: background-color 0.1s ease;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--color-container);
+    padding: 5px 10px;
+    color: var(--text-color);
+    font-size: 0.85rem;
+}
+
+.pageBtn:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--text-color) 5%, transparent);
+}
+
+.pageBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pageInfo {
+    margin: 0 10px;
+    color: var(--text-color);
+    font-size: 0.85rem;
+}

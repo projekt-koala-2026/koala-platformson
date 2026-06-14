@@ -1,0 +1,147 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 20px;
+    min-height: 50vh;
+}
+
+.loader {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.card {
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    background-color: var(--color-container, #ffffff);
+    padding: 30px;
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.welcome {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-color, #333333);
+}
+
+.title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-color, #333333);
+    font-size: 1.25rem;
+}
+
+.text {
+    margin-bottom: 25px;
+    color: var(--text-muted, #666666);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.teamBadge {
+    margin-top: 20px;
+    border: 2px dashed var(--color-button, #458756);
+    border-radius: 6px;
+    background-color: color-mix(in srgb, var(--color-button) 8%, transparent);
+    padding: 15px;
+}
+
+.teamBadge h2 {
+    margin: 0;
+    color: var(--color-button, #458756);
+}
+
+.membersList {
+    margin: 20px 0;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 6px;
+    background-color: var(--color-bg, #f9f9f9);
+    padding: 15px;
+    text-align: left;
+}
+
+.membersList h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--text-color, #333333);
+}
+
+.membersList ul {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-color, #555555);
+    font-size: 0.9rem;
+}
+
+.membersList li {
+    margin-bottom: 5px;
+}
+
+.actionRow {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btnEdit,
+.btnDelete {
+    flex: 1;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.btnEdit {
+    background-color: var(--color-button, #458756);
+}
+
+.btnDelete {
+    background-color: #d32f2f;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form input {
+    box-sizing: border-box;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 4px;
+    padding: 10px;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.button {
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--color-button, #458756);
+    padding: 12px;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.buttonSecondary {
+    cursor: pointer;
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 4px;
+    background-color: transparent;
+    padding: 10px;
+    color: var(--text-color, #333333);
+    font-size: 0.9rem;
+}
