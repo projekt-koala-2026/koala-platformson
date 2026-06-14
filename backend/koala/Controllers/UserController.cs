@@ -51,7 +51,7 @@ namespace koala.Controllers
             return Ok(added_user);
         }
 
-        [Authorize(Roles = "ADMIN,EDITOR")]
+        [Authorize(Roles = "ADMIN,EDITOR,CAPTAIN")]
         [HttpPut("email")]
         public async Task<IActionResult> AdminPanelChangeUserEmail([FromBody] UserChangeEmailVM userChangeEmailVM)
         {
@@ -63,7 +63,7 @@ namespace koala.Controllers
             return Ok(changed_user);
         }
 
-        [Authorize(Roles = "ADMIN,EDITOR")]
+        [Authorize(Roles = "ADMIN,EDITOR,CAPTAIN")]
         [HttpPut("password")]
         public async Task<IActionResult> AdminPanelChangeUserPassword([FromBody] UserChangePasswordVM userChangePasswordVM)
         {

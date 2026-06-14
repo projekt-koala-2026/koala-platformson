@@ -18,16 +18,16 @@ namespace koala.Controllers
         }
 
 
+        [Authorize(Roles = "ADMIN")]
         [HttpGet("/api/admin/teams")]
-        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<TeamUpdateVM>>> GetTeams()
         {
             var teams = await _teamService.GetAllTeamsAsync();
             return Ok(teams);
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpPut("/api/admin/teams/{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminUpdateTeam(Guid id, [FromBody] TeamUpdateVM model)
         {
             if (id != model.Id)
@@ -50,8 +50,8 @@ namespace koala.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpDelete("/api/admin/teams/{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminDeleteTeam(Guid id)
         {
             var currentTeam = await _teamService.GetTeamByIdAsync(id);
@@ -69,8 +69,8 @@ namespace koala.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "CAPTAIN")]
         [HttpGet("my-team")]
-        [Authorize]
         public async Task<ActionResult<TeamUpdateVM>> GetUserTeam()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -88,8 +88,8 @@ namespace koala.Controllers
             return Ok(team);
         }
 
+        [Authorize(Roles = "CAPTAIN")]
         [HttpGet("{id}")]
-        [Authorize]
         public async Task<ActionResult<TeamUpdateVM>> GetTeam(Guid id)
         {
             var team = await _teamService.GetTeamByIdAsync(id);
@@ -101,8 +101,8 @@ namespace koala.Controllers
             return Ok(team);
         }
 
+        [Authorize(Roles = "CAPTAIN")]
         [HttpPost]
-        [Authorize]
         public async Task<ActionResult<TeamUpdateVM>> CreateTeam([FromBody] TeamCreateVM model)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -121,8 +121,8 @@ namespace koala.Controllers
             return Ok(createdTeam);
         }
 
+        [Authorize(Roles = "CAPTAIN")]
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<IActionResult> UpdateTeam(Guid id, [FromBody] TeamUpdateVM model)
         {
             if (id != model.Id)
@@ -147,8 +147,8 @@ namespace koala.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "CAPTAIN")] 
         [HttpDelete("{id}")]
-        [Authorize] 
         public async Task<IActionResult> DeleteTeam(Guid id)
         {
             var currentTeam = await _teamService.GetTeamByIdAsync(id);
