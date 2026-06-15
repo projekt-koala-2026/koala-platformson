@@ -19,7 +19,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<UserChangeEmailValidator>()
 builder.Services.AddValidatorsFromAssemblyContaining<UserChangePasswordValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UserChangeRolesValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<UserLoginValidator>();
-
+builder.Services.AddValidatorsFromAssemblyContaining<PostCreateVMValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<PostUpdateVMValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<SponsorCreateVMValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<SponsorUpdateVMValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<KoalicjantCreateVMValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<KoalicjantUpdateVMValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
 //NOTE: CONECTING TO DB
