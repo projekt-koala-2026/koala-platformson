@@ -36,14 +36,32 @@ namespace koala.Services
             return team == null ? null : MapToViewModel(team);
         }
 
-        public async Task<TeamUpdateVM> CreateTeamAsync(TeamCreateVM model, Guid captainId)
+        public async Task<TeamUpdateVM> CreateTeamAsync(string userToken,TeamCreateVM model)
         {
             using var context = await _factory.CreateDbContextAsync();
+            var session = await context.Tokens
+            .FirstOrDefaultAsync(t => t.Value == userToken);
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.Id == session.UserId);
+
+            if (user == null)
+            {
+                return null;
+            }
+            Guid cId = user.Id;
+
+            var team = await context.Teams.FirstOrDefaultAsync(t => t.CaptainId == cId);
             
-            var team = new Team
+            if(team != null)
+            {
+                return null;
+            }
+            
+            team = new Team
             {
                 Id = Guid.NewGuid(),
-                CaptainId = captainId,
+                CaptainId = cId,
+                SchoolRSPO = model.SchoolRSPO,
                 TeamName = model.TeamName,
                 Name1 = model.Name1,
                 Name2 = model.Name2,
@@ -95,12 +113,90 @@ namespace koala.Services
             return true;
         }
 
+        public async Task<TeamUpdateVM> UpdateCaptainTeamAsync(string userToken, TeamUpdateVM model)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var session = await context.Tokens
+            .FirstOrDefaultAsync(t => t.Value == userToken);
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.Id == session.UserId);
+
+            if (user == null)
+            {
+                return null;
+            }
+            Guid cId = user.Id;
+            var team = await context.Teams.FirstOrDefaultAsync(t => t.CaptainId == cId);
+            
+            if(team == null)
+            {
+                return null;
+            }
+
+            team.SchoolRSPO = model.SchoolRSPO;
+            team.TeamName = model.TeamName;
+            team.Name1 = model.Name1;
+            team.Name2 = model.Name2;
+            team.Name3 = model.Name3;
+            team.Name4 = model.Name4;
+
+            await context.SaveChangesAsync();
+            return MapToViewModel(team);
+        }
+
+        public async Task<bool> DeleteCaptainTeamAsync(string userToken)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var session = await context.Tokens
+            .FirstOrDefaultAsync(t => t.Value == userToken);
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.Id == session.UserId);
+
+            if (user == null)
+            {
+                return false;
+            }
+            Guid cId = user.Id;
+            
+            if (cId == Guid.Empty)
+            {
+                return false;
+            }
+
+            var team = await context.Teams.FirstOrDefaultAsync(t => t.CaptainId == cId);
+
+            if(team == null)
+            {
+                return false;
+            }
+
+            context.Teams.Remove(team);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        
+        private async Task<Guid> GetCaptainIdByToken(string userToken)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            var session = await context.Tokens
+            .FirstOrDefaultAsync(t => t.Value == userToken);
+            var user = await context.Users
+                .FirstOrDefaultAsync(u => u.Id == session.UserId);
+
+            if (user == null)
+            {
+                return Guid.Empty;
+            }
+            return user.Id;
+        }
+
         private static TeamUpdateVM MapToViewModel(Team team)
         {
             return new TeamUpdateVM
             {
                 Id = team.Id,
                 TeamName = team.TeamName,
+                SchoolRSPO = team.SchoolRSPO,
                 Name1 = team.Name1,
                 Name2 = team.Name2,
                 Name3 = team.Name3,
