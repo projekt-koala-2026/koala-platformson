@@ -22,3 +22,11 @@
     gap: 4px;
     margin-left: auto;
 }
+
+.textOverlay {
+    align-items: center;
+    max-width: 50%;
+    overflow: hidden;
+    word-wrap: break-word;
+    word-break: break-all;
+}
