@@ -48,6 +48,7 @@ namespace koala.Controllers
             return Ok(schoolInfoVM);
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpPut("name")]
         public async Task<IActionResult> AdminPanelEditSchoolName([FromBody] SchoolEditNameVM editSchool)
         {

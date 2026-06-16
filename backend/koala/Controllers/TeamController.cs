@@ -17,10 +17,10 @@ namespace koala.Controllers
             _teamService = teamService;
         }
 
-
-        [Authorize(Roles = "ADMIN")]
-        [HttpGet("/api/admin/teams")]
-        public async Task<ActionResult<IEnumerable<TeamUpdateVM>>> GetTeams()
+        //FIXME: DUPLICATE DELETE
+        [AllowAnonymous]
+        [HttpGet("/api/teams")]
+        public async Task<ActionResult<List<TeamUpdateVM>>> GetTeams()
         {
             var teams = await _teamService.GetAllTeamsAsync();
             return Ok(teams);
@@ -69,6 +69,7 @@ namespace koala.Controllers
             return NoContent();
         }
 
+        //FIXME: FROM COOKIE
         [Authorize(Roles = "CAPTAIN")]
         [HttpGet("my-team")]
         public async Task<ActionResult<TeamUpdateVM>> GetUserTeam()
@@ -89,84 +90,60 @@ namespace koala.Controllers
         }
 
         [Authorize(Roles = "CAPTAIN")]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TeamUpdateVM>> GetTeam(Guid id)
-        {
-            var team = await _teamService.GetTeamByIdAsync(id);
-            if (team == null)
-            {
-                return NotFound(new { Message = $"Team with ID {id} not found." });
-            }
-
-            return Ok(team);
-        }
-
-        [Authorize(Roles = "CAPTAIN")]
         [HttpPost]
         public async Task<ActionResult<TeamUpdateVM>> CreateTeam([FromBody] TeamCreateVM model)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var captainId))
+            var tokenValue = Request.Cookies["KOALA_auth_token"];
+            if(string.IsNullOrEmpty(tokenValue))
             {
-                return Unauthorized(new { Message = "Valid user identity not found in token." });
+                return NotFound("No session found");
             }
 
-            var existingTeam = await _teamService.GetTeamByCaptainIdAsync(captainId);
-            if (existingTeam != null)
+            /* token -> usera -> team*/
+            var data = await _teamService.CreateTeamAsync(tokenValue, model);
+            if(data == null)
             {
-                return BadRequest(new { Message = "You are already the Captain of an existing team." });
+                return BadRequest();
             }
-
-            var createdTeam = await _teamService.CreateTeamAsync(model, captainId);
-            return Ok(createdTeam);
+            return Ok(data);
         }
 
         [Authorize(Roles = "CAPTAIN")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTeam(Guid id, [FromBody] TeamUpdateVM model)
+        [HttpPut]
+        public async Task<IActionResult> UpdateTeam([FromBody] TeamUpdateVM model)
         {
-            if (id != model.Id)
+            var tokenValue = Request.Cookies["KOALA_auth_token"];
+            if(string.IsNullOrEmpty(tokenValue))
             {
-                return BadRequest(new { Message = "ID in URL path does not match the ID provided in the body." });
+                return NotFound("No session found");
             }
 
-            var currentTeam = await _teamService.GetTeamByIdAsync(id);
-            if (currentTeam == null)
+            /* token -> usera -> team*/
+            var data = await _teamService.UpdateCaptainTeamAsync(tokenValue, model);
+            if(data == null)
             {
-                return NotFound(new { Message = $"Team with ID {id} does not exist." });
+                return BadRequest();
             }
-
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            var updated = await _teamService.UpdateTeamAsync(id, model);
-            if (!updated)
-            {
-                return StatusCode(500, new { Message = "An error occurred while updating the team data." });
-            }
-
-            return NoContent();
+            return Ok(data);
         }
 
-        [Authorize(Roles = "CAPTAIN")] 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTeam(Guid id)
+        [Authorize(Roles = "CAPTAIN")]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTeam()
         {
-            var currentTeam = await _teamService.GetTeamByIdAsync(id);
-            if (currentTeam == null)
+            var tokenValue = Request.Cookies["KOALA_auth_token"];
+            if(string.IsNullOrEmpty(tokenValue))
             {
-                return NotFound(new { Message = $"Team with ID {id} not found." });
+                return NotFound("No session found");
             }
 
-            // Sprawdzenie, czy zalogowany użytkownik jest kapitanem TEJ drużyny
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            var deleted = await _teamService.DeleteTeamAsync(id);
-            if (!deleted)
+            /* token -> usera -> team*/
+            var ret = await _teamService.DeleteCaptainTeamAsync(tokenValue);
+            if(ret == false)
             {
-                return StatusCode(500, new { Message = "An error occurred while deleting the team." });
+                return BadRequest();
             }
-
-            return NoContent();
+            return Ok();
         }
     }
 }
