@@ -23,7 +23,17 @@ const RuleScreen = () => {
 
             <div className="container" style={{ minWidth: "50%" }}>
                 <h1>Regulamin</h1>
-                <MarkdownRenderer content={rules.markdownBody} />
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        padding: "2rem",
+                        justifyContent: "left",
+                        width: "100%",
+                    }}
+                >
+                    <MarkdownRenderer content={rules.markdownBody} />
+                </div>
             </div>
 
             <PublicFooter />

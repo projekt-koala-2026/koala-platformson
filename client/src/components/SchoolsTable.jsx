@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import Button from "./Button";
 import styles from "./SchoolsTable.module.css";
 
-const SchoolsTable = ({
-    schools = [],
-    actionsRenderer,
-    onAddNewSchool,
-    onUpdateSchool,
-    hideActions = false,
-}) => {
+const SchoolsTable = ({ schools = [], onRowClick }) => {
     const ITEMS_PER_PAGE = 50;
 
     const [filters, setFilters] = useState({
@@ -21,22 +14,6 @@ const SchoolsTable = ({
         addres: "",
     });
 
-    const [newSchool, setNewSchool] = useState({
-        rspo: "",
-        name: "",
-        nameShort: "",
-        state: "",
-        city: "",
-        type: "",
-        addres: "",
-    });
-
-    const [editingRspo, setEditingRspo] = useState(null);
-    const [editData, setEditData] = useState({
-        name: "",
-        nameShort: "",
-    });
-
     const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
@@ -45,66 +22,6 @@ const SchoolsTable = ({
 
     const handleFilterChange = (column, value) => {
         setFilters((prev) => ({ ...prev, [column]: value }));
-    };
-
-    const handleNewSchoolChange = (column, value) => {
-        setNewSchool((prev) => ({ ...prev, [column]: value }));
-    };
-
-    const handleEditStart = (school) => {
-        setEditingRspo(school.rspo);
-        setEditData({
-            name: school.name,
-            nameShort: school.nameShort || "",
-        });
-    };
-
-    const handleEditCancel = () => {
-        setEditingRspo(null);
-        setEditData({ name: "", nameShort: "" });
-    };
-
-    const handleEditSave = (school) => {
-        if (!editData.name.trim()) {
-            return alert("Nazwa szkoły nie może być pusta!");
-        }
-        onUpdateSchool({
-            ...school,
-            name: editData.name.trim(),
-            nameShort: editData.nameShort.trim() || null,
-        });
-        setEditingRspo(null);
-    };
-
-    const handleCreateClick = () => {
-        if (!newSchool.rspo.trim() || !newSchool.name.trim()) {
-            return alert("Pola RSPO oraz Nazwa są obowiązkowe!");
-        }
-
-        const payload = {
-            rspo: parseInt(newSchool.rspo.trim(), 10),
-            name: newSchool.name.trim(),
-            nameShort: newSchool.nameShort.trim() || null,
-            state: newSchool.state.trim(),
-            city: newSchool.city.trim(),
-            type: newSchool.type.trim(),
-            addres: newSchool.addres.trim(),
-        };
-
-        if (isNaN(payload.rspo)) {
-            return alert("Numer RSPO musi być liczbą!");
-        }
-
-        onAddNewSchool(payload);
-        setNewSchool({
-            rspo: "",
-            name: "",
-            nameShort: "",
-            state: "",
-            city: "",
-            type: "",
-            addres: "",
-        });
     };
 
     const filteredSchools = useMemo(() => {
@@ -152,6 +69,41 @@ const SchoolsTable = ({
 
     return (
         <div className={styles.scrollContainer}>
+            <div className={styles.paginationBar}>
+                <button
+                    className={styles.pageBtn}
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                >
+                    &lt;&lt;
+                </button>
+                <button
+                    className={styles.pageBtn}
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                >
+                    Poprzednia
+                </button>
+                <span className={styles.pageInfo}>
+                    Strona <strong>{currentPage}</strong> z <strong>{totalPages}</strong>{" "}
+                    (Filtrowanych: {filteredSchools.length})
+                </span>
+                <button
+                    className={styles.pageBtn}
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                >
+                    Następna
+                </button>
+                <button
+                    className={styles.pageBtn}
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                >
+                    &gt;&gt;
+                </button>
+            </div>
+
             <table className={styles.table}>
                 <thead>
                     <tr>
@@ -166,7 +118,7 @@ const SchoolsTable = ({
                             />
                         </th>
                         <th className={styles.th}>
-                            <div>Nazwa</div>
+                            <div>Pełna nazwa szkoły</div>
                             <input
                                 type="text"
                                 value={filters.name}
@@ -176,7 +128,7 @@ const SchoolsTable = ({
                             />
                         </th>
                         <th className={styles.th}>
-                            <div>Skrócona nazwa</div>
+                            <div>Nazwa skrócona</div>
                             <input
                                 type="text"
                                 value={filters.nameShort}
@@ -196,7 +148,7 @@ const SchoolsTable = ({
                             />
                         </th>
                         <th className={styles.th}>
-                            <div>Miasto</div>
+                            <div>Miejscowość</div>
                             <input
                                 type="text"
                                 value={filters.city}
@@ -206,7 +158,7 @@ const SchoolsTable = ({
                             />
                         </th>
                         <th className={styles.th}>
-                            <div>Typ</div>
+                            <div>Typ placówki</div>
                             <input
                                 type="text"
                                 value={filters.type}
@@ -225,218 +177,31 @@ const SchoolsTable = ({
                                 placeholder="Szukaj..."
                             />
                         </th>
-                        {!hideActions && <th className={styles.th}>Akcje</th>}
                     </tr>
                 </thead>
                 <tbody>
-                    <tr className={styles.paginationRow}>
-                        <td
-                            colSpan={hideActions ? 7 : 8}
-                            className={styles.td}
-                            style={{ padding: 0 }}
-                        >
-                            <div className={styles.paginationBar}>
-                                <button
-                                    className={styles.pageBtn}
-                                    onClick={() => setCurrentPage(1)}
-                                    disabled={currentPage === 1}
-                                >
-                                    &lt;&lt;
-                                </button>
-                                <button
-                                    className={styles.pageBtn}
-                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                >
-                                    Poprzednia
-                                </button>
-                                <span className={styles.pageInfo}>
-                                    Strona <strong>{currentPage}</strong> z{" "}
-                                    <strong>{totalPages}</strong> (Filtrowanych:{" "}
-                                    {filteredSchools.length})
-                                </span>
-                                <button
-                                    className={styles.pageBtn}
-                                    onClick={() =>
-                                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                                    }
-                                    disabled={currentPage === totalPages}
-                                >
-                                    Następna
-                                </button>
-                                <button
-                                    className={styles.pageBtn}
-                                    onClick={() => setCurrentPage(totalPages)}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    &gt;&gt;
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {onAddNewSchool && (
-                        <tr className={styles.createRow}>
-                            <td className={styles.td}>
-                                <input
-                                    type="text"
-                                    placeholder="Nowy RSPO"
-                                    value={newSchool.rspo}
-                                    onChange={(e) => handleNewSchoolChange("rspo", e.target.value)}
-                                    className={styles.createInput}
-                                />
-                            </td>
-                            <td className={styles.td}>
-                                <input
-                                    type="text"
-                                    placeholder="Pełna nazwa placówki"
-                                    value={newSchool.name}
-                                    onChange={(e) => handleNewSchoolChange("name", e.target.value)}
-                                    className={styles.createInput}
-                                />
-                            </td>
-                            <td className={styles.td}>
-                                <input
-                                    type="text"
-                                    placeholder="Skrót (np. SP1)"
-                                    value={newSchool.nameShort}
-                                    onChange={(e) =>
-                                        handleNewSchoolChange("nameShort", e.target.value)
-                                    }
-                                    className={styles.createInput}
-                                />
-                            </td>
-                            <td className={styles.td}>
-                                <input
-                                    type="text"
-                                    placeholder="Województwo"
-                                    value={newSchool.state}
-                                    onChange={(e) => handleNewSchoolChange("state", e.target.value)}
-                                    className={styles.createInput}
-                                />
-                            </td>
-                            <td className={styles.td}>
-                                <input
-                                    type="text"
-                                    placeholder="Miasto"
-                                    value={newSchool.city}
-                                    onChange={(e) => handleNewSchoolChange("city", e.target.value)}
-                                    className={styles.createInput}
-                                />
-                            </td>
-                            <td className={styles.td}>
-                                <input
-                                    type="text"
-                                    placeholder="Typ"
-                                    value={newSchool.type}
-                                    onChange={(e) => handleNewSchoolChange("type", e.target.value)}
-                                    className={styles.createInput}
-                                />
-                            </td>
-                            <td className={styles.td}>
-                                <input
-                                    type="text"
-                                    placeholder="Adres"
-                                    value={newSchool.addres}
-                                    onChange={(e) =>
-                                        handleNewSchoolChange("addres", e.target.value)
-                                    }
-                                    className={styles.createInput}
-                                />
-                            </td>
-                            <td className={styles.td}>
-                                <button onClick={handleCreateClick} className={styles.btnSuccess}>
-                                    Dodaj +
-                                </button>
-                            </td>
-                        </tr>
-                    )}
-
                     {paginatedSchools.length === 0 ? (
                         <tr>
-                            <td
-                                colSpan={hideActions ? 7 : 8}
-                                className={`${styles.td} ${styles.emptyCell}`}
-                            >
-                                Brak danych spełniających kryteria.
+                            <td colSpan={7} className={`${styles.td} ${styles.emptyCell}`}>
+                                Brak szkół spełniających kryteria wyszukiwania.
                             </td>
                         </tr>
                     ) : (
-                        paginatedSchools.map((school) => {
-                            const isEditing = editingRspo === school.rspo;
-                            return (
-                                <tr key={school.rspo}>
-                                    <td className={styles.td}>{school.rspo}</td>
-                                    <td className={styles.td}>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={editData.name}
-                                                onChange={(e) =>
-                                                    setEditData((prev) => ({
-                                                        ...prev,
-                                                        name: e.target.value,
-                                                    }))
-                                                }
-                                                className={styles.editInput}
-                                            />
-                                        ) : (
-                                            school.name
-                                        )}
-                                    </td>
-                                    <td className={styles.td}>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                value={editData.nameShort}
-                                                onChange={(e) =>
-                                                    setEditData((prev) => ({
-                                                        ...prev,
-                                                        nameShort: e.target.value,
-                                                    }))
-                                                }
-                                                className={styles.editInput}
-                                                placeholder="Brak skrótu"
-                                            />
-                                        ) : (
-                                            school.nameShort || "-"
-                                        )}
-                                    </td>
-                                    <td className={styles.td}>{school.state}</td>
-                                    <td className={styles.td}>{school.city}</td>
-                                    <td className={styles.td}>{school.type}</td>
-                                    <td className={styles.td}>{school.addres}</td>
-                                    {!hideActions && (
-                                        <td className={styles.td}>
-                                            {isEditing ? (
-                                                <div className={styles.actions}>
-                                                    <button
-                                                        onClick={() => handleEditSave(school)}
-                                                        className={styles.btnPrimary}
-                                                    >
-                                                        Zapisz
-                                                    </button>
-                                                    <button
-                                                        onClick={handleEditCancel}
-                                                        className={styles.btnSecondary}
-                                                    >
-                                                        Anuluj
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className={styles.actions}>
-                                                    <Button
-                                                        onClick={() => handleEditStart(school)}
-                                                        text={"Edytuj"}
-                                                    />
-                                                    {actionsRenderer && actionsRenderer(school)}
-                                                </div>
-                                            )}
-                                        </td>
-                                    )}
-                                </tr>
-                            );
-                        })
+                        paginatedSchools.map((school) => (
+                            <tr
+                                key={school.rspo}
+                                onClick={() => onRowClick && onRowClick(school)}
+                                className={styles.clickableRow}
+                            >
+                                <td className={styles.td}>{school.rspo}</td>
+                                <td className={styles.td}>{school.name}</td>
+                                <td className={styles.td}>{school.nameShort || "-"}</td>
+                                <td className={styles.td}>{school.state}</td>
+                                <td className={styles.td}>{school.city}</td>
+                                <td className={styles.td}>{school.type}</td>
+                                <td className={styles.td}>{school.addres}</td>
+                            </tr>
+                        ))
                     )}
                 </tbody>
             </table>
