@@ -60,7 +60,6 @@ const MarkdownEditor = ({ onSave, initialValue = "", label = "Zapisz zmiany" }) 
                     </div>
                 </div>
             )}
-
             <SimpleMDE value={content} onChange={(value) => setContent(value)} options={options} />
             <Button text={label} onClick={() => onSave(content)} />
         </div>

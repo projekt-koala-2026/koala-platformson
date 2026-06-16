@@ -19,6 +19,7 @@ const AdminTeamsScreen = () => {
         name2: "",
         name3: "",
         name4: "",
+        schoolRSPO: "",
     });
 
     const [editForm, setEditForm] = useState({
@@ -27,11 +28,12 @@ const AdminTeamsScreen = () => {
         name2: "",
         name3: "",
         name4: "",
+        schoolRSPO: "",
     });
 
     const fetchTeams = async () => {
         setLoading(true);
-        const data = await apiRequest("/api/admin/teams", null, "GET", navigate);
+        const data = await apiRequest("/api/teams", null, "GET", navigate);
         if (data) {
             setTeams(data);
         }
@@ -58,6 +60,7 @@ const AdminTeamsScreen = () => {
             name2: team.name2 || "",
             name3: team.name3 || "",
             name4: team.name4 || "",
+            schoolRSPO: team.schoolRSPO || "",
         });
     };
 
@@ -84,6 +87,7 @@ const AdminTeamsScreen = () => {
                 name2: editForm.name2.trim(),
                 name3: editForm.name3.trim(),
                 name4: editForm.name4.trim(),
+                schoolRSPO: Number(editForm.schoolRSPO),
             },
             "PUT",
             navigate
@@ -124,8 +128,18 @@ const AdminTeamsScreen = () => {
             const name4Match = String(team.name4 ?? "")
                 .toLowerCase()
                 .includes(filters.name4.toLowerCase());
+            const schoolRspoMatch = String(team.schoolRSPO ?? "")
+                .toLowerCase()
+                .includes(filters.schoolRSPO.toLowerCase());
 
-            return teamNameMatch && name1Match && name2Match && name3Match && name4Match;
+            return (
+                teamNameMatch &&
+                name1Match &&
+                name2Match &&
+                name3Match &&
+                name4Match &&
+                schoolRspoMatch
+            );
         });
     }, [teams, filters]);
 
@@ -206,12 +220,24 @@ const AdminTeamsScreen = () => {
                                         placeholder="Szukaj..."
                                     />
                                 </th>
+                                <th className={styles.th}>
+                                    <div>RSPO Szkoły</div>
+                                    <input
+                                        type="text"
+                                        value={filters.schoolRSPO}
+                                        onChange={(e) =>
+                                            handleFilterChange("schoolRSPO", e.target.value)
+                                        }
+                                        className={styles.input}
+                                        placeholder="Szukaj..."
+                                    />
+                                </th>
                                 <th className={styles.th}>Akcje</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr className={styles.paginationRow}>
-                                <td colSpan={6} className={styles.td} style={{ padding: 0 }}>
+                                <td colSpan={7} className={styles.td} style={{ padding: 0 }}>
                                     <div className={styles.paginationBar}>
                                         <button
                                             className={styles.pageBtn}
@@ -258,7 +284,7 @@ const AdminTeamsScreen = () => {
 
                             {paginatedTeams.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className={`${styles.td} ${styles.emptyCell}`}>
+                                    <td colSpan={7} className={`${styles.td} ${styles.emptyCell}`}>
                                         Brak zespołów spełniających kryteria wyszukiwania.
                                     </td>
                                 </tr>
@@ -332,6 +358,7 @@ const AdminTeamsScreen = () => {
                                                     team.name4 || "-"
                                                 )}
                                             </td>
+                                            <td className={styles.td}>{team.schoolRSPO || "-"}</td>
                                             <td className={styles.td}>
                                                 {isEditing ? (
                                                     <div className={styles.actions}>

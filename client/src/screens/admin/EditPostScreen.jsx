@@ -142,9 +142,17 @@ const EditPosts = () => {
                 <>
                     <div className="container-near">
                         <div className="container">
-                            {editingPost === null && <h1>Dodaj Post {title}</h1>}
-                            {editingPost !== null && <h1>Edytuj Post {title}</h1>}
-                            <div>
+                            {editingPost === null && (
+                                <div className={styles.textOverlay}>
+                                    <h1>Dodaj Post {title}</h1>
+                                </div>
+                            )}
+                            {editingPost !== null && (
+                                <div className={styles.textOverlay}>
+                                    <h1>Edytuj Post {title}</h1>
+                                </div>
+                            )}
+                            <div style={{ maxWidth: "600px", padding: "16px" }}>
                                 <input
                                     type="text"
                                     placeholder="Tytuł posta"
