@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import SchoolsTable from "../../components/SchoolsTable";
 import { apiRequest } from "../../utils/apiFetcher";
 import styles from "./CaptainHomeScreen.module.css";
 
@@ -9,6 +10,7 @@ const CaptainHomeScreen = () => {
     const id = useMemo(() => localStorage.getItem("userId"), []);
     const navigate = useNavigate();
     const [team, setTeam] = useState(null);
+    const [schools, setSchools] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
 
@@ -18,7 +20,13 @@ const CaptainHomeScreen = () => {
         member2: "",
         member3: "",
         member4: "",
+        schoolRSPO: "",
     });
+
+    const fetchSchools = async () => {
+        const data = await apiRequest("/api/admin/school/school", null, "GET", navigate);
+        if (data) setSchools(data);
+    };
 
     const fetchMyTeam = async () => {
         setLoading(true);
@@ -31,6 +39,7 @@ const CaptainHomeScreen = () => {
                 member2: data.name2 || "",
                 member3: data.name3 || "",
                 member4: data.name4 || "",
+                schoolRSPO: data.schoolRSPO || "",
             });
         } else {
             setTeam(null);
@@ -40,6 +49,7 @@ const CaptainHomeScreen = () => {
 
     useEffect(() => {
         fetchMyTeam();
+        fetchSchools();
     }, [navigate]);
 
     const handleChange = (e) => {
@@ -47,8 +57,17 @@ const CaptainHomeScreen = () => {
         setTeamForm((prev) => ({ ...prev, [name]: value }));
     };
 
+    const handleSchoolSelect = (school) => {
+        setTeamForm((prev) => ({ ...prev, schoolRSPO: school.rspo }));
+    };
+
     const handleCreateTeam = async (e) => {
         e.preventDefault();
+
+        if (!teamForm.schoolRSPO) {
+            alert("Wybierz szkołę z tabeli!");
+            return;
+        }
 
         const data = await apiRequest(
             "/api/teams",
@@ -58,6 +77,7 @@ const CaptainHomeScreen = () => {
                 name2: teamForm.member2,
                 name3: teamForm.member3,
                 name4: teamForm.member4,
+                schoolRSPO: Number(teamForm.schoolRSPO),
             },
             "POST",
             navigate
@@ -71,8 +91,13 @@ const CaptainHomeScreen = () => {
     const handleUpdateTeam = async (e) => {
         e.preventDefault();
 
+        if (!teamForm.schoolRSPO) {
+            alert("Wybierz szkołę z tabeli!");
+            return;
+        }
+
         const data = await apiRequest(
-            `/api/teams/${team.id}`,
+            `/api/teams`,
             {
                 id: team.id,
                 teamName: teamForm.teamName,
@@ -80,6 +105,7 @@ const CaptainHomeScreen = () => {
                 name2: teamForm.member2,
                 name3: teamForm.member3,
                 name4: teamForm.member4,
+                schoolRSPO: Number(teamForm.schoolRSPO),
             },
             "PUT",
             navigate
@@ -98,7 +124,7 @@ const CaptainHomeScreen = () => {
             return;
         }
 
-        const success = await apiRequest(`/api/teams/${team.id}`, null, "DELETE", navigate);
+        const success = await apiRequest(`/api/teams`, null, "DELETE", navigate);
 
         if (success) {
             setTeam(null);
@@ -108,6 +134,7 @@ const CaptainHomeScreen = () => {
                 member2: "",
                 member3: "",
                 member4: "",
+                schoolRSPO: "",
             });
             setIsEditing(false);
         }
@@ -125,6 +152,7 @@ const CaptainHomeScreen = () => {
                         <p className={styles.text}>Twój zarejestrowany zespół to:</p>
                         <div className={styles.teamBadge}>
                             <h2>{team.teamName}</h2>
+                            <p className={styles.rspoInfo}>RSPO Szkoły: {team.schoolRSPO}</p>
                         </div>
 
                         <div className={styles.membersList}>
@@ -147,7 +175,7 @@ const CaptainHomeScreen = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className={styles.card}>
+                    <div className={`${styles.card} ${styles.cardWide}`}>
                         <h3 className={styles.title}>
                             {isEditing
                                 ? "Edycja danych zespołu"
@@ -201,6 +229,15 @@ const CaptainHomeScreen = () => {
                                 value={teamForm.member4}
                                 onChange={handleChange}
                             />
+
+                            <div className={styles.schoolSelection}>
+                                <h4>Wybór placówki</h4>
+                                <div className={styles.selectedSchoolIndicator}>
+                                    Wybrane RSPO:{" "}
+                                    <strong>{teamForm.schoolRSPO || "Brak (wymagane)"}</strong>
+                                </div>
+                                <SchoolsTable schools={schools} onRowClick={handleSchoolSelect} />
+                            </div>
 
                             <button type="submit" className={styles.button}>
                                 {isEditing ? "Zapisz zmiany" : "Załóż zespół"}

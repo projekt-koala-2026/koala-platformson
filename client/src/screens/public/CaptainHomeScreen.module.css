@@ -25,6 +25,10 @@
     text-align: center;
 }
 
+.cardWide {
+    max-width: 1200px;
+}
+
 .welcome {
     margin-top: 0;
     margin-bottom: 15px;
@@ -56,6 +60,13 @@
 .teamBadge h2 {
     margin: 0;
     color: var(--color-button, #458756);
+}
+
+.rspoInfo {
+    margin-top: 10px;
+    margin-bottom: 0;
+    color: var(--text-color, #333333);
+    font-weight: bold;
 }
 
 .membersList {
@@ -123,6 +134,27 @@
     padding: 10px;
     width: 100%;
     font-size: 0.9rem;
+}
+
+.schoolSelection {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.schoolSelection h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--text-color, #333333);
+}
+
+.selectedSchoolIndicator {
+    border: 1px solid var(--color-button, #458756);
+    border-radius: 4px;
+    background-color: color-mix(in srgb, var(--color-button, #458756) 10%, transparent);
+    padding: 12px;
+    color: var(--text-color, #333333);
+    font-size: 0.95rem;
 }
 
 .button {

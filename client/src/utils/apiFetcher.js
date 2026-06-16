@@ -5,7 +5,11 @@ const authMiddleware = (response, navigate) => {
     if (!allowedStatus.includes(response.status)) {
         console.log("Error occured!\nerror status: " + response.status);
         console.log(response.body);
-        if (response.status === 401 || response.status === 403) navigate("/admin/login");
+        if (response.status === 401 || response.status === 403) {
+            const path = window.location.pathname;
+            if (path.startsWith("/admin")) navigate("/admin/login");
+            else navigate("/");
+        }
         return null;
     }
     return true;
@@ -45,7 +49,8 @@ export const apiRequest = async (url, options, method, navigate) => {
             return true;
         }
 
-        return await response.text();
+        const text = await response.text();
+        return text || true;
     } catch (error) {
         console.error("Network / server error: ", error);
         return null;

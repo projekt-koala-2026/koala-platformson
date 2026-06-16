@@ -18,7 +18,7 @@
 
 .th {
     position: sticky;
-    top: 0;
+    top: 45px;
     z-index: 3;
     border-bottom: 2px solid var(--border-color);
     background-color: var(--color-bg);
@@ -32,61 +32,23 @@
     padding: 10px;
 }
 
-.input,
-.createInput,
-.editInput {
-    box-sizing: border-box;
-    border-radius: 4px;
-    width: 100%;
+.clickableRow {
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.clickableRow:hover {
+    background-color: color-mix(in srgb, var(--color-button, #458756) 8%, transparent);
 }
 
 .input {
+    box-sizing: border-box;
     margin-top: 5px;
     border: 1px solid var(--border-color);
-    padding: 5px;
-    font-size: 0.8rem;
-}
-
-.createInput {
-    border: 1px solid var(--color-button);
-    padding: 6px;
-    font-size: 0.85rem;
-}
-
-.editInput {
-    border: 1px solid var(--color-button-hover);
-    padding: 6px;
-    font-size: 0.85rem;
-}
-
-.createRow {
-    background-color: color-mix(in srgb, var(--color-button) 5%, transparent);
-}
-
-.btnSuccess,
-.btnPrimary,
-.btnSecondary {
-    cursor: pointer;
-    border: none;
     border-radius: 4px;
-    color: var(--color-container);
-}
-
-.btnSuccess {
-    background-color: var(--color-button);
-    padding: 6px 12px;
+    padding: 5px;
     width: 100%;
-    font-weight: bold;
-}
-
-.btnPrimary {
-    background-color: var(--color-button);
-    padding: 6px 10px;
-}
-
-.btnSecondary {
-    background-color: var(--text-muted);
-    padding: 6px 10px;
+    font-size: 0.8rem;
 }
 
 .emptyCell {
@@ -94,26 +56,19 @@
     text-align: center;
 }
 
-.actions {
-    display: flex;
-    gap: 5px;
-}
-
-.paginationRow {
-    position: sticky;
-    top: 73px;
-    z-index: 2;
-    background-color: var(--color-bg);
-}
-
 .paginationBar {
     display: flex;
+    position: sticky;
+    top: 0;
     justify-content: center;
     align-items: center;
     gap: 8px;
+    z-index: 4;
+    box-sizing: border-box;
     border-bottom: 1px solid var(--border-color);
     background-color: var(--color-bg);
     padding: 10px;
+    height: 45px;
 }
 
 .pageBtn {
