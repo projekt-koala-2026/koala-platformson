@@ -30,13 +30,13 @@ const EditPosts = () => {
         startLoading();
 
         if (!title || title.trim() === "" || title.length < 3) {
-            alert("Podaj tytuł posta, który ma ponad 2 znaki");
+            alert("Podaj tytuł wpisu, który ma ponad 2 znaki");
             stopLoading();
             return;
         }
 
         if (!editionId || editionId === "") {
-            alert("Wybierz edycję, do której ma zostać przypisany post");
+            alert("Wybierz edycję, do której ma zostać przypisany wpis");
             stopLoading();
             return;
         }
@@ -101,7 +101,7 @@ const EditPosts = () => {
     };
 
     const DeletePost = async (post) => {
-        const confirmed = window.confirm(`Czy na pewno chcesz usunąć post ${post.title}?`);
+        const confirmed = window.confirm(`Czy na pewno chcesz usunąć wpis ${post.title}?`);
 
         if (!confirmed) return;
 
@@ -155,7 +155,7 @@ const EditPosts = () => {
                             <div style={{ maxWidth: "600px", padding: "16px" }}>
                                 <input
                                     type="text"
-                                    placeholder="Tytuł posta"
+                                    placeholder="Tytuł wpisu"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     required
@@ -191,7 +191,7 @@ const EditPosts = () => {
                             </div>
                         </div>
                         <div className="container">
-                            <h1>Posty z Edycji</h1>
+                            <h1>Wpisy z edycji</h1>
                             <ContentsListBox>
                                 {posts.map((item, idx) => {
                                     const linkedEdition = editions.find(

@@ -47,7 +47,13 @@ const EditHistory = () => {
             {isAdminEditor && (
                 <>
                     <h1>Historia konkursu</h1>
-                    <div>
+                    <div
+                        style={{
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                            maxWidth: "600px",
+                        }}
+                    >
                         <MarkdownEditor
                             key={markdownBody}
                             initialValue={markdownBody}

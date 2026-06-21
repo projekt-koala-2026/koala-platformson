@@ -27,7 +27,7 @@ const AdminHeader = ({ navigate }) => {
             <Hamburger
                 options={[
                     ["Strona główna", () => navigate("/admin")],
-                    ["Posty", () => navigate("/admin/posts")],
+                    ["Wpisy", () => navigate("/admin/posts")],
                     ["Historia", () => navigate("/admin/history")],
                     ["Regulamin", () => navigate("/admin/rules")],
                     ["Zarządzanie Sponsorami", () => navigate("/admin/sponsors")],

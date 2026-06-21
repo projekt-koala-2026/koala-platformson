@@ -19,7 +19,9 @@ import CaptainHomeScreen from "./screens/public/CaptainHomeScreen.jsx";
 import HistoryScreen from "./screens/public/HistoryScreen.jsx";
 import HomeScreen from "./screens/public/HomeScreen";
 import KoalicjaScreen from "./screens/public/KoalicjaScreen.jsx";
+import LoginScreen from "./screens/public/LoginScreen";
 import ProblemsPublicScreen from "./screens/public/ProblemsPublicScreen.jsx";
+import PublicChangePassScreen from "./screens/public/PublicChangePassScreen";
 import RuleScreen from "./screens/public/RuleScreen.jsx";
 
 export default function App() {
@@ -43,8 +45,10 @@ export default function App() {
                     <Route path="/admin/schools" element={<EditSchoolsScreen />} />
                     <Route path="/admin/teams" element={<AdminTeamsScreen />} />
                     <Route path="/" element={<HomeScreen />} />
+                    <Route path="/login" element={<LoginScreen />} />
                     <Route path="/problems" element={<ProblemsPublicScreen />} />
                     <Route path="/rules" element={<RuleScreen />} />
+                    <Route path="/changepass" element={<PublicChangePassScreen />} />
                     <Route path="/history" element={<HistoryScreen />} />
                     <Route path="/koalicja" element={<KoalicjaScreen />} />
                     <Route path="/captain" element={<CaptainHomeScreen />} />

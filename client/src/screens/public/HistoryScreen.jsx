@@ -43,7 +43,7 @@ const HistoryScreen = () => {
             <div className="container" style={{ minWidth: "50%" }}>
                 <h1>Historia</h1>
                 <MarkdownRenderer content={history.markdownBody} />
-                <h1>Posty z poprzednich edycji</h1>
+                <h1>Wpisy z poprzednich edycji</h1>
 
                 <div className="container-near">
                     {editions.map((item, idx) => (

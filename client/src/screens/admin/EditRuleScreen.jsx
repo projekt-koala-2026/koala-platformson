@@ -47,7 +47,13 @@ const EditRule = () => {
             {isAdminUser && (
                 <>
                     <h1>Regulamin</h1>
-                    <div>
+                    <div
+                        style={{
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                            maxWidth: "600px",
+                        }}
+                    >
                         <MarkdownEditor
                             key={markdownBody}
                             initialValue={markdownBody}

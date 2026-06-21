@@ -1,5 +1,9 @@
 .markdownRender {
     width: 100%;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .image {

@@ -3,48 +3,24 @@ import { useLoading } from "../contexts/LoadingContext";
 import { apiRequest } from "../utils/apiFetcher";
 import { isCaptain } from "../utils/authService";
 import Hamburger from "./Hamburger";
+import ProfileButton from "./ProfileButton";
 
 const PublicHeader = ({ navigate }) => {
     const isCaptainUser = useMemo(() => isCaptain(), []);
     const { startLoading, stopLoading } = useLoading();
-    const handleLogin = async () => {
-        startLoading();
+    const isLoggedIn = useMemo(() => !!localStorage.getItem("userId"), []);
 
-        await apiRequest(
-            "/api/admin/user/create-account",
-            {
-                email: "captain@example.com",
-                password: "Aaaaa11#",
-                roles: ["CAPTAIN"],
-            },
-            "POST",
-            navigate
-        );
-
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        const data = await apiRequest(
-            "/api/admin/auth/session",
-            { email: "captain@example.com", password: "Aaaaa11#" },
-            "POST",
-            navigate
-        );
-
+    const handleLogout = async () => {
+        const data = await apiRequest("/api/admin/auth/session", {}, "DELETE", navigate);
         if (data) {
-            const state = {
-                isAdmin: data.roles.includes("ADMIN"),
-                isEditor: data.roles.includes("EDITOR"),
-                isReviewer: data.roles.includes("REVIEWER"),
-                isGuardian: data.roles.includes("GUARDIAN"),
-                isCaptain: data.roles.includes("CAPTAIN"),
-            };
-            const id = data.id;
-            localStorage.setItem("userRoles", JSON.stringify(state));
-            localStorage.setItem("userId", id);
-            navigate("/");
+            localStorage.removeItem("userRoles");
+            localStorage.removeItem("userId");
+            navigate("/login");
         }
+    };
 
-        stopLoading();
+    const ChangePassword = async () => {
+        navigate("/changepass");
     };
 
     return (
@@ -64,6 +40,14 @@ const PublicHeader = ({ navigate }) => {
                 <span style={{ color: "#458756" }}>A</span>
             </h2>
             <h5>Wielkopolski konkurs grup szkolnych</h5>
+            {isLoggedIn && (
+                <ProfileButton
+                    options={[
+                        ["Logout", handleLogout],
+                        ["Zmień Hasło", ChangePassword],
+                    ]}
+                />
+            )}
             <Hamburger
                 options={[
                     ["Aktualności", () => navigate("/")],
@@ -71,7 +55,7 @@ const PublicHeader = ({ navigate }) => {
                     ["Regulamin", () => navigate("/rules")],
                     ["Historia", () => navigate("/history")],
                     ["KOALicjA", () => navigate("/koalicja")],
-                    ["Login tymczasowy", handleLogin],
+                    ...(!isLoggedIn ? [["Zaloguj", () => navigate("/login")]] : []),
                     ...(isCaptainUser ? [["Dla kapitana", () => navigate("/captain")]] : []),
                 ]}
             />
