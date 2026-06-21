@@ -27,16 +27,16 @@ const AdminHeader = ({ navigate }) => {
             <Hamburger
                 options={[
                     ["Strona główna", () => navigate("/admin")],
+                    ["Edycje", () => navigate("/admin/editions")],
                     ["Wpisy", () => navigate("/admin/posts")],
                     ["Historia", () => navigate("/admin/history")],
                     ["Regulamin", () => navigate("/admin/rules")],
-                    ["Zarządzanie Sponsorami", () => navigate("/admin/sponsors")],
-                    ["Zarządzanie Koalicjantami", () => navigate("/admin/koalicjants")],
-                    ["Zarządzanie Edycjami", () => navigate("/admin/editions")],
-                    ["Zarządzanie Zadaniami", () => navigate("/admin/problems")],
-                    ["Zarządzanie Szkołami", () => navigate("/admin/schools")],
-                    ["Zarządzanie plikami", () => navigate("/admin/images")],
-                    ["Zarządzanie drużynami", () => navigate("/admin/teams")],
+                    ["Sponsorzy", () => navigate("/admin/sponsors")],
+                    ["Koalicjanci", () => navigate("/admin/koalicjants")],
+                    ["Zadania", () => navigate("/admin/problems")],
+                    ["Szkoły", () => navigate("/admin/schools")],
+                    ["Pliki", () => navigate("/admin/images")],
+                    ["Drużyny", () => navigate("/admin/teams")],
                 ]}
             />
         </header>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import MarkdownEditor from "../../components/MarkdownEditor";
+import MarkdownRenderer from "../../components/MarkdownRenderer";
 import { apiRequest } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
 
@@ -45,25 +46,32 @@ const EditHistory = () => {
         <div className="container">
             <AdminHeader navigate={navigate} />
             {isAdminEditor && (
-                <>
-                    <h1>Historia konkursu</h1>
-                    <div
-                        style={{
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                            maxWidth: "600px",
-                        }}
-                    >
-                        <MarkdownEditor
-                            key={markdownBody}
-                            initialValue={markdownBody}
-                            onChange={setMarkdownBody}
-                            onSave={(text) => {
-                                UpdateHistory(text);
-                            }}
-                        />
+                <div className="container-near">
+                    <div className="container">
+                        <>
+                            <h1>Historia konkursu</h1>
+                            <div
+                                style={{
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                    maxWidth: "600px",
+                                }}
+                            >
+                                <MarkdownEditor
+                                    key={"editor"}
+                                    initialValue={markdownBody}
+                                    onChange={setMarkdownBody}
+                                    onSave={(text) => {
+                                        UpdateHistory(text);
+                                    }}
+                                />
+                            </div>
+                        </>
                     </div>
-                </>
+                    <div className="container">
+                        <MarkdownRenderer content={markdownBody} />
+                    </div>
+                </div>
             )}
         </div>
     );
