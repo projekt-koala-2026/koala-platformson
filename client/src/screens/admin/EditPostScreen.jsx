@@ -25,6 +25,7 @@ const EditPosts = () => {
     const [editionId, setEditionId] = useState("");
 
     const [editingPost, setEditingPost] = useState(null);
+    const [preview, setPreview] = useState(false);
 
     const savePost = async (text) => {
         startLoading();
@@ -129,6 +130,7 @@ const EditPosts = () => {
                     setEditionId(editionsData[0].id);
                 }
             }
+            console.log(postsData);
             stopLoading();
         };
 
@@ -144,12 +146,12 @@ const EditPosts = () => {
                         <div className="container">
                             {editingPost === null && (
                                 <div className={styles.textOverlay}>
-                                    <h1>Dodaj Post {title}</h1>
+                                    <h1>Dodaj Wpis {title}</h1>
                                 </div>
                             )}
                             {editingPost !== null && (
                                 <div className={styles.textOverlay}>
-                                    <h1>Edytuj Post {title}</h1>
+                                    <h1>Edytuj Wpis {title}</h1>
                                 </div>
                             )}
                             <div style={{ maxWidth: "600px", padding: "16px" }}>
@@ -177,7 +179,7 @@ const EditPosts = () => {
                                 </select>
 
                                 <MarkdownEditor
-                                    key={markdownBody}
+                                    key={postId || "new-post"}
                                     initialValue={markdownBody}
                                     onChange={setMarkdownBody}
                                     onSave={(text) => {
@@ -191,57 +193,87 @@ const EditPosts = () => {
                             </div>
                         </div>
                         <div className="container">
-                            <h1>Wpisy z edycji</h1>
-                            <ContentsListBox>
-                                {posts.map((item, idx) => {
-                                    const linkedEdition = editions.find(
-                                        (e) => e.id === item.editionId
-                                    );
+                            <Button
+                                text={preview ? "Przełącz na podgląd" : "Przełącz na listę"}
+                                onClick={() => setPreview((prev) => !prev)}
+                            />
+                            {preview && (
+                                <>
+                                    <h1>Wpisy z edycji</h1>
+                                    <ContentsListBox>
+                                        {posts.map((item, idx) => {
+                                            const linkedEdition = editions.find(
+                                                (e) => e.id === item.editionId
+                                            );
 
-                                    return (
-                                        <ContentsListTile key={item.id}>
-                                            <div className={styles.postHeader}>
-                                                <h3>Tytuł: {item.title}</h3>
-                                                <h6>
-                                                    Data:{" "}
-                                                    {new Date(item.createdAt).toLocaleString(
-                                                        "pl-PL",
-                                                        {
-                                                            year: "numeric",
-                                                            month: "long",
-                                                            day: "numeric",
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        }
-                                                    )}
-                                                </h6>
-                                                <hr className={styles.divider} />
-                                            </div>
-                                            <MarkdownRenderer
-                                                key={idx}
-                                                content={item.markdownBody}
-                                            />
-                                            <hr className={styles.divider} />
-                                            <h6>
-                                                Edycja:{" "}
-                                                {linkedEdition
-                                                    ? linkedEdition.title
-                                                    : "Nieprzypisana"}
-                                            </h6>
-                                            <div className={styles.actions}>
-                                                <Button
-                                                    text={<FaEdit />}
-                                                    onClick={() => EditPost(item)}
-                                                />
-                                                <Button
-                                                    text={<FaTrash />}
-                                                    onClick={() => DeletePost(item)}
-                                                />
-                                            </div>
-                                        </ContentsListTile>
-                                    );
-                                })}
-                            </ContentsListBox>
+                                            return (
+                                                <ContentsListTile key={item.id}>
+                                                    <div className={styles.postHeader}>
+                                                        <h3>{item.title}</h3>
+                                                        <h6>
+                                                            Data:{" "}
+                                                            {new Date(
+                                                                item.createdAt
+                                                            ).toLocaleString("pl-PL", {
+                                                                year: "numeric",
+                                                                month: "long",
+                                                                day: "numeric",
+                                                                hour: "2-digit",
+                                                                minute: "2-digit",
+                                                            })}
+                                                        </h6>
+                                                        <hr className={styles.divider} />
+                                                    </div>
+                                                    <MarkdownRenderer
+                                                        key={idx + "post"}
+                                                        content={item.markdownBody}
+                                                    />
+                                                    <hr className={styles.divider} />
+                                                    <h6>
+                                                        Edycja:{" "}
+                                                        {linkedEdition
+                                                            ? linkedEdition.title
+                                                            : "Nieprzypisana"}
+                                                    </h6>
+                                                    <div className={styles.actions}>
+                                                        <Button
+                                                            text={<FaEdit />}
+                                                            onClick={() => EditPost(item)}
+                                                        />
+                                                        <Button
+                                                            text={<FaTrash />}
+                                                            onClick={() => DeletePost(item)}
+                                                        />
+                                                    </div>
+                                                </ContentsListTile>
+                                            );
+                                        })}
+                                    </ContentsListBox>
+                                </>
+                            )}
+                            {!preview && (
+                                <ContentsListTile>
+                                    <div className={styles.postHeader}>
+                                        <h3 className={styles.postTitle}>{title}</h3>
+                                        <h6>
+                                            Data:{" "}
+                                            {new Date().toLocaleString("pl-PL", {
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </h6>
+                                        <hr className={styles.divider} />
+                                    </div>
+                                    <MarkdownRenderer content={markdownBody} />
+                                    <hr className={styles.divider} />
+                                    <h6>
+                                        Edycja: {editions.find((e) => e.id === editionId)?.title}
+                                    </h6>
+                                </ContentsListTile>
+                            )}
                         </div>
                     </div>
                 </>

@@ -4,7 +4,12 @@ import SimpleMDE from "react-simplemde-editor";
 import Button from "./Button";
 import ImagePicker from "./ImagePicker";
 
-const MarkdownEditor = ({ onSave, initialValue = "", label = "Zapisz zmiany" }) => {
+const MarkdownEditor = ({
+    onSave,
+    initialValue = "",
+    onChange = null,
+    label = "Zapisz zmiany",
+}) => {
     const [content, setContent] = useState(initialValue);
     const [showPicker, setShowPicker] = useState(false);
     const mdeInstance = useRef(null);
@@ -17,6 +22,14 @@ const MarkdownEditor = ({ onSave, initialValue = "", label = "Zapisz zmiany" }) 
 
         cm.replaceRange(textToInsert, cursor);
         setShowPicker(false);
+    };
+
+    const handleTextChange = (value) => {
+        setContent(value);
+        if (onChange) {
+            onChange(value);
+        }
+        return true;
     };
 
     const options = useMemo(
@@ -60,7 +73,7 @@ const MarkdownEditor = ({ onSave, initialValue = "", label = "Zapisz zmiany" }) 
                     </div>
                 </div>
             )}
-            <SimpleMDE value={content} onChange={(value) => setContent(value)} options={options} />
+            <SimpleMDE value={content} onChange={handleTextChange} options={options} />
             <Button text={label} onClick={() => onSave(content)} />
         </div>
     );
