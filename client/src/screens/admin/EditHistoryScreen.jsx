@@ -10,6 +10,7 @@ const EditHistory = () => {
     const navigate = useNavigate();
     const isAdminEditor = useMemo(() => isAdmin() || isEditor(), []);
     const [markdownBody, setMarkdownBody] = useState("");
+    const [loadingData, setLoadingData] = useState(true);
 
     const UpdateHistory = async (history) => {
         const apiData = { markdownBody: history };
@@ -34,9 +35,11 @@ const EditHistory = () => {
 
         const getData = async () => {
             const data = await apiRequest("/api/static-pages/history", null, "GET", navigate);
-            const data_json = JSON.parse(data);
-
-            setMarkdownBody(data_json.markdownBody);
+            if (data) {
+                const dataJson = JSON.parse(data);
+                setMarkdownBody(dataJson.markdownBody || "");
+            }
+            setLoadingData(false);
         };
 
         if (isAdminEditor) getData();
@@ -57,14 +60,16 @@ const EditHistory = () => {
                                     maxWidth: "600px",
                                 }}
                             >
-                                <MarkdownEditor
-                                    key={"editor"}
-                                    initialValue={markdownBody}
-                                    onChange={setMarkdownBody}
-                                    onSave={(text) => {
-                                        UpdateHistory(text);
-                                    }}
-                                />
+                                {!loadingData && (
+                                    <MarkdownEditor
+                                        initialValue={markdownBody}
+                                        onChange={setMarkdownBody}
+                                        onSave={(text) => {
+                                            UpdateHistory(text);
+                                        }}
+                                    />
+                                )}
+                                {loadingData && <p>Ładowanie danych...</p>}
                             </div>
                         </>
                     </div>

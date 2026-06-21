@@ -10,6 +10,7 @@ const EditRule = () => {
     const navigate = useNavigate();
     const isAdminUser = useMemo(() => isAdmin(), []);
     const [markdownBody, setMarkdownBody] = useState("");
+    const [loadingData, setLoadingData] = useState(true);
 
     const AddNewRules = async (rules) => {
         const apiData = { markdownBody: rules };
@@ -34,9 +35,11 @@ const EditRule = () => {
 
         const getData = async () => {
             const data = await apiRequest("/api/static-pages/rules", null, "GET", navigate);
-            const data_json = JSON.parse(data);
-
-            setMarkdownBody(data_json.markdownBody);
+            if (data) {
+                const dataJson = JSON.parse(data);
+                setMarkdownBody(dataJson.markdownBody || "");
+            }
+            setLoadingData(false);
         };
 
         if (isAdminUser) getData();
@@ -56,14 +59,16 @@ const EditRule = () => {
                                 maxWidth: "600px",
                             }}
                         >
-                            <MarkdownEditor
-                                key={markdownBody}
-                                initialValue={markdownBody}
-                                onChange={setMarkdownBody}
-                                onSave={(text) => {
-                                    AddNewRules(text);
-                                }}
-                            />
+                            {!loadingData && (
+                                <MarkdownEditor
+                                    initialValue={markdownBody}
+                                    onChange={setMarkdownBody}
+                                    onSave={(text) => {
+                                        AddNewRules(text);
+                                    }}
+                                />
+                            )}
+                            {loadingData && <p>Ładowanie danych...</p>}
                         </div>
                     </div>
                     <div className="container">
