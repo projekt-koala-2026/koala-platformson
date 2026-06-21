@@ -1,5 +1,6 @@
 ﻿using koala.Data;
 using koala.Data.ViewModels;
+using koala.Utils;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -64,7 +65,7 @@ namespace koala.Services
                 {
                     Id = Guid.NewGuid(),
                     Email = "admin",
-                    Password = "admin"
+                    Password = PasswordHelper.ComputeSha256Hash("admin")
                 };
 
                 context.Users.Add(adminUser);
@@ -90,8 +91,18 @@ namespace koala.Services
             //TODO: ADD RETURN VALUES CORECTLY
             var context = await _factory.CreateDbContextAsync();
 
-            var userDB = context.Users.FirstOrDefault(u => u.Email == userLoginVM.Email && u.Password == userLoginVM.Password);
+            var userDB = context.Users.FirstOrDefault(u => u.Email == userLoginVM.Email);
             if(userDB == null)
+            {
+                return ("", null);
+            }
+
+            string enteredHash = PasswordHelper.ComputeSha256Hash(userLoginVM.Password);
+            string storedHash = userDB.Password;
+
+            bool valid = enteredHash.Equals(storedHash, StringComparison.OrdinalIgnoreCase);
+
+            if (!valid)
             {
                 return ("", null);
             }

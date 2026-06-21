@@ -1,6 +1,7 @@
 
 using koala.Data;
 using koala.Data.ViewModels;
+using koala.Utils;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,7 @@ namespace koala.Services
             {
                 Id = Guid.NewGuid(),
                 Email = userCreateVM.Email,
-                Password = userCreateVM.Password
+                Password = PasswordHelper.ComputeSha256Hash(userCreateVM.Password)
             };
 
             var rolesFromDb = await context.Roles
@@ -90,7 +91,7 @@ namespace koala.Services
             {
                 Id = Guid.NewGuid(),
                 Email = userCreateVM.Email,
-                Password = userCreateVM.Password
+                Password = PasswordHelper.ComputeSha256Hash(userCreateVM.Password)
             };
 
             var rolesFromDb = await context.Roles
@@ -126,9 +127,19 @@ namespace koala.Services
             var context = await _factory.CreateDbContextAsync();
             
             var user = context.Users
-            .FirstOrDefault(u => u.Id == userChangeEmailVM.Id && u.Password == userChangeEmailVM.Password);
+            .FirstOrDefault(u => u.Id == userChangeEmailVM.Id);
 
             if (user == null)
+            {
+                return null;
+            }
+
+            string enteredHash = PasswordHelper.ComputeSha256Hash(userChangeEmailVM.Password);
+            string storedHash = user.Password;
+
+            bool valid = enteredHash.Equals(storedHash, StringComparison.OrdinalIgnoreCase);
+
+            if (!valid)
             {
                 return null;
             }
@@ -163,14 +174,24 @@ namespace koala.Services
             var context = await _factory.CreateDbContextAsync();
             
             var user = context.Users
-            .FirstOrDefault(u => u.Id == userChangePasswordVM.Id && u.Password == userChangePasswordVM.Password);
+            .FirstOrDefault(u => u.Id == userChangePasswordVM.Id);
 
             if (user == null)
             {
                 return null;
             }
-            
-            user.Password = userChangePasswordVM.NewPassword;
+
+            string enteredHash = PasswordHelper.ComputeSha256Hash(userChangePasswordVM.Password);
+            string storedHash = user.Password;
+
+            bool valid = enteredHash.Equals(storedHash, StringComparison.OrdinalIgnoreCase);
+
+            if (!valid)
+            {
+                return null;
+            }
+
+            user.Password = PasswordHelper.ComputeSha256Hash(userChangePasswordVM.NewPassword);
 
             await context.SaveChangesAsync();
 
