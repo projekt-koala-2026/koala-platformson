@@ -64,6 +64,9 @@ namespace koala.src.Modules.Cms.Data
 
         public DbSet<PublicFile> PublicFiles => Set<PublicFile>();
         public DbSet<StaticPage> StaticPages => Set<StaticPage>();
+        public DbSet<Koalicjant> Koalicjants => Set<Koalicjant>();
+        public DbSet<Sponsor> Sponsors => Set<Sponsor>();
+        public DbSet<Post> Posts => Set<Post>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("cms");
@@ -84,15 +87,28 @@ namespace koala.src.Modules.Cms.Data
             Guid history_page_id = Guid.Parse(static_id_guid_page_history);
             Guid rules_page_id = Guid.Parse(static_id_guid_page_rules);
             Guid koalicjants_page_id = Guid.Parse(static_id_guid_page_koalicjants);
+            DateTime timeNow = DateTime.UtcNow;
             modelBuilder.Entity<StaticPage>()
                 .HasData
                 (
-                    new StaticPage{Id = home_page_id, Name = "HOME_PAGE", Path = $"/static-pages/{home_page_id}.json", UpdatedAt = null, Version = 1},
-                    new StaticPage{Id = tasks_page_id, Name = "TASKS_PAGE", Path = $"/static-pages/{tasks_page_id}.json", UpdatedAt = null, Version = 1},
-                    new StaticPage{Id = history_page_id, Name = "HISTORY_PAGE", Path = $"/static-pages/{history_page_id}.json", UpdatedAt = null, Version = 1},
-                    new StaticPage{Id = rules_page_id, Name = "RULES_PAGE", Path = $"/static-pages/{rules_page_id}.json", UpdatedAt = null, Version = 1},
-                    new StaticPage{Id = koalicjants_page_id, Name = "KOALICJANTS_PAGE", Path = $"/static-pages/{koalicjants_page_id}.json", UpdatedAt = null, Version = 1}
+                    new StaticPage{Id = home_page_id, Name = "HOME_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
+                    new StaticPage{Id = tasks_page_id, Name = "TASKS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
+                    new StaticPage{Id = history_page_id, Name = "HISTORY_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
+                    new StaticPage{Id = rules_page_id, Name = "RULES_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
+                    new StaticPage{Id = koalicjants_page_id, Name = "KOALICJANTS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0}
                 );
+
+            // KOALICJANT CONFIG
+            modelBuilder.Entity<Koalicjant>()
+                .HasKey(k => k.Id);
+
+            // SPONSOR CONFIG
+            modelBuilder.Entity<Sponsor>()
+                .HasKey(s => s.Id);
+
+            // POST CONFIG
+            modelBuilder.Entity<Post>()
+                .HasKey(p => p.Id);
         }
     };
 }

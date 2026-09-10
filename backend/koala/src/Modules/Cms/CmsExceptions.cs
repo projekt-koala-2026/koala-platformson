@@ -4,11 +4,17 @@ using Microsoft.AspNetCore.Http;
 
 namespace koala.src.Modules.Cms
 {
-    // 200 -> 399
+    // 400 -> 599
     public class CmsErrorCodes : KoalaErrorCodes
     {
-        public const int _EXTERNAL_ActiveEditionNotFound = 350;
-        public const int _EXTERNAL_EditionNotFound = 351;
+        public const int StaticPageNotFound = 400;
+        public const int FileNotFound = 401;
+        public const int KoalicjantNotFound = 402;
+        public const int SponsorNotFound = 403;
+        public const int PostNotFound = 404;
+        public const int InvalidJsonStructure = 410;
+        public const int _EXTERNAL_ActiveEditionNotFound = 550;
+        public const int _EXTERNAL_EditionNotFound = 551;
     }
     public class CmsException : Exception
     {

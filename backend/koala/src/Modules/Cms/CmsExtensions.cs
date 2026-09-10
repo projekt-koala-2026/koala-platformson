@@ -22,7 +22,7 @@ namespace koala.src.Modules.Cms
                 ));
 
             // 2. HOSTED SERVICES (RUNING ON BACKEND START)
-            services.AddHostedService(sp => new CmsFilesSeederHostedService(publicFilesPath));
+            services.AddHostedService(sp => new CmsSeederHostedService(publicFilesPath));
 
             // 3. SERVICES
             services.AddScoped<PublicFileService, PublicFileService>();
