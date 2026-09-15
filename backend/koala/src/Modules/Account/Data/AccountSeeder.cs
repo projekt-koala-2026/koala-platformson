@@ -7,11 +7,11 @@ using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Data
 {
-    public class AccountDbSeederHostedService : IHostedService
+    public class AccountSeederHostedService : IHostedService
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public AccountDbSeederHostedService(IServiceProvider serviceProvider)
+        public AccountSeederHostedService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }

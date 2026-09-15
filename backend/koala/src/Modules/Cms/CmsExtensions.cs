@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using koala.src.Modules.Cms.Data;
 using koala.src.Modules.Cms.Services;
 using Microsoft.Extensions.FileProviders;
+using koala.src.Modules.Cms.Entities;
 
 
 namespace koala.src.Modules.Cms
@@ -25,8 +26,15 @@ namespace koala.src.Modules.Cms
             services.AddHostedService(sp => new CmsSeederHostedService(publicFilesPath));
 
             // 3. SERVICES
-            services.AddScoped<PublicFileService, PublicFileService>();
-        
+            services.AddScoped<KoalicjantService, KoalicjantService>();
+            services.AddScoped<PostService, PostService>();
+            services.AddScoped<PublicFileService, PublicFileService>(sp => {
+                var db = sp.GetRequiredService<CmsDbContext>();
+                return new PublicFileService(db, publicFilesPath);
+            });
+            services.AddScoped<SponsorService, SponsorService>();
+            services.AddScoped<StaticPageService, StaticPageService>();
+
             // 4. EXCEPTION HANDLERS
             services.AddExceptionHandler<CmsExceptionHandler>();
             services.AddProblemDetails();

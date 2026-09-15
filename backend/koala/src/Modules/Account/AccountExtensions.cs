@@ -20,7 +20,7 @@ namespace koala.src.Modules.Account
                 ));
 
             // 2. HOSTED SERVICES (RUNING ON BACKEND START)
-            services.AddHostedService<AccountDbSeederHostedService>();
+            services.AddHostedService<AccountSeederHostedService>();
 
             // 3. SERVICES
             services.AddScoped<EmailService, EmailService>();
