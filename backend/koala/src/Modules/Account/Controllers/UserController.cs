@@ -40,9 +40,9 @@ namespace koala.src.Modules.Account.Controllers
         }
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetUsers([FromQuery] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetUsers([FromQuery] PageQueryDto pageQueryDto, [FromQuery] UserQueryDto userQueryDto)
         {
-            var result = await _userService.GetUsersAsync(User, pageQueryDto); 
+            var result = await _userService.GetUsersAsync(User, pageQueryDto, userQueryDto); 
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, result.Pagination, result.Data));
         }
         [Authorize]

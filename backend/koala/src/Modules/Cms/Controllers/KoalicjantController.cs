@@ -33,5 +33,13 @@ namespace koala.src.Modules.Cms.Controllers
             (var responseData, var responsePagination) = await _koalicjantService.GetKoalicjantsAsync(User, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<KoalicjantDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
+
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetKoalicjants([FromRoute] Guid id)
+        {
+            var response = await _koalicjantService.GetKoalicjantAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<KoalicjantDto>(true, DateTime.UtcNow, null, null, response));
+        }
     }
 }

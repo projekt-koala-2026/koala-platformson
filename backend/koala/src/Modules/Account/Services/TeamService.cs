@@ -83,6 +83,7 @@ namespace koala.src.Modules.Account.Services
             Team team = new Team
             {
                 Id = Guid.CreateVersion7(),
+                EditionId = activeEdition.Id,
                 Name = requestDto.Name,
                 NameAccepted = false,
                 CreatedAt = timeNow
@@ -386,7 +387,68 @@ namespace koala.src.Modules.Account.Services
             return response;
         }
 
-        public async Task<TeamDto> GetTeam(ClaimsPrincipal? claimsPrincipal, Guid teamId)
+        public async Task<(List<TeamDto>, ApiPagination)> GetMyTeamsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, TeamQueryDto teamQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+
+            if(!isAuthenticated)
+            {
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+            }
+
+            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if(!isTeamPlayer && !isTeamAdmin)
+            {
+                throw new AccountException(AccountErrorCodes.Forbiden,"Only team members can view their teams");
+            }
+
+            if(userId == Guid.Empty)
+            {
+                throw new AccountException(AccountErrorCodes.Forbiden,"Corupted auth cookie");
+            }
+
+            var query = _db.Teams.AsNoTracking().AsQueryable();
+
+            query = query.Where(t => t.TeamMembers.Any(tm => tm.UserId == userId)).Distinct();
+
+            if(teamQueryDto.EditionId != null)
+            {
+                query = query.Where(t => t.EditionId == teamQueryDto.EditionId);
+            }
+
+            if(!string.IsNullOrEmpty(teamQueryDto.Name))
+            {
+                query = query.Where(t => t.Name == teamQueryDto.Name);
+            }
+
+            var queryResults = await query.ToListAsync();
+
+            List<TeamDto> teamDtos = queryResults
+                .Select
+                (
+                    qr => new TeamDto
+                    (
+                        qr.Id,
+                        qr.Name,
+                        qr.NameAccepted,
+                        qr.CreatedAt,
+                        qr.TeamMembers.Select(tm => new TeamMemberDto(tm.UserId, tm.Position)).ToList(),
+                        new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.ExpiresAt)
+                    )
+                )
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .ToList();
+
+            return (teamDtos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
+
+        }
+
+        //TODO fix this just go through this and make sure its corect this and the next one XDD
+        public async Task<TeamDto> GetTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -436,56 +498,59 @@ namespace koala.src.Modules.Account.Services
                 teamJoinCodeDto
             );
         }
+        public async Task<(List<TeamDto>, ApiPagination)> GetTeamsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, TeamQueryDto teamQueryDto, TeamMemberQueryDto teamMemberQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
-        //FIXME: DECIDE HOW TO STRUCTURE THOSE ENDPOINTS
-        // public async Task<TeamDto> GetTeams(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
-        // {
-        //     bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            if(!isAuthenticated)
+            {
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+            }
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-        //     if(!isAuthenticated)
-        //     {
-        //         throw new UnauthorizedException("User is not loged in");
-        //     }
-        //     bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
-        //     bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-        //     Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+            if(!isOrganizationAdmin)
+            {
+                throw new AccountException(AccountErrorCodes.Forbiden,"Only admin can view all the teams");
+            }
 
-        //     if(!isTeamAdmin && !isOrganizationAdmin)
-        //     {
-        //         throw new ForbidenException("Only team members and admin can view the team");
-        //     }
+            var query = _db.Teams.AsNoTracking().AsQueryable();
 
-        //     bool isTeamMember = await _db.TeamMembers.AnyAsync(tm=> tm.TeamId == teamId && tm.UserId == userId);
+            if(teamQueryDto.EditionId != null)
+            {
+                query = query.Where(t => t.EditionId == teamQueryDto.EditionId);
+            }
 
-        //     if(!isTeamMember && !isOrganizationAdmin)
-        //     {
-        //         throw new ForbidenException("Only team members and admin can view the team");
-        //     }
+            if(!string.IsNullOrEmpty(teamQueryDto.Name))
+            {
+                query = query.Where(t => t.Name == teamQueryDto.Name);
+            }
 
-        //     var team = await _db.Teams.AsNoTracking().FirstOrDefaultAsync(t => t.Id == teamId);
-        
-        //     if(team == null)
-        //     {
-        //         throw new TeamNotFoundException("The provided id does not belong to any team");
-        //     }
+            if(teamMemberQueryDto.UserId != null && !string.IsNullOrEmpty(teamMemberQueryDto.Position))
+            {
+                query = query.Where(t => t.TeamMembers.Any(tm => tm.UserId == teamMemberQueryDto.UserId && tm.Position == teamMemberQueryDto.Position));
+            }
 
-        //     var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm=> tm.TeamId == teamId).ToListAsync();
-        //     var teamJoinCode = await _db.TeamJoinCodes.AsNoTracking().FirstOrDefaultAsync(tjc => tjc.TeamId == teamId);
+            var queryResults = await query.ToListAsync();
+            List<TeamDto> teamDtos = queryResults
+                .Select
+                (
+                    qr => new TeamDto
+                    (
+                        qr.Id,
+                        qr.Name,
+                        qr.NameAccepted,
+                        qr.CreatedAt,
+                        qr.TeamMembers.Select(tm => new TeamMemberDto(tm.UserId, tm.Position)).ToList(),
+                        new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.ExpiresAt)
+                    )
+                )
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .ToList();
 
-        //     TeamJoinCodeDto? teamJoinCodeDto = new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt); 
-
-        //     if(teamJoinCode.ExpiresAt <= DateTime.UtcNow)
-        //     {
-        //         teamJoinCodeDto = null;
-        //     }
-
-        //     return new TeamDto
-        //     (
-        //         team.Id,team.Name,!team.NameAccepted,team.CreatedAt,
-        //         teamMembers.Select(tm => new TeamMemberDto(tm.UserId, tm.Position)).ToList(),
-        //         teamJoinCodeDto
-        //     );
-        // }
+            return (teamDtos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
+        }
         
     } 
 }

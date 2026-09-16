@@ -147,7 +147,7 @@ namespace koala.src.Modules.Account.Services
             return new UserDto(user.Id,user.NameFirst!,user.NameLast!,user.Email,user.Censored,userRolesNames);
 
         }
-        public async Task<UserListDto> GetUsersAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<UserListDto> GetUsersAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, UserQueryDto userQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
@@ -165,10 +165,38 @@ namespace koala.src.Modules.Account.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Dont havepermission to do it");
+                throw new AccountException(AccountErrorCodes.Forbiden,"Dont have permission to do it");
             }
 
-            var queryResults = await _db.Users.Where(u => u.Verified == true && u.Id != userId).AsNoTracking().AsQueryable().ToListAsync();
+            var query = _db.Users.AsNoTracking().AsQueryable();
+
+            //FITLER CHECKS
+            if(!string.IsNullOrEmpty(userQueryDto.Email))
+            {
+                query = query.Where(u => u.Email == userQueryDto.Email);
+            }
+
+            if(!string.IsNullOrEmpty(userQueryDto.NameFirst))
+            {
+                query = query.Where(u => u.NameFirst == userQueryDto.NameFirst);
+            }
+
+            if(!string.IsNullOrEmpty(userQueryDto.NameLast))
+            {
+                query = query.Where(u => u.NameLast == userQueryDto.NameLast);
+            }
+
+            if(userQueryDto.ShowCensord != null)
+            {
+                query = query.Where(u => u.Censored == userQueryDto.ShowCensord);
+            }
+
+            if(userQueryDto.UserRoles != null)
+            {
+                query = query.Where(u => u.UserRoles.Any(ur => userQueryDto.UserRoles.Contains(ur.Role.Name)));
+            }
+
+            var queryResults = await query.ToListAsync();
             List<UserDto> users = queryResults
                 .Select(u => new UserDto
                 (

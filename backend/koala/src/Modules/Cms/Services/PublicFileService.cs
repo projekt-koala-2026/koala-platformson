@@ -107,10 +107,35 @@ namespace koala.src.Modules.Cms.Services
             }
         }
 
-        public async Task<(List<PublicFileDto>, ApiPagination)> GetFilesAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<(List<PublicFileDto>, ApiPagination)> GetFilesAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, PublicFileQueryDto publicFileQueryDto)
         {
-            var publicFiles = await _db.PublicFiles
-                .AsNoTracking()
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            if(!isAuthenticated)
+            {
+                throw new CmsException(CmsErrorCodes.Unauthenticated,"User not loged in");
+            }
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+
+            if(!isOrganizationAdmin && !isOrganizationEditor)
+            {
+                throw new CmsException(CmsErrorCodes.Forbiden, "This user canot create a sponsor");
+            }
+
+            var query = _db.PublicFiles.AsNoTracking().AsQueryable();
+
+            if(!string.IsNullOrEmpty(publicFileQueryDto.Type))
+            {
+                query = query.Where(pf => pf.Type == publicFileQueryDto.Type);
+            }
+
+            if(!string.IsNullOrEmpty(publicFileQueryDto.Name))
+            {
+                query = query.Where(pf => pf.Name == publicFileQueryDto.Name);
+            }
+
+            var queryResults = await query.ToListAsync();
+            var publicFiles = queryResults
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
                 .Select(pf => new PublicFileDto
@@ -122,9 +147,9 @@ namespace koala.src.Modules.Cms.Services
                     pf.CreatedAt,
                     pf.Version
                 ))
-                .ToListAsync();
+                .ToList();
 
-            return (publicFiles, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, await _db.PublicFiles.AsNoTracking().CountAsync()));
+            return (publicFiles, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
     }
 }

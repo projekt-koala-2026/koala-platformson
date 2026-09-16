@@ -49,5 +49,13 @@ namespace koala.src.Modules.Cms.Controllers
             (var responseData, var responsePagination) = await _sponsorService.GetSponsorsAsync(User, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<SponsorDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
+
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetSponsor([FromRoute] Guid id)
+        {
+            var response = await _sponsorService.GetSponsorAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<SponsorDto>(true, DateTime.UtcNow, null, null, response));
+        }
     }
 }

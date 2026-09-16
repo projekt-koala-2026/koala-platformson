@@ -72,11 +72,18 @@ namespace koala.src.Modules.Cms.Services
         }
         public async Task<(List<KoalicjantDto>, ApiPagination)> GetKoalicjantsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
-            //TODO: ADD A WAY TO FILLTER OUT DATA
-            //bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            //bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            var koalicjants = await _db.Koalicjants.AsNoTracking().Where(k => k.IsVisiable == true)
+            var query = _db.Koalicjants.AsNoTracking().AsQueryable();
+
+            if(!isOrganizationAdmin && !isOrganizationEditor)
+            {
+                query = query.Where(k => k.IsVisiable == true);
+            }
+
+            var queryResults = await query.ToListAsync();
+            var koalicjants = queryResults
                 .Select
                 (
                     k => new KoalicjantDto
@@ -90,9 +97,37 @@ namespace koala.src.Modules.Cms.Services
                         k.UpdatedAt,
                         k.Version
                     )
-                ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToListAsync();
+                ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
 
-            return (koalicjants , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,await _db.Koalicjants.AsNoTracking().CountAsync()));
+            return (koalicjants , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,queryResults.Count));
+        }
+
+        public async Task<KoalicjantDto> GetKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
+        {
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+
+            var query = _db.Koalicjants.AsNoTracking().AsQueryable();
+
+            if(!isOrganizationAdmin && !isOrganizationEditor)
+            {
+                query = query.Where(k => k.IsVisiable == true);
+            }
+
+            var queryResult = await query.FirstOrDefaultAsync(k => k.Id == id);
+            var koalicjant = new KoalicjantDto
+                (
+                    queryResult.Id,
+                    queryResult.NameFirst,
+                    queryResult.NameLast,
+                    queryResult.Email,
+                    queryResult.ContentJson,
+                    queryResult.IsVisiable,
+                    queryResult.UpdatedAt,
+                    queryResult.Version
+                );
+
+            return koalicjant;
         }
     }
 }
