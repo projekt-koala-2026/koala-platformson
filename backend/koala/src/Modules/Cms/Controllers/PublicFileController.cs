@@ -20,9 +20,9 @@ namespace koala.src.Modules.Cms.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> AddFile([FromForm] string name, [FromForm] IFormFile file)
+        public async Task<IActionResult> AddFile([FromForm] CreatePublicFileRequestDto createPublicFileRequestDto)
         {
-            var responseData = await _publicFileService.AddFileAsync(User,name,file);
+            var responseData = await _publicFileService.AddFileAsync(User,createPublicFileRequestDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWraper<PublicFileDto>(true, DateTime.UtcNow, null, null, responseData));
         }
 

@@ -18,7 +18,7 @@ namespace koala.src.Modules.Cms.Services
             _publicFilesPath = publicFilesPath;
         }
 
-        public async Task<PublicFileDto> AddFileAsync(ClaimsPrincipal? claimsPrincipal,string name,IFormFile file)
+        public async Task<PublicFileDto> AddFileAsync(ClaimsPrincipal? claimsPrincipal, CreatePublicFileRequestDto createPublicFileRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
@@ -33,41 +33,63 @@ namespace koala.src.Modules.Cms.Services
                 throw new CmsException(CmsErrorCodes.Forbiden, "This user canot create a sponsor");
             }
 
-            Directory.CreateDirectory(_publicFilesPath);
-
-            var id = Guid.CreateVersion7();
-            var extension = Path.GetExtension(file.FileName);
-            var path = $"{id}{extension}";
-            var physicalPath = Path.Combine(_publicFilesPath, path);
-
-            await using (var stream = new FileStream(physicalPath, FileMode.CreateNew))
-            {
-                await file.CopyToAsync(stream);
-            }
-
             try
             {
-                DateTime timeNow = DateTime.UtcNow;
-                PublicFile publicFile = new PublicFile
-                {
-                    Id = id,
-                    Name = name,
-                    Path = path,
-                    Type = extension,
-                    CreatedAt = timeNow,
-                    UpdatedAt = timeNow,
-                    Version = 0
-                };
-
-                await _db.PublicFiles.AddAsync(publicFile);
-
-                return new PublicFileDto(publicFile.Id,publicFile.Name,publicFile.Path,publicFile.Type,publicFile.CreatedAt,publicFile.Version);
+                Directory.CreateDirectory(_publicFilesPath);
             }
             catch
             {
-                File.Delete(physicalPath);
-                throw;
+                throw new CmsException(CmsErrorCodes.FolderCreationError, "Error when creating a folder holding public files");    
             }
+
+            var id = Guid.CreateVersion7();
+            var extension = Path.GetExtension(createPublicFileRequestDto.File.FileName);
+            var path = $"{id}{extension}";
+            var physicalPath = Path.Combine(_publicFilesPath, path);
+            Console.WriteLine(_publicFilesPath);
+            Console.WriteLine(id);
+            Console.WriteLine(extension);
+            Console.WriteLine(path);
+            Console.WriteLine(physicalPath);
+            
+            try
+            {       
+                await using (var stream = new FileStream(physicalPath, FileMode.CreateNew))
+                {
+                    await createPublicFileRequestDto.File.CopyToAsync(stream);
+                }
+            }
+            catch
+            {
+                throw new CmsException(CmsErrorCodes.FileCreationError, "Error creating a public file");
+            }
+
+            PublicFile publicFile = new PublicFile();
+            try
+            {
+                DateTime timeNow = DateTime.UtcNow;
+                publicFile.Id = id;
+                publicFile.Name = createPublicFileRequestDto.Name;
+                publicFile.Path = path;
+                publicFile.Type = extension;
+                publicFile.CreatedAt = timeNow;
+                publicFile.UpdatedAt = timeNow;
+                publicFile.Version = 0;
+
+                await _db.PublicFiles.AddAsync(publicFile);
+                await _db.SaveChangesAsync();
+            }
+            catch
+            {
+                if (File.Exists(physicalPath))
+                {
+                    File.Delete(physicalPath);
+                }
+
+                throw new CmsException(CmsErrorCodes.DatabaseError, "Error saving public file record to database");
+            }
+
+            return new PublicFileDto(publicFile.Id, publicFile.Name, publicFile.Path, publicFile.Type, publicFile.CreatedAt, publicFile.Version);
         }
 
         public async Task DeleteFileAsync(ClaimsPrincipal? claimsPrincipal,Guid id)

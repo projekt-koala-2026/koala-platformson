@@ -20,6 +20,7 @@ namespace koala.src.Modules.Core
                 ));
 
             // 2. HOSTED SERVICES (RUNING ON BACKEND START)
+            services.AddHostedService<CoreSeederHostedService>();
 
             // 3. SERVICES
             services.AddScoped<ICoreModule, CoreService>();

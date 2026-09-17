@@ -20,7 +20,8 @@ namespace koala.src.Modules.Account.Data
         {
             using var scope = _serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AccountDbContext>();
-            await dbContext.Database.EnsureCreatedAsync();
+            await dbContext.Database.ExecuteSqlRawAsync("CREATE SCHEMA IF NOT EXISTS account;");
+            await dbContext.Database.MigrateAsync();
 
             bool hasAdmin = await dbContext.UserRoles
                 .Join(dbContext.Roles,

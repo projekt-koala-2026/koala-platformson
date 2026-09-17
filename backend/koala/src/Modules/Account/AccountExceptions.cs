@@ -64,26 +64,22 @@ namespace koala.src.Modules.Account
                 };
 
                 apiError = new ApiError(statusCode, accountEx.Message);
+
+                httpContext.Response.StatusCode = statusCode;
+                httpContext.Response.ContentType = "application/json";
+
+                var response = new ApiResponseWraper<object>(
+                    Success: false,
+                    TimeStamp: DateTime.UtcNow,
+                    Error: apiError,
+                    Pagination: null,
+                    Data: null
+                );
+
+                await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+                return true;
             }
-            else
-            {
-                statusCode = StatusCodes.Status500InternalServerError;
-                apiError = new ApiError(statusCode, "Internal server error");
-            }
-
-            httpContext.Response.StatusCode = statusCode;
-            httpContext.Response.ContentType = "application/json";
-
-            var response = new ApiResponseWraper<object>(
-                Success: false,
-                TimeStamp: DateTime.UtcNow,
-                Error: apiError,
-                Pagination: null,
-                Data: null
-            );
-
-            await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
-            return true;
+            return false;
         }
     }
 }

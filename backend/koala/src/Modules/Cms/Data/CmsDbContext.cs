@@ -59,7 +59,7 @@ namespace koala.src.Modules.Cms.Data
         // public const string static_id_guid_page_? = "01a065c3-3bec-7224-b7b3-6cab833337fb";
         public CmsDbContext(DbContextOptions<CmsDbContext> options) : base(options)
         {
-
+            
         }
 
         public DbSet<PublicFile> PublicFiles => Set<PublicFile>();
@@ -87,7 +87,7 @@ namespace koala.src.Modules.Cms.Data
             Guid history_page_id = Guid.Parse(static_id_guid_page_history);
             Guid rules_page_id = Guid.Parse(static_id_guid_page_rules);
             Guid koalicjants_page_id = Guid.Parse(static_id_guid_page_koalicjants);
-            DateTime timeNow = DateTime.UtcNow;
+            DateTime timeNow = new DateTime(2026, 7, 6, 7, 6, 7, DateTimeKind.Utc);
             modelBuilder.Entity<StaticPage>()
                 .HasData
                 (

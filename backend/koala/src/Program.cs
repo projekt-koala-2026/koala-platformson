@@ -7,14 +7,20 @@ using koala.src.Modules.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
+IConfigurationRoot configuration = new ConfigurationBuilder()
+    .SetBasePath(AppContext.BaseDirectory)
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddEnvironmentVariables()
+    .Build();
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // MODULES INIT
-builder.Services.AddSharedModule(builder.Configuration);
-builder.Services.AddAccountModule(builder.Configuration);
-builder.Services.AddCmsModule(builder.Configuration);
-builder.Services.AddCoreModule(builder.Configuration);
+builder.Services.AddSharedModule(configuration);
+builder.Services.AddAccountModule(configuration);
+builder.Services.AddCmsModule(configuration);
+builder.Services.AddCoreModule(configuration);
 
 // ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>
@@ -37,7 +43,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-CmsModuleExtensions.AddCmsModule(app);
+CmsModuleExtensions.AddCmsModule(app, app.Configuration);
 
 //app.UseCors("AllowFrontend");
 

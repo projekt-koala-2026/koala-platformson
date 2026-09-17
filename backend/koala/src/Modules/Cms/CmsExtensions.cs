@@ -9,21 +9,21 @@ namespace koala.src.Modules.Cms
 {
     public static class CmsModuleExtensions
     {
-        private static string publicFilesPath = "/app/public_files";
         public static IServiceCollection AddCmsModule(this IServiceCollection services, IConfiguration configuration)
         {
             string dbConnStr = configuration.GetConnectionString("Local_Database_Postgres")!;
+            string publicFilesPath = configuration["FileSettings:PublicFilesPath"]!;
 
             // 1. DATABASES
             services.AddDbContext<CmsDbContext>(options =>
                 options.UseNpgsql
                 (
                     dbConnStr,
-                    npgsqlOptions =>npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "account")
+                    npgsqlOptions =>npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "cms")
                 ));
 
             // 2. HOSTED SERVICES (RUNING ON BACKEND START)
-            services.AddHostedService(sp => new CmsSeederHostedService(publicFilesPath));
+            services.AddHostedService(sp => new CmsSeederHostedService(publicFilesPath, sp));
 
             // 3. SERVICES
             services.AddScoped<KoalicjantService, KoalicjantService>();
@@ -43,9 +43,9 @@ namespace koala.src.Modules.Cms
             
             return services;
         }
-        public static void AddCmsModule(WebApplication app)
+        public static void AddCmsModule(WebApplication app, IConfiguration configuration)
         {
-            
+            string publicFilesPath = configuration["FileSettings:PublicFilesPath"]!;
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(publicFilesPath),
