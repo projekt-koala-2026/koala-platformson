@@ -69,7 +69,14 @@ namespace koala.src.Modules.Account.Services
 
             if(activeEdition == null)
             {
-                throw new NoActiveEditionException("There is no active edition under witch the team could be created");
+                throw new AccountException(AccountErrorCodes._EXTERNAL_ActiveEditionNotFound,"There is no active edition under witch the team could be created");
+            }
+
+            var schoolExist = await _coreService.Internal_ExistSchool(requestDto.SchoolId);
+
+            if(schoolExist == false)
+            {
+                throw new AccountException(AccountErrorCodes._EXTERNAL_SchoolNotFound,"There is no school with provided id under witch the team could be created");
             }
 
             bool isTeamMember = await _db.TeamMembers.AsNoTracking().AnyAsync(tm=> tm.UserId == userId);
@@ -107,7 +114,7 @@ namespace koala.src.Modules.Account.Services
             await _db.SaveChangesAsync();
 
             
-            return new TeamDto(team.Id, team.Name, !team.NameAccepted, team.CreatedAt, teamMemberDtos, null);
+            return new TeamDto(team.Id, team.EditionId, team.SchoolId, team.Name, !team.NameAccepted, team.CreatedAt, teamMemberDtos, null);
         }
 
         public async Task DeleteTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId)
@@ -233,7 +240,7 @@ namespace koala.src.Modules.Account.Services
 
             TeamJoinCodeDto teamJoinCodeDto = new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
 
-            return new TeamDto(teamCaptain.Team.Id, teamCaptain.Team.Name, !teamCaptain.Team.NameAccepted, teamCaptain.Team.CreatedAt, teamMembers, teamJoinCodeDto);
+            return new TeamDto(teamCaptain.Team.Id, teamCaptain.Team.EditionId, teamCaptain.Team.SchoolId, teamCaptain.Team.Name, !teamCaptain.Team.NameAccepted, teamCaptain.Team.CreatedAt, teamMembers, teamJoinCodeDto);
         }
 
         public async Task<TeamJoinCodeDto> CreateJoinTeamCodeAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId)
@@ -432,6 +439,8 @@ namespace koala.src.Modules.Account.Services
                     qr => new TeamDto
                     (
                         qr.Id,
+                        qr.EditionId,
+                        qr.SchoolId,
                         qr.Name,
                         qr.NameAccepted,
                         qr.CreatedAt,
@@ -493,7 +502,7 @@ namespace koala.src.Modules.Account.Services
 
             return new TeamDto
             (
-                team.Id,team.Name,!team.NameAccepted,team.CreatedAt,
+                team.Id,team.EditionId,team.SchoolId,team.Name,!team.NameAccepted,team.CreatedAt,
                 teamMembers.Select(tm => new TeamMemberDto(tm.UserId, tm.Position)).ToList(),
                 teamJoinCodeDto
             );
@@ -521,6 +530,11 @@ namespace koala.src.Modules.Account.Services
                 query = query.Where(t => t.EditionId == teamQueryDto.EditionId);
             }
 
+            if(teamQueryDto.SchoolId != null)
+            {
+                query = query.Where(t => t.SchoolId == teamQueryDto.SchoolId);
+            }
+
             if(!string.IsNullOrEmpty(teamQueryDto.Name))
             {
                 query = query.Where(t => t.Name == teamQueryDto.Name);
@@ -538,6 +552,8 @@ namespace koala.src.Modules.Account.Services
                     qr => new TeamDto
                     (
                         qr.Id,
+                        qr.EditionId,
+                        qr.SchoolId,
                         qr.Name,
                         qr.NameAccepted,
                         qr.CreatedAt,

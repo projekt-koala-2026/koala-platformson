@@ -1,4 +1,5 @@
 using koala.src.Modules.Core.Data;
+using koala.src.Modules.Core.Dtos;
 using koala.src.Shared.Core;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,10 +20,24 @@ namespace koala.src.Modules.Core.Services
 
             if(edition == null)
             {
-                throw new CoreException(CoreErrorCodes.ActiveEditionNotFound,"There is no curent active edition at the moment");
+                //throw new CoreException(CoreErrorCodes.ActiveEditionNotFound,"There is no curent active edition at the moment");
+                return null;
             }
 
             return new _EditionDto(edition.Id,edition.Name,edition.CreatedAt,edition.ExpiresAt);
+        }
+
+        public async Task<bool> Internal_ExistSchool(Guid id)
+        {
+            var school = await _db.Schools.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+
+            if(school == null)
+            {
+                //throw new CoreException(CoreErrorCodes.SchoolNotFound,"There is no curent active edition at the moment");
+                return false;
+            }
+
+            return true;
         }
     }
 }

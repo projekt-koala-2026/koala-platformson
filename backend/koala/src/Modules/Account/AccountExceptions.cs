@@ -20,6 +20,7 @@ namespace koala.src.Modules.Account
         public const int TeamMemberCountMax = 222;
         public const int UserAlreadyExists = 223;
         public const int _EXTERNAL_ActiveEditionNotFound = 350;
+        public const int _EXTERNAL_SchoolNotFound = 351;
     }
     public class AccountException : Exception
     {

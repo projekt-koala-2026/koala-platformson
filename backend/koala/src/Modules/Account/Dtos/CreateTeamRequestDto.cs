@@ -2,6 +2,7 @@ namespace koala.src.Modules.Account.Dtos
 {
     public record CreateTeamRequestDto
     (
-        string Name
+        string Name,
+        Guid SchoolId
     );
 }
