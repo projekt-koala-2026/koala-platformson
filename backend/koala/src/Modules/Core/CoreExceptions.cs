@@ -7,9 +7,10 @@ namespace koala.src.Modules.Core
     // 200 -> 399
     public class CoreErrorCodes : KoalaErrorCodes
     {
-        public const int EditionNotFound = 200;
-        public const int ActiveEditionNotFound = 201;
-        public const int ActiveEditionAlreadyExists = 210;
+        public const int EditionNotFound = 600;
+        public const int ActiveEditionNotFound = 601;
+        public const int ActiveEditionAlreadyExists = 610;
+        public const int SubeditionNotFound = 611;
     }
     public class CoreException : Exception
     {
@@ -37,6 +38,7 @@ namespace koala.src.Modules.Core
                     CoreErrorCodes.EditionNotFound => StatusCodes.Status404NotFound,
                     CoreErrorCodes.ActiveEditionNotFound => StatusCodes.Status404NotFound,
                     CoreErrorCodes.ActiveEditionAlreadyExists => StatusCodes.Status409Conflict,
+                    CoreErrorCodes.SubeditionNotFound => StatusCodes.Status404NotFound,
                     _ => StatusCodes.Status400BadRequest
                 };
 

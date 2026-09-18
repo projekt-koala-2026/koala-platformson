@@ -24,19 +24,19 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not logged in");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permission to perform this operation on resource");
             }
 
             bool isThereAnActiveEdition = _db.Editions.Where(e=> e.ExpiresAt == null).AsNoTracking().Any(); 
 
             if(isThereAnActiveEdition)
             {
-                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists,"There is already an active edition, canot create a new one without ending last one first");
+                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists,"There is already an active edition, cannot create a new one without ending last one first");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -62,12 +62,12 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not logged in");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permission to perform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e=> e.Id == id); 
@@ -137,10 +137,25 @@ namespace koala.src.Modules.Core.Services
 
             if(edition == null)
             {
-                throw new CoreException(CoreErrorCodes.EditionNotFound,"There is no curent active edition at the moment");
+                throw new CoreException(CoreErrorCodes.EditionNotFound,"There is no current active edition at the moment");
             }
 
             return new EditionDto(edition.Id,edition.Name,edition.CreatedAt,edition.ExpiresAt);
         }
+
+        public async Task<SubeditionDto> GetSubedition(ClaimsPrincipal? claimsPrincipal)
+        {
+            var subedition = await _db.SubEditions
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+            if (subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubeditionNotFound, "Subedition not found");
+            }
+
+            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DataStart, subedition.DataEnd, subedition.CreatedAt, subedition.ExpiresAt);
+        }
+
     }
 }

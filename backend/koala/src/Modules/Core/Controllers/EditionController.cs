@@ -1,3 +1,4 @@
+using koala.src.Modules.Account.Entities;
 using koala.src.Modules.Core.Dtos;
 using koala.src.Modules.Core.Services;
 using koala.src.Shared;
@@ -57,6 +58,15 @@ namespace koala.src.Modules.Core.Controllers
             var response = await _editionService.GetActiveEdition(User);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
+
+        [AllowAnonymous]
+        [HttpGet("subedition")]
+        public async Task<IActionResult> GetSubedition()
+        {
+            var response = await _editionService.GetSubedition(User);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
+        }
+
 
     }
 }
