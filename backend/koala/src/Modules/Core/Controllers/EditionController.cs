@@ -67,6 +67,21 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
+        [AllowAnonymous]
+        [HttpGet("subeditions")]
+        public async Task<IActionResult> GetSubeditions([FromRoute] PageQueryDto pageQueryDto)
+        {
+            var response = await _editionService.GetSubeditions(User, pageQueryDto);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, response.Pagination, response.Data));                
+        }
+
+        [Authorize]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteSubedition([FromRoute] Guid id)
+        {
+            var response = await _editionService.DeleteSubedition(User, id);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
+        }
 
     }
 }

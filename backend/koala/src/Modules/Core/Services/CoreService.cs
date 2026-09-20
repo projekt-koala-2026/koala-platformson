@@ -19,7 +19,7 @@ namespace koala.src.Modules.Core.Services
 
             if(edition == null)
             {
-                throw new CoreException(CoreErrorCodes.ActiveEditionNotFound,"There is no curent active edition at the moment");
+                throw new CoreException(CoreErrorCodes.ActiveEditionNotFound,"There is no current active edition at the moment");
             }
 
             return new _EditionDto(edition.Id,edition.Name,edition.CreatedAt,edition.ExpiresAt);

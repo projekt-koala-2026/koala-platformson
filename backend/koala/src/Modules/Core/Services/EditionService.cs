@@ -157,5 +157,53 @@ namespace koala.src.Modules.Core.Services
             return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DataStart, subedition.DataEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
 
+        public async Task<SubeditionListDto> GetSubeditions(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        {
+            var queryResult = await _db.SubEditions.AsNoTracking().ToListAsync();
+            var subeditions = queryResult
+                .Skip(pageQueryDto.PageSize*pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .Select(e => new SubeditionDto
+                (
+                    e.Id,
+                    e.EditionId,
+                    e.Name,
+                    e.DataStart,
+                    e.DataEnd,
+                    e.CreatedAt,
+                    e.ExpiresAt
+                ))
+                .ToList();
+
+            return new SubeditionListDto(subeditions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
+        }
+
+        public async Task<SubeditionDto> DeleteSubedition(ClaimsPrincipal? claimsPrincipal, Guid id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if(!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+            }
+
+            if(!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e=> e.Id == id); 
+
+            if(subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubeditionNotFound,"Subedition of provided id does not exist");
+            }
+
+            _db.SubEditions.Remove(subedition);
+            await _db.SaveChangesAsync();
+
+            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DataStart, subedition.DataEnd, subedition.CreatedAt, subedition.ExpiresAt);
+        }
     }
 }
