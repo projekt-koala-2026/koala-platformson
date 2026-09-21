@@ -18,13 +18,15 @@ namespace koala.src.Modules.Cms.Controllers
             _publicFileService = publicFileService;
         }
 
+        [Authorize]
         [HttpPost]
-        public async Task<IActionResult> AddFile([FromForm] string name, [FromForm] IFormFile file)
+        public async Task<IActionResult> AddFile([FromForm] CreatePublicFileRequestDto createPublicFileRequestDto)
         {
-            var responseData = await _publicFileService.AddFileAsync(User,name,file);
+            var responseData = await _publicFileService.AddFileAsync(User,createPublicFileRequestDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWraper<PublicFileDto>(true, DateTime.UtcNow, null, null, responseData));
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFile([FromRoute] Guid id)
         {
@@ -32,10 +34,11 @@ namespace koala.src.Modules.Cms.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetFiles([FromQuery] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetFiles([FromQuery] PageQueryDto pageQueryDto, [FromQuery] PublicFileQueryDto publicFileQueryDto)
         {
-            (var responseData , var responsePagination) = await _publicFileService.GetFilesAsync(User, pageQueryDto);
+            (var responseData , var responsePagination) = await _publicFileService.GetFilesAsync(User, pageQueryDto, publicFileQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<PublicFileDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 

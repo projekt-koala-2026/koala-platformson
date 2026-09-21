@@ -113,9 +113,23 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
         }
 
-        public async Task<EditionListDto> GetEditions(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<(List<EditionDto>, ApiPagination)> GetEditions(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, EditionQueryDto editionQueryDto)
         {
-            var queryResult = await _db.Editions.AsNoTracking().ToListAsync();
+            var query = _db.Editions.AsNoTracking().AsQueryable();
+
+            if(editionQueryDto.ShowActive != null)
+            {
+                if(editionQueryDto.ShowActive.Value)
+                {
+                    query = query.Where(e => e.ExpiresAt == null);
+                }
+                else
+                {
+                    query = query.Where(e => e.ExpiresAt != null);
+                }
+            }
+
+            var queryResult = await query.ToListAsync();
             var editions = queryResult
                 .Skip(pageQueryDto.PageSize*pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
@@ -128,7 +142,7 @@ namespace koala.src.Modules.Core.Services
                 ))
                 .ToList();
 
-            return new EditionListDto(editions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
+            return (editions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
         }
 
         public async Task<EditionDto> GetActiveEdition(ClaimsPrincipal? claimsPrincipal)

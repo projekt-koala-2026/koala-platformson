@@ -116,13 +116,35 @@ namespace koala.src.Modules.Cms.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task<(List<PostDto>, ApiPagination)> GetPostsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<(List<PostDto>, ApiPagination)> GetPostsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, PostQueryDto postQueryDto)
         {
-            //TODO: ADD A WAY TO FILLTER OUT DATA (VISIABLE AND SO ON)
-            //bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            //bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            var posts = await _db.Posts.AsNoTracking().Where(p => p.IsVisable == true)
+            if(!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHiden == true))
+            {
+                throw new CmsException(CmsErrorCodes.Forbiden,"Dont havepermission to do it");
+            }
+
+            var query = _db.Posts.AsNoTracking().AsQueryable();
+
+            if(postQueryDto.EditionId != null)
+            {
+                query = query.Where(p => p.EditionId == postQueryDto.EditionId);
+            }
+
+            if(!string.IsNullOrEmpty(postQueryDto.Name))
+            {
+                query = query.Where(p => p.Name == postQueryDto.Name);
+            }
+
+            if(postQueryDto.ShowHiden != null)
+            {
+                query = query.Where(p => p.IsVisable == !postQueryDto.ShowHiden);
+            }
+
+            var queryResults = await query.ToListAsync();
+            var posts = queryResults
                 .Select
                 (
                     p => new PostDto
@@ -136,9 +158,43 @@ namespace koala.src.Modules.Cms.Services
                         p.IsVisable,
                         p.Version
                     )
-                ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToListAsync();
+                ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
 
-            return (posts , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,await _db.Koalicjants.AsNoTracking().CountAsync()));
+            return (posts , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,queryResults.Count));
+        }
+
+        public async Task<PostDto> GetPostAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
+        {
+            var query = _db.Posts.AsNoTracking().AsQueryable();
+
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+
+            if(!isOrganizationAdmin && !isOrganizationEditor)
+            {
+                query = query.Where(p => p.IsVisable == true);
+            }
+
+            var queryResults = await query.FirstOrDefaultAsync(p => p.Id == id);
+
+            if(queryResults == null)
+            {
+                throw new CmsException(CmsErrorCodes.PostNotFound, "Post with this id does not exist");
+            }
+
+            PostDto post = new PostDto
+            (
+                queryResults.Id,
+                queryResults.EditionId,
+                queryResults.Name,
+                queryResults.ContentJson,
+                queryResults.CreatedAt,
+                queryResults.UpdatedAt,
+                queryResults.IsVisable,
+                queryResults.Version
+            );
+
+            return post;
         }
     }
 }

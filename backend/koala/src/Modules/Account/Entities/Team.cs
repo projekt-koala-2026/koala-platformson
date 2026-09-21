@@ -6,6 +6,10 @@ namespace koala.src.Modules.Account.Entities
     {
         [Column("id")]
         public Guid Id { get; set; }
+        [Column("edition_id")]
+        public Guid EditionId { get; set; }
+        [Column("school_id")]
+        public Guid SchoolId { get; set; }
         [Column("name")]
         public string Name { get; set; }
         [Column("name_accepted")]

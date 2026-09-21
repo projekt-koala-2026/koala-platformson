@@ -111,11 +111,18 @@ namespace koala.src.Modules.Cms.Services
         }
         public async Task<(List<SponsorDto>, ApiPagination)> GetSponsorsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
-            //TODO: ADD A WAY TO FILLTER OUT DATA (VISIABLE AND SO ON)
-            //bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            //bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            var sponsors = await _db.Sponsors.AsNoTracking().Where(s => s.IsVisiable == true)
+            var query = _db.Sponsors.AsNoTracking().AsQueryable();
+
+            if(!isOrganizationAdmin && !isOrganizationEditor)
+            {
+                query = query.Where(s => s.IsVisiable == true);
+            }
+
+            var queryResults = await query.ToListAsync();
+            var sponsors = queryResults
                 .Select
                 (
                     s => new SponsorDto
@@ -128,9 +135,36 @@ namespace koala.src.Modules.Cms.Services
                         s.CreatedAt,
                         s.Version
                     )
-                ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToListAsync();
+                ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
 
-            return (sponsors , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,await _db.Koalicjants.AsNoTracking().CountAsync()));
+            return (sponsors , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,queryResults.Count));
+        }
+
+        public async Task<SponsorDto> GetSponsorAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
+        {
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+
+            var query = _db.Sponsors.AsNoTracking().AsQueryable();
+
+            if(!isOrganizationAdmin && !isOrganizationEditor)
+            {
+                query = query.Where(s => s.IsVisiable == true);
+            }
+
+            var queryResult = await query.FirstOrDefaultAsync(s => s.Id == id);
+            var sponsor = new SponsorDto
+                (
+                    queryResult.Id,
+                    queryResult.Name,
+                    queryResult.ContentJson,
+                    queryResult.IsVisiable,
+                    queryResult.UpdatedAt,
+                    queryResult.CreatedAt,
+                    queryResult.Version
+                );
+
+            return sponsor;
         }
     }
 }

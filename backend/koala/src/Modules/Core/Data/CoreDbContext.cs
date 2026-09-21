@@ -12,13 +12,18 @@ namespace koala.src.Modules.Core.Data
         }
 
         public DbSet<Edition> Editions => Set<Edition>();
+<<<<<<< HEAD
         public DbSet<Subedition> SubEditions => Set<Subedition>();
+=======
+        public DbSet<School> Schools => Set<School>();
+>>>>>>> origin/backend_refactor
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             
             modelBuilder.HasDefaultSchema("core");
 
+<<<<<<< HEAD
             // EDITIONS CONFIG
             modelBuilder.Entity<Edition>(b =>
             {
@@ -37,6 +42,18 @@ namespace koala.src.Modules.Core.Data
                     .HasForeignKey(s => s.EditionId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+=======
+            modelBuilder.Entity<Edition>().ToTable("editions");
+            modelBuilder.Entity<School>().ToTable("schools");
+            
+            // EDITIONS CONFIG
+            modelBuilder.Entity<Edition>()
+                .HasKey(e=> e.Id);
+
+            // SCHOOLS CONFIG
+            modelBuilder.Entity<School>()
+                .HasKey(s=> s.Id);
+>>>>>>> origin/backend_refactor
         }
     };
 }

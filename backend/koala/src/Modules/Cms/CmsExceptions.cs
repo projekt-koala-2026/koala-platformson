@@ -13,6 +13,9 @@ namespace koala.src.Modules.Cms
         public const int SponsorNotFound = 403;
         public const int PostNotFound = 404;
         public const int InvalidJsonStructure = 410;
+        public const int FolderCreationError = 450;
+        public const int FileCreationError = 451;
+        public const int DatabaseError = 452;
         public const int _EXTERNAL_ActiveEditionNotFound = 550;
         public const int _EXTERNAL_EditionNotFound = 551;
     }
@@ -39,30 +42,33 @@ namespace koala.src.Modules.Cms
                 //MAPING FROM EXCEPTION ERROR CODES => STATUS CODES
                 statusCode = cmsEx.ErrorCode switch
                 {
+                    CmsErrorCodes.FolderCreationError => StatusCodes.Status500InternalServerError,
+                    CmsErrorCodes.FileCreationError => StatusCodes.Status500InternalServerError,
                     _ => StatusCodes.Status400BadRequest
                 };
 
                 apiError = new ApiError(statusCode, cmsEx.Message);
+
+                httpContext.Response.StatusCode = statusCode;
+                httpContext.Response.ContentType = "application/json";
+
+                var response = new ApiResponseWraper<object>(
+                    Success: false,
+                    TimeStamp: DateTime.UtcNow,
+                    Error: apiError,
+                    Pagination: null,
+                    Data: null
+                );
+
+                await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+                return true;
             }
-            else
-            {
-                statusCode = StatusCodes.Status500InternalServerError;
-                apiError = new ApiError(statusCode, "Internal server error");
-            }
-
-            httpContext.Response.StatusCode = statusCode;
-            httpContext.Response.ContentType = "application/json";
-
-            var response = new ApiResponseWraper<object>(
-                Success: false,
-                TimeStamp: DateTime.UtcNow,
-                Error: apiError,
-                Pagination: null,
-                Data: null
-            );
-
-            await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
-            return true;
+            return false;
+            // else
+            // {
+            //     statusCode = StatusCodes.Status500InternalServerError;
+            //     apiError = new ApiError(statusCode, "Internal server error");
+            // }
         }
     }
 }

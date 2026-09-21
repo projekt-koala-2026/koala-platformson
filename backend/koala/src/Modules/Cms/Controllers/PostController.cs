@@ -44,10 +44,18 @@ namespace koala.src.Modules.Cms.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetPosts([FromQuery] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetPosts([FromQuery] PageQueryDto pageQueryDto, [FromQuery] PostQueryDto postQueryDto)
         {
-            (var responseData, var responsePagination) = await _postService.GetPostsAsync(User, pageQueryDto);
+            (var responseData, var responsePagination) = await _postService.GetPostsAsync(User, pageQueryDto, postQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<PostDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetPosts([FromRoute] Guid id)
+        {
+            var response = await _postService.GetPostAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<PostDto>(true, DateTime.UtcNow, null, null, response));
         }
     }
 }

@@ -20,6 +20,7 @@ namespace koala.src.Modules.Account
         public const int TeamMemberCountMax = 222;
         public const int UserAlreadyExists = 223;
         public const int _EXTERNAL_ActiveEditionNotFound = 350;
+        public const int _EXTERNAL_SchoolNotFound = 351;
     }
     public class AccountException : Exception
     {
@@ -64,26 +65,22 @@ namespace koala.src.Modules.Account
                 };
 
                 apiError = new ApiError(statusCode, accountEx.Message);
+
+                httpContext.Response.StatusCode = statusCode;
+                httpContext.Response.ContentType = "application/json";
+
+                var response = new ApiResponseWraper<object>(
+                    Success: false,
+                    TimeStamp: DateTime.UtcNow,
+                    Error: apiError,
+                    Pagination: null,
+                    Data: null
+                );
+
+                await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+                return true;
             }
-            else
-            {
-                statusCode = StatusCodes.Status500InternalServerError;
-                apiError = new ApiError(statusCode, "Internal server error");
-            }
-
-            httpContext.Response.StatusCode = statusCode;
-            httpContext.Response.ContentType = "application/json";
-
-            var response = new ApiResponseWraper<object>(
-                Success: false,
-                TimeStamp: DateTime.UtcNow,
-                Error: apiError,
-                Pagination: null,
-                Data: null
-            );
-
-            await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
-            return true;
+            return false;
         }
     }
 }

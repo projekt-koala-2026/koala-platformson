@@ -63,21 +63,22 @@ namespace koala.src.Modules.Account.Controllers
             var response = await _teamService.JoinTeamWithCodeAsync(User, join_code); 
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response)); 
         }
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyTeams([FromQuery] PageQueryDto pageQueryDto, [FromQuery] TeamQueryDto teamQueryDto)
+        {
+            (var responseData, var responsePagination) = await _teamService.GetMyTeamsAsync(User, pageQueryDto, teamQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData)); 
+        }
         //ONLY FOR TEAM PLAYERS AND TEAM AND ORGANIZATION ADMINS
         [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTeam([FromRoute] Guid id)
         {
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null)); 
+            var response = await _teamService.GetTeamAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<TeamDto>(true, DateTime.UtcNow, null, null, response)); 
         }
         //ONLY FOR TEAM AND ORGANIZATION ADMINS
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetTeams([FromRoute] PageQueryDto pageQueryDto)
-        {
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null)); 
-        }
-
         [Authorize]
         [HttpPost("{id}/rodos/{team_member_id}")]
         public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
@@ -104,6 +105,15 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null)); 
+        }
+
+        //ONLY FOR ORGANIZATION ADMINS
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetTeams([FromQuery] PageQueryDto pageQueryDto, [FromQuery] TeamQueryDto teamQueryDto, [FromQuery] TeamMemberQueryDto teamMemberQueryDto)
+        {
+            (var responseData, var responsePagination) = await _teamService.GetTeamsAsync(User, pageQueryDto, teamQueryDto, teamMemberQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData)); 
         }
     }
 }

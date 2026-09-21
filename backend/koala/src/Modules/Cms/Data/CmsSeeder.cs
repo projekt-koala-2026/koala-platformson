@@ -10,12 +10,19 @@ namespace koala.src.Modules.Cms.Data
     public class CmsSeederHostedService : IHostedService
     {
         private readonly string _publicFilesPath;
-        public CmsSeederHostedService(string publicFilesPath)
+        private readonly IServiceProvider _serviceProvider;
+        public CmsSeederHostedService(string publicFilesPath, IServiceProvider serviceProvider)
         {
             _publicFilesPath = publicFilesPath;
+            _serviceProvider = serviceProvider;
         }
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<CmsDbContext>();
+            await dbContext.Database.ExecuteSqlRawAsync("CREATE SCHEMA IF NOT EXISTS cms;");
+            await dbContext.Database.MigrateAsync();
+
 
             if (!Directory.Exists(_publicFilesPath))
             {

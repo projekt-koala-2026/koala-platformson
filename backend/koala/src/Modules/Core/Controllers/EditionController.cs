@@ -45,10 +45,10 @@ namespace koala.src.Modules.Core.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public async Task<IActionResult> GetEditions([FromRoute] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetEditions([FromQuery] PageQueryDto pageQueryDto, [FromQuery] EditionQueryDto editionQueryDto)
         {
-            var response = await _editionService.GetEditions(User, pageQueryDto);
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, response.Pagination, response.Data));                
+            (var responseData, var responsePagination) = await _editionService.GetEditions(User, pageQueryDto, editionQueryDto);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));                
         }
         
         [AllowAnonymous]
