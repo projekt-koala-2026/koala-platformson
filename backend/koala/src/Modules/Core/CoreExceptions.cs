@@ -9,15 +9,12 @@ namespace koala.src.Modules.Core
     {
         public const int EditionNotFound = 600;
         public const int ActiveEditionNotFound = 601;
-<<<<<<< HEAD
-        public const int ActiveEditionAlreadyExists = 610;
-        public const int SubeditionNotFound = 611;
-=======
-        public const int SchoolNotFound = 602;
-        public const int ActiveEditionAlreadyExists = 610;
-        public const int SchoolAlreadyExists = 611;
-        public const int InvalidImportSchoolFile = 612;
->>>>>>> origin/backend_refactor
+        public const int ActiveEditionAlreadyExists = 602;
+        public const int SubeditionNotFound = 603;
+        public const int SchoolNotFound = 604;
+        public const int ActiveEditionAlreadyExists = 605;
+        public const int SchoolAlreadyExists = 606;
+        public const int InvalidImportSchoolFile = 607;
     }
     public class CoreException : Exception
     {
