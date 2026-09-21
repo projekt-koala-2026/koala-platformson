@@ -2,6 +2,8 @@ namespace koala.src.Modules.Core.Dtos
 {
     public record CreateSubeditionDto
     (
-        string Name
+        string Name,
+        DateTime DataStart,
+        DateTime? DataEnd
     );
 }

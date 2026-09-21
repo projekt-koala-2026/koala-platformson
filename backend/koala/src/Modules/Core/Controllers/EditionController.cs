@@ -56,6 +56,23 @@ namespace koala.src.Modules.Core.Controllers
         public async Task<IActionResult> GetActiveEdition()
         {
             var response = await _editionService.GetActiveEdition(User);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));
+                
+        }
+
+        [Authorize]
+        [HttpPost("subedition")]
+        public async Task<IActionResult> CreateSubedition([FromBody] CreateSubeditionDto createSubeditionDto)
+        {
+            var response = await _editionService.CreateSubdition(User, createSubeditionDto);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
+        }
+
+        [Authorize]
+        [HttpPut("subedition/{id}/name")]
+        public async Task<IActionResult> UpdateSubeditionName([FromRoute] Guid id, [FromBody] UpdateSubeditionNameDto updateSubeditionNameDto)
+        {
+            var response = await _editionService.UpdateSubedition(User, id, updateSubeditionNameDto);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 

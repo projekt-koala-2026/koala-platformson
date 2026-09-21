@@ -143,6 +143,105 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id,edition.Name,edition.CreatedAt,edition.ExpiresAt);
         }
 
+        public async Task<SubeditionDto> CreateSubdition(ClaimsPrincipal? claimsPrincipal, CreateSubeditionDto createSubeditionDto)
+        {
+            
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if(!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+            }
+
+            if(!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+            }
+
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Name == createSubeditionDto.Name);
+
+            if (edition == null)
+            {
+                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition does not exist");
+            }
+
+            if (edition.ExpiresAt != null)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "Subeditions can only be created for the current active edition");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e=> e.Name == createSubeditionDto.Name); 
+
+            if(subedition != null)
+            {
+                throw new CoreException(CoreErrorCodes.SubeditionNotFound,"Subedition of provided name does not exist");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+
+            Subedition newSubedition = new Subedition
+            {
+                Id = Guid.CreateVersion7(),
+                EditionId = edition.Id,
+                Name = createSubeditionDto.Name,
+                DataStart = createSubeditionDto.DataStart,
+                DataEnd = createSubeditionDto.DataEnd,
+                CreatedAt = timeNow,
+                ExpiresAt = null
+            };
+
+            _db.SubEditions.Add(newSubedition);
+            await _db.SaveChangesAsync();
+
+            return new SubeditionDto(newSubedition.Id, newSubedition.EditionId, newSubedition.Name, newSubedition.DataStart, newSubedition.DataEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
+        }
+
+        public async Task<SubeditionDto> UpdateSubedition(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateSubeditionNameDto updateSubeditionNameDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if(!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+            }
+
+            if(!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+            }
+
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Name == updateSubeditionNameDto.Name);
+
+            if (edition == null)
+            {
+                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition does not exist");
+            }
+
+            if (edition.ExpiresAt != null)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "Subeditions can only be created for the current active edition");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e=> e.Name == updateSubeditionNameDto.Name); 
+
+            if(subedition != null)
+            {
+                throw new CoreException(CoreErrorCodes.SubeditionNotFound,"Subedition of provided name does not exist");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+            subedition.Name = updateSubeditionNameDto.Name;
+            subedition.DataStart = updateSubeditionNameDto.DataStart;
+            subedition.DataEnd = updateSubeditionNameDto.DataEnd;
+            await _db.SaveChangesAsync();
+
+            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DataStart, subedition.DataEnd, subedition.CreatedAt, subedition.ExpiresAt);
+        }
+
         public async Task<SubeditionDto> GetSubedition(ClaimsPrincipal? claimsPrincipal)
         {
             var subedition = await _db.SubEditions
