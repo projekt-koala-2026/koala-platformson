@@ -30,5 +30,6 @@ namespace koala.src.Modules.Account.Entities
         public ICollection<Session> Sessions { get; set; } = new List<Session>();
         public ICollection<Link> Links { get; set; } = new List<Link>();
         public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
+        public Rodo Rodo { get; set; }
     }
 }

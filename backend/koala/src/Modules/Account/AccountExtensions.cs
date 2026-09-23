@@ -10,6 +10,7 @@ namespace koala.src.Modules.Account
         public static IServiceCollection AddAccountModule(this IServiceCollection services, IConfiguration configuration)
         {
             string dbConnStr = configuration.GetConnectionString("Local_Database_Postgres")!;
+            string privateFilesPath = configuration["FileSettings:PrivateFilesPath"]!;
 
             // 1. DATABASES
             services.AddDbContext<AccountDbContext>(options =>
@@ -28,6 +29,11 @@ namespace koala.src.Modules.Account
             services.AddScoped<SessionService, SessionService>();
             services.AddScoped<UserService, UserService>();
             services.AddScoped<LinkService, LinkService>();
+            services.AddScoped<TeamService, TeamService>();
+            services.AddScoped<RodoService, RodoService>(sp => {
+                var db = sp.GetRequiredService<AccountDbContext>();
+                return new RodoService(db, privateFilesPath);
+            });
         
             // 4. EXCEPTION HANDLERS
             services.AddExceptionHandler<AccountExceptionHandler>();

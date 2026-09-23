@@ -73,6 +73,9 @@ namespace koala.src.Modules.Cms.Data
 
             modelBuilder.Entity<PublicFile>().ToTable("public_files");
             modelBuilder.Entity<StaticPage>().ToTable("static_pages");
+            modelBuilder.Entity<Koalicjant>().ToTable("koalicjants");
+            modelBuilder.Entity<Sponsor>().ToTable("sponsors");
+            modelBuilder.Entity<Post>().ToTable("posts");
 
             // PUBLIC_FILE CONFIG
             modelBuilder.Entity<PublicFile>()

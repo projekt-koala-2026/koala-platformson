@@ -13,6 +13,7 @@ namespace koala.src.Modules.Account
         public const int SessionNotFound = 203;
         public const int TeamMemberNotFound = 204;
         public const int TeamJoinCodeNotFound = 205;
+         public const int RodoNotFound = 206;
         public const int IncorectPassword = 210;
         public const int IncorectRoles = 211;
         public const int UserIsAPartOfTeamAlready = 220;
