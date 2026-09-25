@@ -90,6 +90,7 @@ namespace koala.src.Modules.Account.Services
             Team team = new Team
             {
                 Id = Guid.CreateVersion7(),
+                SchoolId = requestDto.SchoolId,
                 EditionId = activeEdition.Id,
                 Name = requestDto.Name,
                 NameAccepted = false,

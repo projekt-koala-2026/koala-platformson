@@ -67,7 +67,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost]
+        [HttpPost("import")]
         public async Task<IActionResult> ImportSchools([FromBody] ImportSchoolRequestDto importSchoolRequestDto)
         {
             var response = await _schoolService.ImportSchoolsAsync(User, importSchoolRequestDto);

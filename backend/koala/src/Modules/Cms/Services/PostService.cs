@@ -48,6 +48,7 @@ namespace koala.src.Modules.Cms.Services
             };
 
             await _db.Posts.AddAsync(post);
+            await _db.SaveChangesAsync();
 
             return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisable,post.Version);
         }
