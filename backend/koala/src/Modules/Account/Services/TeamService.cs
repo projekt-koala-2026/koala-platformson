@@ -65,14 +65,14 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbiden,"Only team player can create a team");
             }
 
-            var activeEdition = await _coreService.Internal_GetTheActiveEdition();
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if(activeEdition == null)
             {
                 throw new AccountException(AccountErrorCodes._EXTERNAL_ActiveEditionNotFound,"There is no active edition under witch the team could be created");
             }
 
-            var schoolExist = await _coreService.Internal_ExistSchool(requestDto.SchoolId);
+            var schoolExist = await _coreService.Internal_ExistSchoolAsync(requestDto.SchoolId);
 
             if(schoolExist == false)
             {
@@ -90,6 +90,7 @@ namespace koala.src.Modules.Account.Services
             Team team = new Team
             {
                 Id = Guid.CreateVersion7(),
+                SchoolId = requestDto.SchoolId,
                 EditionId = activeEdition.Id,
                 Name = requestDto.Name,
                 NameAccepted = false,
@@ -134,7 +135,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbiden,"Only team player with position captain can manage the team");
             }
 
-            var activeEdition = await _coreService.Internal_GetTheActiveEdition();
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if(activeEdition == null)
             {
@@ -174,7 +175,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbiden,"Only team player with position captain can manage the team");
             }
 
-            var activeEdition = await _coreService.Internal_GetTheActiveEdition();
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if(activeEdition == null)
             {
@@ -218,7 +219,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbiden,"Only team player with position captain can manage the team");
             }
 
-            var activeEdition = await _coreService.Internal_GetTheActiveEdition();
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if(activeEdition == null)
             {
@@ -260,7 +261,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbiden,"Only team player with position captain can manage the team");
             }
 
-            var activeEdition = await _coreService.Internal_GetTheActiveEdition();
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if(activeEdition == null)
             {
@@ -296,7 +297,6 @@ namespace koala.src.Modules.Account.Services
                 teamJoinCode.ExpiresAt = timeNow.AddMinutes(30.0f);
             }
 
-
             await _db.SaveChangesAsync();
 
             return new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
@@ -320,7 +320,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbiden,"Only team player and admin can join a team");
             }
 
-            var activeEdition = await _coreService.Internal_GetTheActiveEdition();
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if(activeEdition == null)
             {
@@ -336,11 +336,15 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if(teamJoinCode.ExpiresAt >= timeNow)
+            if (teamJoinCode.ExpiresAt <= timeNow)
             {
                 _db.TeamJoinCodes.Remove(teamJoinCode);
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.TeamJoinCodeNotFound,"The join code does not exist or is expired");
+
+                throw new AccountException(
+                    AccountErrorCodes.TeamJoinCodeNotFound,
+                    "The join code is invalid or has expired."
+                );
             }
 
             // MAKE SURE THE USER CAN ONLY JOIN ONE TEAM AS A PLAYER AND MANY AS A ADMIN (BOTH TEAM_*)

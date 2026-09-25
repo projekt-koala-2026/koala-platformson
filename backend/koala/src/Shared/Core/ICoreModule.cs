@@ -4,7 +4,7 @@ namespace koala.src.Shared.Core
 {
     public interface ICoreModule
     {
-        Task<_EditionDto?> Internal_GetTheActiveEdition();
-        Task<bool> Internal_ExistSchool(Guid id);
+        Task<_EditionDto?> Internal_GetTheActiveEditionAsync();
+        Task<bool> Internal_ExistSchoolAsync(Guid id);
     }
 }

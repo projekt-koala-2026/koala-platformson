@@ -100,23 +100,17 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new CoreException(CoreErrorCodes.SchoolNotFound, "Schoold with this id does not exist");
             }
-
             DateTime timeNow = DateTime.UtcNow;
-            school = new School
-            {
-                Id = Guid.CreateVersion7(),
-                NameFull = updateSchoolRequestDto.NameFull,
-                NameShort = updateSchoolRequestDto.NameShort,
-                State = updateSchoolRequestDto.State,
-                City = updateSchoolRequestDto.City,
-                Road = updateSchoolRequestDto.Road,
-                Building = updateSchoolRequestDto.Building,
-                Rspo = updateSchoolRequestDto.Rspo,
-                Type = updateSchoolRequestDto.Type,
-                Email = updateSchoolRequestDto.Email,
-                CreatedAt = timeNow,
-                UpdatedAt = timeNow
-            };
+            school.NameFull = updateSchoolRequestDto.NameFull;
+            school.NameShort = updateSchoolRequestDto.NameShort;
+            school.State = updateSchoolRequestDto.State;
+            school.City = updateSchoolRequestDto.City;
+            school.Road = updateSchoolRequestDto.Road;
+            school.Building = updateSchoolRequestDto.Building;
+            school.Rspo = updateSchoolRequestDto.Rspo;
+            school.Type = updateSchoolRequestDto.Type;
+            school.Email = updateSchoolRequestDto.Email;
+            school.UpdatedAt = timeNow;;
 
             await _db.SaveChangesAsync();
 

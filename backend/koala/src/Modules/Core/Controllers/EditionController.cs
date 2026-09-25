@@ -22,7 +22,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAndStartEdition([FromBody] CreateEditionDto createEditionDto)
         {
-            var response = await _editionService.CreateEdition(User, createEditionDto);
+            var response = await _editionService.CreateEditionAsync(User, createEditionDto);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
@@ -30,7 +30,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpPut("{id}/name")]
         public async Task<IActionResult> UpdateEdition([FromRoute] Guid id, [FromBody] UpdateEditionNameDto updateEditionNameDto)
         {
-            var response = await _editionService.UpdateEdition(User, id, updateEditionNameDto);
+            var response = await _editionService.UpdateEditionAsync(User, id, updateEditionNameDto);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
@@ -38,7 +38,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpPut("{id}/end")]
         public async Task<IActionResult> EndEdition([FromRoute] Guid id)
         {
-            var response = await _editionService.ExpireEdition(User, id);
+            var response = await _editionService.ExpireEditionAsync(User, id);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
@@ -46,7 +46,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpGet]
         public async Task<IActionResult> GetEditions([FromQuery] PageQueryDto pageQueryDto, [FromQuery] EditionQueryDto editionQueryDto)
         {
-            (var responseData, var responsePagination) = await _editionService.GetEditions(User, pageQueryDto, editionQueryDto);
+            (var responseData, var responsePagination) = await _editionService.GetEditionsAsync(User, pageQueryDto, editionQueryDto);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));                
         }
         
@@ -54,7 +54,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpGet("active-edition")]
         public async Task<IActionResult> GetActiveEdition()
         {
-            var response = await _editionService.GetActiveEdition(User);
+            var response = await _editionService.GetActiveEditionAsync(User);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
