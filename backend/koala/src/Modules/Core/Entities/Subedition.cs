@@ -14,11 +14,11 @@ namespace koala.src.Modules.Core.Entities
         [Column("name")]
         public string Name { get; set; } = string.Empty;
 
-        [Column("data_start")]
-        public DateTime DataStart { get; set; }
+        [Column("date_start")]
+        public DateTime DateStart { get; set; }
 
-        [Column("data_end")]
-        public DateTime? DataEnd { get; set; }
+        [Column("date_end")]
+        public DateTime? DateEnd { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
