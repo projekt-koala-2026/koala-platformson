@@ -17,7 +17,7 @@ namespace koala.src.Modules.Core.Services
             _db = db;
         }
 
-        public async Task<EditionDto> CreateEdition(ClaimsPrincipal? claimsPrincipal, CreateEditionDto createEditionDto)
+        public async Task<EditionDto> CreateEditionAsync(ClaimsPrincipal? claimsPrincipal, CreateEditionDto createEditionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -55,7 +55,7 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
         }
 
-        public async Task<EditionDto> UpdateEdition(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateEditionNameDto updateEditionNameDto)
+        public async Task<EditionDto> UpdateEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateEditionNameDto updateEditionNameDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -83,7 +83,7 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
         }
 
-        public async Task<EditionDto> ExpireEdition(ClaimsPrincipal? claimsPrincipal, Guid id)
+        public async Task<EditionDto> ExpireEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -113,7 +113,7 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
         }
 
-        public async Task<(List<EditionDto>, ApiPagination)> GetEditions(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, EditionQueryDto editionQueryDto)
+        public async Task<(List<EditionDto>, ApiPagination)> GetEditionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, EditionQueryDto editionQueryDto)
         {
             var query = _db.Editions.AsNoTracking().AsQueryable();
 
@@ -145,7 +145,7 @@ namespace koala.src.Modules.Core.Services
             return (editions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
         }
 
-        public async Task<EditionDto> GetActiveEdition(ClaimsPrincipal? claimsPrincipal)
+        public async Task<EditionDto> GetActiveEditionAsync(ClaimsPrincipal? claimsPrincipal)
         {
             var edition = await _db.Editions.AsNoTracking().FirstOrDefaultAsync(e => e.ExpiresAt == null);
 

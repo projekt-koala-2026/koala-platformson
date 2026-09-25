@@ -100,7 +100,6 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new CoreException(CoreErrorCodes.SchoolNotFound, "Schoold with this id does not exist");
             }
-
             DateTime timeNow = DateTime.UtcNow;
             school.NameFull = updateSchoolRequestDto.NameFull;
             school.NameShort = updateSchoolRequestDto.NameShort;
