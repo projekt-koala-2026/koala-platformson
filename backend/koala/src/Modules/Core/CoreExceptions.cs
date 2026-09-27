@@ -12,7 +12,6 @@ namespace koala.src.Modules.Core
         public const int ActiveEditionAlreadyExists = 602;
         public const int SubeditionNotFound = 603;
         public const int SchoolNotFound = 604;
-        public const int ActiveEditionAlreadyExists = 605;
         public const int SchoolAlreadyExists = 606;
         public const int InvalidImportSchoolFile = 607;
     }

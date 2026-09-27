@@ -12,7 +12,6 @@ namespace koala.src.Modules.Core.Data
         }
 
         public DbSet<Edition> Editions => Set<Edition>();
-        public DbSet<Subedition> SubEditions => Set<Subedition>();
         public DbSet<School> Schools => Set<School>();
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -20,6 +19,7 @@ namespace koala.src.Modules.Core.Data
             base.OnModelCreating(modelBuilder);
             
             modelBuilder.HasDefaultSchema("core");
+            modelBuilder.Entity<Edition>().ToTable("editions");
 
             // EDITIONS CONFIG
             modelBuilder.Entity<Edition>(b =>
