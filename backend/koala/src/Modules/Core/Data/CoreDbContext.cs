@@ -1,4 +1,5 @@
 using koala.src.Modules.Core.Entities;
+using Microsoft.Build.Execution;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -19,7 +20,6 @@ namespace koala.src.Modules.Core.Data
             base.OnModelCreating(modelBuilder);
             
             modelBuilder.HasDefaultSchema("core");
-            modelBuilder.Entity<Edition>().ToTable("editions");
 
             // EDITIONS CONFIG
             modelBuilder.Entity<Edition>(b =>
@@ -38,6 +38,16 @@ namespace koala.src.Modules.Core.Data
                     .WithMany(e => e.SubEditions)
                     .HasForeignKey(s => s.EditionId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasMany(s => s.Tasks)
+                    .WithMany(t => t.Subeditions)
+                    .UsingEntity(j => j.ToTable("subedition_tasks"));
+            });
+
+            modelBuilder.Entity<TaskItem>(b =>
+            {
+                b.ToTable("tasks");
+                b.HasKey(t => t.Id);
             });
             
             modelBuilder.Entity<Edition>().ToTable("editions");

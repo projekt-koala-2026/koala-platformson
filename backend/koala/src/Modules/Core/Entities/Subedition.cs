@@ -26,5 +26,6 @@ namespace koala.src.Modules.Core.Entities
         [Column("expires_at")]
         public DateTime? ExpiresAt { get; set; }
         public Edition Edition { get; set; } = null!;
+        public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
     }
 }
