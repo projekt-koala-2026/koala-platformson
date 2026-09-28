@@ -99,7 +99,14 @@ namespace koala.src.Modules.Core.Controllers
             var response = await _editionService.DeleteSubedition(User, id);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
-        //[Authorize]
+
+        [Authorize]
+        [HttpPost("{id}/task")]
+        public async Task<IActionResult> CreateTask([FromRoute] Guid id, [FromBody] CreateTaskItemDto createTaskDto)
+        {
+            var response = await _editionService.CreateTask(User, id, createTaskDto);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
+        }
 
     }
 }

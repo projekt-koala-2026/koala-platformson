@@ -318,5 +318,53 @@ namespace koala.src.Modules.Core.Services
 
             return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
+        public async Task<TaskItemDto> CreateTask(ClaimsPrincipal? claimsPrincipal, Guid subeditionId, CreateTaskItemDto createTaskDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subeditionId); 
+
+            if (subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubeditionNotFound, "Subedition of provided id does not exist");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+            TaskItem newTask = new TaskItem
+            {
+                Id = Guid.CreateVersion7(),
+                EditionId = subedition.EditionId,
+                SubeditionId = subeditionId,
+                Name = createTaskDto.Name,
+                ContentJson = createTaskDto.ContentJson,
+                CreatedAt = timeNow,
+                ExpiredAt = createTaskDto.ExpiredAt
+            };
+
+            _db.Tasks.Add(newTask);
+            await _db.SaveChangesAsync();
+
+            return new TaskItemDto(
+                newTask.Id,
+                newTask.EditionId,
+                newTask.SubeditionId,
+                newTask.Name,
+                newTask.ContentJson,
+                newTask.CreatedAt,
+                newTask.ExpiredAt
+            );
+        }
     }
 }
