@@ -115,5 +115,12 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
+        [HttpGet("task/{id}")]
+        public async Task<IActionResult> GetTask([FromRoute] Guid id)
+        {
+            var response = await _editionService.GetTask(User, id);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
+        }
+
     }
 }

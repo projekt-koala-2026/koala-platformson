@@ -318,7 +318,7 @@ namespace koala.src.Modules.Core.Services
 
             return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
-        
+
         public async Task<TaskItemDto> CreateTask(ClaimsPrincipal? claimsPrincipal, Guid subeditionId, CreateTaskItemDto createTaskDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -392,6 +392,25 @@ namespace koala.src.Modules.Core.Services
 
             _db.Tasks.Remove(task);
             await _db.SaveChangesAsync();
+
+            return new TaskItemDto(
+                task.Id,
+                task.EditionId,
+                task.SubeditionId,
+                task.Name,
+                task.ContentJson,
+                task.CreatedAt,
+                task.ExpiredAt
+            );
+        }
+        public async Task<TaskItemDto> GetTask(ClaimsPrincipal? claimsPrincipal, Guid id)
+        {
+            var task = await _db.Tasks.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+
+            if (task == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+            }
 
             return new TaskItemDto(
                 task.Id,
