@@ -5,8 +5,8 @@ namespace koala.src.Modules.Core.Dtos
         Guid Id,
         Guid EditionId,
         string Name,
-        DateTime DataStart,
-        DateTime? DataEnd,
+        DateTime DateStart,
+        DateTime? DateEnd,
         DateTime CreatedAt,
         DateTime? ExpiredAt
     );

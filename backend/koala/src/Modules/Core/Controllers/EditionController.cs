@@ -61,15 +61,15 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("subedition")]
-        public async Task<IActionResult> CreateSubedition([FromBody] CreateSubeditionDto createSubeditionDto)
+        [HttpPost("{id}/subeditions")]
+        public async Task<IActionResult> CreateSubedition([FromRoute] Guid id, [FromBody] CreateSubeditionDto createSubeditionDto)
         {
-            var response = await _editionService.CreateSubdition(User, createSubeditionDto);
+            var response = await _editionService.CreateSubedition(User, id, createSubeditionDto);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
         [Authorize]
-        [HttpPut("subedition/{id}/name")]
+        [HttpPut("{id}/subeditions")]
         public async Task<IActionResult> UpdateSubeditionName([FromRoute] Guid id, [FromBody] UpdateSubeditionNameDto updateSubeditionNameDto)
         {
             var response = await _editionService.UpdateSubedition(User, id, updateSubeditionNameDto);
@@ -99,6 +99,7 @@ namespace koala.src.Modules.Core.Controllers
             var response = await _editionService.DeleteSubedition(User, id);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
+        //[Authorize]
 
     }
 }

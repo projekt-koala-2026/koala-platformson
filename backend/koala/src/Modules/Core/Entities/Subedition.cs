@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace koala.src.Modules.Core.Entities
 {
     //[Table("subeditions")]
-    public class Subedition
+    public class SubEdition
     {
         [Column("id")]
         public Guid Id { get; set; }

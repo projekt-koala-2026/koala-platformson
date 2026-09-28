@@ -12,6 +12,6 @@ namespace koala.src.Modules.Core.Entities
         public DateTime CreatedAt { get; set; }
         [Column("expires_at")]
         public DateTime? ExpiresAt { get; set; }  
-        public ICollection<Subedition> SubEditions { get; set; } = new List<Subedition>();
+        public ICollection<SubEdition> SubEditions { get; set; } = new List<SubEdition>();
     };
 }

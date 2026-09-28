@@ -13,6 +13,8 @@ namespace koala.src.Modules.Core.Data
         }
 
         public DbSet<Edition> Editions => Set<Edition>();
+        public DbSet<SubEdition> SubEditions => Set<SubEdition>();
+        public DbSet<TaskItem> Tasks => Set<TaskItem>();
         public DbSet<School> Schools => Set<School>();
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,7 +31,7 @@ namespace koala.src.Modules.Core.Data
             });
 
             // SUBEDITIONS CONFIG
-            modelBuilder.Entity<Subedition>(b =>
+            modelBuilder.Entity<SubEdition>(b =>
             {
                 b.ToTable("subeditions");
                 b.HasKey(s => s.Id);
@@ -40,7 +42,7 @@ namespace koala.src.Modules.Core.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 b.HasMany(s => s.Tasks)
-                    .WithMany(t => t.Subeditions)
+                    .WithMany(t => t.SubEditions)
                     .UsingEntity(j => j.ToTable("subedition_tasks"));
             });
 

@@ -157,7 +157,7 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id,edition.Name,edition.CreatedAt,edition.ExpiresAt);
         }
 
-        public async Task<SubeditionDto> CreateSubdition(ClaimsPrincipal? claimsPrincipal, CreateSubeditionDto createSubeditionDto)
+        public async Task<SubeditionDto> CreateSubedition(ClaimsPrincipal? claimsPrincipal, Guid editionId, CreateSubeditionDto createSubeditionDto)
         {
             
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -173,7 +173,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
             }
 
-            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Name == createSubeditionDto.Name);
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == editionId);
 
             if (edition == null)
             {
@@ -195,21 +195,21 @@ namespace koala.src.Modules.Core.Services
             DateTime timeNow = DateTime.UtcNow;
 
 
-            Subedition newSubedition = new Subedition
+            SubEdition newSubedition = new SubEdition
             {
                 Id = Guid.CreateVersion7(),
                 EditionId = edition.Id,
                 Name = createSubeditionDto.Name,
-                DataStart = createSubeditionDto.DataStart,
-                DataEnd = createSubeditionDto.DataEnd,
+                DateStart = createSubeditionDto.DateStart,
+                DateEnd = createSubeditionDto.DateEnd,
                 CreatedAt = timeNow,
                 ExpiresAt = null
             };
 
-            _db.SubEditions.Add(newSubedition);
+            _db.SubEditions.AddAsync(newSubedition);
             await _db.SaveChangesAsync();
 
-            return new SubeditionDto(newSubedition.Id, newSubedition.EditionId, newSubedition.Name, newSubedition.DataStart, newSubedition.DataEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
+            return new SubeditionDto(newSubedition.Id, newSubedition.EditionId, newSubedition.Name, newSubedition.DateStart, newSubedition.DateEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
         }
 
         public async Task<SubeditionDto> UpdateSubedition(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateSubeditionNameDto updateSubeditionNameDto)
@@ -249,11 +249,11 @@ namespace koala.src.Modules.Core.Services
             DateTime timeNow = DateTime.UtcNow;
 
             subedition.Name = updateSubeditionNameDto.Name;
-            subedition.DataStart = updateSubeditionNameDto.DataStart;
-            subedition.DataEnd = updateSubeditionNameDto.DataEnd;
+            subedition.DateStart = updateSubeditionNameDto.DateStart;
+            subedition.DateEnd = updateSubeditionNameDto.DateEnd;
             await _db.SaveChangesAsync();
 
-            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DataStart, subedition.DataEnd, subedition.CreatedAt, subedition.ExpiresAt);
+            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
 
         public async Task<SubeditionDto> GetSubedition(ClaimsPrincipal? claimsPrincipal)
@@ -267,7 +267,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.SubeditionNotFound, "Subedition not found");
             }
 
-            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DataStart, subedition.DataEnd, subedition.CreatedAt, subedition.ExpiresAt);
+            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
 
         public async Task<SubeditionListDto> GetSubeditions(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
@@ -281,8 +281,8 @@ namespace koala.src.Modules.Core.Services
                     e.Id,
                     e.EditionId,
                     e.Name,
-                    e.DataStart,
-                    e.DataEnd,
+                    e.DateStart,
+                    e.DateEnd,
                     e.CreatedAt,
                     e.ExpiresAt
                 ))
@@ -316,7 +316,7 @@ namespace koala.src.Modules.Core.Services
             _db.SubEditions.Remove(subedition);
             await _db.SaveChangesAsync();
 
-            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DataStart, subedition.DataEnd, subedition.CreatedAt, subedition.ExpiresAt);
+            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
     }
 }
