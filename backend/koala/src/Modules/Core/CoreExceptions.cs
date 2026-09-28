@@ -14,6 +14,7 @@ namespace koala.src.Modules.Core
         public const int SchoolNotFound = 604;
         public const int SchoolAlreadyExists = 606;
         public const int InvalidImportSchoolFile = 607;
+        public const int TaskNotFound = 608;
     }
     public class CoreException : Exception
     {
@@ -42,6 +43,7 @@ namespace koala.src.Modules.Core
                     CoreErrorCodes.ActiveEditionNotFound => StatusCodes.Status404NotFound,
                     CoreErrorCodes.ActiveEditionAlreadyExists => StatusCodes.Status409Conflict,
                     CoreErrorCodes.SubeditionNotFound => StatusCodes.Status404NotFound,
+                    CoreErrorCodes.TaskNotFound => StatusCodes.Status404NotFound,
                     _ => StatusCodes.Status400BadRequest
                 };
 

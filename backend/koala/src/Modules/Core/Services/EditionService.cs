@@ -318,6 +318,7 @@ namespace koala.src.Modules.Core.Services
 
             return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
+        
         public async Task<TaskItemDto> CreateTask(ClaimsPrincipal? claimsPrincipal, Guid subeditionId, CreateTaskItemDto createTaskDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -364,6 +365,42 @@ namespace koala.src.Modules.Core.Services
                 newTask.ContentJson,
                 newTask.CreatedAt,
                 newTask.ExpiredAt
+            );
+        }
+
+        public async Task<TaskItemDto> DeleteTask(ClaimsPrincipal? claimsPrincipal, Guid id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+            }
+
+            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == id);
+
+            if (task == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+            }
+
+            _db.Tasks.Remove(task);
+            await _db.SaveChangesAsync();
+
+            return new TaskItemDto(
+                task.Id,
+                task.EditionId,
+                task.SubeditionId,
+                task.Name,
+                task.ContentJson,
+                task.CreatedAt,
+                task.ExpiredAt
             );
         }
     }

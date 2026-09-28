@@ -107,6 +107,13 @@ namespace koala.src.Modules.Core.Controllers
             var response = await _editionService.CreateTask(User, id, createTaskDto);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
+        [Authorize]
+        [HttpDelete("task/{id}")]
+        public async Task<IActionResult> DeleteTask([FromRoute] Guid id)
+        {
+            var response = await _editionService.DeleteTask(User, id);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
+        }
 
     }
 }
