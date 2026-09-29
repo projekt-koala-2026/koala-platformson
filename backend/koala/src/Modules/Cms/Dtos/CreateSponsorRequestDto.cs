@@ -4,7 +4,7 @@ namespace koala.src.Modules.Cms.Dtos
     (
         string Name,
         string ContentJson,
-        bool IsVisable,
+        bool IsVisible,
         int Version
     );
 }

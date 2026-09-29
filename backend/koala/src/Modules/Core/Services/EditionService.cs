@@ -24,19 +24,19 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             bool isThereAnActiveEdition = _db.Editions.Where(e=> e.ExpiresAt == null).AsNoTracking().Any(); 
 
             if(isThereAnActiveEdition)
             {
-                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists,"There is already an active edition, canot create a new one without ending last one first");
+                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists,"There is already an active edition, cannot create a new one without ending last one first");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -62,12 +62,12 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e=> e.Id == id); 
@@ -90,12 +90,12 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e=> e.Id == id); 

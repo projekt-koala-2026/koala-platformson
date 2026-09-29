@@ -6,7 +6,7 @@ namespace koala.src.Modules.Cms.Dtos
         string NameLast,
         string Email,
         string ContentJson,
-        bool IsVisiable,
+        bool IsVisible,
         int Version
     );
 }

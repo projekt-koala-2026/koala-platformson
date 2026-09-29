@@ -11,7 +11,7 @@ namespace koala.src.Shared
         int Code,
         string Message
     );
-    public record ApiResponseWraper<T>
+    public record ApiResponseWrapper<T>
     (
         bool Success,
         DateTime TimeStamp,

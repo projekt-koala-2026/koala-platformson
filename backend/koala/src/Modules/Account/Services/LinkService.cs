@@ -37,10 +37,9 @@ namespace koala.src.Modules.Account.Services
             {
                 link.Active = false;
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User conected to that link no longer exists");
+                throw new AccountException(AccountErrorCodes.UserNotFound,"User connected to that link no longer exists");
             }
             link.Active = false;
-            //TODO: HASH THE PASSWORD
             user.NameFirst = requestDto.NameFirst;
             user.NameLast = requestDto.NameLast;
             user.PasswordHash = PasswordHasher.Hash(requestDto.Password);
@@ -71,10 +70,9 @@ namespace koala.src.Modules.Account.Services
             {
                 link.Active = false;
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User conected to that link no longer exists");
+                throw new AccountException(AccountErrorCodes.UserNotFound,"User connected to that link no longer exists");
             }
             link.Active = false;
-            //TODO: HASH THE PASSWORD
             user.PasswordHash = PasswordHasher.Hash(requestDto.Password);
             await _db.SaveChangesAsync();
         }
@@ -84,10 +82,18 @@ namespace koala.src.Modules.Account.Services
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email && u.Verified == true);
             if(user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User does not exist");
+                return;
             }
 
             DateTime timeNow = DateTime.UtcNow;
+
+            var previousLinks = await _db.Links
+                .Where(l => l.UserId == user.Id && l.Type == "RESETPASSWORD" && l.Active)
+                .ToListAsync();
+            foreach (var previousLink in previousLinks)
+            {
+                previousLink.Active = false;
+            }
 
             Link link = new Link
             {
@@ -103,7 +109,6 @@ namespace koala.src.Modules.Account.Services
             await _db.Links.AddAsync(link);
             await _db.SaveChangesAsync();
 
-            //SEND TO EMAIL FIXME:
             await _emailService.SendPasswordResetEmailAsync(user.Email, link.Token.ToString());
         }
 
@@ -174,11 +179,6 @@ namespace koala.src.Modules.Account.Services
 
             var links = await _db.Links.Where(l=> l.UserId == userId && l.Active==true).ToListAsync();
             
-            if(links == null)
-            {
-                throw new AccountException(AccountErrorCodes.LinkNotFound,"Nothing to delete");
-            }
-
             _db.Links.RemoveRange(links);
             await _db.SaveChangesAsync();
 

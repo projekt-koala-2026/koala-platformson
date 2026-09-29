@@ -1,26 +1,23 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import { FaEdit, FaFlagCheckered, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
-import type { Edition } from "../../types/models";
-import { apiRequest, apiRequestResult } from "../../utils/apiFetcher";
+import type { ApiEdition, Edition } from "../../types/models";
+import { adaptEdition } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
+import { apiRequestResult } from "../../utils/apiFetcher";
 
-const EDITIONS_ENDPOINT = "/api/admin/edition";
-const TITLE_ENDPOINT = `${EDITIONS_ENDPOINT}/title`;
-const START_DATE_ENDPOINT = `${EDITIONS_ENDPOINT}/start-date`;
-const END_DATE_ENDPOINT = `${EDITIONS_ENDPOINT}/end-date`;
+const EDITIONS_ENDPOINT = apiEndpoints.editions;
 
 interface EditionForm {
     title: string;
-    startDate: string;
-    endDate: string;
 }
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 
-const emptyForm: EditionForm = { title: "", startDate: "", endDate: "" };
+const emptyForm: EditionForm = { title: "" };
 const inputClass =
     "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100";
 
@@ -29,16 +26,6 @@ const sortEditions = (editions: Edition[]) =>
         (first, second) =>
             new Date(second.startDate).getTime() - new Date(first.startDate).getTime()
     );
-
-const toLocalDateTime = (value: string) => {
-    if (!value) return "";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-    return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-};
-
-const sameInstant = (first: string, second: string) =>
-    new Date(first).getTime() === new Date(second).getTime();
 
 const EditEditionScreen = () => {
     const navigate = useNavigate();
@@ -55,10 +42,18 @@ const EditEditionScreen = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequest<Edition[]>(EDITIONS_ENDPOINT, null, "GET", navigate).then((data) => {
+        void Promise.all([
+            apiRequestResult<ApiEdition[]>(`${EDITIONS_ENDPOINT}?${firstPage}&ShowActive=false`, null, "GET", navigate),
+            apiRequestResult<ApiEdition[]>(`${EDITIONS_ENDPOINT}?${firstPage}&ShowActive=true`, null, "GET", navigate),
+        ]).then(([pastResult, activeResult]) => {
             if (!active) return;
-            if (data) setEditions(sortEditions(data));
-            else setFeedback({ tone: "error", message: "Nie udało się pobrać edycji." });
+            const data = [
+                ...(activeResult.data ?? []),
+                ...(pastResult.data ?? []),
+            ].map(adaptEdition);
+            setEditions(sortEditions(data));
+            if (!pastResult.data && pastResult.status !== 200)
+                setFeedback({ tone: "error", message: "Nie udało się pobrać edycji." });
             setReferenceTime(Date.now());
             setLoading(false);
         });
@@ -91,55 +86,26 @@ const EditEditionScreen = () => {
         setEditingEdition(edition);
         setForm({
             title: edition.title,
-            startDate: toLocalDateTime(edition.startDate),
-            endDate: toLocalDateTime(edition.endDate),
         });
         setModalError("");
         setFeedback(null);
         setIsModalOpen(true);
     };
 
-    const refreshAfterPartialSave = async (editionId: string) => {
-        const data = await apiRequest<Edition[]>(EDITIONS_ENDPOINT, null, "GET", navigate);
-        if (!data) return;
-        setEditions(sortEditions(data));
-        const refreshedEdition = data.find((edition) => edition.id === editionId);
-        if (refreshedEdition) setEditingEdition(refreshedEdition);
-    };
-
     const save = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const title = form.title.trim();
-        const startTimestamp = new Date(form.startDate).getTime();
-        const endTimestamp = new Date(form.endDate).getTime();
-
         setModalError("");
         if (!title || title.length > 200) {
             setModalError("Tytuł jest wymagany i może mieć maksymalnie 200 znaków.");
             return;
         }
-        if (
-            !form.startDate ||
-            !form.endDate ||
-            Number.isNaN(startTimestamp) ||
-            Number.isNaN(endTimestamp)
-        ) {
-            setModalError("Podaj prawidłową datę rozpoczęcia i zakończenia.");
-            return;
-        }
-        if (startTimestamp >= endTimestamp) {
-            setModalError("Data zakończenia musi być późniejsza niż data rozpoczęcia.");
-            return;
-        }
-
-        const startDate = new Date(startTimestamp).toISOString();
-        const endDate = new Date(endTimestamp).toISOString();
         setSaving(true);
 
         if (!editingEdition) {
-            const { data: created } = await apiRequestResult<Edition>(
+            const { data: created } = await apiRequestResult<ApiEdition>(
                 EDITIONS_ENDPOINT,
-                { title, startDate, endDate },
+                { name: title },
                 "POST",
                 navigate
             );
@@ -148,65 +114,33 @@ const EditEditionScreen = () => {
                 setSaving(false);
                 return;
             }
-            setEditions((current) => sortEditions([...current, created]));
+            const adapted = adaptEdition(created);
+            setEditions((current) => sortEditions([...current, adapted]));
             setReferenceTime(Date.now());
-            setFeedback({ tone: "success", message: `Utworzono edycję „${created.title}”.` });
+            setFeedback({ tone: "success", message: `Utworzono edycję „${adapted.title}”.` });
             setSaving(false);
             resetModal();
             return;
         }
 
-        const titleChanged = title !== editingEdition.title;
-        const startChanged = !sameInstant(startDate, editingEdition.startDate);
-        const endChanged = !sameInstant(endDate, editingEdition.endDate);
-        if (!titleChanged && !startChanged && !endChanged) {
+        if (title === editingEdition.title) {
             setModalError("Nie wprowadzono żadnych zmian.");
             setSaving(false);
             return;
         }
 
-        let latest = editingEdition;
-        let failed = false;
-        if (titleChanged) {
-            const { data } = await apiRequestResult<Edition>(
-                TITLE_ENDPOINT,
-                { id: editingEdition.id, title },
-                "PUT",
-                navigate
-            );
-            if (data) latest = data;
-            else failed = true;
-        }
-        if (startChanged) {
-            const { data } = await apiRequestResult<Edition>(
-                START_DATE_ENDPOINT,
-                { id: editingEdition.id, startDate },
-                "PUT",
-                navigate
-            );
-            if (data) latest = data;
-            else failed = true;
-        }
-        if (endChanged) {
-            const { data } = await apiRequestResult<Edition>(
-                END_DATE_ENDPOINT,
-                { id: editingEdition.id, endDate },
-                "PUT",
-                navigate
-            );
-            if (data) latest = data;
-            else failed = true;
-        }
-
-        if (failed) {
-            await refreshAfterPartialSave(editingEdition.id);
-            setModalError(
-                "Nie udało się zapisać wszystkich zmian. Dane serwera zostały odświeżone; możesz ponowić zapis."
-            );
+        const { data } = await apiRequestResult<ApiEdition>(
+            `${EDITIONS_ENDPOINT}/${editingEdition.id}/name`,
+            { name: title },
+            "PUT",
+            navigate
+        );
+        if (!data) {
+            setModalError("Nie udało się zmienić nazwy edycji.");
             setSaving(false);
             return;
         }
-
+        const latest = adaptEdition(data);
         setEditions((current) =>
             sortEditions(current.map((edition) => (edition.id === latest.id ? latest : edition)))
         );
@@ -216,39 +150,37 @@ const EditEditionScreen = () => {
         resetModal();
     };
 
-    const remove = async (edition: Edition) => {
+    const endEdition = async (edition: Edition) => {
         if (
             !window.confirm(
-                `Czy na pewno chcesz usunąć edycję „${edition.title}”? Powiązane wpisy lub dane mogą uniemożliwić tę operację.`
+                `Czy na pewno chcesz zakończyć edycję „${edition.title}”? Tej operacji nie można cofnąć z poziomu panelu.`
             )
         )
             return;
 
         setDeletingId(edition.id);
         setFeedback(null);
-        const { data } = await apiRequestResult(
-            `${EDITIONS_ENDPOINT}/${edition.id}`,
+        const { data } = await apiRequestResult<ApiEdition>(
+            `${EDITIONS_ENDPOINT}/${edition.id}/end`,
             null,
-            "DELETE",
+            "PUT",
             navigate
         );
         if (data === null) {
             setFeedback({
                 tone: "error",
-                message: "Nie udało się usunąć edycji. Może być powiązana z innymi danymi.",
+                message: "Nie udało się zakończyć edycji.",
             });
         } else {
-            setEditions((current) => current.filter((item) => item.id !== edition.id));
-            setFeedback({ tone: "success", message: `Usunięto edycję „${edition.title}”.` });
+            const ended = adaptEdition(data);
+            setEditions((current) => sortEditions(current.map((item) => item.id === edition.id ? ended : item)));
+            setFeedback({ tone: "success", message: `Zakończono edycję „${edition.title}”.` });
         }
         setDeletingId(null);
     };
 
     const statusFor = (edition: Edition) => {
-        const start = new Date(edition.startDate).getTime();
         const end = new Date(edition.endDate).getTime();
-        if (referenceTime < start)
-            return { label: "Nadchodząca", className: "bg-sky-50 text-sky-700" };
         if (referenceTime <= end)
             return { label: "Aktywna", className: "bg-emerald-50 text-emerald-700" };
         return { label: "Zakończona", className: "bg-slate-100 text-slate-600" };
@@ -323,12 +255,14 @@ const EditEditionScreen = () => {
                                                         "pl-PL"
                                                     )}
                                                 </time>
-                                                {" — "}
-                                                <time dateTime={edition.endDate}>
-                                                    {new Date(edition.endDate).toLocaleString(
-                                                        "pl-PL"
-                                                    )}
-                                                </time>
+                                                {status.label === "Zakończona" && (
+                                                    <>
+                                                        {" — "}
+                                                        <time dateTime={edition.endDate}>
+                                                            {new Date(edition.endDate).toLocaleString("pl-PL")}
+                                                        </time>
+                                                    </>
+                                                )}
                                             </p>
                                         </div>
                                         <div className="flex shrink-0 gap-2">
@@ -344,19 +278,19 @@ const EditEditionScreen = () => {
                                                 onClick={() => openEdit(edition)}
                                                 className="px-3"
                                             />
-                                            <Button
-                                                text={
-                                                    <>
-                                                        <FaTrash />
-                                                        <span className="sr-only">
-                                                            Usuń {edition.title}
-                                                        </span>
-                                                    </>
-                                                }
-                                                disabled={deletingId === edition.id}
-                                                onClick={() => void remove(edition)}
-                                                className="bg-red-600 px-3 hover:bg-red-700 focus:ring-red-500"
-                                            />
+                                            {status.label === "Aktywna" && (
+                                                <Button
+                                                    text={
+                                                        <>
+                                                            <FaFlagCheckered />
+                                                            <span className="sr-only">Zakończ {edition.title}</span>
+                                                        </>
+                                                    }
+                                                    disabled={deletingId === edition.id}
+                                                    onClick={() => void endEdition(edition)}
+                                                    className="bg-amber-600 px-3 hover:bg-amber-700 focus:ring-amber-500"
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 </article>
@@ -392,36 +326,6 @@ const EditEditionScreen = () => {
                             }
                             className={inputClass}
                             placeholder="np. Edycja V"
-                            required
-                        />
-                    </label>
-                    <label className="block text-sm font-medium text-slate-700">
-                        Data rozpoczęcia
-                        <input
-                            type="datetime-local"
-                            value={form.startDate}
-                            disabled={saving}
-                            onChange={(event) =>
-                                setForm((current) => ({
-                                    ...current,
-                                    startDate: event.target.value,
-                                }))
-                            }
-                            className={inputClass}
-                            required
-                        />
-                    </label>
-                    <label className="block text-sm font-medium text-slate-700">
-                        Data zakończenia
-                        <input
-                            type="datetime-local"
-                            value={form.endDate}
-                            min={form.startDate || undefined}
-                            disabled={saving}
-                            onChange={(event) =>
-                                setForm((current) => ({ ...current, endDate: event.target.value }))
-                            }
-                            className={inputClass}
                             required
                         />
                     </label>

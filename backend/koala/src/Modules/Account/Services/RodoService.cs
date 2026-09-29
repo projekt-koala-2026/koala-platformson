@@ -24,7 +24,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
@@ -32,14 +32,14 @@ namespace koala.src.Modules.Account.Services
 
             if(!isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamMember = await _db.TeamMembers.AsNoTracking().AnyAsync(tm=> tm.TeamId == teamId && tm.UserId == userId);
 
             if(!isUserTeamMember)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin that is a member of this tean and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
             bool isMemeber = await _db.TeamMembers.AsNoTracking().AnyAsync(tm => tm.TeamId == teamId && tm.UserId == teamMemberId);
@@ -131,7 +131,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
@@ -139,14 +139,14 @@ namespace koala.src.Modules.Account.Services
 
             if(!isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamMember = await _db.TeamMembers.AsNoTracking().AnyAsync(tm=> tm.TeamId == teamId && tm.UserId == userId);
 
             if(!isUserTeamMember)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin that is a member of this tean and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
             bool isMemeber = await _db.TeamMembers.AsNoTracking().AnyAsync(tm => tm.TeamId == teamId && tm.UserId == teamMemberId);
@@ -218,7 +218,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
@@ -226,14 +226,14 @@ namespace koala.src.Modules.Account.Services
 
             if(!isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamMember = await _db.TeamMembers.AsNoTracking().AnyAsync(tm=> tm.TeamId == teamId && tm.UserId == userId);
 
             if(!isUserTeamMember)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin that is a member of this tean and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
             bool isMemeber = await _db.TeamMembers.AsNoTracking().AnyAsync(tm => tm.TeamId == teamId && tm.UserId == teamMemberId);
@@ -272,7 +272,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
@@ -281,14 +281,14 @@ namespace koala.src.Modules.Account.Services
 
             if(!isTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamMember = await _db.TeamMembers.AsNoTracking().AnyAsync(tm=> tm.TeamId == teamId && tm.UserId == userId);
 
             if(!isUserTeamMember && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin that is a member of this tean and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
             bool isMemeber = await _db.TeamMembers.AsNoTracking().AnyAsync(tm => tm.TeamId == teamId && tm.UserId == teamMemberId);
@@ -312,7 +312,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
@@ -321,14 +321,14 @@ namespace koala.src.Modules.Account.Services
 
             if(!isTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamMember = await _db.TeamMembers.AsNoTracking().AnyAsync(tm=> tm.TeamId == teamId && tm.UserId == userId);
 
             if(!isUserTeamMember && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin that is a member of this tean and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
             bool isMemeber = await _db.TeamMembers.AsNoTracking().AnyAsync(tm => tm.TeamId == teamId && tm.UserId == teamMemberId);
@@ -352,7 +352,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
@@ -361,14 +361,14 @@ namespace koala.src.Modules.Account.Services
 
             if(!isTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamMember = await _db.TeamMembers.AnyAsync(tm=> tm.TeamId == teamId && tm.UserId == userId);
 
             if(!isUserTeamMember && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin that is a member of this tean and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
             var query = _db.Rodos.AsNoTracking().AsQueryable();
@@ -389,13 +389,13 @@ namespace koala.src.Modules.Account.Services
 
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
             if(!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Only team admin and organization admin can view the rodos");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Only team admin and organization admin can view the rodos");
             }
 
             Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.UserId == teamMemberId);

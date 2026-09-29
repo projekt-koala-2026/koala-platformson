@@ -6,6 +6,7 @@ interface ButtonProps {
     type?: "button" | "submit";
     disabled?: boolean;
     className?: string;
+    title?: string;
 }
 const Button = ({
     text,
@@ -13,11 +14,13 @@ const Button = ({
     type = "button",
     disabled = false,
     className = "",
+    title,
 }: ButtonProps) => (
     <button
         type={type}
         disabled={disabled}
         onClick={onClick}
+        title={title}
         className={`inline-flex appearance-none items-center justify-center gap-2 overflow-hidden rounded-xl border-0 bg-emerald-600 bg-clip-border px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-300 ${className}`}
     >
         {text}

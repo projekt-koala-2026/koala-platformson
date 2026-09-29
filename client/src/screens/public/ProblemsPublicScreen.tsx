@@ -3,11 +3,10 @@ import { FaFilePdf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
-import type { Edition, ProblemsByEdition } from "../../types/models";
+import type { ApiEdition, ApiStaticPage, Edition, ProblemsByEdition } from "../../types/models";
+import { adaptEdition, staticPageProblems } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequest, resolveApiAssetUrl } from "../../utils/apiFetcher";
-
-const EDITIONS_ENDPOINT = "/api/edition";
-const PROBLEMS_ENDPOINT = "/content/problems/problems.json";
 
 const ProblemsPublicScreen = () => {
     const navigate = useNavigate();
@@ -20,18 +19,19 @@ const ProblemsPublicScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<Edition[]>(EDITIONS_ENDPOINT, null, "GET", navigate),
-            apiRequest<ProblemsByEdition>(PROBLEMS_ENDPOINT, null, "GET", navigate),
-        ]).then(([editionData, problemData]) => {
+            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
+            apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
+        ]).then(([editionData, staticPages]) => {
             if (!active) return;
-            const sortedEditions = [...(editionData ?? [])].sort(
+            const taskPage = staticPages?.find((page) => page.name === "TASKS_PAGE");
+            const sortedEditions = (editionData ?? []).map(adaptEdition).sort(
                 (first, second) =>
                     new Date(second.startDate).getTime() - new Date(first.startDate).getTime()
             );
             setEditions(sortedEditions);
             setSelectedEditionId(sortedEditions[0]?.id ?? "");
-            setProblemsData(problemData ?? {});
-            setHasError(!editionData || !problemData);
+            setProblemsData(staticPageProblems(taskPage));
+            setHasError(!editionData || !taskPage);
             setLoading(false);
         });
         return () => {

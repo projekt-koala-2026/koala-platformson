@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Sponsor } from "../types/models";
+import type { ApiSponsor, Sponsor } from "../types/models";
+import { adaptSponsor } from "../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../utils/apiEndpoints";
 import { apiRequest, resolveApiAssetUrl } from "../utils/apiFetcher";
 
 const PublicFooter = () => {
@@ -9,8 +11,14 @@ const PublicFooter = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequest<Sponsor[]>("/api/admin/sponsors", null, "GET", navigate).then((data) => {
-            if (active && data) setSponsors(data);
+        void apiRequest<ApiSponsor[]>(
+            `${apiEndpoints.sponsors}?${firstPage}`,
+            null,
+            "GET",
+            navigate
+        ).then((data) => {
+            if (active && data)
+                setSponsors(data.filter((sponsor) => sponsor.isVisible).map(adaptSponsor));
         });
         return () => {
             active = false;

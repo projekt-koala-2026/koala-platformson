@@ -3,7 +3,9 @@ import { FaFilePdf, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
-import type { Edition, ManagedFile, ProblemFile, ProblemsByEdition } from "../../types/models";
+import type { ApiEdition, ApiStaticPage, Edition, ProblemFile, ProblemsByEdition } from "../../types/models";
+import { adaptEdition, staticPageProblems } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import {
     apiRequest,
     apiRequestResult,
@@ -12,10 +14,6 @@ import {
 } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
 
-const EDITIONS_ENDPOINT = "/api/edition";
-const PROBLEMS_CONTENT_ENDPOINT = "/content/problems/problems.json";
-const PROBLEMS_SAVE_ENDPOINT = "/api/static-pages/problems";
-const FILES_ENDPOINT = "/api/admin/file/public/files";
 const MAX_PDF_SIZE = 64 * 1024 * 1024;
 
 type Feedback = { tone: "success" | "warning" | "error"; message: string } | null;
@@ -27,6 +25,7 @@ const EditProblemsScreen = () => {
     const [editions, setEditions] = useState<Edition[]>([]);
     const [selectedEditionId, setSelectedEditionId] = useState("");
     const [allProblemsData, setAllProblemsData] = useState<ProblemsByEdition>({});
+    const [taskPage, setTaskPage] = useState<ApiStaticPage | null>(null);
     const [subpointInputValue, setSubpointInputValue] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(true);
@@ -42,15 +41,17 @@ const EditProblemsScreen = () => {
 
         let active = true;
         void Promise.all([
-            apiRequest<Edition[]>(EDITIONS_ENDPOINT, null, "GET", navigate),
-            apiRequest<ProblemsByEdition>(PROBLEMS_CONTENT_ENDPOINT, null, "GET", navigate),
-        ]).then(([editionsData, problemsData]) => {
+            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
+            apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
+        ]).then(([editionsData, staticPages]) => {
             if (!active) return;
-            const loadedEditions = editionsData ?? [];
+            const loadedEditions = (editionsData ?? []).map(adaptEdition);
+            const loadedTaskPage = staticPages?.find((page) => page.name === "TASKS_PAGE") ?? null;
             setEditions(loadedEditions);
             setSelectedEditionId(loadedEditions[0]?.id ?? "");
-            setAllProblemsData(problemsData ?? {});
-            if (!editionsData || !problemsData) {
+            setTaskPage(loadedTaskPage);
+            setAllProblemsData(staticPageProblems(loadedTaskPage ?? undefined));
+            if (!editionsData || !loadedTaskPage) {
                 setFeedback({
                     tone: "error",
                     message: "Nie udało się pobrać wszystkich danych o zadaniach.",
@@ -65,12 +66,17 @@ const EditProblemsScreen = () => {
     }, [canEdit, navigate]);
 
     const saveMetadata = async (data: ProblemsByEdition) => {
-        const { data: response } = await apiRequestResult(
-            PROBLEMS_SAVE_ENDPOINT,
-            { markdownBody: JSON.stringify(data) },
+        if (!taskPage) return false;
+        const { data: response } = await apiRequestResult<ApiStaticPage>(
+            `${apiEndpoints.staticPages}/${taskPage.id}`,
+            {
+                contentJson: JSON.stringify({ markdownBody: JSON.stringify(data) }),
+                version: taskPage.version,
+            },
             "PUT",
             navigate
         );
+        if (response) setTaskPage(response);
         return response !== null;
     };
 
@@ -120,7 +126,7 @@ const EditProblemsScreen = () => {
         }
 
         const fileUrl =
-            uploadedFile.filePath || uploadedFile.url || `/content/problems/${uploadedFile.id}.pdf`;
+            uploadedFile.filePath || uploadedFile.url || `/api/koala/content/${uploadedFile.id}.pdf`;
         const newProblem: ProblemFile = {
             id: uploadedFile.id,
             title: selectedFile.name,
@@ -138,15 +144,15 @@ const EditProblemsScreen = () => {
 
         if (!(await saveMetadata(updatedData))) {
             const rollback = await apiRequestResult(
-                FILES_ENDPOINT,
-                { id: uploadedFile.id },
+                `${apiEndpoints.publicFiles}/${uploadedFile.id}`,
+                null,
                 "DELETE",
                 navigate
             );
             setFeedback({
                 tone: "error",
                 message:
-                    rollback.data !== null
+                    rollback.status === 200 || rollback.status === 204
                         ? "Nie udało się zapisać metadanych. Wysłany plik został wycofany."
                         : "Nie udało się zapisać metadanych ani wycofać wysłanego pliku. Sprawdź pliki na serwerze.",
             });
@@ -182,35 +188,18 @@ const EditProblemsScreen = () => {
         }
 
         setAllProblemsData(updatedData);
-        const { data } = await apiRequestResult<string>(
-            FILES_ENDPOINT,
-            { id: pdf.id },
+        const { status } = await apiRequestResult<null>(
+            `${apiEndpoints.publicFiles}/${pdf.id}`,
+            null,
             "DELETE",
             navigate
         );
-        if (data === null) {
+        if (status !== 200 && status !== 204) {
             setFeedback({
                 tone: "warning",
                 message: "Dokument usunięto z listy, ale serwer nie potwierdził usunięcia pliku.",
             });
-        } else {
-            const registeredFiles = await apiRequest<ManagedFile[]>(
-                `${FILES_ENDPOINT}?Folder=problems`,
-                null,
-                "GET",
-                navigate
-            );
-            const stillRegistered = registeredFiles?.some((file) => file.id === pdf.id) ?? false;
-            setFeedback(
-                stillRegistered
-                    ? {
-                          tone: "warning",
-                          message:
-                              "Dokument usunięto z listy zadań, ale nadal jest zarejestrowany w magazynie plików.",
-                      }
-                    : { tone: "success", message: "Dokument został usunięty." }
-            );
-        }
+        } else setFeedback({ tone: "success", message: "Dokument został usunięty." });
         setDeletingId(null);
     };
 

@@ -1,10 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { FaCheck, FaTrash } from "react-icons/fa";
 import type { NavigateFunction } from "react-router-dom";
-import type { ManagedFile } from "../types/models";
+import type { ApiPublicFile, ManagedFile } from "../types/models";
+import { adaptPublicFile } from "../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../utils/apiEndpoints";
 import { apiRequest, resolveApiAssetUrl } from "../utils/apiFetcher";
-
-const IMAGES_ENDPOINT = "/api/admin/file/public/files?Folder=images";
 
 export interface ImagePickerHandle {
     refresh: () => void;
@@ -34,11 +34,14 @@ const ImagePicker = forwardRef<ImagePickerHandle, ImagePickerProps>(
 
         useEffect(() => {
             let active = true;
-            void apiRequest<ManagedFile[]>(IMAGES_ENDPOINT, null, "GET", navigate).then((data) => {
+            void apiRequest<ApiPublicFile[]>(`${apiEndpoints.publicFiles}?${firstPage}`, null, "GET", navigate).then((data) => {
                 if (!active) return;
                 if (data) {
+                    const images = data
+                        .filter((file) => [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(file.type.toLowerCase()))
+                        .map(adaptPublicFile);
                     setImages(
-                        [...data].sort((first, second) =>
+                        images.sort((first, second) =>
                             first.title.localeCompare(second.title, "pl")
                         )
                     );

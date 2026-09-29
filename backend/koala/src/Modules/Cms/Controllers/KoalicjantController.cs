@@ -23,7 +23,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> UpdateKoalicjant([FromRoute] Guid id, [FromBody] UpdateKoalicjantRequestDto requestDto)
         {
             var responseData = await _koalicjantService.UpdateKoalicjantAsync(User, id, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<KoalicjantDto>(true, DateTime.UtcNow, null, null, responseData));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<KoalicjantDto>(true, DateTime.UtcNow, null, null, responseData));
         }
 
         [AllowAnonymous]
@@ -31,7 +31,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> GetKoalicjants([FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _koalicjantService.GetKoalicjantsAsync(User, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<KoalicjantDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<KoalicjantDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         [AllowAnonymous]
@@ -39,7 +39,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> GetKoalicjants([FromRoute] Guid id)
         {
             var response = await _koalicjantService.GetKoalicjantAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<KoalicjantDto>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<KoalicjantDto>(true, DateTime.UtcNow, null, null, response));
         }
     }
 }

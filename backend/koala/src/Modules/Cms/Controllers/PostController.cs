@@ -23,7 +23,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> CreatePost([FromBody] CreatePostRequestDto requestDto)
         {
             var responseData = await _postService.CreatePostAsync(User, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<PostDto>(true, DateTime.UtcNow, null, null, responseData));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<PostDto>(true, DateTime.UtcNow, null, null, responseData));
         }
 
         [Authorize]
@@ -31,7 +31,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> DeletePost([FromRoute] Guid id)
         {
             await _postService.DeletePostAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
@@ -39,7 +39,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> CreatePost([FromRoute] Guid id, [FromBody] UpdatePostRequestDto requestDto)
         {
             var responseData = await _postService.UpdatePostAsync(User, id, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<PostDto>(true, DateTime.UtcNow, null, null, responseData));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<PostDto>(true, DateTime.UtcNow, null, null, responseData));
         }
 
         [AllowAnonymous]
@@ -47,7 +47,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> GetPosts([FromQuery] PageQueryDto pageQueryDto, [FromQuery] PostQueryDto postQueryDto)
         {
             (var responseData, var responsePagination) = await _postService.GetPostsAsync(User, pageQueryDto, postQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<PostDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<PostDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         [AllowAnonymous]
@@ -55,7 +55,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> GetPosts([FromRoute] Guid id)
         {
             var response = await _postService.GetPostAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<PostDto>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<PostDto>(true, DateTime.UtcNow, null, null, response));
         }
     }
 }

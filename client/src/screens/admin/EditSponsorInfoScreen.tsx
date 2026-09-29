@@ -5,8 +5,10 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
-import type { Sponsor } from "../../types/models";
-import { apiRequest, apiRequestResult } from "../../utils/apiFetcher";
+import type { ApiSponsor, Sponsor } from "../../types/models";
+import { adaptSponsor } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
+import { apiRequestResult } from "../../utils/apiFetcher";
 
 interface SponsorForm {
     name: string;
@@ -29,6 +31,7 @@ const isHttpUrl = (value: string) => {
 const EditSponsorInfo = () => {
     const navigate = useNavigate();
     const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+    const [versions, setVersions] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(true);
     const [modal, setModal] = useState<"create" | Sponsor | null>(null);
     const [form, setForm] = useState<SponsorForm>(emptyForm);
@@ -40,10 +43,13 @@ const EditSponsorInfo = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<Sponsor[]>("/api/admin/sponsors", null, "GET", navigate).then(
+        void apiRequestResult<ApiSponsor[]>(`${apiEndpoints.sponsors}?${firstPage}`, null, "GET", navigate).then(
             (result) => {
                 if (!active) return;
-                if (result.data) setSponsors(result.data);
+                if (result.data) {
+                    setSponsors(result.data.map(adaptSponsor));
+                    setVersions(Object.fromEntries(result.data.map((item) => [item.id, item.version])));
+                }
                 else
                     setFeedback({
                         tone: "error",
@@ -82,62 +88,76 @@ const EditSponsorInfo = () => {
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setFeedback(null);
-        const payload: SponsorForm = {
+        const normalized: SponsorForm = {
             name: form.name.trim(),
             websiteUrl: form.websiteUrl.trim(),
             logoUrl: form.logoUrl.trim(),
             description: form.description.trim(),
         };
-        if (!payload.name) {
+        if (!normalized.name) {
             setFeedback({ tone: "error", message: "Nazwa sponsora jest wymagana." });
             return;
         }
-        if (payload.name.length > 100) {
+        if (normalized.name.length > 100) {
             setFeedback({
                 tone: "error",
                 message: "Nazwa sponsora może mieć maksymalnie 100 znaków.",
             });
             return;
         }
-        if (!isHttpUrl(payload.websiteUrl)) {
+        if (!isHttpUrl(normalized.websiteUrl)) {
             setFeedback({
                 tone: "error",
                 message: "Adres strony musi być poprawnym URL-em HTTP lub HTTPS.",
             });
             return;
         }
-        if (!isHttpUrl(payload.logoUrl)) {
+        if (!isHttpUrl(normalized.logoUrl)) {
             setFeedback({
                 tone: "error",
                 message: "Adres logo musi być poprawnym URL-em HTTP lub HTTPS.",
             });
             return;
         }
+        const payload = {
+            name: normalized.name,
+            contentJson: JSON.stringify({
+                websiteUrl: normalized.websiteUrl,
+                logoUrl: normalized.logoUrl,
+                description: normalized.description,
+            }),
+            isVisible: true,
+            version: modal !== "create" && modal ? (versions[modal.id] ?? 0) : 0,
+        };
         setSaving(true);
         if (modal === "create") {
-            const created = await apiRequest<Sponsor>(
-                "/api/admin/sponsors",
+            const { data: created } = await apiRequestResult<ApiSponsor>(
+                apiEndpoints.sponsors,
                 payload,
                 "POST",
                 navigate
             );
             if (created) {
-                setSponsors((items) => [...items, created]);
+                const adapted = adaptSponsor(created);
+                setSponsors((items) => [...items, adapted]);
+                setVersions((items) => ({ ...items, [created.id]: created.version }));
                 setModal(null);
                 setForm(emptyForm);
-                setFeedback({ tone: "success", message: `Dodano sponsora „${created.name}”.` });
+                setFeedback({ tone: "success", message: `Dodano sponsora „${adapted.name}”.` });
             } else setFeedback({ tone: "error", message: "Nie udało się dodać sponsora." });
         } else if (modal) {
-            const updated = await apiRequest<boolean>(
-                `/api/admin/sponsors/${modal.id}`,
+            const { data: updated } = await apiRequestResult<ApiSponsor>(
+                `${apiEndpoints.sponsors}/${modal.id}`,
                 payload,
                 "PUT",
                 navigate
             );
             if (updated) {
+                const adapted = adaptSponsor(updated);
                 setSponsors((items) =>
-                    items.map((item) => (item.id === modal.id ? { ...item, ...payload } : item))
+                    items.map((item) => (item.id === modal.id ? adapted : item))
                 );
+                setVersions((items) => ({ ...items, [updated.id]: updated.version }));
                 setModal(null);
                 setForm(emptyForm);
                 setFeedback({ tone: "success", message: "Dane sponsora zostały zapisane." });
@@ -151,13 +171,13 @@ const EditSponsorInfo = () => {
         if (!window.confirm(`Usunąć sponsora „${sponsor.name}”?`)) return;
         setPendingId(sponsor.id);
         setFeedback(null);
-        const deleted = await apiRequest<boolean>(
-            `/api/admin/sponsors/${sponsor.id}`,
+        const { status } = await apiRequestResult<null>(
+            `${apiEndpoints.sponsors}/${sponsor.id}`,
             null,
             "DELETE",
             navigate
         );
-        if (deleted) {
+        if (status === 200 || status === 204) {
             setSponsors((items) => items.filter((item) => item.id !== sponsor.id));
             setFeedback({ tone: "success", message: "Sponsor został usunięty." });
         } else setFeedback({ tone: "error", message: "Nie udało się usunąć sponsora." });

@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { apiRequestResult } from "../utils/apiFetcher";
-import { clearStoredSession, isAdmin, isCaptain, isEditor } from "../utils/authService";
+import { apiEndpoints } from "../utils/apiEndpoints";
+import { clearStoredSession, isAdmin, isCaptain, isEditor, isGuardian } from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
@@ -24,10 +25,12 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const [isPasswordOpen, setIsPasswordOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const isCaptainUser = useMemo(() => isCaptain(), []);
-    const canChangePassword = useMemo(() => isAdmin() || isEditor() || isCaptain(), []);
+    const isGuardianUser = useMemo(() => isGuardian(), []);
+    const isTeamUser = isCaptainUser || isGuardianUser;
+    const canChangePassword = useMemo(() => isAdmin() || isEditor() || isCaptain() || isGuardian(), []);
     const isLoggedIn = useMemo(() => Boolean(localStorage.getItem("userId")), []);
-    const links = isCaptainUser
-        ? [...baseLinks, { label: "Dla kapitana", path: "/captain" }]
+    const links = isTeamUser
+        ? [...baseLinks, { label: "Drużyny", path: "/captain" }]
         : baseLinks;
     const navigationOptions = links.map((link) => ({
         label: link.label,
@@ -37,7 +40,7 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const logout = async () => {
         if (loggingOut) return;
         setLoggingOut(true);
-        await apiRequestResult<boolean>("/api/admin/auth/session", null, "DELETE", navigate);
+        await apiRequestResult<boolean>(apiEndpoints.sessions, null, "DELETE", navigate);
         clearStoredSession();
         navigate("/login");
         setLoggingOut(false);
@@ -89,10 +92,10 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                         {isLoggedIn ? (
                             <ProfileButton
                                 options={[
-                                    ...(isCaptainUser
+                                    ...(isTeamUser
                                         ? [
                                               {
-                                                  label: "Panel kapitana",
+                                                  label: "Panel drużyn",
                                                   onClick: () => navigate("/captain"),
                                               },
                                           ]

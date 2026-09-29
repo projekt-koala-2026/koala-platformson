@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import SchoolsTable from "../../components/SchoolsTable";
-import type { School } from "../../types/models";
-import { apiFormRequest, apiRequest } from "../../utils/apiFetcher";
+import type { ApiSchool, School } from "../../types/models";
+import { adaptSchool } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
+import { apiFormRequest, apiRequestResult } from "../../utils/apiFetcher";
 
 interface SchoolForm {
     rspo: string;
@@ -14,7 +16,9 @@ interface SchoolForm {
     state: string;
     city: string;
     type: string;
-    addres: string;
+    road: string;
+    building: string;
+    email: string;
 }
 
 interface EditForm {
@@ -33,7 +37,9 @@ const emptySchool: SchoolForm = {
     state: "",
     city: "",
     type: "",
-    addres: "",
+    road: "",
+    building: "",
+    email: "",
 };
 const inputClass =
     "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100";
@@ -42,6 +48,7 @@ const AdminSchoolsScreen = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [schools, setSchools] = useState<School[]>([]);
+    const [rawSchools, setRawSchools] = useState<Record<string, ApiSchool>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [action, setAction] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -51,7 +58,7 @@ const AdminSchoolsScreen = () => {
     const [editForm, setEditForm] = useState<EditForm>({ name: "", nameShort: "" });
 
     const loadSchools = useCallback(async () => {
-        const data = await apiRequest<School[]>("/api/admin/school/school", null, "GET", navigate);
+        const { data } = await apiRequestResult<ApiSchool[]>(`${apiEndpoints.schools}?${firstPage}`, null, "GET", navigate);
         if (!data) {
             setFeedback({
                 tone: "error",
@@ -59,16 +66,21 @@ const AdminSchoolsScreen = () => {
             });
             return null;
         }
-        setSchools(data);
-        return data;
+        const adapted = data.map(adaptSchool);
+        setSchools(adapted);
+        setRawSchools(Object.fromEntries(data.map((school) => [school.id, school])));
+        return adapted;
     }, [navigate]);
 
     useEffect(() => {
         let active = true;
-        void apiRequest<School[]>("/api/admin/school/school", null, "GET", navigate).then(
-            (data) => {
+        void apiRequestResult<ApiSchool[]>(`${apiEndpoints.schools}?${firstPage}`, null, "GET", navigate).then(
+            ({ data }) => {
                 if (active) {
-                    if (data) setSchools(data);
+                    if (data) {
+                        setSchools(data.map(adaptSchool));
+                        setRawSchools(Object.fromEntries(data.map((school) => [school.id, school])));
+                    }
                     else
                         setFeedback({
                             tone: "error",
@@ -93,11 +105,10 @@ const AdminSchoolsScreen = () => {
         }
         const formData = new FormData();
         formData.append("File", csvFile);
-        formData.append("Title", csvFile.name);
         setAction("import");
         setFeedback(null);
         const importedCount = await apiFormRequest<number>(
-            "/api/admin/school/import/csv",
+            `${apiEndpoints.schools}/import`,
             formData,
             navigate
         );
@@ -121,13 +132,13 @@ const AdminSchoolsScreen = () => {
         if (!window.confirm("Potwierdź ponownie. Tej operacji nie można cofnąć.")) return;
         setAction("delete-all");
         setFeedback(null);
-        const success = await apiRequest<boolean>(
-            "/api/admin/school/schools",
-            null,
+        const { status } = await apiRequestResult<null>(
+            apiEndpoints.schools,
+            schools.flatMap((school) => (school.id ? [school.id] : [])),
             "DELETE",
             navigate
         );
-        if (success) {
+        if (status === 200 || status === 204) {
             setSchools([]);
             setSelectedSchool(null);
             setSuccess("Rejestr szkół został wyczyszczony.");
@@ -149,31 +160,35 @@ const AdminSchoolsScreen = () => {
                 newSchool.state,
                 newSchool.city,
                 newSchool.type,
-                newSchool.addres,
+                newSchool.road,
+                newSchool.building,
+                newSchool.email,
             ].every((value) => value.trim())
         ) {
             setError("Uzupełnij wszystkie wymagane dane szkoły.");
             return;
         }
-        const payload: School = {
-            rspo,
-            name: newSchool.name.trim(),
+        const payload = {
+            rspo: String(rspo),
+            nameFull: newSchool.name.trim(),
             nameShort: newSchool.nameShort.trim(),
             state: newSchool.state.trim(),
             city: newSchool.city.trim(),
             type: newSchool.type.trim(),
-            addres: newSchool.addres.trim(),
+            road: newSchool.road.trim(),
+            building: newSchool.building.trim(),
+            email: newSchool.email.trim(),
         };
         setAction("create");
-        const created = await apiRequest<School>(
-            "/api/admin/school/school",
+        const { data: created } = await apiRequestResult<ApiSchool>(
+            apiEndpoints.schools,
             payload,
             "POST",
             navigate
         );
         if (created) {
             setNewSchool(emptySchool);
-            setSuccess(`Dodano szkołę „${created.name || payload.name}”.`);
+            setSuccess(`Dodano szkołę „${created.nameFull || payload.nameFull}”.`);
             await loadSchools();
         } else setError("Nie udało się dodać szkoły. Sprawdź, czy numer RSPO nie jest już zajęty.");
         setAction(null);
@@ -201,35 +216,23 @@ const AdminSchoolsScreen = () => {
         }
         setAction("update");
         setFeedback(null);
-        const results: boolean[] = [];
-        if (nameChanged)
-            results.push(
-                Boolean(
-                    await apiRequest<School>(
-                        "/api/admin/school/name",
-                        { rspo: selectedSchool.rspo, name },
-                        "PUT",
-                        navigate
-                    )
-                )
-            );
-        if (shortChanged)
-            results.push(
-                Boolean(
-                    await apiRequest<School>(
-                        "/api/admin/school/nameshort",
-                        { rspo: selectedSchool.rspo, nameShort },
-                        "PUT",
-                        navigate
-                    )
-                )
-            );
-        if (results.every(Boolean)) {
+        const source = selectedSchool.id ? rawSchools[selectedSchool.id] : undefined;
+        const { data: updated } = source
+            ? await apiRequestResult<ApiSchool>(
+                  `${apiEndpoints.schools}/${source.id}`,
+                  { ...source, nameFull: name, nameShort },
+                  "PUT",
+                  navigate
+              )
+            : { data: null };
+        if (updated) {
+            const adapted = adaptSchool(updated);
             setSchools((current) =>
                 current.map((school) =>
-                    school.rspo === selectedSchool.rspo ? { ...school, name, nameShort } : school
+                    school.rspo === selectedSchool.rspo ? adapted : school
                 )
             );
+            setRawSchools((current) => ({ ...current, [updated.id]: updated }));
             setSelectedSchool(null);
             setSuccess("Dane szkoły zostały zapisane.");
         } else {
@@ -250,13 +253,13 @@ const AdminSchoolsScreen = () => {
         if (!selectedSchool || !window.confirm(`Usunąć szkołę „${selectedSchool.name}”?`)) return;
         setAction("delete-one");
         setFeedback(null);
-        const success = await apiRequest<boolean>(
-            "/api/admin/school/school",
-            { rspo: selectedSchool.rspo },
+        const { status } = await apiRequestResult<null>(
+            `${apiEndpoints.schools}/${selectedSchool.id}`,
+            null,
             "DELETE",
             navigate
         );
-        if (success) {
+        if (status === 200 || status === 204) {
             setSelectedSchool(null);
             setSuccess("Szkoła została usunięta.");
             await loadSchools();
@@ -402,12 +405,31 @@ const AdminSchoolsScreen = () => {
                                 />
                             </label>
                             <label className="text-sm font-medium text-slate-700">
-                                Adres *
+                                Ulica *
                                 <input
-                                    value={newSchool.addres}
+                                    value={newSchool.road}
                                     onChange={(event) =>
-                                        updateNewSchool("addres", event.target.value)
+                                        updateNewSchool("road", event.target.value)
                                     }
+                                    className={inputClass}
+                                    required
+                                />
+                            </label>
+                            <label className="text-sm font-medium text-slate-700">
+                                Numer budynku *
+                                <input
+                                    value={newSchool.building}
+                                    onChange={(event) => updateNewSchool("building", event.target.value)}
+                                    className={inputClass}
+                                    required
+                                />
+                            </label>
+                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                                E-mail *
+                                <input
+                                    type="email"
+                                    value={newSchool.email}
+                                    onChange={(event) => updateNewSchool("email", event.target.value)}
                                     className={inputClass}
                                     required
                                 />

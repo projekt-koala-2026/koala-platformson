@@ -23,7 +23,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> AddFile([FromForm] CreatePublicFileRequestDto createPublicFileRequestDto)
         {
             var responseData = await _publicFileService.AddFileAsync(User,createPublicFileRequestDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWraper<PublicFileDto>(true, DateTime.UtcNow, null, null, responseData));
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<PublicFileDto>(true, DateTime.UtcNow, null, null, responseData));
         }
 
         [Authorize]
@@ -31,7 +31,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> DeleteFile([FromRoute] Guid id)
         {
             await _publicFileService.DeleteFileAsync(User,id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
@@ -39,14 +39,14 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> GetFiles([FromQuery] PageQueryDto pageQueryDto, [FromQuery] PublicFileQueryDto publicFileQueryDto)
         {
             (var responseData , var responsePagination) = await _publicFileService.GetFilesAsync(User, pageQueryDto, publicFileQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<PublicFileDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<PublicFileDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         // [HttpPut("{id}")]
         // public async Task<IActionResult> UpdateFile([FromRoute] Guid id)
         // {
         //     //await _publicFileService.AddFile();
-        //     return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+        //     return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         // }
     }
 }

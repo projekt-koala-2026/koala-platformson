@@ -5,7 +5,7 @@ namespace koala.src.Modules.Cms.Dtos
         Guid Id,
         string Name,
         string ContentJson,
-        bool IsVisiable,
+        bool IsVisible,
         DateTime UpdatedAt,
         DateTime CreatedAt,
         int Version

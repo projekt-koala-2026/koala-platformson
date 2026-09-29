@@ -4,9 +4,8 @@ import AdminHeader from "../../components/AdminHeader";
 import FileUploader from "../../components/FileUploader";
 import ImagePicker, { type ImagePickerHandle } from "../../components/ImagePicker";
 import type { ManagedFile } from "../../types/models";
+import { apiEndpoints } from "../../utils/apiEndpoints";
 import { apiRequestResult, uploadFile } from "../../utils/apiFetcher";
-
-const FILES_ENDPOINT = "/api/admin/file/public/files";
 const MAX_IMAGE_SIZE = 16 * 1024 * 1024;
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
@@ -45,13 +44,13 @@ const ImageHandlingScreen = () => {
         if (!window.confirm(`Czy na pewno chcesz usunąć obraz „${file.title}”?`)) return;
         setFeedback(null);
         setDeletingId(file.id);
-        const { data } = await apiRequestResult(
-            FILES_ENDPOINT,
-            { id: file.id },
+        const { status } = await apiRequestResult(
+            `${apiEndpoints.publicFiles}/${file.id}`,
+            null,
             "DELETE",
             navigate
         );
-        if (data === null) {
+        if (status !== 200 && status !== 204) {
             setFeedback({ tone: "error", message: "Nie udało się usunąć obrazu." });
         } else {
             setFeedback({ tone: "success", message: `Usunięto obraz ${file.title}.` });

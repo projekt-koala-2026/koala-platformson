@@ -52,11 +52,10 @@ namespace koala.src.Modules.Account.Services
 
         public async Task SendPasswordResetEmailAsync(string toEmail, string resetToken)
         {
-            string baseUrl = _configuration["AppUrl"] ?? "https://localhost:8080";
+            string frontendUrl = (_configuration["FrontendUrl"] ?? "http://localhost:5173").TrimEnd('/');
+            string resetLink = $"{frontendUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
 
-            string resetLink = $"{baseUrl}/api/auth/account/reset-password-links/?token={Uri.EscapeDataString(resetToken)}";
-
-            // 3. Professional, responsive HTML email template
+            // Professional, responsive HTML email template
             string htmlMessage = $@"
                 <!DOCTYPE html>
                 <html>
@@ -83,15 +82,15 @@ namespace koala.src.Modules.Account.Services
                 </body>
                 </html>";
 
-            // 4. Send via your existing email service method (marked high priority)
+            // Send via the existing email service with high priority.
             await SendEmailAsync(toEmail, "Password Reset", htmlMessage, isHighPriority: true);
         }
 
         public async Task SendRegisterEmailAsync(string toEmail, string registerToken)
         {
-            string baseUrl = _configuration["AppUrl"] ?? "https://localhost:8080";
+            string frontendUrl = (_configuration["FrontendUrl"] ?? "http://localhost:5173").TrimEnd('/');
 
-            string resetLink = $"{baseUrl}/api/auth/account/register-links/?token={Uri.EscapeDataString(registerToken)}";
+            string registerLink = $"{frontendUrl}/register?token={Uri.EscapeDataString(registerToken)}";
 
             // 3. Professional, responsive HTML email template
             string htmlMessage = $@"
@@ -111,8 +110,8 @@ namespace koala.src.Modules.Account.Services
                         <h2>Register Request</h2>
                         <p>We received a request to register an account for this email. If you didn't make this request, you can safely ignore this email.</p>
                         <p>To register, click the button below:</p>
-                        <a href=""{resetLink}"" class=""button"">Register</a>
-                        <p style=""margin-top: 20px; font-size: 13px; color: #666;"">Or copy and paste this link into your browser:<br><a href=""{resetLink}"">{resetLink}</a></p>
+                        <a href=""{registerLink}"" class=""button"">Register</a>
+                        <p style=""margin-top: 20px; font-size: 13px; color: #666;"">Or copy and paste this link into your browser:<br><a href=""{registerLink}"">{registerLink}</a></p>
                         <div class=""footer"">
                             <p>&copy; 2026 University Engineering Project. All rights reserved.</p>
                         </div>

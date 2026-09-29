@@ -11,7 +11,7 @@ namespace koala.src.Modules.Cms.Entities
         [Column("content_json", TypeName = "jsonb")]
         public string ContentJson { get; set; }
         [Column("is_visiable")]
-        public bool IsVisiable { get; set; }
+        public bool IsVisible { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         [Column("updated_at")]

@@ -4,8 +4,7 @@ const EditRuleScreen = () => (
     <StaticPageEditor
         title="Regulamin"
         description="Aktualizuj regulamin publikowany dla uczestników konkursu."
-        contentEndpoint="/content/rules/rules.json"
-        saveEndpoint="/api/static-pages/rules"
+        pageName="RULES_PAGE"
     />
 );
 

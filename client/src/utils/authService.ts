@@ -26,11 +26,11 @@ export const getUserRoles = (): UserRoles => {
 };
 
 export const rolesToFlags = (roles: Role[]): UserRoles => ({
-    isAdmin: roles.includes("ADMIN"),
-    isEditor: roles.includes("EDITOR"),
-    isReviewer: roles.includes("REVIEWER"),
-    isGuardian: roles.includes("GUARDIAN"),
-    isCaptain: roles.includes("CAPTAIN"),
+    isAdmin: roles.includes("ORGANIZATION_ADMIN") || roles.includes("ADMIN"),
+    isEditor: roles.includes("ORGANIZATION_EDITOR") || roles.includes("EDITOR"),
+    isReviewer: roles.includes("ORGANIZATION_REVIEWER") || roles.includes("REVIEWER"),
+    isGuardian: roles.includes("TEAM_ADMIN") || roles.includes("GUARDIAN"),
+    isCaptain: roles.includes("TEAM_PLAYER") || roles.includes("CAPTAIN"),
 });
 
 export const storeSession = (user: SessionUser) => {
@@ -57,6 +57,11 @@ const roleFlags: Record<Role, keyof UserRoles> = {
     REVIEWER: "isReviewer",
     GUARDIAN: "isGuardian",
     CAPTAIN: "isCaptain",
+    ORGANIZATION_ADMIN: "isAdmin",
+    ORGANIZATION_EDITOR: "isEditor",
+    ORGANIZATION_REVIEWER: "isReviewer",
+    TEAM_ADMIN: "isGuardian",
+    TEAM_PLAYER: "isCaptain",
 };
 
 export const hasAnyRole = (roles: Role[]) => {

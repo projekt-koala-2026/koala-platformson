@@ -51,7 +51,7 @@ namespace koala.src.Shared
                                 var claims = new List<Claim>
                                 {
                                     new Claim(ClaimTypes.NameIdentifier, session.UserId.ToString()),
-                                    new Claim("SessionId", session.SessionToken.ToString()),
+                                    new Claim("SessionId", session.SessionId.ToString()),
                                     new Claim("SessionToken", session.SessionToken.ToString())
                                 };
 

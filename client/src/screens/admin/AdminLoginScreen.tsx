@@ -4,9 +4,10 @@ import Button from "../../components/Button";
 import { useLoading } from "../../contexts/LoadingContext";
 import type { SessionUser } from "../../types/models";
 import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiEndpoints } from "../../utils/apiEndpoints";
 import { clearStoredSession, rolesToFlags, storeSession } from "../../utils/authService";
 
-const LOGIN_ENDPOINT = "/api/admin/auth/session";
+const LOGIN_ENDPOINT = apiEndpoints.sessions;
 const fieldClass =
     "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100";
 

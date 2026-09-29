@@ -24,7 +24,7 @@ namespace koala.src.Modules.Account.Services
 
             if(isAuthenticated && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Forbiden");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Forbidden");
             }
 
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email);
@@ -78,7 +78,7 @@ namespace koala.src.Modules.Account.Services
             {
                 if (!validTeamRoleNames.Contains(role))
                 {
-                    throw new AccountException(AccountErrorCodes.IncorectRoles,"Specified role is not a team user role");
+                    throw new AccountException(AccountErrorCodes.IncorrectRoles,"Specified role is not a team user role");
                 }
             }
 
@@ -117,7 +117,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -126,12 +126,12 @@ namespace koala.src.Modules.Account.Services
 
             if(userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Dont havepermission to do it");
+                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if(user == null)
@@ -152,7 +152,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -165,10 +165,14 @@ namespace koala.src.Modules.Account.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Dont have permission to do it");
+                throw new AccountException(AccountErrorCodes.Forbidden,"Dont have permission to do it");
             }
 
-            var query = _db.Users.AsNoTracking().AsQueryable();
+            var query = _db.Users
+                .AsNoTracking()
+                .Include(user => user.UserRoles)
+                .ThenInclude(userRole => userRole.Role)
+                .AsQueryable();
 
             //FITLER CHECKS
             if(!string.IsNullOrEmpty(userQueryDto.Email))
@@ -186,9 +190,9 @@ namespace koala.src.Modules.Account.Services
                 query = query.Where(u => u.NameLast == userQueryDto.NameLast);
             }
 
-            if(userQueryDto.ShowCensord != null)
+            if(userQueryDto.ShowCensored != null)
             {
-                query = query.Where(u => u.Censored == userQueryDto.ShowCensord);
+                query = query.Where(u => u.Censored == userQueryDto.ShowCensored);
             }
 
             if(userQueryDto.UserRoles != null)
@@ -218,7 +222,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -232,7 +236,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Dont havepermission to do it");
+                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if(user == null)
@@ -258,7 +262,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -272,7 +276,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Dont havepermission to do it");
+                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
@@ -290,7 +294,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -303,7 +307,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Dont havepermission to do it");
+                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
@@ -321,7 +325,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User not loged in");
+                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -334,7 +338,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbiden,"Dont havepermission to do it");
+                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);

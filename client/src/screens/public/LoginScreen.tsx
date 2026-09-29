@@ -3,24 +3,18 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import PublicHeader from "../../components/PublicHeader";
 import { useLoading } from "../../contexts/LoadingContext";
-import type { SessionUser, User } from "../../types/models";
+import type { SessionUser } from "../../types/models";
 import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiEndpoints } from "../../utils/apiEndpoints";
 import { clearStoredSession, rolesToFlags, storeSession } from "../../utils/authService";
 
-const LOGIN_ENDPOINT = "/api/admin/auth/session";
-const REGISTER_ENDPOINT = "/api/admin/user/create-account";
+const LOGIN_ENDPOINT = apiEndpoints.sessions;
+const REGISTER_ENDPOINT = apiEndpoints.users;
 const fieldClass =
     "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100";
 
-type RegistrationRole = "CAPTAIN" | "GUARDIAN";
+type RegistrationRole = "TEAM_PLAYER" | "TEAM_ADMIN";
 type Mode = "login" | "register";
-
-const isStrongPassword = (password: string) =>
-    password.length >= 8 &&
-    /[a-z]/.test(password) &&
-    /[A-Z]/.test(password) &&
-    /\d/.test(password) &&
-    /[\W_]/.test(password);
 
 const LoginScreen = () => {
     const navigate = useNavigate();
@@ -29,8 +23,7 @@ const LoginScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [registerEmail, setRegisterEmail] = useState("");
-    const [registerPassword, setRegisterPassword] = useState("");
-    const [registrationRole, setRegistrationRole] = useState<RegistrationRole>("CAPTAIN");
+    const [registrationRole, setRegistrationRole] = useState<RegistrationRole>("TEAM_PLAYER");
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -86,38 +79,29 @@ const LoginScreen = () => {
             setError("Podaj prawidłowy adres e-mail.");
             return;
         }
-        if (!isStrongPassword(registerPassword)) {
-            setError(
-                "Hasło musi mieć co najmniej 8 znaków oraz zawierać małą i wielką literę, cyfrę i znak specjalny."
-            );
-            return;
-        }
-
         setSubmitting(true);
         startLoading();
         try {
-            const { data } = await apiRequestResult<User>(
+            const { status } = await apiRequestResult<null>(
                 REGISTER_ENDPOINT,
                 {
                     email: normalizedEmail,
-                    password: registerPassword,
                     roles: [registrationRole],
                 },
                 "POST",
                 navigate
             );
-            if (!data) {
-                setError("Nie udało się utworzyć konta. Adres może być już zajęty.");
+            if (status !== 201) {
+                setError("Nie udało się wysłać zaproszenia. Adres może być już zajęty.");
                 return;
             }
 
             setEmail(normalizedEmail);
             setPassword("");
             setRegisterEmail("");
-            setRegisterPassword("");
-            setRegistrationRole("CAPTAIN");
+            setRegistrationRole("TEAM_PLAYER");
             setMode("login");
-            setNotice("Konto zostało utworzone. Możesz się teraz zalogować.");
+            setNotice("Wysłaliśmy wiadomość z linkiem umożliwiającym dokończenie rejestracji.");
         } finally {
             setSubmitting(false);
             stopLoading();
@@ -193,6 +177,14 @@ const LoginScreen = () => {
                             <button
                                 type="button"
                                 disabled={submitting}
+                                onClick={() => navigate("/reset-password")}
+                                className="w-full rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                            >
+                                Nie pamiętasz hasła?
+                            </button>
+                            <button
+                                type="button"
+                                disabled={submitting}
                                 onClick={() => switchMode("register")}
                                 className="w-full rounded-lg px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
                             >
@@ -213,24 +205,12 @@ const LoginScreen = () => {
                                     required
                                 />
                             </label>
-                            <label className="block text-sm font-medium text-slate-700">
-                                Hasło
-                                <input
-                                    className={fieldClass}
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={registerPassword}
-                                    disabled={submitting}
-                                    onChange={(event) => setRegisterPassword(event.target.value)}
-                                    required
-                                />
-                            </label>
                             <fieldset>
                                 <legend className="text-sm font-medium text-slate-700">
                                     Rodzaj konta
                                 </legend>
                                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                    {(["CAPTAIN", "GUARDIAN"] as RegistrationRole[]).map((role) => (
+                                    {(["TEAM_PLAYER", "TEAM_ADMIN"] as RegistrationRole[]).map((role) => (
                                         <label
                                             key={role}
                                             className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700 hover:bg-emerald-50"
@@ -243,15 +223,11 @@ const LoginScreen = () => {
                                                 disabled={submitting}
                                                 onChange={() => setRegistrationRole(role)}
                                             />
-                                            {role === "CAPTAIN" ? "Kapitan" : "Opiekun"}
+                                            {role === "TEAM_PLAYER" ? "Kapitan" : "Opiekun"}
                                         </label>
                                     ))}
                                 </div>
                             </fieldset>
-                            <p className="text-xs leading-5 text-slate-500">
-                                Hasło: minimum 8 znaków, mała i wielka litera, cyfra oraz znak
-                                specjalny.
-                            </p>
                             <Button
                                 text={submitting ? "Tworzenie konta…" : "Zarejestruj"}
                                 type="submit"

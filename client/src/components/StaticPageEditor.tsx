@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { MarkdownStaticPage } from "../types/models";
-import { apiRequest, apiRequestResult } from "../utils/apiFetcher";
+import type { ApiStaticPage } from "../types/models";
+import { staticPageMarkdown } from "../utils/apiAdapters";
+import { apiEndpoints } from "../utils/apiEndpoints";
+import { apiRequestResult } from "../utils/apiFetcher";
 import AdminHeader from "./AdminHeader";
 import MarkdownEditor from "./MarkdownEditor";
 import MarkdownRenderer from "./MarkdownRenderer";
@@ -9,8 +11,7 @@ import MarkdownRenderer from "./MarkdownRenderer";
 interface StaticPageEditorProps {
     title: string;
     description: string;
-    contentEndpoint: string;
-    saveEndpoint: string;
+    pageName: string;
 }
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
@@ -18,21 +19,23 @@ type Feedback = { tone: "success" | "error"; message: string } | null;
 const StaticPageEditor = ({
     title,
     description,
-    contentEndpoint,
-    saveEndpoint,
+    pageName,
 }: StaticPageEditorProps) => {
     const navigate = useNavigate();
     const [markdownBody, setMarkdownBody] = useState("");
+    const [page, setPage] = useState<ApiStaticPage | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [feedback, setFeedback] = useState<Feedback>(null);
 
     useEffect(() => {
         let active = true;
-        void apiRequest<MarkdownStaticPage>(contentEndpoint, null, "GET", navigate).then((data) => {
+        void apiRequestResult<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate).then(({ data }) => {
             if (!active) return;
-            if (data && typeof data.markdownBody === "string") {
-                setMarkdownBody(data.markdownBody);
+            const matchingPage = data?.find((item) => item.name === pageName);
+            if (matchingPage) {
+                setPage(matchingPage);
+                setMarkdownBody(staticPageMarkdown(matchingPage));
             } else {
                 setFeedback({
                     tone: "error",
@@ -45,18 +48,24 @@ const StaticPageEditor = ({
         return () => {
             active = false;
         };
-    }, [contentEndpoint, navigate]);
+    }, [navigate, pageName]);
 
     const save = async (content: string) => {
         setSaving(true);
         setFeedback(null);
-        const legacyPage: MarkdownStaticPage = { markdownBody: content };
-        const { data } = await apiRequestResult<string>(
-            saveEndpoint,
-            { markdownBody: JSON.stringify(legacyPage) },
+        if (!page) {
+            setFeedback({ tone: "error", message: "Nie znaleziono strony do zapisania." });
+            setSaving(false);
+            return;
+        }
+        const { data } = await apiRequestResult<ApiStaticPage>(
+            `${apiEndpoints.staticPages}/${page.id}`,
+            { contentJson: JSON.stringify({ markdownBody: content }), version: page.version },
             "PUT",
             navigate
         );
+
+        if (data) setPage(data);
 
         setFeedback(
             data === null

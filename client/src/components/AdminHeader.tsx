@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { apiRequestResult } from "../utils/apiFetcher";
+import { apiEndpoints } from "../utils/apiEndpoints";
 import { clearStoredSession, isAdmin } from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
@@ -50,7 +51,7 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
     const logout = async () => {
         if (loggingOut) return;
         setLoggingOut(true);
-        await apiRequestResult<boolean>("/api/admin/auth/session", null, "DELETE", navigate);
+        await apiRequestResult<boolean>(apiEndpoints.sessions, null, "DELETE", navigate);
         clearStoredSession();
         navigate("/admin/login");
         setLoggingOut(false);

@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
-import type { Koalicjant } from "../../types/models";
+import type { ApiKoalicjant, Koalicjant } from "../../types/models";
+import { adaptKoalicjant } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequest, resolveApiAssetUrl } from "../../utils/apiFetcher";
 
 const KoalicjaScreen = () => {
@@ -10,13 +12,16 @@ const KoalicjaScreen = () => {
     const [koalicjants, setKoalicjants] = useState<Koalicjant[]>([]);
     useEffect(() => {
         const load = async () => {
-            const data = await apiRequest<Koalicjant[]>(
-                "/api/admin/koalicjants",
+            const data = await apiRequest<ApiKoalicjant[]>(
+                `${apiEndpoints.koalicjants}?${firstPage}`,
                 null,
                 "GET",
                 navigate
             );
-            if (data) setKoalicjants(data);
+            if (data)
+                setKoalicjants(
+                    data.filter((person) => person.isVisible).map(adaptKoalicjant)
+                );
         };
         void load();
     }, [navigate]);

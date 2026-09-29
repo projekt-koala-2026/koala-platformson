@@ -17,7 +17,7 @@ namespace koala.src.Modules.Account.Entities
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
-        public TeamJoinCode TeamJoinCode { get; set; } = null!;
+        public TeamJoinCode? TeamJoinCode { get; set; }
         public ICollection<Rodo> Rodos { get; set; } = new List<Rodo>();
     }
 }

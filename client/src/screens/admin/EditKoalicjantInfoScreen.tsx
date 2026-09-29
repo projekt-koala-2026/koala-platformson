@@ -6,37 +6,57 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import ImagePicker from "../../components/ImagePicker";
 import Modal from "../../components/Modal";
-import type { Koalicjant, ManagedFile } from "../../types/models";
-import { apiRequest, apiRequestResult, resolveApiAssetUrl } from "../../utils/apiFetcher";
+import type { ApiKoalicjant, Koalicjant, ManagedFile } from "../../types/models";
+import { adaptKoalicjant } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
+import { apiRequestResult, resolveApiAssetUrl } from "../../utils/apiFetcher";
 
 interface KoalicjantForm {
-    name: string;
+    nameFirst: string;
+    nameLast: string;
+    email: string;
     profilePicture: string;
     description: string;
 }
-const emptyForm: KoalicjantForm = { name: "", profilePicture: "", description: "" };
+const emptyForm: KoalicjantForm = {
+    nameFirst: "",
+    nameLast: "",
+    email: "",
+    profilePicture: "",
+    description: "",
+};
 const inputClass =
     "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
 const EditKoalicjantInfo = () => {
     const navigate = useNavigate();
     const [koalicjants, setKoalicjants] = useState<Koalicjant[]>([]);
+    const [rawKoalicjants, setRawKoalicjants] = useState<Record<string, ApiKoalicjant>>({});
     const [loading, setLoading] = useState(true);
-    const [modal, setModal] = useState<"create" | Koalicjant | null>(null);
+    const [modal, setModal] = useState<Koalicjant | null>(null);
     const [form, setForm] = useState<KoalicjantForm>(emptyForm);
     const [showImages, setShowImages] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [pendingId, setPendingId] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(
         null
     );
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<Koalicjant[]>("/api/admin/koalicjants", null, "GET", navigate).then(
+        void apiRequestResult<ApiKoalicjant[]>(
+            `${apiEndpoints.koalicjants}?${firstPage}`,
+            null,
+            "GET",
+            navigate
+        ).then(
             (result) => {
                 if (!active) return;
-                if (result.data) setKoalicjants(result.data);
+                if (result.data) {
+                    setKoalicjants(result.data.map(adaptKoalicjant));
+                    setRawKoalicjants(
+                        Object.fromEntries(result.data.map((person) => [person.id, person]))
+                    );
+                }
                 else if (result.status !== 404)
                     setFeedback({
                         tone: "error",
@@ -50,15 +70,12 @@ const EditKoalicjantInfo = () => {
         };
     }, [navigate]);
 
-    const openCreate = () => {
-        setForm(emptyForm);
-        setShowImages(false);
-        setModal("create");
-        setFeedback(null);
-    };
     const openEdit = (person: Koalicjant) => {
+        const source = rawKoalicjants[person.id];
         setForm({
-            name: person.name,
+            nameFirst: source?.nameFirst ?? "",
+            nameLast: source?.nameLast ?? "",
+            email: source?.email ?? "",
             profilePicture: person.profilePicture,
             description: person.description ?? "",
         });
@@ -81,44 +98,50 @@ const EditKoalicjantInfo = () => {
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setFeedback(null);
-        const payload: KoalicjantForm = {
-            name: form.name.trim(),
+        const normalized: KoalicjantForm = {
+            nameFirst: form.nameFirst.trim(),
+            nameLast: form.nameLast.trim(),
+            email: form.email.trim(),
             profilePicture: form.profilePicture.trim(),
             description: form.description.trim(),
         };
-        if (!payload.name) {
+        if (!normalized.nameFirst || !normalized.nameLast) {
             setFeedback({ tone: "error", message: "Imię i nazwisko są wymagane." });
             return;
         }
-        if (!payload.profilePicture) {
+        if (!normalized.email) {
+            setFeedback({ tone: "error", message: "Adres e-mail jest wymagany." });
+            return;
+        }
+        if (!normalized.profilePicture) {
             setFeedback({ tone: "error", message: "Wybierz zdjęcie lub podaj jego adres." });
             return;
         }
         setSaving(true);
-        if (modal === "create") {
-            const created = await apiRequest<Koalicjant>(
-                "/api/admin/koalicjants",
-                payload,
-                "POST",
-                navigate
-            );
-            if (created) {
-                setKoalicjants((items) => [...items, created]);
-                setModal(null);
-                setForm(emptyForm);
-                setFeedback({ tone: "success", message: `Dodano osobę „${created.name}”.` });
-            } else setFeedback({ tone: "error", message: "Nie udało się dodać koalicjanta." });
-        } else if (modal) {
-            const updated = await apiRequest<boolean>(
-                `/api/admin/koalicjants/${modal.id}`,
-                { id: modal.id, ...payload },
+        if (modal) {
+            const source = rawKoalicjants[modal.id];
+            const { data: updated } = await apiRequestResult<ApiKoalicjant>(
+                `${apiEndpoints.koalicjants}/${modal.id}`,
+                {
+                    nameFirst: normalized.nameFirst,
+                    nameLast: normalized.nameLast,
+                    email: normalized.email,
+                    contentJson: JSON.stringify({
+                        profilePicture: normalized.profilePicture,
+                        description: normalized.description,
+                    }),
+                    isVisible: source?.isVisible ?? true,
+                    version: source?.version ?? 0,
+                },
                 "PUT",
                 navigate
             );
             if (updated) {
+                const adapted = adaptKoalicjant(updated);
                 setKoalicjants((items) =>
-                    items.map((item) => (item.id === modal.id ? { ...item, ...payload } : item))
+                    items.map((item) => (item.id === modal.id ? adapted : item))
                 );
+                setRawKoalicjants((items) => ({ ...items, [updated.id]: updated }));
                 setModal(null);
                 setForm(emptyForm);
                 setFeedback({ tone: "success", message: "Dane koalicjanta zostały zapisane." });
@@ -129,23 +152,6 @@ const EditKoalicjantInfo = () => {
                 });
         }
         setSaving(false);
-    };
-
-    const remove = async (person: Koalicjant) => {
-        if (!window.confirm(`Usunąć osobę „${person.name}” z listy koalicjantów?`)) return;
-        setPendingId(person.id);
-        setFeedback(null);
-        const deleted = await apiRequest<boolean>(
-            `/api/admin/koalicjants/${person.id}`,
-            null,
-            "DELETE",
-            navigate
-        );
-        if (deleted) {
-            setKoalicjants((items) => items.filter((item) => item.id !== person.id));
-            setFeedback({ tone: "success", message: "Koalicjant został usunięty." });
-        } else setFeedback({ tone: "error", message: "Nie udało się usunąć koalicjanta." });
-        setPendingId(null);
     };
 
     return (
@@ -169,7 +175,8 @@ const EditKoalicjantInfo = () => {
                                 <span className="ml-2">Dodaj osobę</span>
                             </>
                         }
-                        onClick={openCreate}
+                        disabled
+                        title="Dodawanie będzie dostępne po uzupełnieniu endpointu backendu."
                     />
                 </header>
                 {feedback && (
@@ -239,8 +246,8 @@ const EditKoalicjantInfo = () => {
                                                 <span className="ml-2">Usuń</span>
                                             </>
                                         }
-                                        onClick={() => void remove(person)}
-                                        disabled={pendingId === person.id}
+                                        disabled
+                                        title="Usuwanie będzie dostępne po uzupełnieniu endpointu backendu."
                                         className="bg-red-600 px-3 hover:bg-red-700 focus:ring-red-500"
                                     />
                                 </div>
@@ -252,22 +259,30 @@ const EditKoalicjantInfo = () => {
             <Modal
                 isOpen={modal !== null}
                 onClose={closeModal}
-                title={modal === "create" ? "Dodaj koalicjanta" : "Edytuj koalicjanta"}
+                title="Edytuj koalicjanta"
                 maxWidth="xl"
             >
                 <form onSubmit={submit} className="space-y-4">
                     <div className="grid gap-5 md:grid-cols-[1fr_12rem]">
                         <div className="space-y-4">
                             <label className="block text-sm font-medium text-slate-700">
-                                Imię i nazwisko *
+                                Imię *
                                 <input
-                                    value={form.name}
+                                    value={form.nameFirst}
                                     onChange={(event) =>
-                                        setForm((value) => ({ ...value, name: event.target.value }))
+                                        setForm((value) => ({ ...value, nameFirst: event.target.value }))
                                     }
                                     className={inputClass}
                                     required
                                 />
+                            </label>
+                            <label className="block text-sm font-medium text-slate-700">
+                                Nazwisko *
+                                <input value={form.nameLast} onChange={(event) => setForm((value) => ({ ...value, nameLast: event.target.value }))} className={inputClass} required />
+                            </label>
+                            <label className="block text-sm font-medium text-slate-700">
+                                E-mail *
+                                <input type="email" value={form.email} onChange={(event) => setForm((value) => ({ ...value, email: event.target.value }))} className={inputClass} required />
                             </label>
                             <label className="block text-sm font-medium text-slate-700">
                                 Adres zdjęcia *

@@ -1,5 +1,7 @@
 import type { NavigateFunction } from "react-router-dom";
-import type { ManagedFile } from "../types/models";
+import type { ApiPublicFile, ManagedFile } from "../types/models";
+import { adaptPublicFile } from "./apiAdapters";
+import { apiEndpoints } from "./apiEndpoints";
 
 export const apiUrl =
     (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
@@ -80,16 +82,15 @@ export const apiRequest = async <T = unknown>(
 export const uploadFile = async (
     file: File,
     title: string,
-    folder: string,
+    _folder: string,
     navigate?: NavigateFunction
 ): Promise<ManagedFile | null> => {
     const formData = new FormData();
     formData.append("File", file);
-    formData.append("Title", title);
-    formData.append("Folder", folder);
+    formData.append("Name", title);
 
     try {
-        const response = await fetch(apiUrl + "/api/admin/file/public/file", {
+        const response = await fetch(apiUrl + apiEndpoints.publicFiles, {
             method: "POST",
             body: formData,
             credentials: "include",
@@ -98,7 +99,7 @@ export const uploadFile = async (
             handleAuthFailure(response, navigate);
             return null;
         }
-        return await parseResponse<ManagedFile>(response);
+        return adaptPublicFile(await parseResponse<ApiPublicFile>(response));
     } catch {
         return null;
     }

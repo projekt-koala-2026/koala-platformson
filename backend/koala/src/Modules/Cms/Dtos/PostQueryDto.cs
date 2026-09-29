@@ -4,6 +4,6 @@ namespace koala.src.Modules.Cms.Dtos
     (
         Guid? EditionId,
         string? Name,
-        bool? ShowHiden
+        bool? ShowHidden
     );
 }

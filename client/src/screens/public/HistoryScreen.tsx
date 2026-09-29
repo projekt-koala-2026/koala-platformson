@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
-import type { Edition, MarkdownStaticPage, Post } from "../../types/models";
+import type { ApiEdition, ApiPost, ApiStaticPage, Edition, Post } from "../../types/models";
+import { adaptEdition, adaptPost, staticPageMarkdown } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequest } from "../../utils/apiFetcher";
-
-const HISTORY_ENDPOINT = "/content/history/history.json";
-const EDITIONS_ENDPOINT = "/api/edition";
-const POSTS_ENDPOINT = "/api/admin/post";
 
 const HistoryScreen = () => {
     const navigate = useNavigate();
@@ -22,23 +20,24 @@ const HistoryScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<MarkdownStaticPage>(HISTORY_ENDPOINT, null, "GET", navigate),
-            apiRequest<Edition[]>(EDITIONS_ENDPOINT, null, "GET", navigate),
-            apiRequest<Post[]>(POSTS_ENDPOINT, null, "GET", navigate),
-        ]).then(([historyData, editionData, postData]) => {
+            apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
+            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
+            apiRequest<ApiPost[]>(`${apiEndpoints.posts}?${firstPage}`, null, "GET", navigate),
+        ]).then(([staticPages, editionData, postData]) => {
             if (!active) return;
+            const historyPage = staticPages?.find((item) => item.name === "HISTORY_PAGE");
             const now = Date.now();
-            const pastEditions = (editionData ?? [])
+            const pastEditions = (editionData ?? []).map(adaptEdition)
                 .filter((edition) => new Date(edition.endDate).getTime() < now)
                 .sort(
                     (first, second) =>
                         new Date(second.endDate).getTime() - new Date(first.endDate).getTime()
                 );
-            setHistory(historyData?.markdownBody ?? "");
+            setHistory(staticPageMarkdown(historyPage));
             setEditions(pastEditions);
-            setPosts(postData ?? []);
+            setPosts((postData ?? []).map(adaptPost));
             setSelectedEditionId(pastEditions[0]?.id ?? "");
-            setHasError(!historyData || !editionData || !postData);
+            setHasError(!historyPage || !editionData || !postData);
             setLoading(false);
         });
         return () => {

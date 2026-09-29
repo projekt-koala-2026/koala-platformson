@@ -5,12 +5,13 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
-import type { Edition, Post } from "../../types/models";
+import type { ApiEdition, ApiPost, Edition, Post } from "../../types/models";
+import { adaptEdition, adaptPost } from "../../utils/apiAdapters";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequest, apiRequestResult } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
 
-const POSTS_ENDPOINT = "/api/admin/post";
-const EDITIONS_ENDPOINT = "/api/edition";
+const POSTS_ENDPOINT = apiEndpoints.posts;
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 type SidePanel = "preview" | "posts";
@@ -34,6 +35,7 @@ const EditPostScreen = () => {
     const navigate = useNavigate();
     const isAdminUser = useMemo(() => isAdmin(), []);
     const [posts, setPosts] = useState<Post[]>([]);
+    const [postVersions, setPostVersions] = useState<Record<string, number>>({});
     const [editions, setEditions] = useState<Edition[]>([]);
     const [form, setForm] = useState(emptyForm);
     const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -47,17 +49,25 @@ const EditPostScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<Post[]>(POSTS_ENDPOINT, null, "GET", navigate),
-            apiRequest<Edition[]>(EDITIONS_ENDPOINT, null, "GET", navigate),
-        ]).then(([postsData, editionsData]) => {
+            apiRequest<ApiPost[]>(`${POSTS_ENDPOINT}?${firstPage}&ShowHidden=true`, null, "GET", navigate),
+            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
+            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=true`, null, "GET", navigate),
+        ]).then(([postsData, pastEditionsData, activeEditionData]) => {
             if (!active) return;
-            setPosts(postsData ?? []);
-            setEditions(editionsData ?? []);
+            const editionsData = [
+                ...(activeEditionData ?? []),
+                ...(pastEditionsData ?? []),
+            ].map(adaptEdition);
+            setPosts((postsData ?? []).map(adaptPost));
+            setPostVersions(
+                Object.fromEntries((postsData ?? []).map((post) => [post.id, post.version]))
+            );
+            setEditions(editionsData);
             setForm((current) => ({
                 ...current,
                 editionId: current.editionId || pickDefaultEdition(editionsData ?? []),
             }));
-            if (!postsData || !editionsData) {
+            if (!postsData || !pastEditionsData) {
                 setFeedback({ tone: "error", message: "Nie udało się pobrać wszystkich danych." });
             }
             setLoading(false);
@@ -99,10 +109,16 @@ const EditPostScreen = () => {
 
         setSaving(true);
         setFeedback(null);
-        const payload = { title, markdownBody, editionId: form.editionId };
+        const payload = {
+            name: title,
+            contentJson: JSON.stringify({ markdownBody }),
+            editionId: form.editionId,
+            isVisible: true,
+            version: editingPostId ? (postVersions[editingPostId] ?? 0) : 0,
+        };
         const endpoint = editingPostId ? `${POSTS_ENDPOINT}/${editingPostId}` : POSTS_ENDPOINT;
         const method = editingPostId ? "PUT" : "POST";
-        const { data } = await apiRequestResult<Post>(endpoint, payload, method, navigate);
+        const { data } = await apiRequestResult<ApiPost>(endpoint, payload, method, navigate);
 
         if (!data) {
             setFeedback({
@@ -113,10 +129,12 @@ const EditPostScreen = () => {
             return;
         }
 
+        const adapted = adaptPost(data);
+        setPostVersions((current) => ({ ...current, [data.id]: data.version }));
         setPosts((current) =>
             editingPostId
-                ? current.map((post) => (post.id === editingPostId ? data : post))
-                : [data, ...current]
+                ? current.map((post) => (post.id === editingPostId ? adapted : post))
+                : [adapted, ...current]
         );
         setFeedback({
             tone: "success",

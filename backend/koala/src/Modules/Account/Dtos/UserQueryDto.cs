@@ -6,6 +6,6 @@ namespace koala.src.Modules.Account.Dtos
         string? NameFirst = null,
         string? NameLast = null,
         List<string>? UserRoles = null,
-        bool? ShowCensord = false
+        bool? ShowCensored = false
     );
 }

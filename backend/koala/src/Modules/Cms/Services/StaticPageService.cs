@@ -19,14 +19,14 @@ namespace koala.src.Modules.Cms.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User not loged in");
+                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbiden, "User does not have permission to update static page");
+                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to update static page");
             }
 
             var staticPage = await _db.StaticPages.FirstOrDefaultAsync(sp => sp.Id == id);
