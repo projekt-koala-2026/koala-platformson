@@ -291,7 +291,7 @@ namespace koala.src.Modules.Core.Services
             return new SubeditionListDto(subeditions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
         }
 
-        public async Task<SubeditionDto> DeleteSubedition(ClaimsPrincipal? claimsPrincipal, Guid id)
+        public async Task DeleteSubedition(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -315,8 +315,6 @@ namespace koala.src.Modules.Core.Services
 
             _db.SubEditions.Remove(subedition);
             await _db.SaveChangesAsync();
-
-            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
 
         public async Task<TaskItemDto> CreateTask(ClaimsPrincipal? claimsPrincipal, Guid subeditionId, CreateTaskItemDto createTaskDto)
@@ -368,7 +366,7 @@ namespace koala.src.Modules.Core.Services
             );
         }
 
-        public async Task<TaskItemDto> DeleteTask(ClaimsPrincipal? claimsPrincipal, Guid id)
+        public async Task DeleteTask(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -393,15 +391,6 @@ namespace koala.src.Modules.Core.Services
             _db.Tasks.Remove(task);
             await _db.SaveChangesAsync();
 
-            return new TaskItemDto(
-                task.Id,
-                task.EditionId,
-                task.SubeditionId,
-                task.Name,
-                task.ContentJson,
-                task.CreatedAt,
-                task.ExpiredAt
-            );
         }
         public async Task<TaskItemDto> GetTask(ClaimsPrincipal? claimsPrincipal, Guid id)
         {

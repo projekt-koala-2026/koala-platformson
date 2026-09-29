@@ -96,8 +96,8 @@ namespace koala.src.Modules.Core.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSubedition([FromRoute] Guid id)
         {
-            var response = await _editionService.DeleteSubedition(User, id);
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
+            await _editionService.DeleteSubedition(User, id);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));                
         }
 
         [Authorize]
@@ -112,8 +112,8 @@ namespace koala.src.Modules.Core.Controllers
         [HttpDelete("task/{id}")]
         public async Task<IActionResult> DeleteTask([FromRoute] Guid id)
         {
-            var response = await _editionService.DeleteTask(User, id);
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
+            await _editionService.DeleteTask(User, id);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));                
         }
 
         [HttpGet("task/{id}")]
