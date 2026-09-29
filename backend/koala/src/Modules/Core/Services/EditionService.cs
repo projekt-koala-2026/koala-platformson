@@ -206,7 +206,7 @@ namespace koala.src.Modules.Core.Services
                 ExpiresAt = null
             };
 
-            _db.SubEditions.AddAsync(newSubedition);
+            await _db.SubEditions.AddAsync(newSubedition);
             await _db.SaveChangesAsync();
 
             return new SubeditionDto(newSubedition.Id, newSubedition.EditionId, newSubedition.Name, newSubedition.DateStart, newSubedition.DateEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
@@ -354,7 +354,7 @@ namespace koala.src.Modules.Core.Services
                 ExpiredAt = createTaskDto.ExpiredAt
             };
 
-            _db.Tasks.Add(newTask);
+            await _db.Tasks.AddAsync(newTask);
             await _db.SaveChangesAsync();
 
             return new TaskItemDto(
