@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import PublicHeader from "../../components/PublicHeader";
@@ -6,7 +6,12 @@ import { useLoading } from "../../contexts/LoadingContext";
 import type { SessionUser } from "../../types/models";
 import { apiRequestResult } from "../../utils/apiFetcher";
 import { apiEndpoints } from "../../utils/apiEndpoints";
-import { clearStoredSession, rolesToFlags, storeSession } from "../../utils/authService";
+import {
+    clearStoredSession,
+    getAuthenticatedHomePath,
+    rolesToFlags,
+    storeSession,
+} from "../../utils/authService";
 
 const LOGIN_ENDPOINT = apiEndpoints.sessions;
 const REGISTER_ENDPOINT = apiEndpoints.users;
@@ -27,6 +32,11 @@ const LoginScreen = () => {
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        const destination = getAuthenticatedHomePath();
+        if (destination) navigate(destination, { replace: true });
+    }, [navigate]);
 
     const switchMode = (nextMode: Mode) => {
         setMode(nextMode);

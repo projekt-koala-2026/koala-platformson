@@ -8,7 +8,7 @@ import { adaptEdition, adaptPost } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequestResult } from "../../utils/apiFetcher";
 
-const POSTS_ENDPOINT = `${apiEndpoints.posts}?${firstPage}`;
+const POSTS_ENDPOINT = `${apiEndpoints.posts}?${firstPage}&ShowHidden=false`;
 const ACTIVE_EDITIONS_ENDPOINT = `${apiEndpoints.editions}?${firstPage}&ShowActive=true`;
 
 const HomeScreen = () => {

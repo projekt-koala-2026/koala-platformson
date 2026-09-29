@@ -5,6 +5,7 @@ import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import { apiEndpoints } from "../../utils/apiEndpoints";
 import { apiRequestResult } from "../../utils/apiFetcher";
+import { clearStoredSession, getLoginPath } from "../../utils/authService";
 
 const fieldClass =
     "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100";
@@ -15,12 +16,19 @@ const ResetPasswordScreen = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const token = searchParams.get("token")?.trim() ?? "";
+    const accountArea = searchParams.get("area");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmation, setConfirmation] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const loginPath =
+        accountArea === "organization"
+            ? "/admin/login"
+            : accountArea === "team"
+              ? "/login"
+              : getLoginPath();
 
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -56,6 +64,7 @@ const ResetPasswordScreen = () => {
               );
         const expectedStatus = token ? 200 : 201;
         if (status === expectedStatus) {
+            if (token) clearStoredSession();
             setSuccess(
                 token
                     ? "Hasło zostało zmienione. Możesz się teraz zalogować."
@@ -91,7 +100,7 @@ const ResetPasswordScreen = () => {
                             <Button type="submit" text={submitting ? "Wysyłanie…" : token ? "Zapisz nowe hasło" : "Wyślij link"} disabled={submitting} className="w-full" />
                         </form>
                     )}
-                    <button type="button" onClick={() => navigate("/login")} className="mt-4 w-full rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">Wróć do logowania</button>
+                    <button type="button" onClick={() => navigate(loginPath)} className="mt-4 w-full rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">Wróć do logowania</button>
                 </section>
             </main>
             <PublicFooter />

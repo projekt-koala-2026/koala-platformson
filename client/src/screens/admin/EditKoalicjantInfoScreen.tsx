@@ -17,6 +17,7 @@ interface KoalicjantForm {
     email: string;
     profilePicture: string;
     description: string;
+    isVisible: boolean;
 }
 const emptyForm: KoalicjantForm = {
     nameFirst: "",
@@ -24,6 +25,7 @@ const emptyForm: KoalicjantForm = {
     email: "",
     profilePicture: "",
     description: "",
+    isVisible: true,
 };
 const inputClass =
     "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
@@ -78,6 +80,7 @@ const EditKoalicjantInfo = () => {
             email: source?.email ?? "",
             profilePicture: person.profilePicture,
             description: person.description ?? "",
+            isVisible: source?.isVisible ?? true,
         });
         setShowImages(false);
         setModal(person);
@@ -104,6 +107,7 @@ const EditKoalicjantInfo = () => {
             email: form.email.trim(),
             profilePicture: form.profilePicture.trim(),
             description: form.description.trim(),
+            isVisible: form.isVisible,
         };
         if (!normalized.nameFirst || !normalized.nameLast) {
             setFeedback({ tone: "error", message: "Imię i nazwisko są wymagane." });
@@ -130,7 +134,7 @@ const EditKoalicjantInfo = () => {
                         profilePicture: normalized.profilePicture,
                         description: normalized.description,
                     }),
-                    isVisible: source?.isVisible ?? true,
+                    isVisible: normalized.isVisible,
                     version: source?.version ?? 0,
                 },
                 "PUT",
@@ -223,6 +227,11 @@ const EditKoalicjantInfo = () => {
                                         <h2 className="text-lg font-semibold text-slate-900">
                                             {person.name}
                                         </h2>
+                                        <span
+                                            className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${person.isVisible ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
+                                        >
+                                            {person.isVisible ? "Widoczny" : "Ukryty"}
+                                        </span>
                                         <p className="mt-2 line-clamp-4 text-sm leading-6 text-slate-600">
                                             {person.description || "Brak opisu."}
                                         </p>
@@ -325,6 +334,27 @@ const EditKoalicjantInfo = () => {
                                     }
                                     className={`${inputClass} min-h-28 resize-y`}
                                 />
+                            </label>
+                            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                <input
+                                    type="checkbox"
+                                    checked={form.isVisible}
+                                    onChange={(event) =>
+                                        setForm((value) => ({
+                                            ...value,
+                                            isVisible: event.target.checked,
+                                        }))
+                                    }
+                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                />
+                                <span>
+                                    <span className="block text-sm font-medium text-slate-700">
+                                        Widoczny na stronie publicznej
+                                    </span>
+                                    <span className="mt-1 block text-xs leading-5 text-slate-500">
+                                        Wyłącz, aby ukryć koalicjanta bez usuwania danych.
+                                    </span>
+                                </span>
                             </label>
                         </div>
                         <div className="grid min-h-48 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">

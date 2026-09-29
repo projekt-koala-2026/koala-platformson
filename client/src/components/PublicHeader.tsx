@@ -3,7 +3,11 @@ import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { apiRequestResult } from "../utils/apiFetcher";
 import { apiEndpoints } from "../utils/apiEndpoints";
-import { clearStoredSession, isAdmin, isCaptain, isEditor, isGuardian } from "../utils/authService";
+import {
+    clearStoredSession,
+    getOrganizationHomePath,
+    getUserRoles,
+} from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
@@ -24,12 +28,12 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const location = useLocation();
     const [isPasswordOpen, setIsPasswordOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
-    const isCaptainUser = useMemo(() => isCaptain(), []);
-    const isGuardianUser = useMemo(() => isGuardian(), []);
-    const isTeamUser = isCaptainUser || isGuardianUser;
-    const canChangePassword = useMemo(() => isAdmin() || isEditor() || isCaptain() || isGuardian(), []);
-    const isLoggedIn = useMemo(() => Boolean(localStorage.getItem("userId")), []);
-    const links = isTeamUser
+    const roles = useMemo(() => getUserRoles(), []);
+    const isOrganizationUser = roles.isAdmin || roles.isEditor || roles.isReviewer;
+    const isTeamAccount = roles.isCaptain || roles.isGuardian;
+    const isLoggedIn = isOrganizationUser || isTeamAccount;
+    const organizationHomePath = getOrganizationHomePath(roles);
+    const links = isTeamAccount
         ? [...baseLinks, { label: "Drużyny", path: "/captain" }]
         : baseLinks;
     const navigationOptions = links.map((link) => ({
@@ -42,7 +46,7 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
         setLoggingOut(true);
         await apiRequestResult<boolean>(apiEndpoints.sessions, null, "DELETE", navigate);
         clearStoredSession();
-        navigate("/login");
+        navigate(isOrganizationUser ? "/admin/login" : "/login");
         setLoggingOut(false);
     };
 
@@ -92,7 +96,7 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                         {isLoggedIn ? (
                             <ProfileButton
                                 options={[
-                                    ...(isTeamUser
+                                    ...(isTeamAccount
                                         ? [
                                               {
                                                   label: "Panel drużyn",
@@ -100,7 +104,15 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                               },
                                           ]
                                         : []),
-                                    ...(canChangePassword
+                                    ...(isOrganizationUser && organizationHomePath !== "/"
+                                        ? [
+                                              {
+                                                  label: "Panel administracyjny",
+                                                  onClick: () => navigate(organizationHomePath),
+                                              },
+                                          ]
+                                        : []),
+                                    ...(isLoggedIn
                                         ? [
                                               {
                                                   label: "Zmień hasło",

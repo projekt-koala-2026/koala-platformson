@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import SchoolsTable from "../../components/SchoolsTable";
@@ -28,6 +29,8 @@ const CaptainHomeScreen = () => {
     const [joinCode, setJoinCode] = useState("");
     const [loading, setLoading] = useState(true);
     const [editingName, setEditingName] = useState(false);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [createError, setCreateError] = useState("");
     const [saving, setSaving] = useState(false);
     const [feedback, setFeedback] = useState<Feedback>(null);
 
@@ -67,16 +70,18 @@ const CaptainHomeScreen = () => {
         event.preventDefault();
         const normalizedName = teamName.trim();
         if (!normalizedName) {
-            setFeedback({ tone: "error", message: "Podaj nazwę drużyny." });
+            if (team) setFeedback({ tone: "error", message: "Podaj nazwę drużyny." });
+            else setCreateError("Podaj nazwę drużyny.");
             return;
         }
         if (!team && !schoolId) {
-            setFeedback({ tone: "error", message: "Wybierz szkołę z tabeli." });
+            setCreateError("Wybierz szkołę z tabeli.");
             return;
         }
 
         setSaving(true);
         setFeedback(null);
+        setCreateError("");
         const result = team
             ? await apiRequestResult<ApiTeam>(
                   `${apiEndpoints.teams}/${team.id}/name`,
@@ -102,12 +107,30 @@ const CaptainHomeScreen = () => {
             setTeamName(result.data.name);
             setSchoolId(result.data.schoolId);
             setEditingName(false);
+            setIsCreateOpen(false);
             setFeedback({
                 tone: "success",
                 message: team ? "Nazwa drużyny została zapisana." : "Drużyna została utworzona.",
             });
-        } else setFeedback({ tone: "error", message: "Nie udało się zapisać drużyny." });
+        } else if (team) setFeedback({ tone: "error", message: "Nie udało się zapisać drużyny." });
+        else setCreateError("Nie udało się utworzyć drużyny. Sprawdź dane i spróbuj ponownie.");
         setSaving(false);
+    };
+
+    const openCreateTeam = () => {
+        setTeamName("");
+        setSchoolId("");
+        setCreateError("");
+        setFeedback(null);
+        setIsCreateOpen(true);
+    };
+
+    const closeCreateTeam = () => {
+        if (saving) return;
+        setIsCreateOpen(false);
+        setTeamName("");
+        setSchoolId("");
+        setCreateError("");
     };
 
     const selectTeam = (selectedTeam: ApiTeam) => {
@@ -286,15 +309,83 @@ const CaptainHomeScreen = () => {
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row"><input value={joinCode} onChange={(event) => setJoinCode(event.target.value)} className={`${inputClass} mt-0 font-mono uppercase`} placeholder="Kod dołączenia" disabled={saving} required /><Button type="submit" text={saving ? "Dołączanie…" : "Dołącz"} disabled={saving} /></div>
                         </form>
                         {roles.isCaptain && (
-                            <form onSubmit={submitTeam} className="space-y-6">
-                                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-semibold text-slate-900">Utwórz drużynę</h2><label className="mt-5 block text-sm font-medium text-slate-700">Nazwa drużyny<input className={inputClass} value={teamName} onChange={(event) => setTeamName(event.target.value)} disabled={saving} required /></label></section>
-                                <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><h2 className="text-xl font-semibold text-slate-900">Wybierz szkołę</h2>{selectedSchool && <p className="mt-2 text-sm font-medium text-emerald-700">Wybrano: {selectedSchool.name}</p>}<div className="mt-5"><SchoolsTable schools={schools} selectedRspo={selectedSchool?.rspo ?? null} onRowClick={(school) => setSchoolId(school.id ?? "")} /></div></section>
-                                <Button type="submit" text={saving ? "Tworzenie…" : "Utwórz drużynę"} disabled={saving || !schoolId} />
-                            </form>
+                            <Button text="Utwórz nową drużynę" onClick={openCreateTeam} />
                         )}
                     </div>
                 )}
             </main>
+            <Modal
+                isOpen={isCreateOpen}
+                onClose={closeCreateTeam}
+                title="Utwórz drużynę"
+                maxWidth="xl"
+            >
+                <form onSubmit={submitTeam} className="space-y-6">
+                    <label className="block text-sm font-medium text-slate-700">
+                        Nazwa drużyny
+                        <input
+                            className={inputClass}
+                            value={teamName}
+                            onChange={(event) => setTeamName(event.target.value)}
+                            disabled={saving}
+                            required
+                            autoFocus
+                        />
+                    </label>
+
+                    <section aria-labelledby="create-team-school-heading">
+                        <div className="mb-4">
+                            <h3
+                                id="create-team-school-heading"
+                                className="font-semibold text-slate-900"
+                            >
+                                Wybierz szkołę
+                            </h3>
+                            <p className="mt-1 text-sm text-slate-500">
+                                Kliknij odpowiedni wiersz w tabeli.
+                            </p>
+                            {selectedSchool && (
+                                <p className="mt-2 text-sm font-semibold text-emerald-700">
+                                    Wybrano: {selectedSchool.name}
+                                </p>
+                            )}
+                        </div>
+                        <SchoolsTable
+                            schools={schools}
+                            selectedRspo={selectedSchool?.rspo ?? null}
+                            onRowClick={(school) => {
+                                setSchoolId(school.id ?? "");
+                                setCreateError("");
+                            }}
+                        />
+                    </section>
+
+                    {createError && (
+                        <p
+                            role="alert"
+                            className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                        >
+                            {createError}
+                        </p>
+                    )}
+
+                    <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                        <button
+                            type="button"
+                            onClick={closeCreateTeam}
+                            disabled={saving}
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                        >
+                            Anuluj
+                        </button>
+                        <Button
+                            type="submit"
+                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
+                            disabled={saving}
+                        />
+                    </div>
+                </form>
+            </Modal>
             <PublicFooter />
         </div>
     );

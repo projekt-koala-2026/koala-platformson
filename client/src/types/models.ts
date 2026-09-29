@@ -147,6 +147,7 @@ export interface Post {
     markdownBody: string;
     editionId: string;
     createdAt: string;
+    isVisible: boolean;
 }
 export interface Sponsor {
     id: string;
@@ -154,12 +155,14 @@ export interface Sponsor {
     websiteUrl: string;
     logoUrl?: string;
     description?: string;
+    isVisible: boolean;
 }
 export interface Koalicjant {
     id: string;
     name: string;
     profilePicture: string;
     description?: string;
+    isVisible: boolean;
 }
 export interface ManagedFile {
     id: string;

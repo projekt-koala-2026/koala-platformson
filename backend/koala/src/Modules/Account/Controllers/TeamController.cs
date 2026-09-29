@@ -61,7 +61,7 @@ namespace koala.src.Modules.Account.Controllers
         // ONLY FOR TEAM PLAYERS + (REQUIRED MOSTLY WITH CAPTAIN POSITION IN TEAM_MEMBERS)
         [Authorize]
         [HttpPost("{id}/rodos/{team_member_id}")]
-        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoCreateDto rodoCreateDto)
+        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromForm] RodoCreateDto rodoCreateDto)
         {
             var response = await _rodoService.AddRodoAsync(User, id, team_member_id, rodoCreateDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));

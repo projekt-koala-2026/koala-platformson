@@ -5,6 +5,7 @@
 @layer base {
     html {
         @apply bg-slate-50;
+        scrollbar-gutter: stable;
     }
     body {
         @apply min-h-screen bg-slate-50 font-sans text-slate-700 antialiased;

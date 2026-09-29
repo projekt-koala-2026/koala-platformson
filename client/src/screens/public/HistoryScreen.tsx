@@ -22,7 +22,7 @@ const HistoryScreen = () => {
         void Promise.all([
             apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
             apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
-            apiRequest<ApiPost[]>(`${apiEndpoints.posts}?${firstPage}`, null, "GET", navigate),
+            apiRequest<ApiPost[]>(`${apiEndpoints.posts}?${firstPage}&ShowHidden=false`, null, "GET", navigate),
         ]).then(([staticPages, editionData, postData]) => {
             if (!active) return;
             const historyPage = staticPages?.find((item) => item.name === "HISTORY_PAGE");

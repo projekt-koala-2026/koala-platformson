@@ -82,6 +82,7 @@ export const adaptPost = (post: ApiPost): Post => {
         markdownBody:
             stringField(content.markdownBody) || stringField(content.content) || post.contentJson,
         createdAt: post.createdAt,
+        isVisible: post.isVisible,
     };
 };
 
@@ -93,6 +94,7 @@ export const adaptSponsor = (sponsor: ApiSponsor): Sponsor => {
         websiteUrl: stringField(content.websiteUrl) || "#",
         logoUrl: stringField(content.logoUrl) || undefined,
         description: stringField(content.description) || undefined,
+        isVisible: sponsor.isVisible,
     };
 };
 
@@ -103,5 +105,6 @@ export const adaptKoalicjant = (person: ApiKoalicjant): Koalicjant => {
         name: `${person.nameFirst} ${person.nameLast}`.trim(),
         profilePicture: stringField(content.profilePicture),
         description: stringField(content.description) || stringField(content.markdownBody),
+        isVisible: person.isVisible,
     };
 };

@@ -4,6 +4,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TopLoadingBar from "./components/TopLoadingBar";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import type { Role } from "./types/models";
+import {
+    getAuthArea,
+    getOrganizationHomePath,
+    getUserRoles,
+} from "./utils/authService";
 
 const AdminLoginScreen = lazy(() => import("./screens/admin/AdminLoginScreen"));
 const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));
@@ -39,6 +44,19 @@ const RouteFallback = () => (
     </main>
 );
 
+const LegacyPasswordRedirect = ({ area }: { area: "organization" | "team" }) => {
+    const roles = getUserRoles();
+    const matchesArea = getAuthArea(roles) === area;
+    const target = matchesArea
+        ? area === "organization"
+            ? getOrganizationHomePath(roles)
+            : "/captain"
+        : area === "organization"
+          ? "/admin/login"
+          : "/login";
+    return <Navigate to={target} replace />;
+};
+
 export default function App() {
     return (
         <LoadingProvider>
@@ -57,7 +75,7 @@ export default function App() {
                         />
                         <Route
                             path="/admin/changepass"
-                            element={<Navigate to="/admin" replace />}
+                            element={<LegacyPasswordRedirect area="organization" />}
                         />
                         <Route path="/admin/adduser" element={<Navigate to="/admin" replace />} />
                         <Route
@@ -167,7 +185,10 @@ export default function App() {
                         <Route path="/reset-password" element={<ResetPasswordScreen />} />
                         <Route path="/problems" element={<ProblemsPublicScreen />} />
                         <Route path="/rules" element={<RuleScreen />} />
-                        <Route path="/changepass" element={<Navigate to="/" replace />} />
+                        <Route
+                            path="/changepass"
+                            element={<LegacyPasswordRedirect area="team" />}
+                        />
                         <Route path="/history" element={<HistoryScreen />} />
                         <Route path="/koalicja" element={<KoalicjaScreen />} />
                         <Route

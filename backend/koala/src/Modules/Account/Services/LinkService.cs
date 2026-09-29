@@ -109,7 +109,18 @@ namespace koala.src.Modules.Account.Services
             await _db.Links.AddAsync(link);
             await _db.SaveChangesAsync();
 
-            await _emailService.SendPasswordResetEmailAsync(user.Email, link.Token.ToString());
+            var organizationAccount = await _db.UserRoles
+                .AnyAsync(userRole =>
+                    userRole.UserId == user.Id &&
+                    (userRole.Role.Name == "ORGANIZATION_ADMIN" ||
+                     userRole.Role.Name == "ORGANIZATION_EDITOR" ||
+                     userRole.Role.Name == "ORGANIZATION_REVIEWER"));
+
+            await _emailService.SendPasswordResetEmailAsync(
+                user.Email,
+                link.Token.ToString(),
+                organizationAccount ? "organization" : "team"
+            );
         }
 
         public async Task<LinkListDto> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)

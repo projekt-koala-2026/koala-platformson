@@ -50,10 +50,10 @@ namespace koala.src.Modules.Account.Services
             await client.DisconnectAsync(true);
         }
 
-        public async Task SendPasswordResetEmailAsync(string toEmail, string resetToken)
+        public async Task SendPasswordResetEmailAsync(string toEmail, string resetToken, string accountArea)
         {
             string frontendUrl = (_configuration["FrontendUrl"] ?? "http://localhost:5173").TrimEnd('/');
-            string resetLink = $"{frontendUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
+            string resetLink = $"{frontendUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}&area={Uri.EscapeDataString(accountArea)}";
 
             // Professional, responsive HTML email template
             string htmlMessage = $@"

@@ -15,8 +15,15 @@ interface SponsorForm {
     websiteUrl: string;
     logoUrl: string;
     description: string;
+    isVisible: boolean;
 }
-const emptyForm: SponsorForm = { name: "", websiteUrl: "", logoUrl: "", description: "" };
+const emptyForm: SponsorForm = {
+    name: "",
+    websiteUrl: "",
+    logoUrl: "",
+    description: "",
+    isVisible: true,
+};
 const inputClass =
     "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 const isHttpUrl = (value: string) => {
@@ -74,6 +81,7 @@ const EditSponsorInfo = () => {
             websiteUrl: sponsor.websiteUrl,
             logoUrl: sponsor.logoUrl ?? "",
             description: sponsor.description ?? "",
+            isVisible: sponsor.isVisible,
         });
         setModal(sponsor);
         setFeedback(null);
@@ -93,6 +101,7 @@ const EditSponsorInfo = () => {
             websiteUrl: form.websiteUrl.trim(),
             logoUrl: form.logoUrl.trim(),
             description: form.description.trim(),
+            isVisible: form.isVisible,
         };
         if (!normalized.name) {
             setFeedback({ tone: "error", message: "Nazwa sponsora jest wymagana." });
@@ -126,7 +135,7 @@ const EditSponsorInfo = () => {
                 logoUrl: normalized.logoUrl,
                 description: normalized.description,
             }),
-            isVisible: true,
+            isVisible: normalized.isVisible,
             version: modal !== "create" && modal ? (versions[modal.id] ?? 0) : 0,
         };
         setSaving(true);
@@ -252,6 +261,11 @@ const EditSponsorInfo = () => {
                                         <h2 className="text-lg font-semibold text-slate-900">
                                             {sponsor.name}
                                         </h2>
+                                        <span
+                                            className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${sponsor.isVisible ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
+                                        >
+                                            {sponsor.isVisible ? "Widoczny" : "Ukryty"}
+                                        </span>
                                         <a
                                             href={sponsor.websiteUrl}
                                             target="_blank"
@@ -357,6 +371,27 @@ const EditSponsorInfo = () => {
                             }
                             className={`${inputClass} min-h-24 resize-y`}
                         />
+                    </label>
+                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <input
+                            type="checkbox"
+                            checked={form.isVisible}
+                            onChange={(event) =>
+                                setForm((value) => ({
+                                    ...value,
+                                    isVisible: event.target.checked,
+                                }))
+                            }
+                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span>
+                            <span className="block text-sm font-medium text-slate-700">
+                                Widoczny na stronie publicznej
+                            </span>
+                            <span className="mt-1 block text-xs leading-5 text-slate-500">
+                                Wyłącz, aby ukryć sponsora bez usuwania jego danych.
+                            </span>
+                        </span>
                     </label>
                     <div className="flex justify-end gap-3 pt-2">
                         <button

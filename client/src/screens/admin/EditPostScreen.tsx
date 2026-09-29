@@ -16,7 +16,7 @@ const POSTS_ENDPOINT = apiEndpoints.posts;
 type Feedback = { tone: "success" | "error"; message: string } | null;
 type SidePanel = "preview" | "posts";
 
-const emptyForm = { title: "", markdownBody: "", editionId: "" };
+const emptyForm = { title: "", markdownBody: "", editionId: "", isVisible: true };
 
 const pickDefaultEdition = (editions: Edition[]) => {
     const now = Date.now();
@@ -49,7 +49,7 @@ const EditPostScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<ApiPost[]>(`${POSTS_ENDPOINT}?${firstPage}&ShowHidden=true`, null, "GET", navigate),
+            apiRequest<ApiPost[]>(`${POSTS_ENDPOINT}?${firstPage}`, null, "GET", navigate),
             apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
             apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=true`, null, "GET", navigate),
         ]).then(([postsData, pastEditionsData, activeEditionData]) => {
@@ -85,7 +85,12 @@ const EditPostScreen = () => {
 
     const startEditing = (post: Post) => {
         setEditingPostId(post.id);
-        setForm({ title: post.title, markdownBody: post.markdownBody, editionId: post.editionId });
+        setForm({
+            title: post.title,
+            markdownBody: post.markdownBody,
+            editionId: post.editionId,
+            isVisible: post.isVisible,
+        });
         setEditorRevision((revision) => revision + 1);
         setFeedback(null);
         setSidePanel("preview");
@@ -113,7 +118,7 @@ const EditPostScreen = () => {
             name: title,
             contentJson: JSON.stringify({ markdownBody }),
             editionId: form.editionId,
-            isVisible: true,
+            isVisible: form.isVisible,
             version: editingPostId ? (postVersions[editingPostId] ?? 0) : 0,
         };
         const endpoint = editingPostId ? `${POSTS_ENDPOINT}/${editingPostId}` : POSTS_ENDPOINT;
@@ -253,6 +258,27 @@ const EditPostScreen = () => {
                                         ))}
                                     </select>
                                 </label>
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.isVisible}
+                                        onChange={(event) =>
+                                            setForm((current) => ({
+                                                ...current,
+                                                isVisible: event.target.checked,
+                                            }))
+                                        }
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                    />
+                                    <span>
+                                        <span className="block text-sm font-medium text-slate-700">
+                                            Widoczny na stronie publicznej
+                                        </span>
+                                        <span className="mt-1 block text-xs leading-5 text-slate-500">
+                                            Wyłącz, aby zachować wpis jako ukryty szkic.
+                                        </span>
+                                    </span>
+                                </label>
                                 <div>
                                     <span className="mb-2 block text-sm font-medium text-slate-700">
                                         Treść *
@@ -336,6 +362,11 @@ const EditPostScreen = () => {
                                                     <h3 className="mt-1 break-words text-lg font-semibold">
                                                         {post.title}
                                                     </h3>
+                                                    <span
+                                                        className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${post.isVisible ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
+                                                    >
+                                                        {post.isVisible ? "Widoczny" : "Ukryty"}
+                                                    </span>
                                                     <p className="mt-1 text-xs text-slate-500">
                                                         {new Date(post.createdAt).toLocaleString(
                                                             "pl-PL"

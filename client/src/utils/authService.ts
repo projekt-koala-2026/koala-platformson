@@ -51,6 +51,34 @@ export const isReviewer = () => getUserRoles().isReviewer || false;
 export const isGuardian = () => getUserRoles().isGuardian || false;
 export const isCaptain = () => getUserRoles().isCaptain || false;
 
+export type AuthArea = "organization" | "team";
+
+export const getAuthArea = (roles = getUserRoles()): AuthArea | null => {
+    if (roles.isAdmin || roles.isEditor || roles.isReviewer) return "organization";
+    if (roles.isCaptain || roles.isGuardian) return "team";
+    return null;
+};
+
+export const isOrganizationUser = () => getAuthArea() === "organization";
+export const isTeamUser = () => getAuthArea() === "team";
+
+export const getOrganizationHomePath = (roles = getUserRoles()) => {
+    if (roles.isAdmin) return "/admin";
+    if (roles.isEditor) return "/admin/posts";
+    // The reviewer module does not have a dedicated screen yet.
+    return "/";
+};
+
+export const getAuthenticatedHomePath = (roles = getUserRoles()): string | null => {
+    const area = getAuthArea(roles);
+    if (area === "organization") return getOrganizationHomePath(roles);
+    if (area === "team") return "/captain";
+    return null;
+};
+
+export const getLoginPath = (roles = getUserRoles()) =>
+    getAuthArea(roles) === "organization" ? "/admin/login" : "/login";
+
 const roleFlags: Record<Role, keyof UserRoles> = {
     ADMIN: "isAdmin",
     EDITOR: "isEditor",

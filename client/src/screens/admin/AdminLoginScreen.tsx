@@ -1,11 +1,17 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { useLoading } from "../../contexts/LoadingContext";
 import type { SessionUser } from "../../types/models";
 import { apiRequestResult } from "../../utils/apiFetcher";
 import { apiEndpoints } from "../../utils/apiEndpoints";
-import { clearStoredSession, rolesToFlags, storeSession } from "../../utils/authService";
+import {
+    clearStoredSession,
+    getAuthenticatedHomePath,
+    getOrganizationHomePath,
+    rolesToFlags,
+    storeSession,
+} from "../../utils/authService";
 
 const LOGIN_ENDPOINT = apiEndpoints.sessions;
 const fieldClass =
@@ -18,6 +24,11 @@ const AdminLoginScreen = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        const destination = getAuthenticatedHomePath();
+        if (destination) navigate(destination, { replace: true });
+    }, [navigate]);
 
     const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -38,7 +49,7 @@ const AdminLoginScreen = () => {
             }
 
             const roles = rolesToFlags(data.roles);
-            if (!roles.isAdmin && !roles.isEditor) {
+            if (!roles.isAdmin && !roles.isEditor && !roles.isReviewer) {
                 await apiRequestResult<boolean>(LOGIN_ENDPOINT, null, "DELETE", navigate);
                 clearStoredSession();
                 setError("To konto nie ma dostępu do panelu administracyjnego.");
@@ -46,7 +57,7 @@ const AdminLoginScreen = () => {
             }
 
             storeSession(data);
-            navigate(roles.isAdmin ? "/admin" : "/admin/posts");
+            navigate(getOrganizationHomePath(roles));
         } finally {
             setSubmitting(false);
             stopLoading();
@@ -64,7 +75,7 @@ const AdminLoginScreen = () => {
                 </p>
                 <h1 className="mt-2 text-2xl font-bold text-slate-900">Zaloguj się</h1>
                 <p className="mt-2 text-sm text-slate-500">
-                    Użyj konta administratora lub redaktora.
+                    Użyj konta administratora, redaktora lub recenzenta.
                 </p>
 
                 {error && (
