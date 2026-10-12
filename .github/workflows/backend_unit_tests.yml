@@ -24,9 +24,12 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
+        working-directory: backend/koala
 
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
+        working-directory: backend/koala
 
       - name: Run xUnit tests
         run: dotnet test --no-build --configuration Release --verbosity normal
+        working-directory: backend/koala
