@@ -41,13 +41,13 @@ namespace koala.src.Shared
             }
             return true;
         }
-        public static bool IsOrganizationReviuer(ClaimsPrincipal? claimsPrincipal)
+        public static bool IsOrganizationReviewer(ClaimsPrincipal? claimsPrincipal)
         {
             if(claimsPrincipal == null)
             {
                 return false;
             }
-            if(!claimsPrincipal.IsInRole("ORGANIZATION_REVIUER"))
+            if(!claimsPrincipal.IsInRole("ORGANIZATION_REVIEWER"))
             {
                 return false;
             }

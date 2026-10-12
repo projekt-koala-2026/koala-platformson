@@ -8,11 +8,21 @@ using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Services
 {
-    public class UserService
+    public interface IUserService
+    {
+        public Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, RegisterUserRequestDto requestDto);
+        public Task<UserDto> GetUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
+        public Task<UserListDto> GetUsersAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, UserQueryDto userQueryDto);
+        public Task<UserDto> UpdateUserNamesAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserChangeNamesDto request);
+        public Task DeleteUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
+        public Task CensorUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
+        public Task UnCensorUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
+    }
+    public class UserService : IUserService
     {
         private readonly AccountDbContext _db;
-        private readonly EmailService _emailService;
-        public UserService(AccountDbContext db, EmailService emailService)
+        private readonly IEmailService _emailService;
+        public UserService(AccountDbContext db, IEmailService emailService)
         {
             _db = db;
             _emailService = emailService;
@@ -193,7 +203,7 @@ namespace koala.src.Modules.Account.Services
 
             if(userQueryDto.UserRoles != null)
             {
-                query = query.Where(u => u.UserRoles.Any(ur => userQueryDto.UserRoles.Contains(ur.Role.Name)));
+                query = query.Include(u => u.UserRoles).Where(u => u.UserRoles.Any(ur => userQueryDto.UserRoles.Contains(ur.Role.Name)));
             }
 
             var queryResults = await query.ToListAsync();

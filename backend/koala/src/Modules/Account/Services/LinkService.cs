@@ -9,7 +9,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Account.Services
 {
-    public class LinkService
+    public interface ILinkService
+    {
+        public Task ConsumeRegisterLinkAsync(Guid token, ConsumeRegisterLinkRequestDto requestDto);
+        public Task ConsumeResetPasswordLinkAsync(Guid token, ConsumeResetPasswordLinkRequestDto requestDto);
+        public Task GenerateResetPasswordLinkAsync(GenerateResetPasswordLinkRequestDto requestDto);
+        public Task<LinkListDto> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
+        public Task DeleteUserLinksAsync(ClaimsPrincipal? claimsPrincipal);
+    }
+    public class LinkService : ILinkService
     {
         private readonly AccountDbContext _db;
         private readonly EmailService _emailService;

@@ -115,17 +115,17 @@ namespace koala.src.Modules.Account.Controllers
         }
         [Authorize]
         [HttpGet("{id}/rodos/{team_member_id}")]
-        public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid teamMemberId)
+        public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
-            var response = await _rodoService.GetRodoAsync(User, id, teamMemberId);
+            var response = await _rodoService.GetRodoAsync(User, id, team_member_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<RodoDto>(true, DateTime.UtcNow, null, null, response));
 
         }
         [Authorize]
         [HttpGet("{id}/rodos/{team_member_id}/file")]
-        public async Task<IActionResult> GetTeamMemberRodoFile([FromRoute] Guid id, [FromRoute] Guid teamMemberId)
+        public async Task<IActionResult> GetTeamMemberRodoFile([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
-            string physicalPath = await _rodoService.GetRodoFileAsync(User, id, teamMemberId);
+            string physicalPath = await _rodoService.GetRodoFileAsync(User, id, team_member_id);
             var provider = new FileExtensionContentTypeProvider();
             provider.TryGetContentType(physicalPath, out var contentType);
             return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
@@ -142,9 +142,9 @@ namespace koala.src.Modules.Account.Controllers
 
         [Authorize]
         [HttpPut("{id}/rodos/{team_member_id}/state")]
-        public async Task<IActionResult> SetTeamMemberRodoState([FromRoute] Guid id, [FromRoute] Guid teamMemberId, [FromBody] RodoStateUpdateDto rodoStateUpdateDto)
+        public async Task<IActionResult> SetTeamMemberRodoState([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoStateUpdateDto rodoStateUpdateDto)
         {
-            var response = await _rodoService.SetRodoStateAsync(User, id, teamMemberId, rodoStateUpdateDto);
+            var response = await _rodoService.SetRodoStateAsync(User, id, team_member_id, rodoStateUpdateDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<RodoDto>(true, DateTime.UtcNow, null, null, response));
         }
     }

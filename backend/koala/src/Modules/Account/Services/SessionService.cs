@@ -9,7 +9,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Account.Services
 {
-    public class SessionService
+    public interface ISessionService
+    {
+        public Task<_SessionResponseDto?> CreateSessionAsync(LoginRequestDto requestDto);
+        public Task DeleteSessionAsync(ClaimsPrincipal? claimsPrincipal, Guid session_id);
+        public Task<SessionListDto> GetSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
+        public Task DeleteSessionsAsync(ClaimsPrincipal? claimsPrincipal);
+    }
+    public class SessionService : ISessionService
     {
         private readonly AccountDbContext _db;
         private readonly ICacheService _cache;
