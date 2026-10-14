@@ -26,5 +26,6 @@ namespace koala.src.Modules.Core.Entities
         public DateTime? ExpiredAt { get; set; }
 
         public ICollection<SubEdition> SubEditions { get; set; } = new List<SubEdition>();
+        public ICollection<TaskOdp> TaskOpds{ get; set; } = new List<TaskOdp>();
     }
 }
