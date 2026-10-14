@@ -16,6 +16,7 @@ namespace koala.src.Modules.Core.Data
         public DbSet<SubEdition> SubEditions => Set<SubEdition>();
         public DbSet<TaskItem> Tasks => Set<TaskItem>();
         public DbSet<School> Schools => Set<School>();
+        public DbSet<TaskOdp> TaskOdps => Set<TaskOdp>();
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,7 +52,13 @@ namespace koala.src.Modules.Core.Data
                 b.ToTable("tasks");
                 b.HasKey(t => t.Id);
             });
-            
+
+            modelBuilder.Entity<TaskOdp>(b =>
+            {
+                b.ToTable("task_odps");
+                b.HasKey(t => t.Id);
+            });
+
             modelBuilder.Entity<Edition>().ToTable("editions");
             modelBuilder.Entity<School>().ToTable("schools");
 
