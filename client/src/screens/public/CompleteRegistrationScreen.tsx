@@ -28,6 +28,8 @@ const CompleteRegistrationScreen = () => {
     const [acceptedRules, setAcceptedRules] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [onboardingOpen, setOnboardingOpen] = useState(true);
+    const [onboardingStep, setOnboardingStep] = useState(0);
 
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -79,33 +81,164 @@ const CompleteRegistrationScreen = () => {
                     <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
                         Rejestracja
                     </p>
-                    <h1 className="mt-2 text-2xl font-bold text-slate-900">Dokończ tworzenie konta</h1>
+                    <h1 className="mt-2 text-2xl font-bold text-slate-900">
+                        Dokończ tworzenie konta
+                    </h1>
+                    {token && onboardingOpen && (
+                        <div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6"
+                            role="presentation"
+                        >
+                            <section
+                                role="dialog"
+                                aria-modal="true"
+                                aria-labelledby="onboarding-title"
+                                aria-describedby="onboarding-description"
+                                className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                                        Zanim zaczniesz
+                                    </p>
 
+                                    <button
+                                        type="button"
+                                        onClick={() => setOnboardingOpen(false)}
+                                        className="rounded-lg px-3 py-1 text-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                        aria-label="Zamknij wprowadzenie"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="mt-5 flex gap-2" aria-label="Postęp">
+                                    {[0, 1].map((step) => (
+                                        <div
+                                            key={step}
+                                            className={`h-1.5 flex-1 rounded-full ${
+                                                onboardingStep >= step
+                                                    ? "bg-emerald-600"
+                                                    : "bg-slate-200"
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+
+                                <div className="mt-7 flex items-center justify-between gap-3">
+                                    {onboardingStep === 0 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOnboardingOpen(false)}
+                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                                        >
+                                            Pomiń wprowadzenie
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOnboardingStep(0)}
+                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                                        >
+                                            Wstecz
+                                        </button>
+                                    )}
+
+                                    {onboardingStep === 0 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOnboardingStep(1)}
+                                            className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                                        >
+                                            Dalej
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOnboardingOpen(false)}
+                                            className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                                        >
+                                            Przejdź do formularza
+                                        </button>
+                                    )}
+                                </div>
+                            </section>
+                        </div>
+                    )}
                     {!token ? (
-                        <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        <p
+                            role="alert"
+                            className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                        >
                             W adresie brakuje tokenu rejestracyjnego.
                         </p>
                     ) : (
                         <form onSubmit={submit} className="mt-6 space-y-4">
-                            {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-                            <label className="block text-sm font-medium text-slate-700">Imię
-                                <input className={inputClass} value={nameFirst} onChange={(event) => setNameFirst(event.target.value)} disabled={submitting} required />
+                            {error && (
+                                <p
+                                    role="alert"
+                                    className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                                >
+                                    {error}
+                                </p>
+                            )}
+                            <label className="block text-sm font-medium text-slate-700">
+                                Imię
+                                <input
+                                    className={inputClass}
+                                    value={nameFirst}
+                                    onChange={(event) => setNameFirst(event.target.value)}
+                                    disabled={submitting}
+                                    required
+                                />
                             </label>
-                            <label className="block text-sm font-medium text-slate-700">Nazwisko
-                                <input className={inputClass} value={nameLast} onChange={(event) => setNameLast(event.target.value)} disabled={submitting} required />
+                            <label className="block text-sm font-medium text-slate-700">
+                                Nazwisko
+                                <input
+                                    className={inputClass}
+                                    value={nameLast}
+                                    onChange={(event) => setNameLast(event.target.value)}
+                                    disabled={submitting}
+                                    required
+                                />
                             </label>
-                            <label className="block text-sm font-medium text-slate-700">Hasło
-                                <input className={inputClass} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={submitting} required />
+                            <label className="block text-sm font-medium text-slate-700">
+                                Hasło
+                                <input
+                                    className={inputClass}
+                                    type="password"
+                                    autoComplete="new-password"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    disabled={submitting}
+                                    required
+                                />
                             </label>
                             <label className="flex items-start gap-3 text-sm text-slate-700">
-                                <input className="mt-1" type="checkbox" checked={acceptedRules} onChange={(event) => setAcceptedRules(event.target.checked)} disabled={submitting} />
+                                <input
+                                    className="mt-1"
+                                    type="checkbox"
+                                    checked={acceptedRules}
+                                    onChange={(event) => setAcceptedRules(event.target.checked)}
+                                    disabled={submitting}
+                                />
                                 Akceptuję regulamin konkursu.
                             </label>
                             <label className="flex items-start gap-3 text-sm text-slate-700">
-                                <input className="mt-1" type="checkbox" checked={acceptedRodo} onChange={(event) => setAcceptedRodo(event.target.checked)} disabled={submitting} />
+                                <input
+                                    className="mt-1"
+                                    type="checkbox"
+                                    checked={acceptedRodo}
+                                    onChange={(event) => setAcceptedRodo(event.target.checked)}
+                                    disabled={submitting}
+                                />
                                 Wyrażam zgodę na przetwarzanie danych osobowych.
                             </label>
-                            <Button type="submit" text={submitting ? "Zapisywanie…" : "Utwórz konto"} disabled={submitting} className="w-full" />
+                            <Button
+                                type="submit"
+                                text={submitting ? "Zapisywanie…" : "Utwórz konto"}
+                                disabled={submitting}
+                                className="w-full"
+                            />
                         </form>
                     )}
                 </section>
