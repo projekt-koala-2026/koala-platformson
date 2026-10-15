@@ -19,9 +19,7 @@ const KoalicjaScreen = () => {
                 navigate
             );
             if (data)
-                setKoalicjants(
-                    data.filter((person) => person.isVisible).map(adaptKoalicjant)
-                );
+                setKoalicjants(data.filter((person) => person.isVisible).map(adaptKoalicjant));
         };
         void load();
     }, [navigate]);

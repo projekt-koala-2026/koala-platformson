@@ -50,23 +50,20 @@ const EditKoalicjantInfo = () => {
             null,
             "GET",
             navigate
-        ).then(
-            (result) => {
-                if (!active) return;
-                if (result.data) {
-                    setKoalicjants(result.data.map(adaptKoalicjant));
-                    setRawKoalicjants(
-                        Object.fromEntries(result.data.map((person) => [person.id, person]))
-                    );
-                }
-                else if (result.status !== 404)
-                    setFeedback({
-                        tone: "error",
-                        message: "Nie udało się pobrać listy koalicjantów.",
-                    });
-                setLoading(false);
-            }
-        );
+        ).then((result) => {
+            if (!active) return;
+            if (result.data) {
+                setKoalicjants(result.data.map(adaptKoalicjant));
+                setRawKoalicjants(
+                    Object.fromEntries(result.data.map((person) => [person.id, person]))
+                );
+            } else if (result.status !== 404)
+                setFeedback({
+                    tone: "error",
+                    message: "Nie udało się pobrać listy koalicjantów.",
+                });
+            setLoading(false);
+        });
         return () => {
             active = false;
         };
@@ -279,7 +276,10 @@ const EditKoalicjantInfo = () => {
                                 <input
                                     value={form.nameFirst}
                                     onChange={(event) =>
-                                        setForm((value) => ({ ...value, nameFirst: event.target.value }))
+                                        setForm((value) => ({
+                                            ...value,
+                                            nameFirst: event.target.value,
+                                        }))
                                     }
                                     className={inputClass}
                                     required
@@ -287,11 +287,32 @@ const EditKoalicjantInfo = () => {
                             </label>
                             <label className="block text-sm font-medium text-slate-700">
                                 Nazwisko *
-                                <input value={form.nameLast} onChange={(event) => setForm((value) => ({ ...value, nameLast: event.target.value }))} className={inputClass} required />
+                                <input
+                                    value={form.nameLast}
+                                    onChange={(event) =>
+                                        setForm((value) => ({
+                                            ...value,
+                                            nameLast: event.target.value,
+                                        }))
+                                    }
+                                    className={inputClass}
+                                    required
+                                />
                             </label>
                             <label className="block text-sm font-medium text-slate-700">
                                 E-mail *
-                                <input type="email" value={form.email} onChange={(event) => setForm((value) => ({ ...value, email: event.target.value }))} className={inputClass} required />
+                                <input
+                                    type="email"
+                                    value={form.email}
+                                    onChange={(event) =>
+                                        setForm((value) => ({
+                                            ...value,
+                                            email: event.target.value,
+                                        }))
+                                    }
+                                    className={inputClass}
+                                    required
+                                />
                             </label>
                             <label className="block text-sm font-medium text-slate-700">
                                 Adres zdjęcia *

@@ -31,9 +31,7 @@ const HomeScreen = () => {
             setPosts((postData ?? []).filter((post) => post.isVisible).map(adaptPost));
             setEditions(editionData ? [adaptEdition(editionData)] : []);
             setLoadedAt(Date.now());
-            setHasError(
-                postsResult.status !== 200 || editionResult.status !== 200
-            );
+            setHasError(postsResult.status !== 200 || editionResult.status !== 200);
             setLoading(false);
         });
         return () => {

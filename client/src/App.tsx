@@ -4,11 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TopLoadingBar from "./components/TopLoadingBar";
 import { LoadingProvider } from "./contexts/LoadingContext";
 import type { Role } from "./types/models";
-import {
-    getAuthArea,
-    getOrganizationHomePath,
-    getUserRoles,
-} from "./utils/authService";
+import { getAuthArea, getOrganizationHomePath, getUserRoles } from "./utils/authService";
 
 const AdminLoginScreen = lazy(() => import("./screens/admin/AdminLoginScreen"));
 const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));

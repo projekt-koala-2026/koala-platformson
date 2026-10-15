@@ -3,7 +3,13 @@ import { FaFilePdf, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
-import type { ApiEdition, ApiStaticPage, Edition, ProblemFile, ProblemsByEdition } from "../../types/models";
+import type {
+    ApiEdition,
+    ApiStaticPage,
+    Edition,
+    ProblemFile,
+    ProblemsByEdition,
+} from "../../types/models";
 import { adaptEdition, staticPageProblems } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import {
@@ -41,7 +47,12 @@ const EditProblemsScreen = () => {
 
         let active = true;
         void Promise.all([
-            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
+            apiRequest<ApiEdition[]>(
+                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+                null,
+                "GET",
+                navigate
+            ),
             apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
         ]).then(([editionsData, staticPages]) => {
             if (!active) return;
@@ -126,7 +137,9 @@ const EditProblemsScreen = () => {
         }
 
         const fileUrl =
-            uploadedFile.filePath || uploadedFile.url || `/api/koala/content/${uploadedFile.id}.pdf`;
+            uploadedFile.filePath ||
+            uploadedFile.url ||
+            `/api/koala/content/${uploadedFile.id}.pdf`;
         const newProblem: ProblemFile = {
             id: uploadedFile.id,
             title: selectedFile.name,
