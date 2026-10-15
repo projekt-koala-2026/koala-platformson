@@ -87,7 +87,7 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> JoinTeamWithCode([FromRoute] string join_code)
         {
             var response = await _teamService.JoinTeamWithCodeAsync(User, join_code);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpGet("me")]
@@ -110,7 +110,7 @@ namespace koala.src.Modules.Account.Controllers
         [HttpGet("{id}/rodos")]
         public async Task<IActionResult> GetTeamRodos([FromRoute] Guid id, [FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _rodoService.GetRodosAsync(User, id,pageQueryDto);
+            (var responseData, var responsePagination) = await _rodoService.GetRodosAsync(User, id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<RodoDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
         [Authorize]

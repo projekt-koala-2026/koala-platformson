@@ -8,7 +8,9 @@ namespace koala.src.Modules.Account.Dtos
         string Name,
         bool IsCensored,
         DateTime CreatedAt,
-        List<TeamMemberDto> TeamMembers,
+        UserDto TeamCaptain,
+        UserDto? TeamAdmin,
+        List<TeamMemberDto>? TeamMembers,
         TeamJoinCodeDto? JoinCode
     );
 }

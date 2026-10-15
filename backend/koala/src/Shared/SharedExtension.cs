@@ -27,7 +27,7 @@ namespace koala.src.Shared
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                     options.Cookie.SameSite = SameSiteMode.Lax;
-                    options.ExpireTimeSpan = TimeSpan.FromHours(2);
+                    options.ExpireTimeSpan = TimeSpan.FromHours(12);
 
                     options.Events = new CookieAuthenticationEvents
                     {
