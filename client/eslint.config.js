@@ -28,7 +28,10 @@ export default defineConfig([
         rules: {
             "no-unused-vars": "off",
             "no-undef": "off",
-            "@typescript-eslint/no-unused-vars": ["warn", { varsIgnorePattern: "^[A-Z_]", argsIgnorePattern: "^_" }],
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                { varsIgnorePattern: "^[A-Z_]", argsIgnorePattern: "^_" },
+            ],
             "react-hooks/set-state-in-effect": "warn",
             "react-refresh/only-export-components": ["error", { allowExportNames: ["useLoading"] }],
         },

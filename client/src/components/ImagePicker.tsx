@@ -34,11 +34,20 @@ const ImagePicker = forwardRef<ImagePickerHandle, ImagePickerProps>(
 
         useEffect(() => {
             let active = true;
-            void apiRequest<ApiPublicFile[]>(`${apiEndpoints.publicFiles}?${firstPage}`, null, "GET", navigate).then((data) => {
+            void apiRequest<ApiPublicFile[]>(
+                `${apiEndpoints.publicFiles}?${firstPage}`,
+                null,
+                "GET",
+                navigate
+            ).then((data) => {
                 if (!active) return;
                 if (data) {
                     const images = data
-                        .filter((file) => [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(file.type.toLowerCase()))
+                        .filter((file) =>
+                            [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(
+                                file.type.toLowerCase()
+                            )
+                        )
                         .map(adaptPublicFile);
                     setImages(
                         images.sort((first, second) =>

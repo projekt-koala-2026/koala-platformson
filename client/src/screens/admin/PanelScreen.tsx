@@ -42,12 +42,14 @@ const PanelScreen = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<User[]>(`${USERS_ENDPOINT}?${firstPage}`, null, "GET", navigate).then(({ data }) => {
-            if (!active) return;
-            if (data) setUsers(sortUsers(data));
-            else setFeedback({ tone: "error", message: "Nie udało się pobrać użytkowników." });
-            setLoading(false);
-        });
+        void apiRequestResult<User[]>(`${USERS_ENDPOINT}?${firstPage}`, null, "GET", navigate).then(
+            ({ data }) => {
+                if (!active) return;
+                if (data) setUsers(sortUsers(data));
+                else setFeedback({ tone: "error", message: "Nie udało się pobrać użytkowników." });
+                setLoading(false);
+            }
+        );
         return () => {
             active = false;
         };
@@ -99,7 +101,10 @@ const PanelScreen = () => {
         setEmail("");
         setNewRoles([]);
         setCreateError("");
-        setFeedback({ tone: "success", message: `Wysłano zaproszenie na adres ${normalizedEmail}.` });
+        setFeedback({
+            tone: "success",
+            message: `Wysłano zaproszenie na adres ${normalizedEmail}.`,
+        });
     };
 
     const deleteUser = async (user: User) => {

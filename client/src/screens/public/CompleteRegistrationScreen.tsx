@@ -79,33 +79,85 @@ const CompleteRegistrationScreen = () => {
                     <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
                         Rejestracja
                     </p>
-                    <h1 className="mt-2 text-2xl font-bold text-slate-900">Dokończ tworzenie konta</h1>
+                    <h1 className="mt-2 text-2xl font-bold text-slate-900">
+                        Dokończ tworzenie konta
+                    </h1>
 
                     {!token ? (
-                        <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        <p
+                            role="alert"
+                            className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                        >
                             W adresie brakuje tokenu rejestracyjnego.
                         </p>
                     ) : (
                         <form onSubmit={submit} className="mt-6 space-y-4">
-                            {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-                            <label className="block text-sm font-medium text-slate-700">Imię
-                                <input className={inputClass} value={nameFirst} onChange={(event) => setNameFirst(event.target.value)} disabled={submitting} required />
+                            {error && (
+                                <p
+                                    role="alert"
+                                    className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                                >
+                                    {error}
+                                </p>
+                            )}
+                            <label className="block text-sm font-medium text-slate-700">
+                                Imię
+                                <input
+                                    className={inputClass}
+                                    value={nameFirst}
+                                    onChange={(event) => setNameFirst(event.target.value)}
+                                    disabled={submitting}
+                                    required
+                                />
                             </label>
-                            <label className="block text-sm font-medium text-slate-700">Nazwisko
-                                <input className={inputClass} value={nameLast} onChange={(event) => setNameLast(event.target.value)} disabled={submitting} required />
+                            <label className="block text-sm font-medium text-slate-700">
+                                Nazwisko
+                                <input
+                                    className={inputClass}
+                                    value={nameLast}
+                                    onChange={(event) => setNameLast(event.target.value)}
+                                    disabled={submitting}
+                                    required
+                                />
                             </label>
-                            <label className="block text-sm font-medium text-slate-700">Hasło
-                                <input className={inputClass} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={submitting} required />
+                            <label className="block text-sm font-medium text-slate-700">
+                                Hasło
+                                <input
+                                    className={inputClass}
+                                    type="password"
+                                    autoComplete="new-password"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    disabled={submitting}
+                                    required
+                                />
                             </label>
                             <label className="flex items-start gap-3 text-sm text-slate-700">
-                                <input className="mt-1" type="checkbox" checked={acceptedRules} onChange={(event) => setAcceptedRules(event.target.checked)} disabled={submitting} />
+                                <input
+                                    className="mt-1"
+                                    type="checkbox"
+                                    checked={acceptedRules}
+                                    onChange={(event) => setAcceptedRules(event.target.checked)}
+                                    disabled={submitting}
+                                />
                                 Akceptuję regulamin konkursu.
                             </label>
                             <label className="flex items-start gap-3 text-sm text-slate-700">
-                                <input className="mt-1" type="checkbox" checked={acceptedRodo} onChange={(event) => setAcceptedRodo(event.target.checked)} disabled={submitting} />
+                                <input
+                                    className="mt-1"
+                                    type="checkbox"
+                                    checked={acceptedRodo}
+                                    onChange={(event) => setAcceptedRodo(event.target.checked)}
+                                    disabled={submitting}
+                                />
                                 Wyrażam zgodę na przetwarzanie danych osobowych.
                             </label>
-                            <Button type="submit" text={submitting ? "Zapisywanie…" : "Utwórz konto"} disabled={submitting} className="w-full" />
+                            <Button
+                                type="submit"
+                                text={submitting ? "Zapisywanie…" : "Utwórz konto"}
+                                disabled={submitting}
+                                className="w-full"
+                            />
                         </form>
                     )}
                 </section>

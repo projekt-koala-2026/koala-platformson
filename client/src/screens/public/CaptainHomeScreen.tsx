@@ -6,7 +6,13 @@ import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import SchoolsTable from "../../components/SchoolsTable";
-import type { ApiSchool, ApiTeam, ApiTeamJoinCode, ApiTeamMember, School } from "../../types/models";
+import type {
+    ApiSchool,
+    ApiTeam,
+    ApiTeamJoinCode,
+    ApiTeamMember,
+    School,
+} from "../../types/models";
 import { adaptSchool } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequestResult } from "../../utils/apiFetcher";
@@ -37,8 +43,18 @@ const CaptainHomeScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequestResult<ApiTeam[]>(`${apiEndpoints.teams}/me?${firstPage}`, null, "GET", navigate),
-            apiRequestResult<ApiSchool[]>(`${apiEndpoints.schools}?${firstPage}`, null, "GET", navigate),
+            apiRequestResult<ApiTeam[]>(
+                `${apiEndpoints.teams}/me?${firstPage}`,
+                null,
+                "GET",
+                navigate
+            ),
+            apiRequestResult<ApiSchool[]>(
+                `${apiEndpoints.schools}?${firstPage}`,
+                null,
+                "GET",
+                navigate
+            ),
         ]).then(([teamResult, schoolResult]) => {
             if (!active) return;
             const loadedTeams = teamResult.data ?? [];
@@ -49,7 +65,10 @@ const CaptainHomeScreen = () => {
             setSchoolId(loadedTeam?.schoolId ?? "");
             setSchools((schoolResult.data ?? []).map(adaptSchool));
             if (!teamResult.data || !schoolResult.data) {
-                setFeedback({ tone: "error", message: "Nie udało się pobrać wszystkich danych panelu drużyny." });
+                setFeedback({
+                    tone: "error",
+                    message: "Nie udało się pobrać wszystkich danych panelu drużyny.",
+                });
             }
             setLoading(false);
         });
@@ -154,7 +173,10 @@ const CaptainHomeScreen = () => {
             navigate
         );
         if (!data) {
-            setFeedback({ tone: "error", message: "Nie udało się dołączyć do drużyny. Sprawdź kod." });
+            setFeedback({
+                tone: "error",
+                message: "Nie udało się dołączyć do drużyny. Sprawdź kod.",
+            });
             setSaving(false);
             return;
         }
@@ -166,14 +188,21 @@ const CaptainHomeScreen = () => {
         );
         if (refreshed.data) {
             const previousIds = new Set(teams.map((item) => item.id));
-            const joinedTeam = refreshed.data.find((item) => !previousIds.has(item.id)) ?? refreshed.data[0] ?? null;
+            const joinedTeam =
+                refreshed.data.find((item) => !previousIds.has(item.id)) ??
+                refreshed.data[0] ??
+                null;
             setTeams(refreshed.data);
             setTeam(joinedTeam);
             setTeamName(joinedTeam?.name ?? "");
             setSchoolId(joinedTeam?.schoolId ?? "");
             setJoinCode("");
             setFeedback({ tone: "success", message: "Dołączono do drużyny." });
-        } else setFeedback({ tone: "error", message: "Dołączono do drużyny, ale nie udało się odświeżyć jej danych." });
+        } else
+            setFeedback({
+                tone: "error",
+                message: "Dołączono do drużyny, ale nie udało się odświeżyć jej danych.",
+            });
         setSaving(false);
     };
 
@@ -206,7 +235,10 @@ const CaptainHomeScreen = () => {
             navigate
         );
         if (status === 200 || status === 204) {
-            const updated = { ...team, teamMembers: team.teamMembers.filter((item) => item.id !== memberId) };
+            const updated = {
+                ...team,
+                teamMembers: team.teamMembers.filter((item) => item.id !== memberId),
+            };
             setTeam(updated);
             setTeams((items) => items.map((item) => (item.id === updated.id ? updated : item)));
             setFeedback({ tone: "success", message: "Członek został usunięty z drużyny." });
@@ -215,7 +247,11 @@ const CaptainHomeScreen = () => {
     };
 
     const deleteTeam = async () => {
-        if (!team || !window.confirm(`Usunąć drużynę „${team.name}”? Tej operacji nie można cofnąć.`)) return;
+        if (
+            !team ||
+            !window.confirm(`Usunąć drużynę „${team.name}”? Tej operacji nie można cofnąć.`)
+        )
+            return;
         setSaving(true);
         const { status } = await apiRequestResult<null>(
             `${apiEndpoints.teams}/${team.id}`,
@@ -238,75 +274,222 @@ const CaptainHomeScreen = () => {
             <PublicHeader navigate={navigate} />
             <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
                 <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Panel drużyn</p>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                        Panel drużyn
+                    </p>
                     <h1 className="mt-2 text-3xl font-bold text-slate-900">Twoje drużyny</h1>
-                    <p className="mt-3 max-w-2xl text-slate-600">Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.</p>
+                    <p className="mt-3 max-w-2xl text-slate-600">
+                        Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
+                    </p>
                 </header>
                 {teams.length > 1 && (
                     <label className="mb-6 block max-w-xl text-sm font-medium text-slate-700">
                         Wyświetlana drużyna
-                        <select value={team?.id ?? ""} onChange={(event) => { const selected = teams.find((item) => item.id === event.target.value); if (selected) selectTeam(selected); }} className={inputClass}>
-                            {teams.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                        <select
+                            value={team?.id ?? ""}
+                            onChange={(event) => {
+                                const selected = teams.find(
+                                    (item) => item.id === event.target.value
+                                );
+                                if (selected) selectTeam(selected);
+                            }}
+                            className={inputClass}
+                        >
+                            {teams.map((item) => (
+                                <option key={item.id} value={item.id}>
+                                    {item.name}
+                                </option>
+                            ))}
                         </select>
                     </label>
                 )}
                 {team && roles.isGuardian && (
-                    <form onSubmit={joinTeam} className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <form
+                        onSubmit={joinTeam}
+                        className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                    >
                         <h2 className="font-semibold text-slate-900">Dołącz do kolejnej drużyny</h2>
-                        <div className="mt-3 flex flex-col gap-3 sm:flex-row"><input value={joinCode} onChange={(event) => setJoinCode(event.target.value)} className={`${inputClass} mt-0 font-mono uppercase`} placeholder="Kod dołączenia" disabled={saving} required /><Button type="submit" text={saving ? "Dołączanie…" : "Dołącz"} disabled={saving} /></div>
+                        <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                            <input
+                                value={joinCode}
+                                onChange={(event) => setJoinCode(event.target.value)}
+                                className={`${inputClass} mt-0 font-mono uppercase`}
+                                placeholder="Kod dołączenia"
+                                disabled={saving}
+                                required
+                            />
+                            <Button
+                                type="submit"
+                                text={saving ? "Dołączanie…" : "Dołącz"}
+                                disabled={saving}
+                            />
+                        </div>
                     </form>
                 )}
                 {feedback && (
-                    <p role={feedback.tone === "error" ? "alert" : "status"} className={`mb-6 rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}>
+                    <p
+                        role={feedback.tone === "error" ? "alert" : "status"}
+                        className={`mb-6 rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}
+                    >
                         {feedback.message}
                     </p>
                 )}
                 {loading ? (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-14 text-center text-sm text-slate-500 shadow-sm">Ładowanie danych drużyny…</div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-14 text-center text-sm text-slate-500 shadow-sm">
+                        Ładowanie danych drużyny…
+                    </div>
                 ) : team ? (
                     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                             {editingName ? (
                                 <form onSubmit={submitTeam} className="space-y-4">
-                                    <label className="block text-sm font-medium text-slate-700">Nazwa drużyny<input className={inputClass} value={teamName} onChange={(event) => setTeamName(event.target.value)} disabled={saving} required /></label>
-                                    <div className="flex gap-3"><Button type="submit" text={saving ? "Zapisywanie…" : "Zapisz nazwę"} disabled={saving} /><button type="button" className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100" onClick={() => { setTeamName(team.name); setEditingName(false); }}>Anuluj</button></div>
+                                    <label className="block text-sm font-medium text-slate-700">
+                                        Nazwa drużyny
+                                        <input
+                                            className={inputClass}
+                                            value={teamName}
+                                            onChange={(event) => setTeamName(event.target.value)}
+                                            disabled={saving}
+                                            required
+                                        />
+                                    </label>
+                                    <div className="flex gap-3">
+                                        <Button
+                                            type="submit"
+                                            text={saving ? "Zapisywanie…" : "Zapisz nazwę"}
+                                            disabled={saving}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                                            onClick={() => {
+                                                setTeamName(team.name);
+                                                setEditingName(false);
+                                            }}
+                                        >
+                                            Anuluj
+                                        </button>
+                                    </div>
                                 </form>
                             ) : (
                                 <>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Zarejestrowana drużyna</p>
-                                    <h2 className="mt-2 text-2xl font-bold text-slate-900">{team.name}</h2>
-                                    <p className="mt-2 text-sm text-slate-500">{selectedSchool?.name ?? `Szkoła: ${team.schoolId}`}</p>
-                                    <p className="mt-1 text-sm text-slate-500">Status nazwy: {team.isCensored ? "oczekuje na akceptację" : "zaakceptowana"}</p>
-                                    {isCaptain && <Button text="Edytuj nazwę" onClick={() => setEditingName(true)} className="mt-5" />}
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                        Zarejestrowana drużyna
+                                    </p>
+                                    <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                                        {team.name}
+                                    </h2>
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        {selectedSchool?.name ?? `Szkoła: ${team.schoolId}`}
+                                    </p>
+                                    <p className="mt-1 text-sm text-slate-500">
+                                        Status nazwy:{" "}
+                                        {team.isCensored
+                                            ? "oczekuje na akceptację"
+                                            : "zaakceptowana"}
+                                    </p>
+                                    {isCaptain && (
+                                        <Button
+                                            text="Edytuj nazwę"
+                                            onClick={() => setEditingName(true)}
+                                            className="mt-5"
+                                        />
+                                    )}
                                 </>
                             )}
                         </section>
                         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-slate-900">Kod dołączenia</h2>
                             {team.joinCode ? (
-                                <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-center"><p className="font-mono text-2xl font-bold tracking-widest text-emerald-900">{team.joinCode.joinCode}</p><p className="mt-2 text-xs text-emerald-700">Ważny do {new Date(team.joinCode.expiresAt).toLocaleString("pl-PL")}</p></div>
-                            ) : <p className="mt-3 text-sm text-slate-500">Brak aktywnego kodu.</p>}
-                            {isCaptain && <Button text={team.joinCode ? "Wygeneruj nowy kod" : "Wygeneruj kod"} onClick={() => void generateJoinCode()} disabled={saving} className="mt-4" />}
+                                <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-center">
+                                    <p className="font-mono text-2xl font-bold tracking-widest text-emerald-900">
+                                        {team.joinCode.joinCode}
+                                    </p>
+                                    <p className="mt-2 text-xs text-emerald-700">
+                                        Ważny do{" "}
+                                        {new Date(team.joinCode.expiresAt).toLocaleString("pl-PL")}
+                                    </p>
+                                </div>
+                            ) : (
+                                <p className="mt-3 text-sm text-slate-500">Brak aktywnego kodu.</p>
+                            )}
+                            {isCaptain && (
+                                <Button
+                                    text={team.joinCode ? "Wygeneruj nowy kod" : "Wygeneruj kod"}
+                                    onClick={() => void generateJoinCode()}
+                                    disabled={saving}
+                                    className="mt-4"
+                                />
+                            )}
                         </section>
                         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-                            <h2 className="text-lg font-semibold text-slate-900">Członkowie drużyny</h2>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Członkowie drużyny
+                            </h2>
                             <ul className="mt-4 divide-y divide-slate-100">
                                 {team.teamMembers.map((member) => (
-                                    <li key={member.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                                        <div><p className="font-mono text-sm text-slate-700">{member.id}</p><p className="text-xs text-slate-500">{member.position}</p></div>
-                                        {isCaptain && member.position !== "CAPTAIN" && <button type="button" disabled={saving} onClick={() => void removeMember(member.id)} className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50">Usuń z drużyny</button>}
+                                    <li
+                                        key={member.id}
+                                        className="flex flex-wrap items-center justify-between gap-3 py-3"
+                                    >
+                                        <div>
+                                            <p className="font-mono text-sm text-slate-700">
+                                                {member.id}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {member.position}
+                                            </p>
+                                        </div>
+                                        {isCaptain && member.position !== "CAPTAIN" && (
+                                            <button
+                                                type="button"
+                                                disabled={saving}
+                                                onClick={() => void removeMember(member.id)}
+                                                className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                                            >
+                                                Usuń z drużyny
+                                            </button>
+                                        )}
                                     </li>
                                 ))}
                             </ul>
-                            {isCaptain && <Button text={saving ? "Usuwanie…" : "Usuń drużynę"} onClick={() => void deleteTeam()} disabled={saving} className="mt-6 bg-red-600 hover:bg-red-700 focus:ring-red-500" />}
+                            {isCaptain && (
+                                <Button
+                                    text={saving ? "Usuwanie…" : "Usuń drużynę"}
+                                    onClick={() => void deleteTeam()}
+                                    disabled={saving}
+                                    className="mt-6 bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                                />
+                            )}
                         </section>
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        <form onSubmit={joinTeam} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <h2 className="text-xl font-semibold text-slate-900">Dołącz do drużyny</h2>
-                            <p className="mt-1 text-sm text-slate-500">Wpisz kod otrzymany od kapitana.</p>
-                            <div className="mt-4 flex flex-col gap-3 sm:flex-row"><input value={joinCode} onChange={(event) => setJoinCode(event.target.value)} className={`${inputClass} mt-0 font-mono uppercase`} placeholder="Kod dołączenia" disabled={saving} required /><Button type="submit" text={saving ? "Dołączanie…" : "Dołącz"} disabled={saving} /></div>
+                        <form
+                            onSubmit={joinTeam}
+                            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                        >
+                            <h2 className="text-xl font-semibold text-slate-900">
+                                Dołącz do drużyny
+                            </h2>
+                            <p className="mt-1 text-sm text-slate-500">
+                                Wpisz kod otrzymany od kapitana.
+                            </p>
+                            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                                <input
+                                    value={joinCode}
+                                    onChange={(event) => setJoinCode(event.target.value)}
+                                    className={`${inputClass} mt-0 font-mono uppercase`}
+                                    placeholder="Kod dołączenia"
+                                    disabled={saving}
+                                    required
+                                />
+                                <Button
+                                    type="submit"
+                                    text={saving ? "Dołączanie…" : "Dołącz"}
+                                    disabled={saving}
+                                />
+                            </div>
                         </form>
                         {roles.isCaptain && (
                             <Button text="Utwórz nową drużynę" onClick={openCreateTeam} />

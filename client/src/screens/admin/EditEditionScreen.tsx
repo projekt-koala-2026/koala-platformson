@@ -43,14 +43,23 @@ const EditEditionScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequestResult<ApiEdition[]>(`${EDITIONS_ENDPOINT}?${firstPage}&ShowActive=false`, null, "GET", navigate),
-            apiRequestResult<ApiEdition[]>(`${EDITIONS_ENDPOINT}?${firstPage}&ShowActive=true`, null, "GET", navigate),
+            apiRequestResult<ApiEdition[]>(
+                `${EDITIONS_ENDPOINT}?${firstPage}&ShowActive=false`,
+                null,
+                "GET",
+                navigate
+            ),
+            apiRequestResult<ApiEdition[]>(
+                `${EDITIONS_ENDPOINT}?${firstPage}&ShowActive=true`,
+                null,
+                "GET",
+                navigate
+            ),
         ]).then(([pastResult, activeResult]) => {
             if (!active) return;
-            const data = [
-                ...(activeResult.data ?? []),
-                ...(pastResult.data ?? []),
-            ].map(adaptEdition);
+            const data = [...(activeResult.data ?? []), ...(pastResult.data ?? [])].map(
+                adaptEdition
+            );
             setEditions(sortEditions(data));
             if (!pastResult.data && pastResult.status !== 200)
                 setFeedback({ tone: "error", message: "Nie udało się pobrać edycji." });
@@ -173,7 +182,9 @@ const EditEditionScreen = () => {
             });
         } else {
             const ended = adaptEdition(data);
-            setEditions((current) => sortEditions(current.map((item) => item.id === edition.id ? ended : item)));
+            setEditions((current) =>
+                sortEditions(current.map((item) => (item.id === edition.id ? ended : item)))
+            );
             setFeedback({ tone: "success", message: `Zakończono edycję „${edition.title}”.` });
         }
         setDeletingId(null);
@@ -259,7 +270,9 @@ const EditEditionScreen = () => {
                                                     <>
                                                         {" — "}
                                                         <time dateTime={edition.endDate}>
-                                                            {new Date(edition.endDate).toLocaleString("pl-PL")}
+                                                            {new Date(
+                                                                edition.endDate
+                                                            ).toLocaleString("pl-PL")}
                                                         </time>
                                                     </>
                                                 )}
@@ -283,7 +296,9 @@ const EditEditionScreen = () => {
                                                     text={
                                                         <>
                                                             <FaFlagCheckered />
-                                                            <span className="sr-only">Zakończ {edition.title}</span>
+                                                            <span className="sr-only">
+                                                                Zakończ {edition.title}
+                                                            </span>
                                                         </>
                                                     }
                                                     disabled={deletingId === edition.id}

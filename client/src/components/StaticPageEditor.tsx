@@ -16,11 +16,7 @@ interface StaticPageEditorProps {
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 
-const StaticPageEditor = ({
-    title,
-    description,
-    pageName,
-}: StaticPageEditorProps) => {
+const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProps) => {
     const navigate = useNavigate();
     const [markdownBody, setMarkdownBody] = useState("");
     const [page, setPage] = useState<ApiStaticPage | null>(null);
@@ -30,7 +26,12 @@ const StaticPageEditor = ({
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate).then(({ data }) => {
+        void apiRequestResult<ApiStaticPage[]>(
+            apiEndpoints.staticPages,
+            null,
+            "GET",
+            navigate
+        ).then(({ data }) => {
             if (!active) return;
             const matchingPage = data?.find((item) => item.name === pageName);
             if (matchingPage) {

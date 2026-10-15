@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { useLoading } from "../../contexts/LoadingContext";
 import type { SessionUser } from "../../types/models";
-import { apiRequestResult } from "../../utils/apiFetcher";
 import { apiEndpoints } from "../../utils/apiEndpoints";
+import { apiRequestResult } from "../../utils/apiFetcher";
 import {
     clearStoredSession,
     getAuthenticatedHomePath,

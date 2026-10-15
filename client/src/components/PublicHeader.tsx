@@ -1,13 +1,9 @@
 import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { apiRequestResult } from "../utils/apiFetcher";
 import { apiEndpoints } from "../utils/apiEndpoints";
-import {
-    clearStoredSession,
-    getOrganizationHomePath,
-    getUserRoles,
-} from "../utils/authService";
+import { apiRequestResult } from "../utils/apiFetcher";
+import { clearStoredSession, getOrganizationHomePath, getUserRoles } from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
