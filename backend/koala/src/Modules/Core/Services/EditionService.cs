@@ -17,26 +17,26 @@ namespace koala.src.Modules.Core.Services
             _db = db;
         }
 
-        public async Task<EditionDto> CreateEdition(ClaimsPrincipal? claimsPrincipal, CreateEditionDto createEditionDto)
+        public async Task<EditionDto> CreateEditionAsync(ClaimsPrincipal? claimsPrincipal, CreateEditionDto createEditionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             bool isThereAnActiveEdition = _db.Editions.Where(e=> e.ExpiresAt == null).AsNoTracking().Any(); 
 
             if(isThereAnActiveEdition)
             {
-                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists,"There is already an active edition, canot create a new one without ending last one first");
+                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists,"There is already an active edition, cannot create a new one without ending last one first");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -55,19 +55,19 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
         }
 
-        public async Task<EditionDto> UpdateEdition(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateEditionNameDto updateEditionNameDto)
+        public async Task<EditionDto> UpdateEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateEditionNameDto updateEditionNameDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e=> e.Id == id); 
@@ -83,19 +83,19 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
         }
 
-        public async Task<EditionDto> ExpireEdition(ClaimsPrincipal? claimsPrincipal, Guid id)
+        public async Task<EditionDto> ExpireEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e=> e.Id == id); 
@@ -113,7 +113,7 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
         }
 
-        public async Task<(List<EditionDto>, ApiPagination)> GetEditions(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, EditionQueryDto editionQueryDto)
+        public async Task<(List<EditionDto>, ApiPagination)> GetEditionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, EditionQueryDto editionQueryDto)
         {
             var query = _db.Editions.AsNoTracking().AsQueryable();
 
@@ -145,7 +145,7 @@ namespace koala.src.Modules.Core.Services
             return (editions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
         }
 
-        public async Task<EditionDto> GetActiveEdition(ClaimsPrincipal? claimsPrincipal)
+        public async Task<EditionDto> GetActiveEditionAsync(ClaimsPrincipal? claimsPrincipal)
         {
             var edition = await _db.Editions.AsNoTracking().FirstOrDefaultAsync(e => e.ExpiresAt == null);
 

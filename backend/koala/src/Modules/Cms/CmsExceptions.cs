@@ -48,7 +48,7 @@ namespace koala.src.Modules.Cms
                 httpContext.Response.StatusCode = statusCode;
                 httpContext.Response.ContentType = "application/json";
 
-                var response = new ApiResponseWraper<object>(
+                var response = new ApiResponseWrapper<object>(
                     Success: false,
                     TimeStamp: DateTime.UtcNow,
                     Error: apiError,

@@ -14,7 +14,7 @@ namespace koala.src.Modules.Core.Services
             _db = db;
         }
 
-        public async Task<_EditionDto?> Internal_GetTheActiveEdition()
+        public async Task<_EditionDto?> Internal_GetTheActiveEditionAsync()
         {
             var edition = await _db.Editions.AsNoTracking().FirstOrDefaultAsync(e => e.ExpiresAt == null);
 
@@ -27,7 +27,7 @@ namespace koala.src.Modules.Core.Services
             return new _EditionDto(edition.Id,edition.Name,edition.CreatedAt,edition.ExpiresAt);
         }
 
-        public async Task<bool> Internal_ExistSchool(Guid id)
+        public async Task<bool> Internal_ExistSchoolAsync(Guid id)
         {
             var school = await _db.Schools.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
 

@@ -135,7 +135,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                         new
                         {
                             Id = new Guid("01a027c5-d599-73de-bd5c-18c05fc3fa53"),
-                            Name = "ORGANIZATION_REVIUER"
+                            Name = "ORGANIZATION_REVIEWER"
                         },
                         new
                         {

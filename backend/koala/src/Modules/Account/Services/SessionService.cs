@@ -18,7 +18,7 @@ namespace koala.src.Modules.Account.Services
             _db = db;
             _cache = cache;
         }
-        public async Task<_SessionResponseDto?> CreateSessionAsync(LoginRequestDto requestDto)
+        public async Task<_SessionResponseDto> CreateSessionAsync(LoginRequestDto requestDto)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email && u.Verified == true);
             if(user == null)
@@ -30,7 +30,7 @@ namespace koala.src.Modules.Account.Services
 
             if(!Verified)
             {
-                throw new AccountException(AccountErrorCodes.IncorectPassword,"Incorect password");
+                throw new AccountException(AccountErrorCodes.IncorrectPassword,"Incorrect password.");
             }
 
             if(NeedsRehash)
@@ -84,6 +84,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.SessionNotFound,"Invalid session id");
             }
 
+            await _cache.RemoveKeyAsync($"koala:account:Session:{session.Token}");
             _db.Sessions.Remove(session);
             await _db.SaveChangesAsync();
         }
@@ -128,11 +129,10 @@ namespace koala.src.Modules.Account.Services
                 .Where(s => s.UserId == userId && s.Active == true)
                 .ToListAsync();
 
-            if(sessions == null)
+            foreach (var session in sessions)
             {
-                throw new AccountException(AccountErrorCodes.SessionNotFound,"No sessions exist for user");
+                await _cache.RemoveKeyAsync($"koala:account:Session:{session.Token}");
             }
-
             _db.Sessions.RemoveRange(sessions);
             await _db.SaveChangesAsync();
         }

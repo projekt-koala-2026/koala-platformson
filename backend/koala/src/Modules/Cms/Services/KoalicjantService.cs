@@ -19,7 +19,7 @@ namespace koala.src.Modules.Cms.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User not loged in");
+                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
@@ -37,7 +37,7 @@ namespace koala.src.Modules.Cms.Services
 
             if(!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbiden, "User does not have permision");
+                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission.");
             }
 
             if(isNull)
@@ -51,7 +51,7 @@ namespace koala.src.Modules.Cms.Services
             koalicjant.NameLast = requestDto.NameLast;
             koalicjant.Email = requestDto.Email;
             koalicjant.ContentJson = requestDto.ContentJson;
-            koalicjant.IsVisiable = requestDto.IsVisiable;
+            koalicjant.IsVisible = requestDto.IsVisible;
             koalicjant.UpdatedAt = timeNow;
             koalicjant.Version = requestDto.Version;
 
@@ -64,7 +64,7 @@ namespace koala.src.Modules.Cms.Services
                 koalicjant.NameLast,
                 koalicjant.Email,
                 koalicjant.ContentJson,
-                koalicjant.IsVisiable,
+                koalicjant.IsVisible,
                 koalicjant.UpdatedAt,
                 koalicjant.Version
             );
@@ -79,7 +79,7 @@ namespace koala.src.Modules.Cms.Services
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                query = query.Where(k => k.IsVisiable == true);
+                query = query.Where(k => k.IsVisible == true);
             }
 
             var queryResults = await query.ToListAsync();
@@ -93,7 +93,7 @@ namespace koala.src.Modules.Cms.Services
                         k.NameLast,
                         k.Email,
                         k.ContentJson,
-                        k.IsVisiable,
+                        k.IsVisible,
                         k.UpdatedAt,
                         k.Version
                     )
@@ -111,7 +111,7 @@ namespace koala.src.Modules.Cms.Services
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                query = query.Where(k => k.IsVisiable == true);
+                query = query.Where(k => k.IsVisible == true);
             }
 
             var queryResult = await query.FirstOrDefaultAsync(k => k.Id == id);
@@ -122,7 +122,7 @@ namespace koala.src.Modules.Cms.Services
                     queryResult.NameLast,
                     queryResult.Email,
                     queryResult.ContentJson,
-                    queryResult.IsVisiable,
+                    queryResult.IsVisible,
                     queryResult.UpdatedAt,
                     queryResult.Version
                 );

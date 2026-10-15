@@ -18,7 +18,7 @@ namespace koala.src.Modules.Account.Services
             _db = db;
             _emailService = emailService;
         }
-        public async Task ConsumeRegisterLink(Guid token, ConsumeRegisterLinkRequestDto requestDto)
+        public async Task ConsumeRegisterLinkAsync(Guid token, ConsumeRegisterLinkRequestDto requestDto)
         {
             DateTime timeNow = DateTime.UtcNow;
             var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.Active == true) && (l.Type == "REGISTER"));
@@ -37,10 +37,9 @@ namespace koala.src.Modules.Account.Services
             {
                 link.Active = false;
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User conected to that link no longer exists");
+                throw new AccountException(AccountErrorCodes.UserNotFound,"User connected to that link no longer exists");
             }
             link.Active = false;
-            //TODO: HASH THE PASSWORD
             user.NameFirst = requestDto.NameFirst;
             user.NameLast = requestDto.NameLast;
             user.PasswordHash = PasswordHasher.Hash(requestDto.Password);
@@ -52,7 +51,7 @@ namespace koala.src.Modules.Account.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task ConsumeResetPasswordLink(Guid token, ConsumeResetPasswordLinkRequestDto requestDto)
+        public async Task ConsumeResetPasswordLinkAsync(Guid token, ConsumeResetPasswordLinkRequestDto requestDto)
         {
             DateTime timeNow = DateTime.UtcNow;
             var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.Active == true) && (l.Type == "RESETPASSWORD"));
@@ -71,23 +70,30 @@ namespace koala.src.Modules.Account.Services
             {
                 link.Active = false;
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User conected to that link no longer exists");
+                throw new AccountException(AccountErrorCodes.UserNotFound,"User connected to that link no longer exists");
             }
             link.Active = false;
-            //TODO: HASH THE PASSWORD
             user.PasswordHash = PasswordHasher.Hash(requestDto.Password);
             await _db.SaveChangesAsync();
         }
 
-        public async Task GenerateResetPasswordLink(GenerateResetPasswordLinkRequestDto requestDto)
+        public async Task GenerateResetPasswordLinkAsync(GenerateResetPasswordLinkRequestDto requestDto)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email && u.Verified == true);
             if(user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User does not exist");
+                return;
             }
 
             DateTime timeNow = DateTime.UtcNow;
+
+            var previousLinks = await _db.Links
+                .Where(l => l.UserId == user.Id && l.Type == "RESETPASSWORD" && l.Active)
+                .ToListAsync();
+            foreach (var previousLink in previousLinks)
+            {
+                previousLink.Active = false;
+            }
 
             Link link = new Link
             {
@@ -103,11 +109,21 @@ namespace koala.src.Modules.Account.Services
             await _db.Links.AddAsync(link);
             await _db.SaveChangesAsync();
 
-            //SEND TO EMAIL FIXME:
-            await _emailService.SendPasswordResetEmailAsync(user.Email, link.Token.ToString());
+            var organizationAccount = await _db.UserRoles
+                .AnyAsync(userRole =>
+                    userRole.UserId == user.Id &&
+                    (userRole.Role.Name == "ORGANIZATION_ADMIN" ||
+                     userRole.Role.Name == "ORGANIZATION_EDITOR" ||
+                     userRole.Role.Name == "ORGANIZATION_REVIEWER"));
+
+            await _emailService.SendPasswordResetEmailAsync(
+                user.Email,
+                link.Token.ToString(),
+                organizationAccount ? "organization" : "team"
+            );
         }
 
-        public async Task<LinkListDto> GetActiveUserLinks(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<LinkListDto> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
@@ -131,7 +147,7 @@ namespace koala.src.Modules.Account.Services
             return new LinkListDto(links, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
         }
 
-        public async Task DeleteUserLink(ClaimsPrincipal? claimsPrincipal, Guid id)
+        public async Task DeleteUserLinkAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
@@ -158,7 +174,7 @@ namespace koala.src.Modules.Account.Services
             return;
         }
 
-        public async Task DeleteUserLinks(ClaimsPrincipal? claimsPrincipal)
+        public async Task DeleteUserLinksAsync(ClaimsPrincipal? claimsPrincipal)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
@@ -174,11 +190,6 @@ namespace koala.src.Modules.Account.Services
 
             var links = await _db.Links.Where(l=> l.UserId == userId && l.Active==true).ToListAsync();
             
-            if(links == null)
-            {
-                throw new AccountException(AccountErrorCodes.LinkNotFound,"Nothing to delete");
-            }
-
             _db.Links.RemoveRange(links);
             await _db.SaveChangesAsync();
 

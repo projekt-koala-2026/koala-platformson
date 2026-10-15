@@ -14,8 +14,8 @@ namespace koala.src.Modules.Account
         public const int TeamMemberNotFound = 204;
         public const int TeamJoinCodeNotFound = 205;
          public const int RodoNotFound = 206;
-        public const int IncorectPassword = 210;
-        public const int IncorectRoles = 211;
+        public const int IncorrectPassword = 210;
+        public const int IncorrectRoles = 211;
         public const int UserIsAPartOfTeamAlready = 220;
         public const int TeamMemberAlreadyExists = 221;
         public const int TeamMemberCountMax = 222;
@@ -55,13 +55,13 @@ namespace koala.src.Modules.Account
                     AccountErrorCodes._EXTERNAL_ActiveEditionNotFound => StatusCodes.Status404NotFound,
                     // 401 Unauthorized - Authentication and credential failures
                     AccountErrorCodes.SessionNotFound => StatusCodes.Status401Unauthorized,
-                    AccountErrorCodes.IncorectPassword => StatusCodes.Status401Unauthorized,
+                    AccountErrorCodes.IncorrectPassword => StatusCodes.Status401Unauthorized,
                     // 409 Conflict - State violations, duplicates, and capacity limits
                     AccountErrorCodes.UserIsAPartOfTeamAlready => StatusCodes.Status409Conflict,
                     AccountErrorCodes.TeamMemberAlreadyExists => StatusCodes.Status409Conflict,
                     AccountErrorCodes.TeamMemberCountMax => StatusCodes.Status409Conflict,
                     // 400 Bad Request - Payload validation failures (e.g., invalid role input during creation)
-                    AccountErrorCodes.IncorectRoles => StatusCodes.Status400BadRequest,
+                    AccountErrorCodes.IncorrectRoles => StatusCodes.Status400BadRequest,
                     _ => StatusCodes.Status400BadRequest
                 };
 
@@ -70,7 +70,7 @@ namespace koala.src.Modules.Account
                 httpContext.Response.StatusCode = statusCode;
                 httpContext.Response.ContentType = "application/json";
 
-                var response = new ApiResponseWraper<object>(
+                var response = new ApiResponseWrapper<object>(
                     Success: false,
                     TimeStamp: DateTime.UtcNow,
                     Error: apiError,

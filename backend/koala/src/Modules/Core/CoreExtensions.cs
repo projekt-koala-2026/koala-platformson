@@ -25,6 +25,7 @@ namespace koala.src.Modules.Core
             // 3. SERVICES
             services.AddScoped<ICoreModule, CoreService>();
             services.AddScoped<EditionService, EditionService>();
+            services.AddScoped<SchoolService, SchoolService>();
         
             // 4. EXCEPTION HANDLERS
             services.AddExceptionHandler<CoreExceptionHandler>();

@@ -23,14 +23,14 @@ namespace koala.src.Modules.Cms.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new CmsException(KoalaErrorCodes.Unauthenticated,"User not loged in");
+                throw new CmsException(KoalaErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbiden, "This user canot create a sponsor");
+                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             try
@@ -46,12 +46,6 @@ namespace koala.src.Modules.Cms.Services
             var extension = Path.GetExtension(createPublicFileRequestDto.File.FileName);
             var path = $"{id}{extension}";
             var physicalPath = Path.Combine(_publicFilesPath, path);
-            Console.WriteLine(_publicFilesPath);
-            Console.WriteLine(id);
-            Console.WriteLine(extension);
-            Console.WriteLine(path);
-            Console.WriteLine(physicalPath);
-            
             try
             {       
                 await using (var stream = new FileStream(physicalPath, FileMode.CreateNew))
@@ -97,21 +91,21 @@ namespace koala.src.Modules.Cms.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User not loged in");
+                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbiden, "This user canot create a sponsor");
+                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var publicFile = await _db.PublicFiles.FirstOrDefaultAsync(pf => pf.Id == id);
 
             if(publicFile == null)
             {
-                throw new CmsException(CmsErrorCodes.FileNotFound, "Could not found such file");
+                throw new CmsException(CmsErrorCodes.FileNotFound, "Could not find such file");
             }
 
             _db.PublicFiles.Remove(publicFile);
@@ -134,14 +128,14 @@ namespace koala.src.Modules.Cms.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User not loged in");
+                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbiden, "This user canot create a sponsor");
+                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var query = _db.PublicFiles.AsNoTracking().AsQueryable();
