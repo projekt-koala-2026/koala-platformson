@@ -124,6 +124,26 @@ const CompleteRegistrationScreen = () => {
                                     ))}
                                 </div>
 
+                                {onboardingStep === 0 ? (
+                                    <>
+                                        <h2
+                                            id="onboarding-title"
+                                            className="mt-4 text-xl font-bold text-slate-900"
+                                        >
+                                            Poznaj zasady konkursu
+                                        </h2>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h2
+                                            id="onboarding-title"
+                                            className="mt-4 text-xl font-bold text-slate-900"
+                                        >
+                                            Twoje dane i prywatność
+                                        </h2>
+                                    </>
+                                )}
+
                                 <div className="mt-7 flex items-center justify-between gap-3">
                                     {onboardingStep === 0 ? (
                                         <button
