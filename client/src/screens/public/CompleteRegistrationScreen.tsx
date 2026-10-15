@@ -141,6 +141,45 @@ const CompleteRegistrationScreen = () => {
                                         >
                                             Twoje dane i prywatność
                                         </h2>
+
+                                        <p
+                                            id="onboarding-description"
+                                            className="mt-3 text-sm leading-6 text-slate-600"
+                                        >
+                                            Podczas rejestracji podajesz imię, nazwisko, adres
+                                            e-mail i hasło. Dane osobowe są przetwarzane zgodnie z
+                                            RODO.
+                                        </p>
+                                        <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-slate-700">
+                                            <p className="font-semibold text-slate-900">
+                                                Co warto wiedzieć?
+                                            </p>
+                                            <ul className="mt-2 list-disc space-y-1 pl-5">
+                                                <li>Administratorem Twoich danych jest WMI UAM.</li>
+                                                <li>
+                                                    Twoje dane będą przetwarzane na potrzeby
+                                                    konkursu KOALA i zostaną usunięte po roku od
+                                                    zakończenia ostatniej edycji konkursu.
+                                                </li>
+                                                <li>
+                                                    Poznaj swoje prawa dotyczące danych osobowych.
+                                                    <a
+                                                        href="/polityka-prywatnosci"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="mt-4 inline-flex font-medium text-emerald-700 underline underline-offset-4 hover:text-emerald-800"
+                                                    >
+                                                        Przeczytaj politykę prywatności - do
+                                                        wstawienia zasady RODO
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <p className="mt-4 text-xs leading-5 text-slate-500">
+                                            Przejście dalej nie oznacza automatycznej zgody. Decyzję
+                                            podejmiesz samodzielnie w formularzu rejestracji.
+                                        </p>
                                     </>
                                 )}
 
