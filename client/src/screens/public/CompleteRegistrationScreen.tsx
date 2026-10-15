@@ -132,6 +132,30 @@ const CompleteRegistrationScreen = () => {
                                         >
                                             Poznaj zasady konkursu
                                         </h2>
+
+                                        <p
+                                            id="onboarding-description"
+                                            className="mt-3 text-sm leading-6 text-slate-600"
+                                        >
+                                            Przed utworzeniem konta zapoznaj się z regulaminem
+                                            konkursu. Znajdziesz w nim zasady udziału, warunki
+                                            uczestnictwa oraz informacje o obowiązkach uczestników.
+                                        </p>
+
+                                        <a
+                                            href="/rules"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-4 inline-flex font-medium text-emerald-700 underline underline-offset-4 hover:text-emerald-800"
+                                        >
+                                            Przeczytaj regulamin konkursu
+                                        </a>
+
+                                        <div className="mt-5 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                                            W formularzu samodzielnie zaznaczysz pole potwierdzające
+                                            akceptację regulaminu. Zapoznaj się z jego treścią przed
+                                            podjęciem decyzji.
+                                        </div>
                                     </>
                                 ) : (
                                     <>
@@ -155,7 +179,9 @@ const CompleteRegistrationScreen = () => {
                                                 Co warto wiedzieć?
                                             </p>
                                             <ul className="mt-2 list-disc space-y-1 pl-5">
-                                                <li>Administratorem Twoich danych jest WMI UAM.</li>
+                                                <li>
+                                                    Administratorem Twoich danych jest WMI UAM.??
+                                                </li>
                                                 <li>
                                                     Twoje dane będą przetwarzane na potrzeby
                                                     konkursu KOALA i zostaną usunięte po roku od
