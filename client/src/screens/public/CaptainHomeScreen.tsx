@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { FaUpload } from "react-icons/fa";
+import { FaDownload, FaExchangeAlt, FaUpload } from "react-icons/fa";
+import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
@@ -471,6 +472,37 @@ const CaptainHomeScreen = () => {
                                                 <FaUpload />
                                                 <span>Zgoda RODO</span>
                                             </button>
+                                        )}
+                                        {roles.isGuardian && isRodo === true && (
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={() => void addRodo(member.id)}
+                                                    className="inline-flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2 text-xs font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50"
+                                                >
+                                                    <FaDownload />
+                                                    <span>Zgoda RODO</span>
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={() => void removeRodo(member.id)}
+                                                    className="rounded-lg bg-red-50 px-2 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                                                >
+                                                    <FaTrashCan />
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={() => void addRodo(member.id)}
+                                                    className="rounded-lg bg-blue-50 px-2 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                                                >
+                                                    <FaExchangeAlt />
+                                                </button>
+                                            </div>
                                         )}
                                     </li>
                                 ))}
