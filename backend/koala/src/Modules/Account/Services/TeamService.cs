@@ -178,7 +178,107 @@ namespace koala.src.Modules.Account.Services
 
             return;
         }
+        public async Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, MemberUpsertRequestDto requestDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
+            if (!isAuthenticated)
+            {
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+
+            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if (!isTeamPlayer)
+            {
+                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+            }
+
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
+
+            if (activeEdition == null)
+            {
+                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+            }
+
+            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(ut => ut.UserId == userId && ut.TeamId == teamId && ut.Position == CAPTAIN);
+            if (teamCaptain == null)
+            {
+                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "User is not a captain of the team");
+            }
+
+            int membersCount = await _db.TeamMembers.Where(tm => tm.TeamId == teamId).CountAsync();
+
+            if(membersCount >= 3)
+            {
+                throw new AccountException(AccountErrorCodes.TeamMemberCountMax, "Team is full");
+            }
+
+            Member newMember = new Member
+            {
+                Id = Guid.CreateVersion7(),
+                NameFirst = requestDto.NameFirst,
+                NameLast = requestDto.NameLast
+            };
+
+            TeamMember newTeamMember = new TeamMember
+            {
+                TeamId = teamId,
+                MemberId = newMember.Id
+            };
+
+            await _db.Members.AddAsync(newMember);
+            await _db.TeamMembers.AddAsync(newTeamMember);
+
+            await _db.SaveChangesAsync();
+
+            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+        }
+        public async Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, MemberUpsertRequestDto requestDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+
+            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if (!isTeamPlayer)
+            {
+                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+            }
+
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
+
+            if (activeEdition == null)
+            {
+                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+            }
+
+            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(ut => ut.UserId == userId && ut.TeamId == teamId && ut.Position == CAPTAIN);
+            if (teamCaptain == null)
+            {
+                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "User is not a captain of the team");
+            }
+
+            var teamMemberToUpdate = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.MemberId == teamMemberId);
+
+            if (teamMemberToUpdate == null)
+            {
+                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
+            }
+
+            teamMemberToUpdate.Member.NameFirst = requestDto.NameFirst;
+            teamMemberToUpdate.Member.NameLast = requestDto.NameLast;
+
+            await _db.SaveChangesAsync();
+
+            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+        }
         public async Task DeleteTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
