@@ -30,25 +30,24 @@ namespace koala.src.Modules.Account.Services
         {
             DateTime timeNow = DateTime.UtcNow;
             var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.Active == true) && (l.Type == "REGISTER"));
-            if(link == null)
+            if (link == null)
             {
-                throw new AccountException(AccountErrorCodes.LinkNotFound,"The verification link with this token does not exist or is expired");
+                throw new AccountException(AccountErrorCodes.LinkNotFound, "The verification link with this token does not exist or is expired");
             }
-            if(link.ExpiresAt < timeNow)
+            if (link.ExpiresAt < timeNow)
             {
                 link.Active = false;
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.LinkNotFound,"The verification link with this token does not exist or is expired");
+                throw new AccountException(AccountErrorCodes.LinkNotFound, "The verification link with this token does not exist or is expired");
             }
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == link.UserId && u.Verified == false);
-            if(user == null)
+            if (user == null)
             {
                 link.Active = false;
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User conected to that link no longer exists");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "User connected to that link no longer exists");
             }
             link.Active = false;
-            //TODO: HASH THE PASSWORD
             user.NameFirst = requestDto.NameFirst;
             user.NameLast = requestDto.NameLast;
             user.PasswordHash = PasswordHasher.Hash(requestDto.Password);
@@ -64,25 +63,24 @@ namespace koala.src.Modules.Account.Services
         {
             DateTime timeNow = DateTime.UtcNow;
             var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.Active == true) && (l.Type == "RESETPASSWORD"));
-            if(link == null)
+            if (link == null)
             {
                 throw new AccountException(AccountErrorCodes.LinkNotFound, "The verification link with this token does not exist or is expired");
             }
-            if(link.ExpiresAt < timeNow)
+            if (link.ExpiresAt < timeNow)
             {
                 link.Active = false;
                 await _db.SaveChangesAsync();
                 throw new AccountException(AccountErrorCodes.LinkNotFound, "The verification link with this token does not exist or is expired");
             }
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == link.UserId && u.Verified == true);
-            if(user == null)
+            if (user == null)
             {
                 link.Active = false;
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User conected to that link no longer exists");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "User connected to that link no longer exists");
             }
             link.Active = false;
-            //TODO: HASH THE PASSWORD
             user.PasswordHash = PasswordHasher.Hash(requestDto.Password);
             await _db.SaveChangesAsync();
         }
@@ -90,12 +88,20 @@ namespace koala.src.Modules.Account.Services
         public async Task GenerateResetPasswordLinkAsync(GenerateResetPasswordLinkRequestDto requestDto)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email && u.Verified == true);
-            if(user == null)
+            if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User does not exist");
+                return;
             }
 
             DateTime timeNow = DateTime.UtcNow;
+
+            var previousLinks = await _db.Links
+                .Where(l => l.UserId == user.Id && l.Type == "RESETPASSWORD" && l.Active)
+                .ToListAsync();
+            foreach (var previousLink in previousLinks)
+            {
+                previousLink.Active = false;
+            }
 
             Link link = new Link
             {
@@ -111,8 +117,18 @@ namespace koala.src.Modules.Account.Services
             await _db.Links.AddAsync(link);
             await _db.SaveChangesAsync();
 
-            //SEND TO EMAIL FIXME:
-            await _emailService.SendPasswordResetEmailAsync(user.Email, link.Token.ToString());
+            var organizationAccount = await _db.UserRoles
+                .AnyAsync(userRole =>
+                    userRole.UserId == user.Id &&
+                    (userRole.Role.Name == "ORGANIZATION_ADMIN" ||
+                     userRole.Role.Name == "ORGANIZATION_EDITOR" ||
+                     userRole.Role.Name == "ORGANIZATION_REVIEWER"));
+
+            await _emailService.SendPasswordResetEmailAsync(
+                user.Email,
+                link.Token.ToString(),
+                organizationAccount ? "organization" : "team"
+            );
         }
 
         public async Task<LinkListDto> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
@@ -120,19 +136,19 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Principal is null.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid or missing user id claim.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
-            var queryResult = await _db.Links.Where(l=> l.Active == true && l.UserId == userId).AsNoTracking().AsQueryable().ToListAsync();
+            var queryResult = await _db.Links.Where(l => l.Active == true && l.UserId == userId).AsNoTracking().AsQueryable().ToListAsync();
             var links = queryResult
-                .Select(l=> new LinkDto(l.Id,l.Type,l.CreatedAt,l.ExpiresAt))
-                .Skip(pageQueryDto.PageSize*pageQueryDto.PageNumber)
+                .Select(l => new LinkDto(l.Id, l.Type, l.CreatedAt, l.ExpiresAt))
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
                 .ToList();
 
@@ -144,20 +160,20 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Principal is null.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid or missing user id claim.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
-            var link = await _db.Links.FirstOrDefaultAsync(l=> l.Id == id && l.UserId == userId && l.Active==true);
-            
-            if(link == null)
+            var link = await _db.Links.FirstOrDefaultAsync(l => l.Id == id && l.UserId == userId && l.Active == true);
+
+            if (link == null)
             {
-                throw new AccountException(AccountErrorCodes.LinkNotFound,"Link does not exist");
+                throw new AccountException(AccountErrorCodes.LinkNotFound, "Link does not exist");
             }
 
             _db.Links.Remove(link);
@@ -171,21 +187,16 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Principal is null.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid or missing user id claim.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
-            var links = await _db.Links.Where(l=> l.UserId == userId && l.Active==true).ToListAsync();
-            
-            if(links == null)
-            {
-                throw new AccountException(AccountErrorCodes.LinkNotFound,"Nothing to delete");
-            }
+            var links = await _db.Links.Where(l => l.UserId == userId && l.Active == true).ToListAsync();
 
             _db.Links.RemoveRange(links);
             await _db.SaveChangesAsync();

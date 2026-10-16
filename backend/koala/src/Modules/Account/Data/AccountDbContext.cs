@@ -121,6 +121,9 @@ namespace koala.src.Modules.Account.Data
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
         public DbSet<TeamJoinCode> TeamJoinCodes => Set<TeamJoinCode>();
         public DbSet<Rodo> Rodos => Set<Rodo>();
+        public DbSet<Member> Members => Set<Member>();
+        public DbSet<UserTeam> UserTeams => Set<UserTeam>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("account");
@@ -133,6 +136,8 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<Team>().ToTable("teams");
             modelBuilder.Entity<TeamMember>().ToTable("team_members");
             modelBuilder.Entity<Rodo>().ToTable("rodos");
+            modelBuilder.Entity<Member>().ToTable("members");
+            modelBuilder.Entity<UserTeam>().ToTable("user_teams");
 
             // ROLE CONFIG
             modelBuilder.Entity<Role>()
@@ -161,16 +166,15 @@ namespace koala.src.Modules.Account.Data
 
             // TEAM_MEMBER CONFIG
             modelBuilder.Entity<TeamMember>()
-                .HasKey(tm => new { tm.UserId, tm.TeamId });
+                .HasKey(tm => new { tm.MemberId, tm.TeamId });
             modelBuilder.Entity<TeamMember>()
                 .HasOne(tm => tm.Team)
                 .WithMany(t => t.TeamMembers)
                 .HasForeignKey(tm => tm.TeamId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<TeamMember>()
-                .HasOne(tm => tm.User)
-                .WithMany(u => u.TeamMembers)
-                .HasForeignKey(tm => tm.UserId);
+                .HasOne(tm => tm.Member)
+                .WithOne(m => m.TeamMember);
 
             // TEAM_JOIN_CODE CONFIG
             modelBuilder.Entity<TeamJoinCode>()
@@ -213,6 +217,22 @@ namespace koala.src.Modules.Account.Data
                 .WithOne(u => u.Rodo)
                 .HasForeignKey<Rodo>(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // MEMBERS CONFIG
+            modelBuilder.Entity<Member>()
+                .HasKey(m => m.Id);
+
+            // USER_TEAMS CONFIG
+            modelBuilder.Entity<UserTeam>()
+                .HasKey(ut => new { ut.UserId, ut.TeamId });
+            modelBuilder.Entity<UserTeam>()
+                .HasOne(ut => ut.User)
+                .WithMany(u => u.UserTeams)
+                .HasForeignKey(ut => ut.UserId);
+            modelBuilder.Entity<UserTeam>()
+                .HasOne(ut => ut.Team)
+                .WithMany(t => t.UserTeams)
+                .HasForeignKey(ut => ut.TeamId);
         }
     };
 }

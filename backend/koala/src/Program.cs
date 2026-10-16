@@ -45,7 +45,7 @@ var app = builder.Build();
 
 CmsModuleExtensions.AddCmsModule(app, app.Configuration);
 
-//app.UseCors("AllowFrontend");
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {

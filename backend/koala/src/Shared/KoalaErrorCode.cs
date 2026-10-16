@@ -4,7 +4,7 @@ namespace koala.src.Shared
     public class KoalaErrorCodes
     {
         public const int Unauthenticated = 0;
-        public const int Forbiden = 1;
+        public const int Forbidden = 1;
         public const int FileNotFound = 2;
         public const int FolderCreationError = 3;
         public const int FileCreationError = 4;

@@ -8,7 +8,7 @@ namespace koala.src.Modules.Cms.Dtos
         string ContentJson,
         DateTime CreatedAt,
         DateTime UpdatedAt,
-        bool IsVisable,
+        bool IsVisible,
         int Version
     );
 }

@@ -17,7 +17,7 @@ namespace koala.src.Modules.Cms.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
         [Column("is_visable")]
-        public bool IsVisable { get; set; }
+        public bool IsVisible { get; set; }
         [Column("version")]
         public int Version { get; set; }    }
 }

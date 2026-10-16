@@ -4,6 +4,8 @@ namespace koala.src.Modules.Account.Dtos
     (
         Guid? EditionId,
         Guid? SchoolId,
+        Guid? CaptainId,
+        Guid? AdminId,
         string? Name
     );
 }

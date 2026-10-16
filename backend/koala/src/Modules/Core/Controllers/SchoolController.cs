@@ -23,15 +23,15 @@ namespace koala.src.Modules.Core.Controllers
         public async Task<IActionResult> CreateSchool([FromBody] CreateSchoolRequestDto createSchoolRequestDto)
         {
             var response = await _schoolService.CreateSchoolAsync(User, createSchoolRequestDto);
-            return StatusCode(200, new ApiResponseWraper<SchoolDto>(true, DateTime.UtcNow, null, null, response));                
+            return StatusCode(200, new ApiResponseWrapper<SchoolDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{id}/name")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSchool([FromRoute] Guid id, [FromBody] UpdateSchoolRequestDto updateSchoolRequestDto)
         {
             var response = await _schoolService.UpdateSchoolAsync(User, id, updateSchoolRequestDto);
-            return StatusCode(200, new ApiResponseWraper<SchoolDto>(true, DateTime.UtcNow, null, null, response));                
+            return StatusCode(200, new ApiResponseWrapper<SchoolDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
@@ -39,23 +39,23 @@ namespace koala.src.Modules.Core.Controllers
         public async Task<IActionResult> DeleteSchool([FromRoute] Guid id)
         {
             await _schoolService.DeleteSchoolAsync(User, id);
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));                
+            return StatusCode(200, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpDelete]
         public async Task<IActionResult> DeleteSchools([FromBody] List<Guid> ids)
         {
             await _schoolService.DeleteSchoolsAsync(User, ids);
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));                
+            return StatusCode(200, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
-        
+
         [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSchool([FromRoute] Guid id)
         {
             var response = await _schoolService.GetSchoolAsync(User, id);
-            return StatusCode(200, new ApiResponseWraper<SchoolDto>(true, DateTime.UtcNow, null, null, response));                
+            return StatusCode(200, new ApiResponseWrapper<SchoolDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [AllowAnonymous]
@@ -63,15 +63,15 @@ namespace koala.src.Modules.Core.Controllers
         public async Task<IActionResult> GetSchools([FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _schoolService.GetSchoolsAsync(User, pageQueryDto);
-            return StatusCode(200, new ApiResponseWraper<List<SchoolDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));                
+            return StatusCode(200, new ApiResponseWrapper<List<SchoolDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost("import")]
         public async Task<IActionResult> ImportSchools([FromForm] ImportSchoolRequestDto importSchoolRequestDto)
         {
             var response = await _schoolService.ImportSchoolsAsync(User, importSchoolRequestDto);
-            return StatusCode(200, new ApiResponseWraper<int>(true, DateTime.UtcNow, null, null, response));                
+            return StatusCode(200, new ApiResponseWrapper<int>(true, DateTime.UtcNow, null, null, response));
         }
 
     }

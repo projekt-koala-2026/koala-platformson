@@ -27,7 +27,7 @@ namespace koala.src.Shared
                     options.Cookie.HttpOnly = true;
                     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                     options.Cookie.SameSite = SameSiteMode.Lax;
-                    options.ExpireTimeSpan = TimeSpan.FromHours(2);
+                    options.ExpireTimeSpan = TimeSpan.FromHours(12);
 
                     options.Events = new CookieAuthenticationEvents
                     {
@@ -51,7 +51,7 @@ namespace koala.src.Shared
                                 var claims = new List<Claim>
                                 {
                                     new Claim(ClaimTypes.NameIdentifier, session.UserId.ToString()),
-                                    new Claim("SessionId", session.SessionToken.ToString()),
+                                    new Claim("SessionId", session.SessionId.ToString()),
                                     new Claim("SessionToken", session.SessionToken.ToString())
                                 };
 

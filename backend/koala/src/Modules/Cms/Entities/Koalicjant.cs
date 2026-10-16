@@ -21,6 +21,6 @@ namespace koala.src.Modules.Cms.Entities
         [Column("version")]
         public int Version { get; set; }
         [Column("is_visiable")]
-        public bool IsVisiable { get; set; }
+        public bool IsVisible { get; set; }
     } 
 }

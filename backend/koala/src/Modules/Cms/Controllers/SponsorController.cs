@@ -23,7 +23,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> CreateSponsor([FromBody] CreateSponsorRequestDto requestDto)
         {
             var responseData = await _sponsorService.CreateSponsorAsync(User, requestDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWraper<SponsorDto>(true, DateTime.UtcNow, null, null, responseData));
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<SponsorDto>(true, DateTime.UtcNow, null, null, responseData));
         }
 
         [Authorize]
@@ -31,7 +31,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> DeleteSponsor([FromRoute] Guid id)
         {
             await _sponsorService.DeleteSponsorAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
@@ -39,7 +39,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> UpdateSponsor([FromRoute] Guid id, [FromBody] UpdateSponsorRequestDto requestDto)
         {
             var responseData = await _sponsorService.UpdateSponsorAsync(User, id, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<SponsorDto>(true, DateTime.UtcNow, null, null, responseData));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<SponsorDto>(true, DateTime.UtcNow, null, null, responseData));
         }
 
         [AllowAnonymous]
@@ -47,7 +47,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> GetSponsors([FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _sponsorService.GetSponsorsAsync(User, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<SponsorDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<SponsorDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         [AllowAnonymous]
@@ -55,7 +55,7 @@ namespace koala.src.Modules.Cms.Controllers
         public async Task<IActionResult> GetSponsor([FromRoute] Guid id)
         {
             var response = await _sponsorService.GetSponsorAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<SponsorDto>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<SponsorDto>(true, DateTime.UtcNow, null, null, response));
         }
     }
 }

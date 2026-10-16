@@ -28,57 +28,71 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequestDto requestDto)
         {
             var response = await _teamService.CreateTeamAsync(User, requestDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWraper<TeamDto>(true, DateTime.UtcNow, null, null, response)); 
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTeam([FromRoute] Guid id)
         {
             await _teamService.DeleteTeamAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+        [Authorize]
+        [HttpPost("{id}/member")]
+        public async Task<IActionResult> CreateTeamMember([FromRoute] Guid id, [FromBody] MemberUpsertRequestDto requestDto)
+        {
+            var response = await _teamService.AddTeamMemberAsync(User, id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response)); 
+        }
+        [Authorize]
+        [HttpPut("{id}/member/{team_member_id}")]
+        public async Task<IActionResult> UpdateTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] MemberUpsertRequestDto requestDto)
+        {
+            var response = await _teamService.UpdateTeamMemberAsync(User, id, team_member_id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response)); 
         }
         [Authorize]
         [HttpDelete("{id}/member/{team_member_id}")]
         public async Task<IActionResult> DeleteTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
             await _teamService.DeleteTeamMemberAsync(User, id, team_member_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
         [HttpPut("{id}/name")]
         public async Task<IActionResult> UpdateTeamName([FromRoute] Guid id, [FromBody] UpdateTeamNameRequestDto requestDto)
         {
             var response = await _teamService.UpdateTeamNameAsync(User, id, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<TeamDto>(true, DateTime.UtcNow, null, null, response)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpPost("{id}/new-join-code")]
         public async Task<IActionResult> CreateJoinTeamCode([FromRoute] Guid id)
         {
             var response = await _teamService.CreateJoinTeamCodeAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<TeamJoinCodeDto>(true, DateTime.UtcNow, null, null, response)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamJoinCodeDto>(true, DateTime.UtcNow, null, null, response));
         }
-        // ONLY FOR TEAM PLAYERS + (REQUIRED MOSTLY WITH CAPTAIN POSITION IN TEAM_MEMBERS)
+        // ONLY FOR TEAM ADMINS
         [Authorize]
         [HttpPost("{id}/rodos/{team_member_id}")]
-        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoCreateDto rodoCreateDto)
+        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromForm] RodoCreateDto rodoCreateDto)
         {
             var response = await _rodoService.AddRodoAsync(User, id, team_member_id, rodoCreateDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<RodoDto>(true, DateTime.UtcNow, null, null, response)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpPut("{id}/rodos/{team_member_id}/file")]
         public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoUpdateDto rodoUpdateDto)
         {
             var response = await _rodoService.UpdateRodoAsync(User, id, team_member_id, rodoUpdateDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<RodoDto>(true, DateTime.UtcNow, null, null, response)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpDelete("{id}/rodos/{team_member_id}")]
         public async Task<IActionResult> DeleteTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
             await _rodoService.DeleteRodoAsync(User, id, team_member_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         // ONLY FOR TEAM ADMINS AND PLAYERS
@@ -86,15 +100,15 @@ namespace koala.src.Modules.Account.Controllers
         [HttpPost("join/{join_code}")]
         public async Task<IActionResult> JoinTeamWithCode([FromRoute] string join_code)
         {
-            var response = await _teamService.JoinTeamWithCodeAsync(User, join_code); 
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response)); 
+            var response = await _teamService.JoinTeamWithCodeAsync(User, join_code);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetMyTeams([FromQuery] PageQueryDto pageQueryDto, [FromQuery] TeamQueryDto teamQueryDto)
         {
             (var responseData, var responsePagination) = await _teamService.GetMyTeamsAsync(User, pageQueryDto, teamQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
         //ONLY FOR TEAM PLAYERS AND TEAM ADMINS AND ORGANIZATION ADMINS
         [Authorize]
@@ -102,7 +116,7 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> GetTeam([FromRoute] Guid id)
         {
             var response = await _teamService.GetTeamAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<TeamDto>(true, DateTime.UtcNow, null, null, response)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
         }
         //ONLY FOR TEAM AND ORGANIZATION ADMINS
 
@@ -110,8 +124,8 @@ namespace koala.src.Modules.Account.Controllers
         [HttpGet("{id}/rodos")]
         public async Task<IActionResult> GetTeamRodos([FromRoute] Guid id, [FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _rodoService.GetRodosAsync(User, id,pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<RodoDto>>(true, DateTime.UtcNow, null, responsePagination, responseData)); 
+            (var responseData, var responsePagination) = await _rodoService.GetRodosAsync(User, id, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<RodoDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
         [Authorize]
         [HttpGet("{id}/rodos/{team_member_id}")]
@@ -137,7 +151,7 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> GetTeams([FromQuery] PageQueryDto pageQueryDto, [FromQuery] TeamQueryDto teamQueryDto, [FromQuery] TeamMemberQueryDto teamMemberQueryDto)
         {
             (var responseData, var responsePagination) = await _teamService.GetTeamsAsync(User, pageQueryDto, teamQueryDto, teamMemberQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         [Authorize]

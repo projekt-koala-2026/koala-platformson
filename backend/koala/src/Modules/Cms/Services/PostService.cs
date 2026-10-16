@@ -21,14 +21,14 @@ namespace koala.src.Modules.Cms.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User not loged in");
+                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbiden, "This user canot create a sponsor");
+                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             //TODO: CHECK IF ACTIVE / REAL EDITION
@@ -43,14 +43,14 @@ namespace koala.src.Modules.Cms.Services
                 ContentJson = requestDto.ContentJson,
                 CreatedAt = timeNow,
                 UpdatedAt = timeNow,
-                IsVisable = requestDto.IsVisable,
+                IsVisible = requestDto.IsVisible,
                 Version = requestDto.Version
             };
 
             await _db.Posts.AddAsync(post);
             await _db.SaveChangesAsync();
 
-            return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisable,post.Version);
+            return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisible,post.Version);
         }
 
         public async Task<PostDto> UpdatePostAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdatePostRequestDto requestDto)
@@ -58,14 +58,14 @@ namespace koala.src.Modules.Cms.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User not loged in");
+                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbiden, "This user canot create a sponsor");
+                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id ==id);
@@ -83,12 +83,12 @@ namespace koala.src.Modules.Cms.Services
             post.Name = requestDto.Name;
             post.ContentJson = requestDto.ContentJson;
             post.UpdatedAt = timeNow;
-            post.IsVisable = requestDto.IsVisable;
+            post.IsVisible = requestDto.IsVisible;
             post.Version = requestDto.Version;
 
             await _db.SaveChangesAsync();
 
-            return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisable,post.Version);
+            return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisible,post.Version);
         }
 
         public async Task DeletePostAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
@@ -96,14 +96,14 @@ namespace koala.src.Modules.Cms.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if(!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User not loged in");
+                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbiden, "This user canot create a sponsor");
+                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id ==id);
@@ -122,9 +122,9 @@ namespace koala.src.Modules.Cms.Services
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHiden == true))
+            if(!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHidden == true))
             {
-                throw new CmsException(CmsErrorCodes.Forbiden,"Dont havepermission to do it");
+                throw new CmsException(CmsErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             var query = _db.Posts.AsNoTracking().AsQueryable();
@@ -139,9 +139,9 @@ namespace koala.src.Modules.Cms.Services
                 query = query.Where(p => p.Name == postQueryDto.Name);
             }
 
-            if(postQueryDto.ShowHiden != null)
+            if(postQueryDto.ShowHidden != null)
             {
-                query = query.Where(p => p.IsVisable == !postQueryDto.ShowHiden);
+                query = query.Where(p => p.IsVisible == !postQueryDto.ShowHidden);
             }
 
             var queryResults = await query.ToListAsync();
@@ -156,7 +156,7 @@ namespace koala.src.Modules.Cms.Services
                         p.ContentJson,
                         p.CreatedAt,
                         p.UpdatedAt,
-                        p.IsVisable,
+                        p.IsVisible,
                         p.Version
                     )
                 ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
@@ -173,7 +173,7 @@ namespace koala.src.Modules.Cms.Services
 
             if(!isOrganizationAdmin && !isOrganizationEditor)
             {
-                query = query.Where(p => p.IsVisable == true);
+                query = query.Where(p => p.IsVisible == true);
             }
 
             var queryResults = await query.FirstOrDefaultAsync(p => p.Id == id);
@@ -191,7 +191,7 @@ namespace koala.src.Modules.Cms.Services
                 queryResults.ContentJson,
                 queryResults.CreatedAt,
                 queryResults.UpdatedAt,
-                queryResults.IsVisable,
+                queryResults.IsVisible,
                 queryResults.Version
             );
 
