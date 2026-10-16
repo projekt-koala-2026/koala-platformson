@@ -38,6 +38,20 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
+        [HttpPost("{id}/member")]
+        public async Task<IActionResult> CreateTeamMember([FromRoute] Guid id, [FromBody] MemberUpsertRequestDto requestDto)
+        {
+            var response = await _teamService.AddTeamMemberAsync(User, id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response)); 
+        }
+        [Authorize]
+        [HttpPut("{id}/member/{team_member_id}")]
+        public async Task<IActionResult> UpdateTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] MemberUpsertRequestDto requestDto)
+        {
+            var response = await _teamService.UpdateTeamMemberAsync(User, id, team_member_id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response)); 
+        }
+        [Authorize]
         [HttpDelete("{id}/member/{team_member_id}")]
         public async Task<IActionResult> DeleteTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
@@ -58,7 +72,7 @@ namespace koala.src.Modules.Account.Controllers
             var response = await _teamService.CreateJoinTeamCodeAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamJoinCodeDto>(true, DateTime.UtcNow, null, null, response));
         }
-        // ONLY FOR TEAM PLAYERS + (REQUIRED MOSTLY WITH CAPTAIN POSITION IN TEAM_MEMBERS)
+        // ONLY FOR TEAM ADMINS
         [Authorize]
         [HttpPost("{id}/rodos/{team_member_id}")]
         public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromForm] RodoCreateDto rodoCreateDto)
