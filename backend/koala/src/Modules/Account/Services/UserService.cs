@@ -32,20 +32,20 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(isAuthenticated && !isOrganizationAdmin)
+            if (isAuthenticated && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden,"Forbidden");
+                throw new AccountException(AccountErrorCodes.Forbidden, "Forbidden");
             }
 
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email);
-            if(user != null && user.Verified == true)
+            if (user != null && user.Verified == true)
             {
-                throw new AccountException(AccountErrorCodes.UserAlreadyExists,"User with this email already exists");
+                throw new AccountException(AccountErrorCodes.UserAlreadyExists, "User with this email already exists");
             }
-            
+
             DateTime timeNow = DateTime.UtcNow;
 
-            if(user != null)
+            if (user != null)
             {
                 _db.Users.Remove(user);
                 await _db.SaveChangesAsync();
@@ -64,19 +64,19 @@ namespace koala.src.Modules.Account.Services
                 Verified = false,
                 CreatedAt = timeNow,
                 VerifiedAt = null
-            };            
+            };
 
             var roles = await _db.Roles.ToListAsync();
 
-            
-            string role_prefix ="";
-            if(isOrganizationAdmin)
+
+            string role_prefix = "";
+            if (isOrganizationAdmin)
             {
-                role_prefix="ORGANIZATION_";
+                role_prefix = "ORGANIZATION_";
             }
             else
             {
-                role_prefix="TEAM_";
+                role_prefix = "TEAM_";
             }
 
             var validTeamRoleNames = roles
@@ -88,7 +88,7 @@ namespace koala.src.Modules.Account.Services
             {
                 if (!validTeamRoleNames.Contains(role))
                 {
-                    throw new AccountException(AccountErrorCodes.IncorrectRoles,"Specified role is not a team user role");
+                    throw new AccountException(AccountErrorCodes.IncorrectRoles, "Specified role is not a team user role");
                 }
             }
 
@@ -118,35 +118,35 @@ namespace koala.src.Modules.Account.Services
             await _db.UserRoles.AddRangeAsync(userRoles);
             await _db.Links.AddAsync(link);
             await _db.SaveChangesAsync();
-            
+
             //FIXME: SEND AN EMAIL WITH A VERIFY LINK TO FINISH THE ACCOUNT CREATION
             await _emailService.SendRegisterEmailAsync(user.Email, link.Token.ToString());
         }
         public async Task<UserDto> GetUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isSelf = userId == id;
 
-            if(userId == Guid.Empty)
+            if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            if(!isOrganizationAdmin && !isSelf)
+            if (!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
-            if(user == null)
+            if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User does not exist");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
             }
             var userRolesNames = await _db.UserRoles
                 .AsNoTracking()
@@ -154,28 +154,28 @@ namespace koala.src.Modules.Account.Services
                 .Select(ur => ur.Role.Name)
                 .Distinct()
                 .ToListAsync();
-            return new UserDto(user.Id,user.NameFirst!,user.NameLast!,user.Email,user.Censored,userRolesNames);
+            return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames);
 
         }
         public async Task<UserListDto> GetUsersAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, UserQueryDto userQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(userId == Guid.Empty)
+            if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid claims principal missing user id");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
-            if(!isOrganizationAdmin)
+            if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden,"Dont have permission to do it");
+                throw new AccountException(AccountErrorCodes.Forbidden, "Dont have permission to do it");
             }
 
             var query = _db.Users
@@ -185,27 +185,27 @@ namespace koala.src.Modules.Account.Services
                 .AsQueryable();
 
             //FITLER CHECKS
-            if(!string.IsNullOrEmpty(userQueryDto.Email))
+            if (!string.IsNullOrEmpty(userQueryDto.Email))
             {
                 query = query.Where(u => u.Email == userQueryDto.Email);
             }
 
-            if(!string.IsNullOrEmpty(userQueryDto.NameFirst))
+            if (!string.IsNullOrEmpty(userQueryDto.NameFirst))
             {
                 query = query.Where(u => u.NameFirst == userQueryDto.NameFirst);
             }
 
-            if(!string.IsNullOrEmpty(userQueryDto.NameLast))
+            if (!string.IsNullOrEmpty(userQueryDto.NameLast))
             {
                 query = query.Where(u => u.NameLast == userQueryDto.NameLast);
             }
 
-            if(userQueryDto.ShowCensored != null)
+            if (userQueryDto.ShowCensored != null)
             {
                 query = query.Where(u => u.Censored == userQueryDto.ShowCensored);
             }
 
-            if(userQueryDto.UserRoles != null)
+            if (userQueryDto.UserRoles != null)
             {
                 query = query.Include(u => u.UserRoles).Where(u => u.UserRoles.Any(ur => userQueryDto.UserRoles.Contains(ur.Role.Name)));
             }
@@ -219,39 +219,39 @@ namespace koala.src.Modules.Account.Services
                     u.NameLast!,
                     u.Email,
                     u.Censored,
-                    u.UserRoles.Select(ur=> ur.Role.Name).Distinct().ToList()
+                    u.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
                 ))
-                .Skip(pageQueryDto.PageSize* pageQueryDto.PageNumber)
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
                 .ToList();
-            
+
             return new UserListDto(users, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
         public async Task<UserDto> UpdateUserNamesAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserChangeNamesDto request)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isSelf = userId == id;
 
-            if(userId == Guid.Empty)
+            if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid claims principal missing user id");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
-            if(!isOrganizationAdmin && !isSelf)
+            if (!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
-            if(user == null)
+            if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User does not exist");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
             }
 
             user.NameFirst = request.NameFirst;
@@ -265,34 +265,34 @@ namespace koala.src.Modules.Account.Services
                 .Select(ur => ur.Role.Name)
                 .Distinct()
                 .ToListAsync();
-            return new UserDto(user.Id,user.NameFirst!,user.NameLast!,user.Email,user.Censored,userRolesNames);
+            return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames);
         }
         public async Task DeleteUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isSelf = userId == id;
 
-            if(userId == Guid.Empty)
+            if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid claims principal missing user id");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
-            if(!isOrganizationAdmin && !isSelf)
+            if (!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
-            if(user == null)
+            if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User does not exist");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
             }
 
             _db.Users.Remove(user);
@@ -302,28 +302,28 @@ namespace koala.src.Modules.Account.Services
         public async Task CensorUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(userId == Guid.Empty)
+            if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid claims principal missing user id");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
-            if(!isOrganizationAdmin)
+            if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
-            if(user == null)
+            if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User does not exist");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
             }
 
             user.Censored = true;
@@ -333,28 +333,28 @@ namespace koala.src.Modules.Account.Services
         public async Task UnCensorUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(userId == Guid.Empty)
+            if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid claims principal missing user id");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
-            if(!isOrganizationAdmin)
+            if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
-            if(user == null)
+            if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound,"User does not exist");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
             }
 
             user.Censored = false;
