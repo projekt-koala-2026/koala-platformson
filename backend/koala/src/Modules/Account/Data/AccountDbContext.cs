@@ -143,11 +143,11 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<Role>()
                 .HasData
                 (
-                    new Role { Id = Guid.Parse(static_id_guid_role_organization_admin), Name = "ORGANIZATION_ADMIN" },
-                    new Role { Id = Guid.Parse(static_id_guid_role_organization_editor), Name = "ORGANIZATION_EDITOR" },
-                    new Role { Id = Guid.Parse(static_id_guid_role_organization_reviewer), Name = "ORGANIZATION_REVIEWER" },
-                    new Role { Id = Guid.Parse(static_id_guid_role_team_admin), Name = "TEAM_ADMIN" },
-                    new Role { Id = Guid.Parse(static_id_guid_role_team_player), Name = "TEAM_PLAYER" }
+                    new Role { Id = Guid.Parse(static_id_guid_role_organization_admin), Name = "ORGANIZATION_ADMIN"},
+                    new Role { Id = Guid.Parse(static_id_guid_role_organization_editor), Name = "ORGANIZATION_EDITOR"},
+                    new Role { Id = Guid.Parse(static_id_guid_role_organization_reviewer), Name = "ORGANIZATION_REVIEWER"},
+                    new Role { Id = Guid.Parse(static_id_guid_role_team_admin), Name = "TEAM_ADMIN"},
+                    new Role { Id = Guid.Parse(static_id_guid_role_team_player), Name = "TEAM_PLAYER"}
                 );
 
 

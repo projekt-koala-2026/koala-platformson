@@ -8,7 +8,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Account.Services
 {
-    public class RodoService
+    public interface IRodoService
+    {
+        public Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoCreateDto rodoCreateDto);
+        public Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoUpdateDto rodoUpdateDto);
+        public Task DeleteRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
+        public Task<RodoDto> GetRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
+        public Task<string> GetRodoFileAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
+        public Task<(List<RodoDto>, ApiPagination)> GetRodosAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, PageQueryDto pageQueryDto);
+        public Task<RodoDto> SetRodoStateAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoStateUpdateDto rodoStateUpdateDto);
+    }
+    public class RodoService : IRodoService
     {
         private const string CAPTAIN = "CAPTAIN";
         private const string ADMIN = "ADMIN";

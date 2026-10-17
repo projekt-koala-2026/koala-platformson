@@ -4,7 +4,13 @@ using Microsoft.Extensions.Configuration;
 
 namespace koala.src.Modules.Account.Services
 {
-    public class EmailService
+    public interface IEmailService
+    {
+        public Task SendEmailAsync(string toEmail, string subject, string htmlMessage, bool isHighPriority = false);
+        public Task SendPasswordResetEmailAsync(string toEmail, string resetToken, string accountArea);
+        public Task SendRegisterEmailAsync(string toEmail, string registerToken);
+    }
+    public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
 

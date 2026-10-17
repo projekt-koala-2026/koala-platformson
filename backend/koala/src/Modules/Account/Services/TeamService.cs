@@ -11,7 +11,19 @@ using System.Text;
 
 namespace koala.src.Modules.Account.Services
 {
-    public class TeamService
+    public interface ITeamService
+    {
+        public Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, CreateTeamRequestDto requestDto);
+        public Task DeleteTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
+        public Task DeleteTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
+        public Task<TeamDto> UpdateTeamNameAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, UpdateTeamNameRequestDto requestDto);
+        public Task<TeamJoinCodeDto> CreateJoinTeamCodeAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
+        public Task<TeamDto> JoinTeamWithCodeAsync(ClaimsPrincipal? claimsPrincipal, string JoinCode);
+        public Task<(List<TeamDto>, ApiPagination)> GetMyTeamsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, TeamQueryDto teamQueryDto);
+        public Task<TeamDto> GetTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
+        public Task<(List<TeamDto>, ApiPagination)> GetTeamsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, TeamQueryDto teamQueryDto, TeamMemberQueryDto teamMemberQueryDto);
+    }
+    public class TeamService : ITeamService
     {
         private readonly ICoreModule _coreService;
         private readonly AccountDbContext _db;
@@ -210,7 +222,7 @@ namespace koala.src.Modules.Account.Services
 
             int membersCount = await _db.TeamMembers.Where(tm => tm.TeamId == teamId).CountAsync();
 
-            if(membersCount >= 3)
+            if (membersCount >= 3)
             {
                 throw new AccountException(AccountErrorCodes.TeamMemberCountMax, "Team is full");
             }
