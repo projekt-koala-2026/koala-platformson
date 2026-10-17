@@ -20,8 +20,8 @@ namespace koala.src.Modules.Account.Services
     public class LinkService : ILinkService
     {
         private readonly AccountDbContext _db;
-        private readonly EmailService _emailService;
-        public LinkService(AccountDbContext db, EmailService emailService)
+        private readonly IEmailService _emailService;
+        public LinkService(AccountDbContext db, IEmailService emailService)
         {
             _db = db;
             _emailService = emailService;

@@ -17,30 +17,31 @@ namespace koala.src.Modules.Account
                 options.UseNpgsql
                 (
                     dbConnStr,
-                    npgsqlOptions =>npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "account")
+                    npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "account")
                 ));
 
             // 2. HOSTED SERVICES (RUNING ON BACKEND START)
             services.AddHostedService<AccountSeederHostedService>();
 
             // 3. SERVICES
-            services.AddScoped<EmailService, EmailService>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IAccountModule, AccountService>();
-            services.AddScoped<SessionService, SessionService>();
-            services.AddScoped<UserService, UserService>();
-            services.AddScoped<LinkService, LinkService>();
-            services.AddScoped<TeamService, TeamService>();
-            services.AddScoped<RodoService, RodoService>(sp => {
+            services.AddScoped<ISessionService, SessionService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<ILinkService, LinkService>();
+            services.AddScoped<ITeamService, TeamService>();
+            services.AddScoped<IRodoService, RodoService>(sp =>
+            {
                 var db = sp.GetRequiredService<AccountDbContext>();
                 return new RodoService(db, privateFilesPath);
             });
-        
+
             // 4. EXCEPTION HANDLERS
             services.AddExceptionHandler<AccountExceptionHandler>();
             services.AddProblemDetails();
 
             // 5. FLUID VALIDATORS
-            
+
             return services;
         }
     }
