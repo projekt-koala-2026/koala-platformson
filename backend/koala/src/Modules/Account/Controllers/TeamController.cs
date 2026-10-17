@@ -42,14 +42,14 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> CreateTeamMember([FromRoute] Guid id, [FromBody] MemberUpsertRequestDto requestDto)
         {
             var response = await _teamService.AddTeamMemberAsync(User, id, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpPut("{id}/member/{team_member_id}")]
         public async Task<IActionResult> UpdateTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] MemberUpsertRequestDto requestDto)
         {
             var response = await _teamService.UpdateTeamMemberAsync(User, id, team_member_id, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response)); 
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpDelete("{id}/member/{team_member_id}")]
@@ -132,7 +132,7 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
             var response = await _rodoService.GetRodoAsync(User, id, team_member_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<RodoDto>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
 
         }
         [Authorize]
@@ -159,7 +159,7 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> SetTeamMemberRodoState([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoStateUpdateDto rodoStateUpdateDto)
         {
             var response = await _rodoService.SetRodoStateAsync(User, id, team_member_id, rodoStateUpdateDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<RodoDto>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
         }
     }
 }

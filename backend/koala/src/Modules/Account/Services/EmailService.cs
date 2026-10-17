@@ -7,7 +7,7 @@ namespace koala.src.Modules.Account.Services
     public interface IEmailService
     {
         public Task SendEmailAsync(string toEmail, string subject, string htmlMessage, bool isHighPriority = false);
-        public Task SendPasswordResetEmailAsync(string toEmail, string resetToken);
+        public Task SendPasswordResetEmailAsync(string toEmail, string resetToken, string accountArea);
         public Task SendRegisterEmailAsync(string toEmail, string registerToken);
     }
     public class EmailService : IEmailService
