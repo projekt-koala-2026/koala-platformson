@@ -13,8 +13,8 @@ namespace koala.src.Modules.Account.Controllers
     [Route("api/koala/account/sessions")]
     public class SessionController : ControllerBase
     {
-        private SessionService _sessionService;
-        public SessionController(SessionService sessionService)
+        private ISessionService _sessionService;
+        public SessionController(ISessionService sessionService)
         {
             _sessionService = sessionService;
         }

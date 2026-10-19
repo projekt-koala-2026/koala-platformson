@@ -15,6 +15,8 @@ namespace koala.src.Modules.Account.Services
     {
         public Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, CreateTeamRequestDto requestDto);
         public Task DeleteTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
+        public Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, MemberUpsertRequestDto requestDto);
+        public Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, MemberUpsertRequestDto requestDto);
         public Task DeleteTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
         public Task<TeamDto> UpdateTeamNameAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, UpdateTeamNameRequestDto requestDto);
         public Task<TeamJoinCodeDto> CreateJoinTeamCodeAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
