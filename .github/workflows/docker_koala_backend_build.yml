@@ -11,6 +11,7 @@ on:
     paths:
       - 'backend/koala_backend.Dockerfile'
       - 'backend/koala/**'
+  workflow_dispatch:
 
 jobs:
   build-and-push:
