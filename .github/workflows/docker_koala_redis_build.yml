@@ -9,6 +9,7 @@ on:
     branches: [ "main" ]
     paths:
       - 'backend/koala_redis.Dockerfile'
+  workflow_dispatch:
 
 jobs:
   build-and-push:
