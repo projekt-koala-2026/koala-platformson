@@ -28,7 +28,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{id}/name")]
+        [HttpPut("{edition_id}/name")]
         public async Task<IActionResult> UpdateEdition([FromRoute] Guid id, [FromBody] UpdateEditionNameDto updateEditionNameDto)
         {
             var response = await _editionService.UpdateEdition(User, id, updateEditionNameDto);
@@ -36,7 +36,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{id}/end")]
+        [HttpPut("{edition_id}/end")]
         public async Task<IActionResult> EndEdition([FromRoute] Guid id)
         {
             var response = await _editionService.ExpireEdition(User, id);
@@ -61,7 +61,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("{id}/subeditions")]
+        [HttpPost("{edition_id}/subeditions")]
         public async Task<IActionResult> CreateSubedition([FromRoute] Guid id, [FromBody] CreateSubeditionDto createSubeditionDto)
         {
             var response = await _editionService.CreateSubedition(User, id, createSubeditionDto);
@@ -69,7 +69,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{id}/subeditions")]
+        [HttpPut("{edition_id}/subeditions/{subedition_id}/name")]
         public async Task<IActionResult> UpdateSubeditionName([FromRoute] Guid id, [FromBody] UpdateSubeditionNameDto updateSubeditionNameDto)
         {
             var response = await _editionService.UpdateSubedition(User, id, updateSubeditionNameDto);
@@ -77,7 +77,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("subedition")]
+        [HttpGet("{edition_id}/subeditions/{subedition_id}")]
         public async Task<IActionResult> GetSubedition()
         {
             var response = await _editionService.GetSubedition(User);
@@ -85,7 +85,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("subeditions")]
+        [HttpGet("{edition_id}/subeditions")]
         public async Task<IActionResult> GetSubeditions([FromRoute] PageQueryDto pageQueryDto)
         {
             var response = await _editionService.GetSubeditions(User, pageQueryDto);
@@ -93,7 +93,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpDelete("{id}")]
+        [HttpDelete("{edition_id}/subeditions/{subedition_id}")]
         public async Task<IActionResult> DeleteSubedition([FromRoute] Guid id)
         {
             await _editionService.DeleteSubedition(User, id);
@@ -101,7 +101,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("{id}/task")]
+        [HttpPost("{edition_id}/subeditions/{subedition_id}/tasks")]
         public async Task<IActionResult> CreateTask([FromRoute] Guid id, [FromBody] CreateTaskItemDto createTaskDto)
         {
             var response = await _editionService.CreateTask(User, id, createTaskDto);
@@ -109,21 +109,23 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpDelete("task/{id}")]
+        [HttpDelete("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
         public async Task<IActionResult> DeleteTask([FromRoute] Guid id)
         {
             await _editionService.DeleteTask(User, id);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));                
         }
 
-        [HttpGet("task/{id}")]
+        [AllowAnonymous]
+        [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
         public async Task<IActionResult> GetTask([FromRoute] Guid id)
         {
             var response = await _editionService.GetTask(User, id);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
-        [HttpGet("tasks")]
+        [AllowAnonymous]
+        [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks")]
         public async Task<IActionResult> GetTasks([FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _editionService.GetTasks(User, pageQueryDto);
