@@ -411,7 +411,31 @@ namespace koala.src.Modules.Core.Services
                 task.ExpiredAt
             );
         }
-        public async Task<PagedResult<TaskItemDto>> GetTasks(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+
+        public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTasks(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        {
+            var query = _db.Tasks.AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+            var entities = await query
+                .OrderBy(e => e.Id)
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .ToListAsync();
+
+            var tasks = entities.Select(e => new TaskItemDto(
+                e.Id,
+                e.EditionId,
+                e.SubeditionId,
+                e.Name,
+                e.ContentJson,
+                e.CreatedAt,
+                e.ExpiredAt
+            )).ToList();
+
+            return (tasks, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+        }
+
         {
             var baseQuery = await _db.Tasks.AsNoTracking().ToListAsync();
 

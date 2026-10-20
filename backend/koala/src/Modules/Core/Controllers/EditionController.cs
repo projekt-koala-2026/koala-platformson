@@ -126,7 +126,9 @@ namespace koala.src.Modules.Core.Controllers
         [HttpGet("tasks")]
         public async Task<IActionResult> GetTasks([FromQuery] PageQueryDto pageQueryDto)
         {
-            var response = await _editionService.GetTasks(User, pageQueryDto);
+            (var responseData, var responsePagination) = await _editionService.GetTasks(User, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));            
+        }
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, response.Pagination, response.Items));            
         }
 
