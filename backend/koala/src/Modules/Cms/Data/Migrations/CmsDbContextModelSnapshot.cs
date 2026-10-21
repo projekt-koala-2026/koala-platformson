@@ -68,7 +68,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Koalicjants", "cms");
+                    b.ToTable("koalicjants", "cms");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Cms.Entities.Post", b =>
@@ -110,7 +110,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Posts", "cms");
+                    b.ToTable("posts", "cms");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Cms.Entities.PublicFile", b =>
@@ -187,7 +187,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Sponsors", "cms");
+                    b.ToTable("sponsors", "cms");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Cms.Entities.StaticPage", b =>

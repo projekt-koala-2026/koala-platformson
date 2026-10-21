@@ -22,49 +22,49 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequestDto requestDto)
         {
             await _userService.RegisterUserAsync(User, requestDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null)); 
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
         {
             await _userService.DeleteUserAsync(User, id);
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null)); 
+            return StatusCode(200, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUser([FromRoute] Guid id)
         {
             var data = await _userService.GetUserAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, data));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, data));
         }
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetUsers([FromQuery] PageQueryDto pageQueryDto, [FromQuery] UserQueryDto userQueryDto)
         {
-            var result = await _userService.GetUsersAsync(User, pageQueryDto, userQueryDto); 
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, result.Pagination, result.Data));
+            var result = await _userService.GetUsersAsync(User, pageQueryDto, userQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, result.Pagination, result.Data));
         }
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUserNames([FromRoute] Guid id, [FromBody] UserChangeNamesDto request)
         {
             var data = await _userService.UpdateUserNamesAsync(User, id, request);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, data));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, data));
         }
         [Authorize]
         [HttpPost("censor/{id}")]
         public async Task<IActionResult> CensorUser([FromRoute] Guid id)
         {
             await _userService.CensorUserAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
         [HttpPost("uncensor/{id}")]
         public async Task<IActionResult> UnCensorUser([FromRoute] Guid id)
         {
             await _userService.UnCensorUserAsync(User, id);
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            return StatusCode(200, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
     }

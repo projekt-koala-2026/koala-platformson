@@ -8,7 +8,7 @@ namespace koala.src.Modules.Core.Dtos
         string State,
         string City,
         string Road,
-        string House,
+        string Building,
         string Rspo,
         string Type,
         string Email,

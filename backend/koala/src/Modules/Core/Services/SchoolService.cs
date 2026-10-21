@@ -25,20 +25,20 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
-            //TODO check here if that all that is uniqe???
+            //TODO check here if that all that is unique???
             var school = await _db.Schools.FirstOrDefaultAsync(s => s.Rspo == createSchoolRequestDto.Rspo);
 
             if(school != null)
             {
-                throw new CoreException(CoreErrorCodes.SchoolAlreadyExists, "Schoold with this rspo or full name already exists");
+                throw new CoreException(CoreErrorCodes.SchoolAlreadyExists, "School with this rspo or full name already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -86,37 +86,31 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             var school = await _db.Schools.FirstOrDefaultAsync(s => s.Id == id);
 
             if(school == null)
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Schoold with this id does not exist");
+                throw new CoreException(CoreErrorCodes.SchoolNotFound, "School with this id does not exist");
             }
-
             DateTime timeNow = DateTime.UtcNow;
-            school = new School
-            {
-                Id = Guid.CreateVersion7(),
-                NameFull = updateSchoolRequestDto.NameFull,
-                NameShort = updateSchoolRequestDto.NameShort,
-                State = updateSchoolRequestDto.State,
-                City = updateSchoolRequestDto.City,
-                Road = updateSchoolRequestDto.Road,
-                Building = updateSchoolRequestDto.Building,
-                Rspo = updateSchoolRequestDto.Rspo,
-                Type = updateSchoolRequestDto.Type,
-                Email = updateSchoolRequestDto.Email,
-                CreatedAt = timeNow,
-                UpdatedAt = timeNow
-            };
+            school.NameFull = updateSchoolRequestDto.NameFull;
+            school.NameShort = updateSchoolRequestDto.NameShort;
+            school.State = updateSchoolRequestDto.State;
+            school.City = updateSchoolRequestDto.City;
+            school.Road = updateSchoolRequestDto.Road;
+            school.Building = updateSchoolRequestDto.Building;
+            school.Rspo = updateSchoolRequestDto.Rspo;
+            school.Type = updateSchoolRequestDto.Type;
+            school.Email = updateSchoolRequestDto.Email;
+            school.UpdatedAt = timeNow;
 
             await _db.SaveChangesAsync();
 
@@ -144,19 +138,19 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             var school = await _db.Schools.FirstOrDefaultAsync(s => s.Id == id);
 
             if(school == null)
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Schoold with this id does not exist");
+                throw new CoreException(CoreErrorCodes.SchoolNotFound, "School with this id does not exist");
             }
 
             _db.Schools.Remove(school);
@@ -170,12 +164,12 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
 
             var schools = await _db.Schools.Where(s => ids.Contains(s.Id)).ToListAsync();
@@ -196,12 +190,12 @@ namespace koala.src.Modules.Core.Services
 
             if(!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User not loged in");
+                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
             }
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
             }
             
             var file = importSchoolRequestDto.File; 
@@ -270,7 +264,7 @@ namespace koala.src.Modules.Core.Services
 
             if(queryResult == null)
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Could not found a school with this id");
+                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Could not find a school with this id");
             }
 
             return new SchoolDto

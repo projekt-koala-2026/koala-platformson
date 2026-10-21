@@ -21,43 +21,43 @@ namespace koala.src.Modules.Account.Controllers
         [HttpPost("register/{token}")]
         public async Task<IActionResult> LinkRegisterAccount([FromRoute] Guid token, [FromBody] ConsumeRegisterLinkRequestDto requestDto)
         {
-            await _linkService.ConsumeRegisterLink(token, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            await _linkService.ConsumeRegisterLinkAsync(token, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [AllowAnonymous]
         [HttpPost("reset-password/{token}")]
         public async Task<IActionResult> LinkResetPasswordAccount([FromRoute] Guid token, [FromBody]ConsumeResetPasswordLinkRequestDto requestDto)
         {
-            await _linkService.ConsumeResetPasswordLink(token, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            await _linkService.ConsumeResetPasswordLinkAsync(token, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [AllowAnonymous]
         [HttpPost("reset-password")]
         public async Task<IActionResult> CreateResetPasswordLink([FromBody] GenerateResetPasswordLinkRequestDto requestDto)
         {
-            await _linkService.GenerateResetPasswordLink(requestDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            await _linkService.GenerateResetPasswordLinkAsync(requestDto);
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetActiveUserLinks([FromQuery] PageQueryDto pageQueryDto)
         {
-            var response = await _linkService.GetActiveUserLinks(User, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, response.Pagination, response.Data));
+            var response = await _linkService.GetActiveUserLinksAsync(User, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, response.Pagination, response.Data));
         }
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUserLink([FromRoute] Guid id)
         {
-            await _linkService.DeleteUserLink(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<LinkListDto>(true, DateTime.UtcNow, null, null, null));
+            await _linkService.DeleteUserLinkAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<LinkListDto>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
         [HttpDelete]
         public async Task<IActionResult> DeleteUserLinks()
         {
-            await _linkService.DeleteUserLinks(User);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, null));
+            await _linkService.DeleteUserLinksAsync(User);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
     }
 }
