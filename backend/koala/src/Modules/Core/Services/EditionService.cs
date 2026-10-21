@@ -437,27 +437,5 @@ namespace koala.src.Modules.Core.Services
 
             return (tasks, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
-
-        {
-            var baseQuery = await _db.Tasks.AsNoTracking().ToListAsync();
-
-            var tasks = baseQuery
-                .OrderBy(e => e.Id)
-                .Skip(pageQueryDto.PageSize * (pageQueryDto.PageNumber - 1))
-                .Take(pageQueryDto.PageSize)
-                .Select(e => new TaskItemDto
-                (
-                    e.Id,
-                    e.EditionId,
-                    e.SubeditionId,
-                    e.Name,
-                    e.ContentJson,
-                    e.CreatedAt,
-                    e.ExpiredAt
-                ))
-                .ToList();
-
-            return new PagedResult<TaskItemDto>(tasks, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, baseQuery.Count()));
-        }
     }
 }
