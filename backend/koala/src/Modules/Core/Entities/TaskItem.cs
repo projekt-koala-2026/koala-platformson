@@ -11,7 +11,7 @@ namespace koala.src.Modules.Core.Entities
         public Guid EditionId { get; set; }
 
         [Column("subedition_id")]
-        public Guid SubeditionId { get; set; }
+        public Guid SubEditionId { get; set; }
 
         [Column("name")]
         public string Name { get; set; } = string.Empty;

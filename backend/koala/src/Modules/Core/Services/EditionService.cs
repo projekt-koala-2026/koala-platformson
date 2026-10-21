@@ -345,7 +345,7 @@ namespace koala.src.Modules.Core.Services
             {
                 Id = Guid.CreateVersion7(),
                 EditionId = subedition.EditionId,
-                SubeditionId = subeditionId,
+                SubEditionId = subeditionId,
                 Name = createTaskDto.Name,
                 ContentJson = createTaskDto.ContentJson,
                 CreatedAt = timeNow,
@@ -358,7 +358,7 @@ namespace koala.src.Modules.Core.Services
             return new TaskItemDto(
                 newTask.Id,
                 newTask.EditionId,
-                newTask.SubeditionId,
+                newTask.SubEditionId,
                 newTask.Name,
                 newTask.ContentJson,
                 newTask.CreatedAt,
@@ -392,6 +392,7 @@ namespace koala.src.Modules.Core.Services
             await _db.SaveChangesAsync();
 
         }
+
         public async Task<TaskItemDto> GetTask(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             var task = await _db.Tasks
@@ -406,7 +407,7 @@ namespace koala.src.Modules.Core.Services
             return new TaskItemDto(
                 task.Id,
                 task.EditionId,
-                task.SubeditionId,
+                task.SubEditionId,
                 task.Name,
                 task.ContentJson,
                 task.CreatedAt,
@@ -428,7 +429,7 @@ namespace koala.src.Modules.Core.Services
             var tasks = entities.Select(e => new TaskItemDto(
                 e.Id,
                 e.EditionId,
-                e.SubeditionId,
+                e.SubEditionId,
                 e.Name,
                 e.ContentJson,
                 e.CreatedAt,
@@ -436,6 +437,196 @@ namespace koala.src.Modules.Core.Services
             )).ToList();
 
             return (tasks, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+        }
+
+        public async Task<TaskOdpDto> CreateTaskOdp(ClaimsPrincipal? claimsPrincipal, Guid id, CreateTaskOdpDto createTaskOdpDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+            }
+
+            var task = await _db.Tasks
+                .Include(e => e.SubEditions)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (task == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskOdpNotFound, "Task odp of provided id does not exist");
+            }
+
+            TaskOdp newTaskOdp = new TaskOdp
+            {
+                Id = Guid.CreateVersion7(),
+                TaskId = task.Id,
+                CorrectAnswer = createTaskOdpDto.CorrectAnswer
+            };
+
+            await _db.TaskOdps.AddAsync(newTaskOdp);
+            await _db.SaveChangesAsync();
+
+            return new TaskOdpDto(
+                newTaskOdp.Id,
+                task.SubEditions.First().EditionId,
+                task.SubEditionId,
+                newTaskOdp.TaskId,
+                newTaskOdp.CorrectAnswer
+            );
+        }
+
+        public async Task<TaskOdpDto> UpdateTaskOdp(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateTaskOdpDto updateTaskOdpDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+            }
+
+            var task = await _db.Tasks
+                .Include(e => e.SubEditions)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (task == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+            }
+
+            TaskOdp newTaskOdp = new TaskOdp
+            {
+                TaskId = task.Id,
+                CorrectAnswer = updateTaskOdpDto.CorrectAnswer
+            };
+
+            await _db.SaveChangesAsync();
+
+            return new TaskOdpDto(
+                newTaskOdp.Id,
+                task.SubEditions.First().EditionId,
+                task.SubEditionId,
+                newTaskOdp.TaskId,
+                newTaskOdp.CorrectAnswer
+            );
+        }
+
+        public async Task DeleteTaskOdp(ClaimsPrincipal? claimsPrincipal, Guid id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+            }
+
+            var taskOdp = await _db.TaskOdps.FirstOrDefaultAsync(e => e.Id == id);
+
+            if (taskOdp == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskOdpNotFound, "Task Odp of provided id does not exist");
+            }
+
+            _db.TaskOdps.Remove(taskOdp);
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<TaskOdpDto> GetTaskOdp(ClaimsPrincipal? claimsPrincipal, Guid id) 
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+            }
+            
+            var taskOdp = await _db.TaskOdps
+                .Include(e => e.TaskItems)
+                    .ThenInclude(t => t.SubEditions)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (taskOdp == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskOdpNotFound, "Task Odp of provided id does not exist");
+            }
+
+            var subEdition = taskOdp.TaskItems?.SubEditions?.FirstOrDefault();
+
+            return new TaskOdpDto(
+                taskOdp.Id,
+                subEdition.EditionId,
+                subEdition.Id,
+                taskOdp.TaskId,
+                taskOdp.CorrectAnswer
+            );
+        }
+
+        public async Task<(List<TaskOdpDto> Data, ApiPagination Pagination)> GetTaskOdps(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+            }
+
+            var query = _db.TaskOdps
+                .AsNoTracking()
+                .Include(e => e.TaskItems)
+                    .ThenInclude(t => t.SubEditions);
+
+            var totalCount = await query.CountAsync();
+            
+            var entities = await query
+                .OrderBy(e => e.Id)
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .ToListAsync();
+
+            var taskOdps = entities.Select(e =>
+            {
+                var subEdition = e.TaskItems?.SubEditions?.FirstOrDefault();
+
+                return new TaskOdpDto(
+                    e.Id,
+                    subEdition.EditionId,
+                    subEdition.Id,
+                    e.TaskId,
+                    e.CorrectAnswer
+                );
+            }).ToList();
+
+            return (taskOdps, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
     }
 }

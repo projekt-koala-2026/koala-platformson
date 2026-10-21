@@ -15,6 +15,7 @@ namespace koala.src.Modules.Core
         public const int SchoolAlreadyExists = 606;
         public const int InvalidImportSchoolFile = 607;
         public const int TaskNotFound = 608;
+        public const int TaskOdpNotFound = 609;
     }
     public class CoreException : Exception
     {
