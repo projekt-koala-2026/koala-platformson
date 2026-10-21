@@ -17,7 +17,7 @@ namespace koala.src.Modules.Core.Services
             _db = db;
         }
 
-        public async Task<EditionDto> CreateEdition(ClaimsPrincipal? claimsPrincipal, CreateEditionDto createEditionDto)
+        public async Task<EditionDto> CreateEditionAsync(ClaimsPrincipal? claimsPrincipal, CreateEditionDto createEditionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -29,7 +29,7 @@ namespace koala.src.Modules.Core.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation on resource");
             }
 
             bool isThereAnActiveEdition = _db.Editions.Where(e=> e.ExpiresAt == null).AsNoTracking().Any(); 
@@ -67,7 +67,7 @@ namespace koala.src.Modules.Core.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e=> e.Id == id); 
@@ -95,7 +95,7 @@ namespace koala.src.Modules.Core.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permision to peform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e=> e.Id == id); 
@@ -170,7 +170,7 @@ namespace koala.src.Modules.Core.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permision to peform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == editionId);
@@ -182,7 +182,7 @@ namespace koala.src.Modules.Core.Services
 
             if (edition.ExpiresAt != null)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "Subeditions can only be created for the current active edition");
+                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be created for the current active edition");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e=> e.Name == createSubeditionDto.Name); 
@@ -224,7 +224,7 @@ namespace koala.src.Modules.Core.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permision to peform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Name == updateSubeditionNameDto.Name);
@@ -236,7 +236,7 @@ namespace koala.src.Modules.Core.Services
 
             if (edition.ExpiresAt != null)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "Subeditions can only be created for the current active edition");
+                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be created for the current active edition");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e=> e.Name == updateSubeditionNameDto.Name); 
@@ -303,7 +303,7 @@ namespace koala.src.Modules.Core.Services
 
             if(!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden,"User does not have permision to peform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permision to peform this operation on resource");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e=> e.Id == id); 
@@ -329,7 +329,7 @@ namespace koala.src.Modules.Core.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subeditionId); 
@@ -378,7 +378,7 @@ namespace koala.src.Modules.Core.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == id);
@@ -451,7 +451,7 @@ namespace koala.src.Modules.Core.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var task = await _db.Tasks
@@ -494,7 +494,7 @@ namespace koala.src.Modules.Core.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var task = await _db.Tasks
@@ -535,7 +535,7 @@ namespace koala.src.Modules.Core.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var taskOdp = await _db.TaskOdps.FirstOrDefaultAsync(e => e.Id == id);
@@ -561,7 +561,7 @@ namespace koala.src.Modules.Core.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
             
             var taskOdp = await _db.TaskOdps
@@ -597,7 +597,7 @@ namespace koala.src.Modules.Core.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbiden, "User does not have permission to perform this operation on resource");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var query = _db.TaskOdps
