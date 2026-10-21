@@ -157,7 +157,7 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id,edition.Name,edition.CreatedAt,edition.ExpiresAt);
         }
 
-        public async Task<SubeditionDto> CreateSubedition(ClaimsPrincipal? claimsPrincipal, Guid editionId, CreateSubeditionDto createSubeditionDto)
+        public async Task<SubEditionDto> CreateSubedition(ClaimsPrincipal? claimsPrincipal, Guid editionId, CreateSubeditionDto createSubeditionDto)
         {
             
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -209,10 +209,10 @@ namespace koala.src.Modules.Core.Services
             await _db.SubEditions.AddAsync(newSubedition);
             await _db.SaveChangesAsync();
 
-            return new SubeditionDto(newSubedition.Id, newSubedition.EditionId, newSubedition.Name, newSubedition.DateStart, newSubedition.DateEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
+            return new SubEditionDto(newSubedition.Id, newSubedition.EditionId, newSubedition.Name, newSubedition.DateStart, newSubedition.DateEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
         }
 
-        public async Task<SubeditionDto> UpdateSubedition(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateSubeditionNameDto updateSubeditionNameDto)
+        public async Task<SubEditionDto> UpdateSubedition(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateSubeditionNameDto updateSubeditionNameDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -253,30 +253,30 @@ namespace koala.src.Modules.Core.Services
             subedition.DateEnd = updateSubeditionNameDto.DateEnd;
             await _db.SaveChangesAsync();
 
-            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
+            return new SubEditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
 
-        public async Task<SubeditionDto> GetSubedition(ClaimsPrincipal? claimsPrincipal)
+        public async Task<SubEditionDto> GetSubedition(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             var subedition = await _db.SubEditions
                 .AsNoTracking()
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(e => e.Id == id);
 
             if (subedition == null)
             {
                 throw new CoreException(CoreErrorCodes.SubeditionNotFound, "Subedition not found");
             }
 
-            return new SubeditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
+            return new SubEditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
         }
 
-        public async Task<SubeditionListDto> GetSubeditions(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<(List<SubEditionDto>, ApiPagination)> GetSubeditions(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
             var queryResult = await _db.SubEditions.AsNoTracking().ToListAsync();
             var subeditions = queryResult
                 .Skip(pageQueryDto.PageSize*pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
-                .Select(e => new SubeditionDto
+                .Select(e => new SubEditionDto
                 (
                     e.Id,
                     e.EditionId,
@@ -288,7 +288,7 @@ namespace koala.src.Modules.Core.Services
                 ))
                 .ToList();
 
-            return new SubeditionListDto(subeditions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
+            return (subeditions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
         }
 
         public async Task DeleteSubedition(ClaimsPrincipal? claimsPrincipal, Guid id)
@@ -394,7 +394,9 @@ namespace koala.src.Modules.Core.Services
         }
         public async Task<TaskItemDto> GetTask(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
-            var task = await _db.Tasks.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+            var task = await _db.Tasks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == id);
 
             if (task == null)
             {

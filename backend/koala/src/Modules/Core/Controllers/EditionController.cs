@@ -78,18 +78,18 @@ namespace koala.src.Modules.Core.Controllers
 
         [AllowAnonymous]
         [HttpGet("{edition_id}/subeditions/{subedition_id}")]
-        public async Task<IActionResult> GetSubedition()
+        public async Task<IActionResult> GetSubedition([FromRoute] Guid id, [FromRoute] Guid subeditionId)
         {
-            var response = await _editionService.GetSubedition(User);
+            var response = await _editionService.GetSubedition(User, id);
             return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
         [AllowAnonymous]
         [HttpGet("{edition_id}/subeditions")]
-        public async Task<IActionResult> GetSubeditions([FromRoute] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetSubeditions([FromQuery] PageQueryDto pageQueryDto)
         {
-            var response = await _editionService.GetSubeditions(User, pageQueryDto);
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, response.Pagination, response.Data));                
+            (var responseData, var responsePagination) = await _editionService.GetSubeditions(User, pageQueryDto);
+            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));                
         }
 
         [Authorize]
@@ -131,8 +131,10 @@ namespace koala.src.Modules.Core.Controllers
             (var responseData, var responsePagination) = await _editionService.GetTasks(User, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWraper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));            
         }
-            return StatusCode(200, new ApiResponseWraper<object>(true, DateTime.UtcNow, null, response.Pagination, response.Items));            
-        }
+            
+        
+
+
 
     }
 }

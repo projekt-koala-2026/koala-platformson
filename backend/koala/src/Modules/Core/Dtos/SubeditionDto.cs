@@ -1,6 +1,6 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record SubeditionDto
+    public record SubEditionDto
     (
         Guid Id,
         Guid EditionId,
