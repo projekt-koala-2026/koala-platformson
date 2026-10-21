@@ -12,7 +12,7 @@ namespace koala.src.Modules.Core.Controllers
     [Route("api/koala/core/editions")]
     public class EditionController : ControllerBase
     {
-        private readonly EditionService _editionService;
+         private readonly EditionService _editionService;
 
         public EditionController(EditionService editionService)
         {
@@ -50,7 +50,7 @@ namespace koala.src.Modules.Core.Controllers
             (var responseData, var responsePagination) = await _editionService.GetEditionsAsync(User, pageQueryDto, editionQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));                
         }
-        
+
         [AllowAnonymous]
         [HttpGet("active-edition")]
         public async Task<IActionResult> GetActiveEdition()
@@ -64,7 +64,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpPost("{edition_id}/subeditions")]
         public async Task<IActionResult> CreateSubedition([FromRoute] Guid id, [FromBody] CreateSubeditionDto createSubeditionDto)
         {
-            var response = await _editionService.CreateSubeditionAsync(User, id, createSubeditionDto);
+            var response = await _editionService.CreateSubedition(User, id, createSubeditionDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
