@@ -12,8 +12,8 @@ namespace koala.src.Modules.Account.Controllers
     [Route("api/koala/account/links")]
     public class LinkController : ControllerBase
     {
-        private LinkService _linkService;
-        public LinkController(LinkService linkService)
+        private ILinkService _linkService;
+        public LinkController(ILinkService linkService)
         {
             _linkService = linkService;
         }
@@ -26,7 +26,7 @@ namespace koala.src.Modules.Account.Controllers
         }
         [AllowAnonymous]
         [HttpPost("reset-password/{token}")]
-        public async Task<IActionResult> LinkResetPasswordAccount([FromRoute] Guid token, [FromBody]ConsumeResetPasswordLinkRequestDto requestDto)
+        public async Task<IActionResult> LinkResetPasswordAccount([FromRoute] Guid token, [FromBody] ConsumeResetPasswordLinkRequestDto requestDto)
         {
             await _linkService.ConsumeResetPasswordLinkAsync(token, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));

@@ -19,7 +19,7 @@ namespace koala.src.Modules.Cms
                 options.UseNpgsql
                 (
                     dbConnStr,
-                    npgsqlOptions =>npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "cms")
+                    npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "cms")
                 ));
 
             // 2. HOSTED SERVICES (RUNING ON BACKEND START)
@@ -28,7 +28,8 @@ namespace koala.src.Modules.Cms
             // 3. SERVICES
             services.AddScoped<KoalicjantService, KoalicjantService>();
             services.AddScoped<PostService, PostService>();
-            services.AddScoped<PublicFileService, PublicFileService>(sp => {
+            services.AddScoped<PublicFileService, PublicFileService>(sp =>
+            {
                 var db = sp.GetRequiredService<CmsDbContext>();
                 return new PublicFileService(db, publicFilesPath);
             });
@@ -40,12 +41,20 @@ namespace koala.src.Modules.Cms
             services.AddProblemDetails();
 
             // 5. FLUID VALIDATORS
-            
+
             return services;
         }
         public static void AddCmsModule(WebApplication app, IConfiguration configuration)
         {
             string publicFilesPath = configuration["FileSettings:PublicFilesPath"]!;
+            try
+            {
+                Directory.CreateDirectory(publicFilesPath);
+            }
+            catch
+            {
+                throw new CmsException(CmsErrorCodes.FolderCreationError, "Error when creating a folder holding public files");
+            }
             app.UseStaticFiles(new StaticFileOptions
             {
                 FileProvider = new PhysicalFileProvider(publicFilesPath),

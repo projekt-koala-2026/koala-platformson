@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # cause csproj does not makr it to be copied to a publish dir
-COPY koala/appsettings.json /app/appsettings.json
+# COPY koala/appsettings.json /app/appsettings.json
 
 EXPOSE 8080
 
