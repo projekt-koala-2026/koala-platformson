@@ -1,6 +1,6 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record UpdateSubeditionNameDto
+    public record UpdateSubEditionNameDto
     (
         string Name,
         DateTime DateStart,
