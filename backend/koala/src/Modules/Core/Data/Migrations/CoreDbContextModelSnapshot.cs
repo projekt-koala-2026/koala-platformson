@@ -48,6 +48,45 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.ToTable("editions", "core");
                 });
 
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.Subedition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DataEnd")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_end");
+
+                    b.Property<DateTime>("DataStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_start");
+
+                    b.Property<Guid>("EditionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("edition_id");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EditionId");
+
+                    b.ToTable("subeditions", "core");
+                });
+
             modelBuilder.Entity("koala.src.Modules.Core.School", b =>
                 {
                     b.Property<Guid>("Id")
@@ -111,6 +150,22 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("schools", "core");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.Subedition", b =>
+                {
+                    b.HasOne("koala.src.Modules.Core.Entities.Edition", "Edition")
+                        .WithMany("SubEditions")
+                        .HasForeignKey("EditionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Edition");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.Edition", b =>
+                {
+                    b.Navigation("SubEditions");
                 });
 #pragma warning restore 612, 618
         }
