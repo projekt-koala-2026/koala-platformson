@@ -124,9 +124,16 @@ namespace koala.src.Modules.Account.Services
                 Position = CAPTAIN
             };
 
+            TeamMember memberTeam = new TeamMember
+            {
+                Id = Guid.CreateVersion7(),
+                TeamId = team.Id,
+                MemberId = null
+            };
+
             await _db.Teams.AddAsync(team);
             await _db.UserTeams.AddAsync(userTeam);
-
+            await _db.TeamMembers.AddAsync(memberTeam);
             await _db.SaveChangesAsync();
 
 
@@ -238,6 +245,7 @@ namespace koala.src.Modules.Account.Services
 
             TeamMember newTeamMember = new TeamMember
             {
+                Id = Guid.CreateVersion7(),
                 TeamId = teamId,
                 MemberId = newMember.Id
             };
@@ -247,7 +255,7 @@ namespace koala.src.Modules.Account.Services
 
             await _db.SaveChangesAsync();
 
-            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
         }
         public async Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, MemberUpsertRequestDto requestDto)
         {
@@ -291,7 +299,7 @@ namespace koala.src.Modules.Account.Services
 
             await _db.SaveChangesAsync();
 
-            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
         }
         public async Task DeleteTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId)
         {
@@ -379,7 +387,7 @@ namespace koala.src.Modules.Account.Services
 
             await _db.SaveChangesAsync();
 
-            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
             var teamJoinCode = await _db.TeamJoinCodes.AsNoTracking().FirstOrDefaultAsync(tjc => tjc.TeamId == teamId);
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null
@@ -552,13 +560,28 @@ namespace koala.src.Modules.Account.Services
             await _db.UserTeams.AddAsync(newTeamAdmin);
             await _db.SaveChangesAsync();
 
-            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamJoinCode.TeamId).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+
+            var adminUser = await _db.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstAsync(u => u.Id == userId);
+
+            var teamMembers = await _db.TeamMembers
+                .AsNoTracking()
+                .Where(tm => tm.TeamId == teamJoinCode.TeamId && tm.MemberId != null)
+                .Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast))
+                .ToListAsync();
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null
                 ? null
                 : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
 
-            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(tm => tm.TeamId == teamJoinCode.TeamId && tm.Position == CAPTAIN);
+            var teamCaptain = await _db.UserTeams
+                .Include(tm => tm.User)
+                .ThenInclude(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(tm => tm.TeamId == teamJoinCode.TeamId && tm.Position == CAPTAIN);
+
             UserDto teamCaptainDto = new UserDto
             (
                 teamCaptain.User.Id,
@@ -566,26 +589,29 @@ namespace koala.src.Modules.Account.Services
                 teamCaptain.User.NameLast!,
                 teamCaptain.User.Email,
                 teamCaptain.User.Censored,
-                teamCaptain.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                teamCaptain.User.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>()
             );
+
             UserDto teamAdminDto = new UserDto
             (
-                newTeamAdmin.User.Id,
-                newTeamAdmin.User.NameFirst!,
-                newTeamAdmin.User.NameLast!,
-                newTeamAdmin.User.Email,
-                newTeamAdmin.User.Censored,
-                newTeamAdmin.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                adminUser.Id,
+                adminUser.NameFirst!,
+                adminUser.NameLast!,
+                adminUser.Email,
+                adminUser.Censored,
+                adminUser.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>()
             );
+
+            var team = teamJoinCode.Team;
 
             return new TeamDto
             (
-                teamCaptain.Team.Id,
-                teamCaptain.Team.EditionId,
-                teamCaptain.Team.SchoolId,
-                teamCaptain.Team.Name,
-                teamCaptain.Team.NameAccepted,
-                teamCaptain.Team.CreatedAt,
+                team.Id,
+                team.EditionId,
+                team.SchoolId,
+                team.Name,
+                team.NameAccepted,
+                team.CreatedAt,
                 teamCaptainDto,
                 teamAdminDto,
                 teamMembers,
@@ -669,6 +695,7 @@ namespace koala.src.Modules.Account.Services
                         .FirstOrDefault(),
 
                     qr.TeamMembers
+                        .Where(tm => tm.MemberId != null)
                         .Select(tm => new TeamMemberDto(tm.Member.Id, tm.Member.NameFirst, tm.Member.NameLast))
                         .ToList(),
 
@@ -716,7 +743,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.TeamNotFound, "The provided id does not belong to any team");
             }
 
-            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId).Select(tm => new TeamMemberDto(tm.Member.Id, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.Member.Id, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
             var teamJoinCode = await _db.TeamJoinCodes.AsNoTracking().FirstOrDefaultAsync(tjc => tjc.TeamId == teamId);
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null || teamJoinCode.ExpiresAt <= DateTime.UtcNow
@@ -849,6 +876,7 @@ namespace koala.src.Modules.Account.Services
                         .FirstOrDefault(),
 
                     qr.TeamMembers
+                        .Where(tm => tm.MemberId != null)
                         .Select(tm => new TeamMemberDto(tm.Member.Id, tm.Member.NameFirst, tm.Member.NameLast))
                         .ToList(),
 
