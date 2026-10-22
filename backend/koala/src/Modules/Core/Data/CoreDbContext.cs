@@ -1,7 +1,6 @@
 using koala.src.Modules.Core.Entities;
-using Microsoft.Build.Execution;
-using Microsoft.EntityFrameworkCore;
 
+using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Core.Data
 {
@@ -43,8 +42,9 @@ namespace koala.src.Modules.Core.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 b.HasMany(s => s.Tasks)
-                    .WithMany(t => t.SubEditions)
-                    .UsingEntity(j => j.ToTable("subedition_tasks"));
+                    .WithOne(t => t.SubEdition)
+                    .HasForeignKey(t => t.SubEditionId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<TaskItem>(b =>
@@ -59,12 +59,12 @@ namespace koala.src.Modules.Core.Data
                 b.HasKey(t => t.Id);
             });
 
-            modelBuilder.Entity<Edition>().ToTable("editions");
-            modelBuilder.Entity<School>().ToTable("schools");
-
             // SCHOOLS CONFIG
-            modelBuilder.Entity<School>()
-                .HasKey(s=> s.Id);
+            modelBuilder.Entity<School>(b =>
+            {
+                b.ToTable("schools");
+                b.HasKey(s => s.Id);
+            });
         }
     };
 }

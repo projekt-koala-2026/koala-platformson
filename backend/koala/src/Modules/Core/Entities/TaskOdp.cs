@@ -10,6 +10,7 @@ namespace koala.src.Modules.Core.Entities
         public Guid TaskId { get; set; }
         [Column("correct_answer")]
         public string CorrectAnswer { get; set; }
-        public TaskItem TaskItems { get; set; }
+        [ForeignKey("TaskId")]
+        public TaskItem TaskItem { get; set; }
     }
 }

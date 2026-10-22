@@ -458,9 +458,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var task = await _db.Tasks
-                .Include(e => e.SubEditions)
-                .FirstOrDefaultAsync(e => e.Id == id);
+            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == id);
 
             if (task == null)
             {
@@ -499,9 +497,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var task = await _db.Tasks
-                .Include(e => e.SubEditions)
-                .FirstOrDefaultAsync(e => e.Id == id);
+            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == id);
 
             if (task == null)
             {
@@ -565,16 +561,13 @@ namespace koala.src.Modules.Core.Services
             }
             
             var taskOdp = await _db.TaskOdps
-                .Include(e => e.TaskItems)
-                    .ThenInclude(t => t.SubEditions)
+                .Include(e => e.TaskItem)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (taskOdp == null)
             {
                 throw new CoreException(CoreErrorCodes.TaskOdpNotFound, "Task Odp of provided id does not exist");
             }
-
-            var subEdition = taskOdp.TaskItems?.SubEditions?.FirstOrDefault();
 
             return new TaskOdpDto(
                 taskOdp.Id,
@@ -598,10 +591,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var query = _db.TaskOdps
-                .AsNoTracking()
-                .Include(e => e.TaskItems)
-                    .ThenInclude(t => t.SubEditions);
+            var query = _db.TaskOdps.AsNoTracking();
 
             var totalCount = await query.CountAsync();
             
