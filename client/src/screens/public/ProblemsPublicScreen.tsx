@@ -19,15 +19,22 @@ const ProblemsPublicScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
+            apiRequest<ApiEdition[]>(
+                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+                null,
+                "GET",
+                navigate
+            ),
             apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
         ]).then(([editionData, staticPages]) => {
             if (!active) return;
             const taskPage = staticPages?.find((page) => page.name === "TASKS_PAGE");
-            const sortedEditions = (editionData ?? []).map(adaptEdition).sort(
-                (first, second) =>
-                    new Date(second.startDate).getTime() - new Date(first.startDate).getTime()
-            );
+            const sortedEditions = (editionData ?? [])
+                .map(adaptEdition)
+                .sort(
+                    (first, second) =>
+                        new Date(second.startDate).getTime() - new Date(first.startDate).getTime()
+                );
             setEditions(sortedEditions);
             setSelectedEditionId(sortedEditions[0]?.id ?? "");
             setProblemsData(staticPageProblems(taskPage));

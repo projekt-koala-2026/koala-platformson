@@ -50,21 +50,23 @@ const EditSponsorInfo = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiSponsor[]>(`${apiEndpoints.sponsors}?${firstPage}`, null, "GET", navigate).then(
-            (result) => {
-                if (!active) return;
-                if (result.data) {
-                    setSponsors(result.data.map(adaptSponsor));
-                    setVersions(Object.fromEntries(result.data.map((item) => [item.id, item.version])));
-                }
-                else
-                    setFeedback({
-                        tone: "error",
-                        message: "Nie udało się pobrać listy sponsorów.",
-                    });
-                setLoading(false);
-            }
-        );
+        void apiRequestResult<ApiSponsor[]>(
+            `${apiEndpoints.sponsors}?${firstPage}`,
+            null,
+            "GET",
+            navigate
+        ).then((result) => {
+            if (!active) return;
+            if (result.data) {
+                setSponsors(result.data.map(adaptSponsor));
+                setVersions(Object.fromEntries(result.data.map((item) => [item.id, item.version])));
+            } else
+                setFeedback({
+                    tone: "error",
+                    message: "Nie udało się pobrać listy sponsorów.",
+                });
+            setLoading(false);
+        });
         return () => {
             active = false;
         };

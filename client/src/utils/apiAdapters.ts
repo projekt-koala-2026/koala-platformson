@@ -3,16 +3,16 @@ import type {
     ApiKoalicjant,
     ApiPost,
     ApiPublicFile,
-    ApiSponsor,
     ApiSchool,
+    ApiSponsor,
     ApiStaticPage,
     Edition,
     Koalicjant,
     ManagedFile,
-    ProblemsByEdition,
     Post,
-    Sponsor,
+    ProblemsByEdition,
     School,
+    Sponsor,
 } from "../types/models";
 
 const parseContent = (contentJson: string): Record<string, unknown> => {

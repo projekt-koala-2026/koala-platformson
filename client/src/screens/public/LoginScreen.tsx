@@ -4,8 +4,8 @@ import Button from "../../components/Button";
 import PublicHeader from "../../components/PublicHeader";
 import { useLoading } from "../../contexts/LoadingContext";
 import type { SessionUser } from "../../types/models";
-import { apiRequestResult } from "../../utils/apiFetcher";
 import { apiEndpoints } from "../../utils/apiEndpoints";
+import { apiRequestResult } from "../../utils/apiFetcher";
 import {
     clearStoredSession,
     getAuthenticatedHomePath,
@@ -220,22 +220,24 @@ const LoginScreen = () => {
                                     Rodzaj konta
                                 </legend>
                                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                    {(["TEAM_PLAYER", "TEAM_ADMIN"] as RegistrationRole[]).map((role) => (
-                                        <label
-                                            key={role}
-                                            className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700 hover:bg-emerald-50"
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="registration-role"
-                                                value={role}
-                                                checked={registrationRole === role}
-                                                disabled={submitting}
-                                                onChange={() => setRegistrationRole(role)}
-                                            />
-                                            {role === "TEAM_PLAYER" ? "Kapitan" : "Opiekun"}
-                                        </label>
-                                    ))}
+                                    {(["TEAM_PLAYER", "TEAM_ADMIN"] as RegistrationRole[]).map(
+                                        (role) => (
+                                            <label
+                                                key={role}
+                                                className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700 hover:bg-emerald-50"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="registration-role"
+                                                    value={role}
+                                                    checked={registrationRole === role}
+                                                    disabled={submitting}
+                                                    onChange={() => setRegistrationRole(role)}
+                                                />
+                                                {role === "TEAM_PLAYER" ? "Kapitan" : "Opiekun"}
+                                            </label>
+                                        )
+                                    )}
                                 </div>
                             </fieldset>
                             <Button

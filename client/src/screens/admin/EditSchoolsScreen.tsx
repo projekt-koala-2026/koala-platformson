@@ -58,7 +58,12 @@ const AdminSchoolsScreen = () => {
     const [editForm, setEditForm] = useState<EditForm>({ name: "", nameShort: "" });
 
     const loadSchools = useCallback(async () => {
-        const { data } = await apiRequestResult<ApiSchool[]>(`${apiEndpoints.schools}?${firstPage}`, null, "GET", navigate);
+        const { data } = await apiRequestResult<ApiSchool[]>(
+            `${apiEndpoints.schools}?${firstPage}`,
+            null,
+            "GET",
+            navigate
+        );
         if (!data) {
             setFeedback({
                 tone: "error",
@@ -74,22 +79,24 @@ const AdminSchoolsScreen = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiSchool[]>(`${apiEndpoints.schools}?${firstPage}`, null, "GET", navigate).then(
-            ({ data }) => {
-                if (active) {
-                    if (data) {
-                        setSchools(data.map(adaptSchool));
-                        setRawSchools(Object.fromEntries(data.map((school) => [school.id, school])));
-                    }
-                    else
-                        setFeedback({
-                            tone: "error",
-                            message: "Nie udało się pobrać rejestru szkół.",
-                        });
-                    setIsLoading(false);
-                }
+        void apiRequestResult<ApiSchool[]>(
+            `${apiEndpoints.schools}?${firstPage}`,
+            null,
+            "GET",
+            navigate
+        ).then(({ data }) => {
+            if (active) {
+                if (data) {
+                    setSchools(data.map(adaptSchool));
+                    setRawSchools(Object.fromEntries(data.map((school) => [school.id, school])));
+                } else
+                    setFeedback({
+                        tone: "error",
+                        message: "Nie udało się pobrać rejestru szkół.",
+                    });
+                setIsLoading(false);
             }
-        );
+        });
         return () => {
             active = false;
         };
@@ -228,9 +235,7 @@ const AdminSchoolsScreen = () => {
         if (updated) {
             const adapted = adaptSchool(updated);
             setSchools((current) =>
-                current.map((school) =>
-                    school.rspo === selectedSchool.rspo ? adapted : school
-                )
+                current.map((school) => (school.rspo === selectedSchool.rspo ? adapted : school))
             );
             setRawSchools((current) => ({ ...current, [updated.id]: updated }));
             setSelectedSchool(null);
@@ -419,7 +424,9 @@ const AdminSchoolsScreen = () => {
                                 Numer budynku *
                                 <input
                                     value={newSchool.building}
-                                    onChange={(event) => updateNewSchool("building", event.target.value)}
+                                    onChange={(event) =>
+                                        updateNewSchool("building", event.target.value)
+                                    }
                                     className={inputClass}
                                     required
                                 />
@@ -429,7 +436,9 @@ const AdminSchoolsScreen = () => {
                                 <input
                                     type="email"
                                     value={newSchool.email}
-                                    onChange={(event) => updateNewSchool("email", event.target.value)}
+                                    onChange={(event) =>
+                                        updateNewSchool("email", event.target.value)
+                                    }
                                     className={inputClass}
                                     required
                                 />

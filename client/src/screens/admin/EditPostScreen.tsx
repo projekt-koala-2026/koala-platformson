@@ -50,14 +50,23 @@ const EditPostScreen = () => {
         let active = true;
         void Promise.all([
             apiRequest<ApiPost[]>(`${POSTS_ENDPOINT}?${firstPage}`, null, "GET", navigate),
-            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
-            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=true`, null, "GET", navigate),
+            apiRequest<ApiEdition[]>(
+                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+                null,
+                "GET",
+                navigate
+            ),
+            apiRequest<ApiEdition[]>(
+                `${apiEndpoints.editions}?${firstPage}&ShowActive=true`,
+                null,
+                "GET",
+                navigate
+            ),
         ]).then(([postsData, pastEditionsData, activeEditionData]) => {
             if (!active) return;
-            const editionsData = [
-                ...(activeEditionData ?? []),
-                ...(pastEditionsData ?? []),
-            ].map(adaptEdition);
+            const editionsData = [...(activeEditionData ?? []), ...(pastEditionsData ?? [])].map(
+                adaptEdition
+            );
             setPosts((postsData ?? []).map(adaptPost));
             setPostVersions(
                 Object.fromEntries((postsData ?? []).map((post) => [post.id, post.version]))

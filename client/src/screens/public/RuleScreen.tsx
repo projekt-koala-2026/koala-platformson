@@ -16,13 +16,15 @@ const RuleScreen = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate).then((data) => {
-            if (!active) return;
-            const page = data?.find((item) => item.name === "RULES_PAGE");
-            if (page) setRules(staticPageMarkdown(page));
-            else setHasError(true);
-            setLoading(false);
-        });
+        void apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate).then(
+            (data) => {
+                if (!active) return;
+                const page = data?.find((item) => item.name === "RULES_PAGE");
+                if (page) setRules(staticPageMarkdown(page));
+                else setHasError(true);
+                setLoading(false);
+            }
+        );
         return () => {
             active = false;
         };

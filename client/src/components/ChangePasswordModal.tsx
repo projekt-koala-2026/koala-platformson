@@ -33,7 +33,12 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
         }
         setSending(true);
         setError("");
-        const userResult = await apiRequestResult<User>(`${apiEndpoints.users}/${id}`, null, "GET", navigate);
+        const userResult = await apiRequestResult<User>(
+            `${apiEndpoints.users}/${id}`,
+            null,
+            "GET",
+            navigate
+        );
         if (!userResult.data?.email) {
             setError("Nie udało się odczytać adresu e-mail konta.");
             setSending(false);
@@ -53,19 +58,43 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
     return (
         <Modal isOpen={isOpen} onClose={close} title="Zmień hasło" maxWidth="md">
             <div className="space-y-5">
-                {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+                {error && (
+                    <p
+                        role="alert"
+                        className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                    >
+                        {error}
+                    </p>
+                )}
                 {sent ? (
-                    <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                    <p
+                        role="status"
+                        className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+                    >
                         Wysłaliśmy wiadomość z bezpiecznym linkiem do ustawienia nowego hasła.
                     </p>
                 ) : (
                     <p className="text-sm leading-6 text-slate-600">
-                        Ze względów bezpieczeństwa zmiana hasła odbywa się przez jednorazowy link wysłany na adres e-mail przypisany do konta.
+                        Ze względów bezpieczeństwa zmiana hasła odbywa się przez jednorazowy link
+                        wysłany na adres e-mail przypisany do konta.
                     </p>
                 )}
                 <div className="flex justify-end gap-3">
-                    <button type="button" disabled={sending} onClick={close} className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50">{sent ? "Zamknij" : "Anuluj"}</button>
-                    {!sent && <Button text={sending ? "Wysyłanie…" : "Wyślij link"} onClick={() => void requestReset()} disabled={sending} />}
+                    <button
+                        type="button"
+                        disabled={sending}
+                        onClick={close}
+                        className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                    >
+                        {sent ? "Zamknij" : "Anuluj"}
+                    </button>
+                    {!sent && (
+                        <Button
+                            text={sending ? "Wysyłanie…" : "Wyślij link"}
+                            onClick={() => void requestReset()}
+                            disabled={sending}
+                        />
+                    )}
                 </div>
             </div>
         </Modal>

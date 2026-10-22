@@ -272,9 +272,33 @@ const CaptainHomeScreen = () => {
         setSaving(false);
     };
 
-    const addRodo = async (memberId: string) => {
-        console.log(team?.id, team?.teamMembers, memberId);
-        setIsRodo(true);
+    const addRodo = async (memberId: string, file?: File) => {
+        if (!team || !file) return;
+
+        if (file.type !== "application/pdf") {
+            setFeedback({ tone: "error", message: "Wybierz plik PDF." });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        setSaving(true);
+        setFeedback(null);
+
+        const result = await apiRequestResult<unknown>(
+            `${apiEndpoints.teams}/${team.id}/rodos/${memberId}`,
+            formData,
+            "POST",
+            navigate
+        );
+
+        setFeedback(
+            result.data
+                ? { tone: "success", message: "Plik PDF został przesłany." }
+                : { tone: "error", message: "Nie udało się przesłać pliku PDF." }
+        );
+        setSaving(false);
     };
     const removeRodo = async (memberId: string) => {
         console.log(team?.id, team?.teamMembers, memberId);
@@ -463,15 +487,21 @@ const CaptainHomeScreen = () => {
                                             </button>
                                         )}
                                         {roles.isGuardian && isRodo == false && (
-                                            <button
-                                                type="button"
-                                                disabled={saving}
-                                                onClick={() => void addRodo(member.id)}
-                                                className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
-                                            >
+                                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
                                                 <FaUpload />
                                                 <span>Zgoda RODO</span>
-                                            </button>
+                                                <input
+                                                    type="file"
+                                                    accept=".pdf,application/pdf"
+                                                    className="sr-only"
+                                                    disabled={saving}
+                                                    onChange={(event) => {
+                                                        const file = event.currentTarget.files?.[0];
+                                                        if (file) void addRodo(member.id, file);
+                                                        event.currentTarget.value = "";
+                                                    }}
+                                                />
+                                            </label>
                                         )}
                                         {roles.isGuardian && isRodo === true && (
                                             <div className="flex items-center gap-1">

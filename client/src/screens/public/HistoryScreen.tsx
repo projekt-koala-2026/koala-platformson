@@ -21,13 +21,24 @@ const HistoryScreen = () => {
         let active = true;
         void Promise.all([
             apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
-            apiRequest<ApiEdition[]>(`${apiEndpoints.editions}?${firstPage}&ShowActive=false`, null, "GET", navigate),
-            apiRequest<ApiPost[]>(`${apiEndpoints.posts}?${firstPage}&ShowHidden=false`, null, "GET", navigate),
+            apiRequest<ApiEdition[]>(
+                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+                null,
+                "GET",
+                navigate
+            ),
+            apiRequest<ApiPost[]>(
+                `${apiEndpoints.posts}?${firstPage}&ShowHidden=false`,
+                null,
+                "GET",
+                navigate
+            ),
         ]).then(([staticPages, editionData, postData]) => {
             if (!active) return;
             const historyPage = staticPages?.find((item) => item.name === "HISTORY_PAGE");
             const now = Date.now();
-            const pastEditions = (editionData ?? []).map(adaptEdition)
+            const pastEditions = (editionData ?? [])
+                .map(adaptEdition)
                 .filter((edition) => new Date(edition.endDate).getTime() < now)
                 .sort(
                     (first, second) =>
