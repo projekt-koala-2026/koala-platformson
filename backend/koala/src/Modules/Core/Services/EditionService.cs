@@ -187,13 +187,7 @@ namespace koala.src.Modules.Core.Services
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e=> e.Name == createSubeditionDto.Name); 
 
-            if(subedition == null)
-            {
-                throw new CoreException(CoreErrorCodes.SubeditionNotFound,"Subedition of provided name does not exist");
-            }
-
             DateTime timeNow = DateTime.UtcNow;
-
 
             SubEdition newSubedition = new SubEdition
             {
@@ -212,7 +206,7 @@ namespace koala.src.Modules.Core.Services
             return new SubEditionDto(newSubedition.Id, newSubedition.EditionId, newSubedition.Name, newSubedition.DateStart, newSubedition.DateEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
         }
 
-        public async Task<SubEditionDto> UpdateSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, UpdateSubEditionNameDto updateSubEditionNameDto)
+        public async Task<SubEditionDto> UpdateSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, UpdateSubEditionDto updateSubEditionNameDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);

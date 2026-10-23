@@ -20,39 +20,39 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("subeditions/tasks/{task_id}/task_odp")]
-        public async Task<IActionResult> CreateTaskCorr([FromRoute] Guid task_id, [FromBody] CreateTaskCorrDto createTaskCorrDto)
+        [HttpPost]
+        public async Task<IActionResult> CreateTaskCorr([FromRoute] Guid id, [FromBody] CreateTaskCorrDto createTaskCorrDto)
         {
-            var response = await _taskService.CreateTaskCorrAsync(User, task_id, createTaskCorrDto);
+            var response = await _taskService.CreateTaskCorrAsync(User, id, createTaskCorrDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
         [Authorize]
-        [HttpPut("task_odp/{task_odp_id}")]
-        public async Task<IActionResult> UpdateTaskCorr([FromRoute] Guid task_odp_id, [FromBody] UpdateTaskCorrDto updateTaskCorrDto)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTaskCorr([FromRoute] Guid id, [FromBody] UpdateTaskCorrDto updateTaskCorrDto)
         {
-            var response = await _taskService.UpdateTaskCorrAsync(User, task_odp_id, updateTaskCorrDto);
+            var response = await _taskService.UpdateTaskCorrAsync(User, id, updateTaskCorrDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskCorrDto>(true, DateTime.UtcNow, null, null, response));                
         }
 
         [Authorize]
-        [HttpDelete("task_odp/{task_odp_id}")]
-        public async Task<IActionResult> DeleteTaskCorr([FromRoute] Guid task_odp_id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTaskCorr([FromRoute] Guid id)
         {
-            await _taskService.DeleteTaskCorrAsync(User, task_odp_id);
+            await _taskService.DeleteTaskCorrAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));                
         }
 
         [Authorize]
-        [HttpGet("/task_odp/{task_odp_id}")]
-        public async Task<IActionResult> GetTaskCorr([FromRoute] Guid task_odp_id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetTaskCorr([FromRoute] Guid id)
         {
-            var response = await _taskService.GetTaskCorrAsync(User, task_odp_id);
+            var response = await _taskService.GetTaskCorrAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskCorrDto>(true, DateTime.UtcNow, null, null, response));                
         }
 
         [Authorize]
-        [HttpGet("task_odp")]
+        [HttpGet]
         public async Task<IActionResult> GetTaskCorrs([FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _taskService.GetTaskCorrsAsync(User, pageQueryDto);
