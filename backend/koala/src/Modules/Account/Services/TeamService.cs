@@ -474,7 +474,7 @@ namespace koala.src.Modules.Account.Services
                     TeamId = teamId,
                     JoinCode = TeamJoinCodeGenerator.GenerateCode(8),
                     CreatedAt = timeNow,
-                    ExpiresAt = timeNow.AddHours(2.0f)
+                    ExpiresAt = timeNow.AddDays(1)
                 };
 
                 await _db.TeamJoinCodes.AddAsync(teamJoinCode);
@@ -483,7 +483,7 @@ namespace koala.src.Modules.Account.Services
             {
                 teamJoinCode.JoinCode = TeamJoinCodeGenerator.GenerateCode(8);
                 teamJoinCode.CreatedAt = timeNow;
-                teamJoinCode.ExpiresAt = timeNow.AddMinutes(30.0f);
+                teamJoinCode.ExpiresAt = timeNow.AddDays(1);
             }
 
             await _db.SaveChangesAsync();

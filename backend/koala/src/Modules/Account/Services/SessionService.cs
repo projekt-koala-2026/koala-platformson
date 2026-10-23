@@ -11,9 +11,9 @@ namespace koala.src.Modules.Account.Services
 {
     public interface ISessionService
     {
-        public Task<_SessionResponseDto?> CreateSessionAsync(LoginRequestDto requestDto);
+        public Task<_SessionResponseDto> CreateSessionAsync(LoginRequestDto requestDto);
         public Task DeleteSessionAsync(ClaimsPrincipal? claimsPrincipal, Guid session_id);
-        public Task<SessionListDto> GetSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
+        public Task<(List<SessionDto>, ApiPagination)> GetSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
         public Task DeleteSessionsAsync(ClaimsPrincipal? claimsPrincipal);
     }
     public class SessionService : ISessionService
@@ -95,7 +95,7 @@ namespace koala.src.Modules.Account.Services
             _db.Sessions.Remove(session);
             await _db.SaveChangesAsync();
         }
-        public async Task<SessionListDto> GetSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<(List<SessionDto>, ApiPagination)> GetSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
@@ -116,7 +116,7 @@ namespace koala.src.Modules.Account.Services
                 .Take(pageQueryDto.PageSize)
                 .ToList();
 
-            return new SessionListDto(sessions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
+            return (sessions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
         public async Task DeleteSessionsAsync(ClaimsPrincipal? claimsPrincipal)
         {

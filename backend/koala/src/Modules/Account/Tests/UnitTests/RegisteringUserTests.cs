@@ -34,7 +34,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Guid sessionId = Guid.CreateVersion7();
             Guid token = Guid.CreateVersion7();
             List<string> roles = ["ORGANIZATION_ADMIN"];
-            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId,sessionId,token,roles);
+            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId, sessionId, token, roles);
 
             RegisterUserRequestDto requestDto = new RegisterUserRequestDto
             (
@@ -44,7 +44,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             // TEST SERVICE
             await service.RegisterUserAsync(claimsPrincipal, requestDto);
-            var link = await db.Links.Include(l=> l.User).FirstOrDefaultAsync(l => l.User.Email == requestDto.Email);
+            var link = await db.Links.Include(l => l.User).FirstOrDefaultAsync(l => l.User.Email == requestDto.Email);
 
             // ASSERT THE RETURN VALUE
             emailMock.Verify(
@@ -70,7 +70,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 new Role { Id = Guid.CreateVersion7(), Name = "ORGANIZATION_ADMIN" }
             );
             await db.SaveChangesAsync();
-            
+
             ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestEmptyClaimsPrincipalAsync();
             RegisterUserRequestDto requestDto = new RegisterUserRequestDto
             (
@@ -80,7 +80,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             // TEST SERVICE
             await service.RegisterUserAsync(claimsPrincipal, requestDto);
-            var link = await db.Links.Include(l=> l.User).FirstOrDefaultAsync(l => l.User.Email == requestDto.Email);
+            var link = await db.Links.Include(l => l.User).FirstOrDefaultAsync(l => l.User.Email == requestDto.Email);
 
             // ASSERT THE RETURN VALUE
             emailMock.Verify(

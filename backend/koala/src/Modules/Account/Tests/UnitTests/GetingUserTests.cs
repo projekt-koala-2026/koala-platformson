@@ -37,12 +37,12 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Guid sessionId = Guid.CreateVersion7();
             Guid token = Guid.CreateVersion7();
             List<string> roles = ["ORGANIZATION_ADMIN"];
-            
-            db.Roles.AddRange(
-                new Role { Id = tempRoleId1, Name = "TEAM_ADMIN" }
-            );
-            db.Users.Add(
-                new User 
+
+            await db.Roles.AddRangeAsync(
+                 new Role { Id = tempRoleId1, Name = "TEAM_ADMIN" }
+             );
+            await db.Users.AddAsync(
+                new User
                 {
                     Id = tempUserId,
                     Email = tempUserEmail,
@@ -52,11 +52,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                     Verified = true
                 }
             );
-            db.UserRoles.Add( new UserRole {UserId = tempUserId, RoleId = tempRoleId1});
+            db.UserRoles.Add(new UserRole { UserId = tempUserId, RoleId = tempRoleId1 });
             await db.SaveChangesAsync();
 
-            
-            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId,sessionId,token,roles);
+
+            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId, sessionId, token, roles);
 
             // TEST SERVICE
             var user = await service.GetUserAsync(claimsPrincipal, tempUserId);
@@ -67,7 +67,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.Equal(user.Email, tempUserEmail);
             Assert.Equal(user.NameFirst, tempUserNameFirst);
             Assert.Equal(user.NameLast, tempUserNameLast);
-            Assert.Equal(user.Censored , tempUserCensored);
+            Assert.Equal(user.Censored, tempUserCensored);
             Assert.Equal(user.Roles, ["TEAM_ADMIN"]);
         }
         [Fact]
@@ -94,12 +94,12 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Guid sessionId = Guid.CreateVersion7();
             Guid token = Guid.CreateVersion7();
             List<string> roles = ["ORGANIZATION_ADMIN"];
-            
+
             db.Roles.AddRange(
-                new Role { Id = tempRoleId1, Name = "ORGANIZATION_ADMIN"}
+                new Role { Id = tempRoleId1, Name = "ORGANIZATION_ADMIN" }
             );
             db.Users.Add(
-                new User 
+                new User
                 {
                     Id = userId,
                     Email = tempUserEmail,
@@ -109,11 +109,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                     Verified = true
                 }
             );
-            db.UserRoles.Add( new UserRole {UserId = userId, RoleId = tempRoleId1});
+            db.UserRoles.Add(new UserRole { UserId = userId, RoleId = tempRoleId1 });
             await db.SaveChangesAsync();
 
-            
-            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId,sessionId,token,roles);
+
+            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId, sessionId, token, roles);
 
             // TEST SERVICE
             var user = await service.GetUserAsync(claimsPrincipal, userId);
@@ -124,7 +124,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.Equal(user.Email, tempUserEmail);
             Assert.Equal(user.NameFirst, tempUserNameFirst);
             Assert.Equal(user.NameLast, tempUserNameLast);
-            Assert.Equal(user.Censored , tempUserCensored);
+            Assert.Equal(user.Censored, tempUserCensored);
             Assert.Equal(user.Roles, roles);
         }
 
@@ -152,12 +152,12 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Guid sessionId = Guid.CreateVersion7();
             Guid token = Guid.CreateVersion7();
             List<string> roles = ["ORGANIZATION_EDITOR"];
-            
+
             db.Roles.AddRange(
-                new Role { Id = tempRoleId1, Name = "ORGANIZATION_EDITOR"}
+                new Role { Id = tempRoleId1, Name = "ORGANIZATION_EDITOR" }
             );
             db.Users.Add(
-                new User 
+                new User
                 {
                     Id = userId,
                     Email = tempUserEmail,
@@ -167,11 +167,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                     Verified = true
                 }
             );
-            db.UserRoles.Add( new UserRole {UserId = userId, RoleId = tempRoleId1});
+            db.UserRoles.Add(new UserRole { UserId = userId, RoleId = tempRoleId1 });
             await db.SaveChangesAsync();
 
-            
-            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId,sessionId,token,roles);
+
+            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId, sessionId, token, roles);
 
             // TEST SERVICE
             var user = await service.GetUserAsync(claimsPrincipal, userId);
@@ -182,7 +182,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.Equal(user.Email, tempUserEmail);
             Assert.Equal(user.NameFirst, tempUserNameFirst);
             Assert.Equal(user.NameLast, tempUserNameLast);
-            Assert.Equal(user.Censored , tempUserCensored);
+            Assert.Equal(user.Censored, tempUserCensored);
             Assert.Equal(user.Roles, roles);
         }
 
@@ -210,12 +210,12 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Guid sessionId = Guid.CreateVersion7();
             Guid token = Guid.CreateVersion7();
             List<string> roles = ["ORGANIZATION_REVIEWER"];
-            
+
             db.Roles.AddRange(
-                new Role { Id = tempRoleId1, Name = "ORGANIZATION_REVIEWER"}
+                new Role { Id = tempRoleId1, Name = "ORGANIZATION_REVIEWER" }
             );
             db.Users.Add(
-                new User 
+                new User
                 {
                     Id = userId,
                     Email = tempUserEmail,
@@ -225,11 +225,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                     Verified = true
                 }
             );
-            db.UserRoles.Add( new UserRole {UserId = userId, RoleId = tempRoleId1});
+            db.UserRoles.Add(new UserRole { UserId = userId, RoleId = tempRoleId1 });
             await db.SaveChangesAsync();
 
-            
-            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId,sessionId,token,roles);
+
+            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId, sessionId, token, roles);
 
             // TEST SERVICE
             var user = await service.GetUserAsync(claimsPrincipal, userId);
@@ -240,8 +240,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.Equal(user.Email, tempUserEmail);
             Assert.Equal(user.NameFirst, tempUserNameFirst);
             Assert.Equal(user.NameLast, tempUserNameLast);
-            Assert.Equal(user.Censored , tempUserCensored);
-            Assert.Equal(user.Roles, roles);   
+            Assert.Equal(user.Censored, tempUserCensored);
+            Assert.Equal(user.Roles, roles);
         }
         [Fact]
         public async Task Can_Get_Myself_As_TEAM_ADMIN()
@@ -267,12 +267,12 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Guid sessionId = Guid.CreateVersion7();
             Guid token = Guid.CreateVersion7();
             List<string> roles = ["TEAM_ADMIN"];
-            
+
             db.Roles.AddRange(
-                new Role { Id = tempRoleId1, Name = "TEAM_ADMIN"}
+                new Role { Id = tempRoleId1, Name = "TEAM_ADMIN" }
             );
             db.Users.Add(
-                new User 
+                new User
                 {
                     Id = userId,
                     Email = tempUserEmail,
@@ -282,11 +282,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                     Verified = true
                 }
             );
-            db.UserRoles.Add( new UserRole {UserId = userId, RoleId = tempRoleId1});
+            db.UserRoles.Add(new UserRole { UserId = userId, RoleId = tempRoleId1 });
             await db.SaveChangesAsync();
 
-            
-            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId,sessionId,token,roles);
+
+            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId, sessionId, token, roles);
 
             // TEST SERVICE
             var user = await service.GetUserAsync(claimsPrincipal, userId);
@@ -297,7 +297,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.Equal(user.Email, tempUserEmail);
             Assert.Equal(user.NameFirst, tempUserNameFirst);
             Assert.Equal(user.NameLast, tempUserNameLast);
-            Assert.Equal(user.Censored , tempUserCensored);
+            Assert.Equal(user.Censored, tempUserCensored);
             Assert.Equal(user.Roles, roles);
         }
         [Fact]
@@ -324,12 +324,12 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Guid sessionId = Guid.CreateVersion7();
             Guid token = Guid.CreateVersion7();
             List<string> roles = ["TEAM_PLAYER"];
-            
+
             db.Roles.AddRange(
-                new Role { Id = tempRoleId1, Name = "TEAM_PLAYER"}
+                new Role { Id = tempRoleId1, Name = "TEAM_PLAYER" }
             );
             db.Users.Add(
-                new User 
+                new User
                 {
                     Id = userId,
                     Email = tempUserEmail,
@@ -339,11 +339,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                     Verified = true
                 }
             );
-            db.UserRoles.Add( new UserRole {UserId = userId, RoleId = tempRoleId1});
+            db.UserRoles.Add(new UserRole { UserId = userId, RoleId = tempRoleId1 });
             await db.SaveChangesAsync();
 
-            
-            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId,sessionId,token,roles);
+
+            ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId, sessionId, token, roles);
 
             // TEST SERVICE
             var user = await service.GetUserAsync(claimsPrincipal, userId);
@@ -354,7 +354,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.Equal(user.Email, tempUserEmail);
             Assert.Equal(user.NameFirst, tempUserNameFirst);
             Assert.Equal(user.NameLast, tempUserNameLast);
-            Assert.Equal(user.Censored , tempUserCensored);
+            Assert.Equal(user.Censored, tempUserCensored);
             Assert.Equal(user.Roles, roles);
         }
     }

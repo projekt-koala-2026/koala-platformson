@@ -63,8 +63,8 @@ namespace koala.src.Modules.Account.Controllers
         [HttpGet]
         public async Task<IActionResult> GetActiveUserSessions([FromQuery] PageQueryDto pageQueryDto)
         {
-            var response = await _sessionService.GetSessionsAsync(User, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<SessionDto>>(true, DateTime.UtcNow, null, response.Pagination, response.Data));
+            (var response, var pagination) = await _sessionService.GetSessionsAsync(User, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<SessionDto>>(true, DateTime.UtcNow, null, pagination, response));
         }
         [Authorize]
         [HttpDelete("{session_id}")]
