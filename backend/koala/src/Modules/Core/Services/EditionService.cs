@@ -206,7 +206,7 @@ namespace koala.src.Modules.Core.Services
             return new SubEditionDto(newSubedition.Id, newSubedition.EditionId, newSubedition.Name, newSubedition.DateStart, newSubedition.DateEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
         }
 
-        public async Task<SubEditionDto> UpdateSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, UpdateSubEditionDto updateSubEditionNameDto)
+        public async Task<SubEditionDto> UpdateSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, UpdateSubEditionDto updateSubEditionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -242,9 +242,9 @@ namespace koala.src.Modules.Core.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            subedition.Name = updateSubEditionNameDto.Name;
-            subedition.DateStart = updateSubEditionNameDto.DateStart;
-            subedition.DateEnd = updateSubEditionNameDto.DateEnd;
+            subedition.Name = updateSubEditionDto.Name;
+            subedition.DateStart = updateSubEditionDto.DateStart;
+            subedition.DateEnd = updateSubEditionDto.DateEnd;
             await _db.SaveChangesAsync();
 
             return new SubEditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
@@ -342,7 +342,6 @@ namespace koala.src.Modules.Core.Services
             TaskItem newTask = new TaskItem
             {
                 Id = Guid.CreateVersion7(),
-                EditionId = subedition.EditionId,
                 SubEditionId = subedition.Id,
                 Name = createTaskDto.Name,
                 ContentJson = createTaskDto.ContentJson,

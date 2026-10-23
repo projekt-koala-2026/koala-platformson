@@ -6,9 +6,6 @@ namespace koala.src.Modules.Core.Entities
     {
         [Column("id")]
         public Guid Id { get; set; }
-        
-        [Column("edition_id")]
-        public Guid EditionId { get; set; }
 
         [Column("subedition_id")]
         public Guid SubEditionId { get; set; }

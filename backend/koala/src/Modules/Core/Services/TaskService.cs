@@ -80,7 +80,7 @@ namespace koala.src.Modules.Core.Services
 
             TaskCorr newTaskCorr = new TaskCorr
             {
-                TaskId = task.Id,
+                TaskId = updateTaskCorrDto.TaskItemId,
                 CorrectAnswer = updateTaskCorrDto.CorrectAnswer
             };
 
