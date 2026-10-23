@@ -175,11 +175,6 @@ namespace koala.src.Modules.Core.Services
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id);
 
-            if (edition == null)
-            {
-                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition does not exist");
-            }
-
             if (edition.ExpiresAt != null)
             {
                 throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be created for the current active edition");
@@ -230,14 +225,14 @@ namespace koala.src.Modules.Core.Services
 
             if (edition.ExpiresAt != null)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be created for the current active edition");
+                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be updated for the current active edition");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id); 
 
             if(subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubeditionNotFound,"Subedition of provided name does not exist");
+                throw new CoreException(CoreErrorCodes.SubeditionNotFound,"Subedition of provided id does not exist");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -345,8 +340,7 @@ namespace koala.src.Modules.Core.Services
                 SubEditionId = subedition.Id,
                 Name = createTaskDto.Name,
                 ContentJson = createTaskDto.ContentJson,
-                CreatedAt = timeNow,
-                // ExpiredAt = createTaskDto.ExpiredAt
+                UpdatedAt = timeNow
             };
 
             await _db.Tasks.AddAsync(newTask);
@@ -357,8 +351,7 @@ namespace koala.src.Modules.Core.Services
                 newTask.SubEditionId,
                 newTask.Name,
                 newTask.ContentJson,
-                newTask.CreatedAt,
-                newTask.ExpiredAt
+                newTask.UpdatedAt
             );
         }
 
@@ -405,8 +398,7 @@ namespace koala.src.Modules.Core.Services
                 task.SubEditionId,
                 task.Name,
                 task.ContentJson,
-                task.CreatedAt,
-                task.ExpiredAt
+                task.UpdatedAt
             );
         }
 
@@ -426,8 +418,7 @@ namespace koala.src.Modules.Core.Services
                 e.SubEditionId,
                 e.Name,
                 e.ContentJson,
-                e.CreatedAt,
-                e.ExpiredAt
+                e.UpdatedAt
             )).ToList();
 
             return (tasks, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));

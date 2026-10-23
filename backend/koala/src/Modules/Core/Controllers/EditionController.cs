@@ -69,10 +69,10 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/subeditions/{subedition_id}/name")]
-        public async Task<IActionResult> UpdateSubedition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] UpdateSubEditionNameDto updateSubEditionNameDto)
+        [HttpPut("{edition_id}/subeditions/{subedition_id}")]
+        public async Task<IActionResult> UpdateSubedition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] UpdateSubEditionDto updateSubEditionDto)
         {
-            var response = await _editionService.UpdateSubeditionAsync(User, edition_id, subedition_id, updateSubEditionNameDto);
+            var response = await _editionService.UpdateSubeditionAsync(User, edition_id, subedition_id, updateSubEditionDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 

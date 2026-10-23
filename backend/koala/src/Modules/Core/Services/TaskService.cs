@@ -17,7 +17,7 @@ namespace koala.src.Modules.Core.Services
             _db = db;
         }
 
-        public async Task<TaskCorrDto> CreateTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid id, CreateTaskCorrDto createTaskCorrDto)
+        public async Task<TaskCorrDto> CreateTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, CreateTaskCorrDto createTaskCorrDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -32,7 +32,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == id);
+            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == createTaskCorrDto.TaskItemId);
 
             if (task == null)
             {
@@ -80,6 +80,7 @@ namespace koala.src.Modules.Core.Services
 
             TaskCorr newTaskCorr = new TaskCorr
             {
+                Id = id,
                 TaskId = updateTaskCorrDto.TaskItemId,
                 CorrectAnswer = updateTaskCorrDto.CorrectAnswer
             };

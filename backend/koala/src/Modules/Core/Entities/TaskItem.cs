@@ -15,12 +15,9 @@ namespace koala.src.Modules.Core.Entities
 
         [Column("content_json")]
         public dynamic ContentJson { get; set; }
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
         
-        [Column("expired_at")]
-        public DateTime? ExpiredAt { get; set; }
+        [Column("updated_at")]
+        public DateTime? UpdatedAt { get; set; }
 
         public SubEditionTask SubEditionTask { get; set; } = null!;
         public ICollection<TaskItemTaskCorr> TaskItemTaskCorrs{ get; set; } = new List<TaskItemTaskCorr>();

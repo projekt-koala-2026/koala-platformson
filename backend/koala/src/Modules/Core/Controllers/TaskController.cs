@@ -21,9 +21,9 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateTaskCorr([FromRoute] Guid id, [FromBody] CreateTaskCorrDto createTaskCorrDto)
+        public async Task<IActionResult> CreateTaskCorr([FromBody] CreateTaskCorrDto createTaskCorrDto)
         {
-            var response = await _taskService.CreateTaskCorrAsync(User, id, createTaskCorrDto);
+            var response = await _taskService.CreateTaskCorrAsync(User, createTaskCorrDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));                
         }
 
