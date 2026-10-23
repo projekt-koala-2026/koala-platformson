@@ -353,7 +353,7 @@ namespace koala.src.Modules.Core.Services
                 Name = createTaskDto.Name,
                 ContentJson = createTaskDto.ContentJson,
                 CreatedAt = timeNow,
-                ExpiredAt = createTaskDto.ExpiredAt
+                // ExpiredAt = createTaskDto.ExpiredAt
             };
 
             await _db.Tasks.AddAsync(newTask);
@@ -361,7 +361,6 @@ namespace koala.src.Modules.Core.Services
 
             return new TaskItemDto(
                 newTask.Id,
-                newTask.EditionId,
                 newTask.SubEditionId,
                 newTask.Name,
                 newTask.ContentJson,
@@ -410,7 +409,6 @@ namespace koala.src.Modules.Core.Services
 
             return new TaskItemDto(
                 task.Id,
-                task.EditionId,
                 task.SubEditionId,
                 task.Name,
                 task.ContentJson,
@@ -432,7 +430,6 @@ namespace koala.src.Modules.Core.Services
 
             var tasks = entities.Select(e => new TaskItemDto(
                 e.Id,
-                e.EditionId,
                 e.SubEditionId,
                 e.Name,
                 e.ContentJson,
@@ -441,176 +438,6 @@ namespace koala.src.Modules.Core.Services
             )).ToList();
 
             return (tasks, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
-        }
-
-        public async Task<TaskOdpDto> CreateTaskOdpAsync(ClaimsPrincipal? claimsPrincipal, Guid id, CreateTaskOdpDto createTaskOdpDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == id);
-
-            if (task == null)
-            {
-                throw new CoreException(CoreErrorCodes.TaskOdpNotFound, "Task odp of provided id does not exist");
-            }
-
-            TaskOdp newTaskOdp = new TaskOdp
-            {
-                Id = Guid.CreateVersion7(),
-                TaskId = task.Id,
-                CorrectAnswer = createTaskOdpDto.CorrectAnswer
-            };
-
-            await _db.TaskOdps.AddAsync(newTaskOdp);
-            await _db.SaveChangesAsync();
-
-            return new TaskOdpDto(
-                newTaskOdp.Id,
-                newTaskOdp.TaskId,
-                newTaskOdp.CorrectAnswer
-            );
-        }
-
-        public async Task<TaskOdpDto> UpdateTaskOdpAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateTaskOdpDto updateTaskOdpDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == id);
-
-            if (task == null)
-            {
-                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
-            }
-
-            TaskOdp newTaskOdp = new TaskOdp
-            {
-                TaskId = task.Id,
-                CorrectAnswer = updateTaskOdpDto.CorrectAnswer
-            };
-
-            await _db.SaveChangesAsync();
-
-            return new TaskOdpDto(
-                newTaskOdp.Id,
-                newTaskOdp.TaskId,
-                newTaskOdp.CorrectAnswer
-            );
-        }
-
-        public async Task DeleteTaskOdpAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var taskOdp = await _db.TaskOdps.FirstOrDefaultAsync(e => e.Id == id);
-
-            if (taskOdp == null)
-            {
-                throw new CoreException(CoreErrorCodes.TaskOdpNotFound, "Task Odp of provided id does not exist");
-            }
-
-            _db.TaskOdps.Remove(taskOdp);
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task<TaskOdpDto> GetTaskOdpAsync(ClaimsPrincipal? claimsPrincipal, Guid id) 
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-            
-            var taskOdp = await _db.TaskOdps
-                .Include(e => e.TaskItem)
-                .FirstOrDefaultAsync(e => e.Id == id);
-
-            if (taskOdp == null)
-            {
-                throw new CoreException(CoreErrorCodes.TaskOdpNotFound, "Task Odp of provided id does not exist");
-            }
-
-            return new TaskOdpDto(
-                taskOdp.Id,
-                taskOdp.TaskId,
-                taskOdp.CorrectAnswer
-            );
-        }
-
-        public async Task<(List<TaskOdpDto> Data, ApiPagination Pagination)> GetTaskOdpsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var query = _db.TaskOdps.AsNoTracking();
-
-            var totalCount = await query.CountAsync();
-            
-            var entities = await query
-                .OrderBy(e => e.Id)
-                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
-                .Take(pageQueryDto.PageSize)
-                .ToListAsync();
-
-            var taskOdps = entities.Select(e =>
-            {
-                return new TaskOdpDto(
-                    e.Id,
-                    e.TaskId,
-                    e.CorrectAnswer
-                );
-            }).ToList();
-
-            return (taskOdps, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
     }
 }

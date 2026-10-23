@@ -1,6 +1,6 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record CreateTaskOdpDto
+    public record CreateTaskCorrDto
     (
         string CorrectAnswer
     );

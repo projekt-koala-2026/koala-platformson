@@ -1,6 +1,6 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record TaskOdpDto
+    public record TaskCorrDto
     (
         Guid Id,
         Guid TaskId,

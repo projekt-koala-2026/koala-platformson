@@ -109,7 +109,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpDelete("tasks/{task_id}")]
+        [HttpDelete("subeditions/tasks/{task_id}")]
         public async Task<IActionResult> DeleteTask([FromRoute] Guid task_id)
         {
             await _editionService.DeleteTaskAsync(User, task_id);
@@ -117,7 +117,7 @@ namespace koala.src.Modules.Core.Controllers
         }
         
         [AllowAnonymous]
-        [HttpGet("tasks/{task_id}")]
+        [HttpGet("subeditions/tasks/{task_id}")]
         public async Task<IActionResult> GetTask([FromRoute] Guid task_id)
         {
             var response = await _editionService.GetTaskAsync(User, task_id);
@@ -125,54 +125,12 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("tasks")]
+        [HttpGet("subeditions/tasks")]
         public async Task<IActionResult> GetTasks([FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _editionService.GetTasksAsync(User, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));            
-        }
-
-        [Authorize]
-        [HttpPost("tasks/{task_id}/task_odp")]
-        public async Task<IActionResult> CreateTaskOdp([FromRoute] Guid task_id, [FromBody] CreateTaskOdpDto createTaskOdpDto)
-        {
-            var response = await _editionService.CreateTaskOdpAsync(User, task_id, createTaskOdpDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));                
-        }
-
-        [Authorize]
-        [HttpPut("task_odp/{task_odp_id}")]
-        public async Task<IActionResult> UpdateTaskOdp([FromRoute] Guid task_odp_id, [FromBody] UpdateTaskOdpDto updateTaskOdpDto)
-        {
-            var response = await _editionService.UpdateTaskOdpAsync(User, task_odp_id, updateTaskOdpDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskOdpDto>(true, DateTime.UtcNow, null, null, response));                
-        }
-
-        [Authorize]
-        [HttpDelete("task_odp/{task_odp_id}")]
-        public async Task<IActionResult> DeleteTaskOdp([FromRoute] Guid task_odp_id)
-        {
-            await _editionService.DeleteTaskOdpAsync(User, task_odp_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));                
-        }
-
-        [Authorize]
-        [HttpGet("/task_odp/{task_odp_id}")]
-        public async Task<IActionResult> GetTaskOdp([FromRoute] Guid task_odp_id)
-        {
-            var response = await _editionService.GetTaskOdpAsync(User, task_odp_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskOdpDto>(true, DateTime.UtcNow, null, null, response));                
-        }
-
-        [Authorize]
-        [HttpGet("task_odp")]
-        public async Task<IActionResult> GetTaskOdps([FromQuery] PageQueryDto pageQueryDto)
-        {
-            (var responseData, var responsePagination) = await _editionService.GetTaskOdpsAsync(User, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskOdpDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));                
-        }
-
-        
+        }        
 
     }
 }
