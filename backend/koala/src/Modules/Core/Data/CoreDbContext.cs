@@ -18,53 +18,39 @@ namespace koala.src.Modules.Core.Data
         public DbSet<TaskOdp> TaskOdps => Set<TaskOdp>();
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-            
+        {            
             modelBuilder.HasDefaultSchema("core");
 
+            modelBuilder.Entity<Edition>().ToTable("editions");
+            modelBuilder.Entity<SubEdition>().ToTable("subeditions");
+            modelBuilder.Entity<TaskItem>().ToTable("tasks");
+            modelBuilder.Entity<TaskOdp>().ToTable("task_odps");
+            modelBuilder.Entity<School>().ToTable("schools");
+
             // EDITIONS CONFIG
-            modelBuilder.Entity<Edition>(b =>
-            {
-                b.ToTable("editions");
-                b.HasKey(e => e.Id);
-            });
-
+            modelBuilder.Entity<Edition>()
+                .HasKey(e => e.Id);
+            
             // SUBEDITIONS CONFIG
-            modelBuilder.Entity<SubEdition>(b =>
-            {
-                b.ToTable("subeditions");
-                b.HasKey(s => s.Id);
+            modelBuilder.Entity<SubEdition>()
+                .HasKey(s => s.Id);
+            modelBuilder.Entity<SubEdition>()
+                .HasOne(s => s.Edition)
+                .WithMany(e => e.SubEditions)
+                .HasForeignKey(s => s.EditionId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-                b.HasOne(s => s.Edition)
-                    .WithMany(e => e.SubEditions)
-                    .HasForeignKey(s => s.EditionId)
-                    .OnDelete(DeleteBehavior.Cascade);
+            //TASKS CONFIG
+            modelBuilder.Entity<TaskItem>()
+                .HasKey(t => t.Id);
 
-                b.HasMany(s => s.Tasks)
-                    .WithOne(t => t.SubEdition)
-                    .HasForeignKey(t => t.SubEditionId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            modelBuilder.Entity<TaskItem>(b =>
-            {
-                b.ToTable("tasks");
-                b.HasKey(t => t.Id);
-            });
-
-            modelBuilder.Entity<TaskOdp>(b =>
-            {
-                b.ToTable("task_odps");
-                b.HasKey(t => t.Id);
-            });
+            //TASKODPS CONFIG
+            modelBuilder.Entity<TaskOdp>()
+                .HasKey(t => t.Id);
 
             // SCHOOLS CONFIG
-            modelBuilder.Entity<School>(b =>
-            {
-                b.ToTable("schools");
-                b.HasKey(s => s.Id);
-            });
+            modelBuilder.Entity<School>()
+                .HasKey(s => s.Id);
         }
     };
 }

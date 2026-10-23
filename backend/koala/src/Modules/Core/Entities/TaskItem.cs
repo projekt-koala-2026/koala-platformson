@@ -25,7 +25,6 @@ namespace koala.src.Modules.Core.Entities
         [Column("expired_at")]
         public DateTime? ExpiredAt { get; set; }
 
-        [ForeignKey("SubEditionId")]
         public SubEdition SubEdition { get; set; } = null!;
         public ICollection<TaskOdp> TaskOdps{ get; set; } = new List<TaskOdp>();
     }
