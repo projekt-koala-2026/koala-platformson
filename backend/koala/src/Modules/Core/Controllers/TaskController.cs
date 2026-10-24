@@ -12,7 +12,7 @@ namespace koala.src.Modules.Core.Controllers
     [Route("api/koala/core/tasks")]
     public class TaskController : ControllerBase
     {
-         private readonly TaskService _taskService;
+        private readonly TaskService _taskService;
 
         public TaskController(TaskService taskService)
         {
@@ -20,43 +20,43 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> CreateTaskCorr([FromBody] CreateTaskCorrDto createTaskCorrDto)
+        [HttpPost("{task_id}/corr")]
+        public async Task<IActionResult> CreateTaskCorr([FromRoute] Guid task_id, [FromBody] CreateTaskCorrDto createTaskCorrDto)
         {
-            var response = await _taskService.CreateTaskCorrAsync(User, createTaskCorrDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));                
+            var response = await _taskService.CreateTaskCorrAsync(User, task_id, createTaskCorrDto);
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTaskCorr([FromRoute] Guid id, [FromBody] UpdateTaskCorrDto updateTaskCorrDto)
+        [HttpPut("{task_id}/corr/{task_corr_id}")]
+        public async Task<IActionResult> UpdateTaskCorr([FromRoute] Guid task_id, [FromRoute] Guid task_corr_id, [FromBody] UpdateTaskCorrDto updateTaskCorrDto)
         {
-            var response = await _taskService.UpdateTaskCorrAsync(User, id, updateTaskCorrDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskCorrDto>(true, DateTime.UtcNow, null, null, response));                
+            var response = await _taskService.UpdateTaskCorrAsync(User, task_id, task_corr_id, updateTaskCorrDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskCorrDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTaskCorr([FromRoute] Guid id)
+        [HttpDelete("{task_id}/corr/{task_corr_id}")]
+        public async Task<IActionResult> DeleteTaskCorr([FromRoute] Guid task_id, [FromRoute] Guid task_corr_id)
         {
-            await _taskService.DeleteTaskCorrAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));                
+            await _taskService.DeleteTaskCorrAsync(User, task_id, task_corr_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetTaskCorr([FromRoute] Guid id)
+        [HttpGet("{task_id}/corr/{task_corr_id}")]
+        public async Task<IActionResult> GetTaskCorr([FromRoute] Guid task_id, [FromRoute] Guid task_corr_id)
         {
-            var response = await _taskService.GetTaskCorrAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskCorrDto>(true, DateTime.UtcNow, null, null, response));                
+            var response = await _taskService.GetTaskCorrAsync(User, task_id, task_corr_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskCorrDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetTaskCorrs([FromQuery] PageQueryDto pageQueryDto)
+        [HttpGet("{task_id}/corr")]
+        public async Task<IActionResult> GetTaskCorrs([FromRoute] Guid task_id, [FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _taskService.GetTaskCorrsAsync(User, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskCorrDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));                
+            (var responseData, var responsePagination) = await _taskService.GetTaskCorrsAsync(User, task_id, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskCorrDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
 

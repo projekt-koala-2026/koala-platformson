@@ -17,7 +17,7 @@ namespace koala.src.Modules.Core.Services
             _db = db;
         }
 
-        public async Task<TaskCorrDto> CreateTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, CreateTaskCorrDto createTaskCorrDto)
+        public async Task<TaskCorrDto> CreateTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, CreateTaskCorrDto createTaskCorrDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -32,31 +32,44 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == createTaskCorrDto.TaskItemId);
+            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == task_item_id);
 
             if (task == null)
             {
                 throw new CoreException(CoreErrorCodes.TaskCorrNotFound, "Task odp of provided id does not exist");
             }
 
-            TaskCorr newTaskCorr = new TaskCorr
+            var newTaskCorr = await _db.TaskCorrs.FirstOrDefaultAsync(tc => tc.CorrectAnswer == createTaskCorrDto.CorrectAnswer && tc.TaskItemTaskCorr.TaskItemId == task_item_id);
+
+            if (newTaskCorr != null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskCorrAlreadyExsits, "task corr for this task with this answer already exists");
+            }
+
+            newTaskCorr = new TaskCorr
             {
                 Id = Guid.CreateVersion7(),
-                TaskId = task.Id,
                 CorrectAnswer = createTaskCorrDto.CorrectAnswer
             };
 
+            TaskItemTaskCorr newTaskItemTaskCorr = new TaskItemTaskCorr
+            {
+                TaskItemId = task_item_id,
+                TaskCorrId = newTaskCorr.Id
+            };
+
             await _db.TaskCorrs.AddAsync(newTaskCorr);
+            await _db.TaskItemTaskCorrs.AddAsync(newTaskItemTaskCorr);
             await _db.SaveChangesAsync();
 
             return new TaskCorrDto(
                 newTaskCorr.Id,
-                newTaskCorr.TaskId,
+                newTaskCorr.TaskItemTaskCorr.TaskItemId,
                 newTaskCorr.CorrectAnswer
             );
         }
 
-        public async Task<TaskCorrDto> UpdateTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateTaskCorrDto updateTaskCorrDto)
+        public async Task<TaskCorrDto> UpdateTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_corr_id, UpdateTaskCorrDto updateTaskCorrDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -71,30 +84,40 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == id);
+            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == task_id);
 
             if (task == null)
             {
                 throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
             }
 
-            TaskCorr newTaskCorr = new TaskCorr
+            var taskCorrWithThisNameExists = await _db.TaskCorrs.FirstOrDefaultAsync(tc => tc.CorrectAnswer == updateTaskCorrDto.CorrectAnswer && tc.TaskItemTaskCorr.TaskItemId == task_id && tc.Id != task_corr_id);
+
+            if (taskCorrWithThisNameExists != null)
             {
-                Id = id,
-                TaskId = updateTaskCorrDto.TaskItemId,
-                CorrectAnswer = updateTaskCorrDto.CorrectAnswer
-            };
+                throw new CoreException(CoreErrorCodes.TaskCorrAlreadyExsits, "task corr for this task with this answer already exists thus canot change this task answer to be the same ! Duplication");
+            }
+
+            var taskCorr = await _db.TaskCorrs.FirstOrDefaultAsync(tc => tc.Id == task_corr_id && tc.TaskItemTaskCorr.TaskItemId == task.Id);
+
+            if (taskCorr == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskCorrNotFound, "Task corr of provided task_core_id and task_id does not exist");
+            }
+
+            taskCorr.TaskItemTaskCorr.TaskItemId = updateTaskCorrDto.TaskItemId;
+            taskCorr.CorrectAnswer = updateTaskCorrDto.CorrectAnswer;
 
             await _db.SaveChangesAsync();
 
             return new TaskCorrDto(
-                newTaskCorr.Id,
-                newTaskCorr.TaskId,
-                newTaskCorr.CorrectAnswer
+                taskCorr.Id,
+                taskCorr.TaskItemTaskCorr.TaskItemId,
+                taskCorr.CorrectAnswer
             );
         }
 
-        public async Task DeleteTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
+        public async Task DeleteTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_corr_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -109,7 +132,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var TaskCorr = await _db.TaskCorrs.FirstOrDefaultAsync(e => e.Id == id);
+            var TaskCorr = await _db.TaskCorrs.FirstOrDefaultAsync(e => e.Id == task_corr_id && e.TaskItemTaskCorr.TaskItemId == task_id);
 
             if (TaskCorr == null)
             {
@@ -120,7 +143,7 @@ namespace koala.src.Modules.Core.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task<TaskCorrDto> GetTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid id) 
+        public async Task<TaskCorrDto> GetTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_corr_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -134,11 +157,11 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
-            
+
             var taskCorr = await _db.TaskCorrs
-                .Include(e => e.TaskItemTaskCorr)
-                    .ThenInclude(link => link.TaskItem)
-                .FirstOrDefaultAsync(e => e.Id == id);
+                .AsNoTracking()
+                .Include(tc => tc.TaskItemTaskCorr)
+                .FirstOrDefaultAsync(e => e.Id == task_corr_id && e.TaskItemTaskCorr.TaskItemId == task_id);
 
             if (taskCorr == null)
             {
@@ -147,12 +170,12 @@ namespace koala.src.Modules.Core.Services
 
             return new TaskCorrDto(
                 taskCorr.Id,
-                taskCorr.TaskId,
+                taskCorr.TaskItemTaskCorr.TaskItemId,
                 taskCorr.CorrectAnswer
             );
         }
 
-        public async Task<(List<TaskCorrDto> Data, ApiPagination Pagination)> GetTaskCorrsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<(List<TaskCorrDto> Data, ApiPagination Pagination)> GetTaskCorrsAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, PageQueryDto pageQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -167,10 +190,10 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var query = _db.TaskCorrs.AsNoTracking();
+            var query = _db.TaskCorrs.Include(tc => tc.TaskItemTaskCorr).Where(tc => tc.TaskItemTaskCorr.TaskItemId == task_id).AsNoTracking();
 
             var totalCount = await query.CountAsync();
-            
+
             var entities = await query
                 .OrderBy(e => e.Id)
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
@@ -181,7 +204,7 @@ namespace koala.src.Modules.Core.Services
             {
                 return new TaskCorrDto(
                     e.Id,
-                    e.TaskId,
+                    e.TaskItemTaskCorr.TaskItemId,
                     e.CorrectAnswer
                 );
             }).ToList();

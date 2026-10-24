@@ -16,6 +16,10 @@ namespace koala.src.Modules.Core
         public const int InvalidImportSchoolFile = 607;
         public const int TaskNotFound = 608;
         public const int TaskCorrNotFound = 609;
+        public const int EditionAlreadyExsits = 610;
+        public const int SubEditionAlreadyExsits = 611;
+        public const int TaskAlreadyExsits = 612;
+        public const int TaskCorrAlreadyExsits = 613;
     }
     public class CoreException : Exception
     {
@@ -28,7 +32,7 @@ namespace koala.src.Modules.Core
 
     public class CoreExceptionHandler : IExceptionHandler
     {
-        public CoreExceptionHandler() {}
+        public CoreExceptionHandler() { }
 
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {

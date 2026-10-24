@@ -6,10 +6,8 @@ namespace koala.src.Modules.Core.Entities
     {
         [Column("id")]
         public Guid Id { get; set; }
-        [Column("task_id")]
-        public Guid TaskId { get; set; }
         [Column("correct_answer")]
         public string CorrectAnswer { get; set; }
-        public TaskItemTaskCorr TaskItemTaskCorr { get; set; }
+        public TaskItemTaskCorr TaskItemTaskCorr { get; set; } = null!;
     }
 }

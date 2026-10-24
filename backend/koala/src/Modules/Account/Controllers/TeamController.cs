@@ -13,10 +13,10 @@ namespace koala.src.Modules.Account.Controllers
     [Route("api/koala/account/teams")]
     public class TeamController : ControllerBase
     {
-        private readonly TeamService _teamService;
-        private readonly RodoService _rodoService;
+        private readonly ITeamService _teamService;
+        private readonly IRodoService _rodoService;
 
-        public TeamController(TeamService teamService, RodoService rodoService)
+        public TeamController(ITeamService teamService, IRodoService rodoService)
         {
             _teamService = teamService;
             _rodoService = rodoService;
