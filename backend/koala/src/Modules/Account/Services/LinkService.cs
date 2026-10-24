@@ -14,6 +14,7 @@ namespace koala.src.Modules.Account.Services
         public Task ConsumeRegisterLinkAsync(Guid token, ConsumeRegisterLinkRequestDto requestDto);
         public Task ConsumeResetPasswordLinkAsync(Guid token, ConsumeResetPasswordLinkRequestDto requestDto);
         public Task GenerateResetPasswordLinkAsync(GenerateResetPasswordLinkRequestDto requestDto);
+        public Task DeleteUserLinkAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
         public Task<LinkListDto> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
         public Task DeleteUserLinkAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
         public Task DeleteUserLinksAsync(ClaimsPrincipal? claimsPrincipal);
