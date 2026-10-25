@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <Compile Remove="**\*" />
+        <Compile Include="src\Modules\**\Tests\*.cs" />
         <Compile Include="src\Modules\**\IntegrationTests\*.cs" />
         <None Include="appsettings.test.json" Link="appsettings.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <Compile Remove="**\*" />
+        <Compile Include="src\Modules\**\Tests\*.cs" />
         <Compile Include="src\Modules\**\UnitTests\*.cs" />
     </ItemGroup>
 

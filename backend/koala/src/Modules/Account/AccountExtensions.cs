@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using koala.src.Modules.Account.Data;
 using koala.src.Modules.Account.Services;
 using koala.src.Shared.Account;
+using FluentValidation;
+using koala.src.Modules.Account.Dtos;
 
 namespace koala.src.Modules.Account
 {
@@ -41,6 +43,7 @@ namespace koala.src.Modules.Account
             services.AddProblemDetails();
 
             // 5. FLUID VALIDATORS
+            services.AddValidatorsFromAssemblyContaining<Program>();
 
             return services;
         }

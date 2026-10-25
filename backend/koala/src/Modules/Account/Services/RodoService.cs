@@ -10,8 +10,8 @@ namespace koala.src.Modules.Account.Services
 {
     public interface IRodoService
     {
-        public Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoCreateDto rodoCreateDto);
-        public Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoUpdateDto rodoUpdateDto);
+        public Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoUpsertDto rodoCreateDto);
+        public Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoUpsertDto rodoUpdateDto);
         public Task DeleteRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId);
         public Task<RodoDto> GetRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId);
         public Task<string> GetRodoFileAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId);
@@ -30,7 +30,7 @@ namespace koala.src.Modules.Account.Services
             _db = db;
             _privateFilesPath = privateFilesPath;
         }
-        public async Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoCreateDto rodoCreateDto)
+        public async Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoUpsertDto rodoCreateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -138,7 +138,7 @@ namespace koala.src.Modules.Account.Services
             return new RodoDto(rodo.TeamId, rodo.MemberId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
 
         }
-        public async Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoUpdateDto rodoUpdateDto)
+        public async Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoUpsertDto rodoUpdateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 

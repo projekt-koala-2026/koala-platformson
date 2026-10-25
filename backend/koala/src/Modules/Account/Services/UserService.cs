@@ -10,9 +10,9 @@ namespace koala.src.Modules.Account.Services
 {
     public interface IUserService
     {
-        public Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, RegisterUserRequestDto requestDto);
+        public Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, UserRegisterRequestDto requestDto);
         public Task<UserDto> GetUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
-        public Task<UserListDto> GetUsersAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, UserQueryDto userQueryDto);
+        public Task<(List<UserDto>, ApiPagination)> GetUsersAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, UserQueryDto userQueryDto);
         public Task<UserDto> UpdateUserNamesAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserChangeNamesDto request);
         public Task DeleteUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
         public Task CensorUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
@@ -27,7 +27,7 @@ namespace koala.src.Modules.Account.Services
             _db = db;
             _emailService = emailService;
         }
-        public async Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, RegisterUserRequestDto requestDto)
+        public async Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, UserRegisterRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -157,7 +157,7 @@ namespace koala.src.Modules.Account.Services
             return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames);
 
         }
-        public async Task<UserListDto> GetUsersAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, UserQueryDto userQueryDto)
+        public async Task<(List<UserDto>, ApiPagination)> GetUsersAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, UserQueryDto userQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
@@ -225,7 +225,7 @@ namespace koala.src.Modules.Account.Services
                 .Take(pageQueryDto.PageSize)
                 .ToList();
 
-            return new UserListDto(users, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
+            return (users, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
         public async Task<UserDto> UpdateUserNamesAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserChangeNamesDto request)
         {

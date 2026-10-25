@@ -25,7 +25,7 @@ namespace koala.src.Modules.Account.Controllers
         // ONLY FOR TEAM PLAYERS + (REQUIRED MOSTLY WITH CAPTAIN POSITION IN TEAM_MEMBERS)
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequestDto requestDto)
+        public async Task<IActionResult> CreateTeam([FromBody] TeamCreateRequestDto requestDto)
         {
             var response = await _teamService.CreateTeamAsync(User, requestDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
@@ -39,14 +39,14 @@ namespace koala.src.Modules.Account.Controllers
         }
         [Authorize]
         [HttpPost("{id}/member")]
-        public async Task<IActionResult> CreateTeamMember([FromRoute] Guid id, [FromBody] MemberUpsertRequestDto requestDto)
+        public async Task<IActionResult> CreateTeamMember([FromRoute] Guid id, [FromBody] TeamMemberUpsertRequestDto requestDto)
         {
             var response = await _teamService.AddTeamMemberAsync(User, id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpPut("{id}/member/{team_member_id}")]
-        public async Task<IActionResult> UpdateTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] MemberUpsertRequestDto requestDto)
+        public async Task<IActionResult> UpdateTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] TeamMemberUpsertRequestDto requestDto)
         {
             var response = await _teamService.UpdateTeamMemberAsync(User, id, team_member_id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response));
@@ -60,7 +60,7 @@ namespace koala.src.Modules.Account.Controllers
         }
         [Authorize]
         [HttpPut("{id}/name")]
-        public async Task<IActionResult> UpdateTeamName([FromRoute] Guid id, [FromBody] UpdateTeamNameRequestDto requestDto)
+        public async Task<IActionResult> UpdateTeamName([FromRoute] Guid id, [FromBody] TeamUpdateNameRequestDto requestDto)
         {
             var response = await _teamService.UpdateTeamNameAsync(User, id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
@@ -75,7 +75,7 @@ namespace koala.src.Modules.Account.Controllers
         // ONLY FOR TEAM ADMINS
         [Authorize]
         [HttpPost("{id}/rodos/{team_member_id?}")]
-        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromForm] RodoCreateDto rodoCreateDto)
+        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromForm] RodoUpsertDto rodoCreateDto)
         {
             Guid? memberId = null;
             if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))
@@ -87,7 +87,7 @@ namespace koala.src.Modules.Account.Controllers
         }
         [Authorize]
         [HttpPut("{id}/rodos/{team_member_id?}/file")]
-        public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromBody] RodoUpdateDto rodoUpdateDto)
+        public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromBody] RodoUpsertDto rodoUpdateDto)
         {
             Guid? memberId = null;
             if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))
