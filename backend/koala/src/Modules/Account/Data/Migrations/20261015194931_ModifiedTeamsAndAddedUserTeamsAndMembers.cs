@@ -16,17 +16,6 @@ namespace koala.src.Modules.Account.Data.Migrations
                 schema: "account",
                 table: "team_members");
 
-            migrationBuilder.DropColumn(
-                name: "position",
-                schema: "account",
-                table: "team_members");
-
-            migrationBuilder.RenameColumn(
-                name: "user_id",
-                schema: "account",
-                table: "team_members",
-                newName: "member_id");
-
             migrationBuilder.CreateTable(
                 name: "members",
                 schema: "account",
@@ -69,6 +58,48 @@ namespace koala.src.Modules.Account.Data.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            // The old table stored authenticated users in CAPTAIN, ADMIN and PLAYER
+            // roles. The redesigned model keeps CAPTAIN/ADMIN in user_teams and turns
+            // PLAYER rows into standalone members. Preserve both sets before changing
+            // the old columns. A user with an existing RODO must remain a member of the
+            // matching team so the later RODO foreign-key migration can succeed.
+            migrationBuilder.Sql("""
+                INSERT INTO account.user_teams (user_id, team_id, position)
+                SELECT user_id, team_id, position
+                FROM account.team_members
+                WHERE position IN ('CAPTAIN', 'ADMIN')
+                ON CONFLICT (user_id, team_id) DO NOTHING;
+
+                INSERT INTO account.team_members (user_id, team_id, position)
+                SELECT user_id, team_id, 'PLAYER'
+                FROM account.rodos
+                ON CONFLICT (user_id, team_id)
+                DO UPDATE SET position = 'PLAYER';
+
+                INSERT INTO account.members (id, name_first, name_last, position)
+                SELECT DISTINCT tm.user_id,
+                       COALESCE(u.name_first, ''),
+                       COALESCE(u.name_last, ''),
+                       'PLAYER'
+                FROM account.team_members tm
+                INNER JOIN account.users u ON u.id = tm.user_id
+                WHERE tm.position = 'PLAYER';
+
+                DELETE FROM account.team_members
+                WHERE position <> 'PLAYER';
+                """);
+
+            migrationBuilder.DropColumn(
+                name: "position",
+                schema: "account",
+                table: "team_members");
+
+            migrationBuilder.RenameColumn(
+                name: "user_id",
+                schema: "account",
+                table: "team_members",
+                newName: "member_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_team_members_member_id",
