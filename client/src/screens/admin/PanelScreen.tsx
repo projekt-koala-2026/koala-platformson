@@ -20,7 +20,7 @@ const roleLabels: Partial<Record<Role, string>> = {
     ORGANIZATION_REVIEWER: "recenzent",
 };
 const inputClass =
-    "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
+    "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted";
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 
@@ -132,18 +132,18 @@ const PanelScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900">
+        <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
             <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
                 <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                             Administracja
                         </p>
                         <h1 className="mt-1 text-3xl font-bold tracking-tight">
                             Użytkownicy panelu
                         </h1>
-                        <p className="mt-2 max-w-2xl text-sm text-slate-600">
+                        <p className="mt-2 max-w-2xl text-sm text-ink-secondary">
                             Zapraszaj użytkowników panelu i przypisuj im role. Zaproszona osoba
                             kończy rejestrację przez odnośnik wysłany w wiadomości e-mail.
                         </p>
@@ -163,9 +163,7 @@ const PanelScreen = () => {
                     <div
                         role="status"
                         className={`mt-6 rounded-xl border px-4 py-3 text-sm ${
-                            feedback.tone === "success"
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                                : "border-red-200 bg-red-50 text-red-800"
+                            feedback.tone === "success" ? "app-status-success" : "app-status-danger"
                         }`}
                     >
                         {feedback.message}
@@ -174,11 +172,11 @@ const PanelScreen = () => {
 
                 <section className="mt-8 space-y-4">
                     {loading ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm">
+                        <div className="rounded-2xl border border-line bg-surface p-8 text-center text-sm text-ink-muted shadow-sm">
                             Ładowanie użytkowników…
                         </div>
                     ) : users.length === 0 ? (
-                        <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">
+                        <p className="rounded-2xl border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-ink-muted">
                             Brak użytkowników do wyświetlenia.
                         </p>
                     ) : (
@@ -187,7 +185,7 @@ const PanelScreen = () => {
                             return (
                                 <article
                                     key={user.id}
-                                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+                                    className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6"
                                 >
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                         <div className="min-w-0">
@@ -196,7 +194,7 @@ const PanelScreen = () => {
                                                     {user.email}
                                                 </h2>
                                                 {isCurrentUser && (
-                                                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                                    <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-ink-secondary">
                                                         Twoje konto
                                                     </span>
                                                 )}
@@ -205,7 +203,7 @@ const PanelScreen = () => {
                                                 {user.roles.map((role) => (
                                                     <span
                                                         key={role}
-                                                        className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800"
+                                                        className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-text-strong"
                                                     >
                                                         {roleLabels[
                                                             role as keyof typeof roleLabels
@@ -237,7 +235,7 @@ const PanelScreen = () => {
                                                 }
                                                 disabled={isCurrentUser || deletingId === user.id}
                                                 onClick={() => void deleteUser(user)}
-                                                className="bg-red-600 px-3 hover:bg-red-700"
+                                                className="bg-danger px-3 hover:bg-danger-hover"
                                             />
                                         </div>
                                     </div>
@@ -262,11 +260,11 @@ const PanelScreen = () => {
                     }}
                 >
                     {createError && (
-                        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                        <p role="alert" className="rounded-lg border p-3 text-sm app-status-danger">
                             {createError}
                         </p>
                     )}
-                    <label className="block text-sm font-semibold text-slate-700">
+                    <label className="block text-sm font-semibold text-ink">
                         E-mail
                         <input
                             className={inputClass}
@@ -279,12 +277,12 @@ const PanelScreen = () => {
                         />
                     </label>
                     <div>
-                        <p className="mb-2 text-sm font-semibold text-slate-700">Role</p>
+                        <p className="mb-2 text-sm font-semibold text-ink">Role</p>
                         <div className="flex flex-wrap gap-3">
                             {editableRoles.map((role) => (
                                 <label
                                     key={role}
-                                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-emerald-50"
+                                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium text-ink transition hover:bg-brand-soft"
                                 >
                                     <input
                                         type="checkbox"
@@ -302,7 +300,7 @@ const PanelScreen = () => {
                             type="button"
                             disabled={creating}
                             onClick={closeCreate}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Anuluj
                         </button>

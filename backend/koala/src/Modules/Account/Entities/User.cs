@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Account.Entities
-{    
+{
     public class User
     {
         [Column("id")]
@@ -29,7 +29,6 @@ namespace koala.src.Modules.Account.Entities
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<Session> Sessions { get; set; } = new List<Session>();
         public ICollection<Link> Links { get; set; } = new List<Link>();
-        public Rodo Rodo { get; set; }
         public ICollection<UserTeam> UserTeams { get; set; } = new List<UserTeam>();
     }
 }
