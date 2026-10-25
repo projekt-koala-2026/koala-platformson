@@ -74,39 +74,24 @@ namespace koala.src.Modules.Account.Controllers
         }
         // ONLY FOR TEAM ADMINS
         [Authorize]
-        [HttpPost("{id}/rodos/{team_member_id?}")]
-        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromForm] RodoCreateDto rodoCreateDto)
+        [HttpPost("{id}/rodos/{team_member_id}")]
+        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromForm] RodoCreateDto rodoCreateDto)
         {
-            Guid? memberId = null;
-            if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))
-            {
-                memberId = validGuid;
-            }
-            var response = await _rodoService.AddRodoAsync(User, id, memberId, rodoCreateDto);
+            var response = await _rodoService.AddRodoAsync(User, id, team_member_id, rodoCreateDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
-        [HttpPut("{id}/rodos/{team_member_id?}/file")]
-        public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromBody] RodoUpdateDto rodoUpdateDto)
+        [HttpPut("{id}/rodos/{team_member_id}/file")]
+        public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoUpdateDto rodoUpdateDto)
         {
-            Guid? memberId = null;
-            if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))
-            {
-                memberId = validGuid;
-            }
-            var response = await _rodoService.UpdateRodoAsync(User, id, memberId, rodoUpdateDto);
+            var response = await _rodoService.UpdateRodoAsync(User, id, team_member_id, rodoUpdateDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
-        [HttpDelete("{id}/rodos/{team_member_id?}")]
-        public async Task<IActionResult> DeleteTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id)
+        [HttpDelete("{id}/rodos/{team_member_id}")]
+        public async Task<IActionResult> DeleteTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
-            Guid? memberId = null;
-            if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))
-            {
-                memberId = validGuid;
-            }
-            await _rodoService.DeleteRodoAsync(User, id, memberId);
+            await _rodoService.DeleteRodoAsync(User, id, team_member_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
@@ -143,28 +128,18 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<RodoDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
         [Authorize]
-        [HttpGet("{id}/rodos/{team_member_id?}")]
-        public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id)
+        [HttpGet("{id}/rodos/{team_member_id}")]
+        public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
-            Guid? memberId = null;
-            if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))
-            {
-                memberId = validGuid;
-            }
-            var response = await _rodoService.GetRodoAsync(User, id, memberId);
+            var response = await _rodoService.GetRodoAsync(User, id, team_member_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
 
         }
         [Authorize]
-        [HttpGet("{id}/rodos/{team_member_id?}/file")]
-        public async Task<IActionResult> GetTeamMemberRodoFile([FromRoute] Guid id, [FromRoute] string? team_member_id)
+        [HttpGet("{id}/rodos/{team_member_id}/file")]
+        public async Task<IActionResult> GetTeamMemberRodoFile([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
-            Guid? memberId = null;
-            if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))
-            {
-                memberId = validGuid;
-            }
-            string physicalPath = await _rodoService.GetRodoFileAsync(User, id, memberId);
+            string physicalPath = await _rodoService.GetRodoFileAsync(User, id, team_member_id);
             var provider = new FileExtensionContentTypeProvider();
             provider.TryGetContentType(physicalPath, out var contentType);
             return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
@@ -180,15 +155,10 @@ namespace koala.src.Modules.Account.Controllers
         }
 
         [Authorize]
-        [HttpPut("{id}/rodos/{team_member_id?}/state")]
-        public async Task<IActionResult> SetTeamMemberRodoState([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromBody] RodoStateUpdateDto rodoStateUpdateDto)
+        [HttpPut("{id}/rodos/{team_member_id}/state")]
+        public async Task<IActionResult> SetTeamMemberRodoState([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoStateUpdateDto rodoStateUpdateDto)
         {
-            Guid? memberId = null;
-            if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))
-            {
-                memberId = validGuid;
-            }
-            var response = await _rodoService.SetRodoStateAsync(User, id, memberId, rodoStateUpdateDto);
+            var response = await _rodoService.SetRodoStateAsync(User, id, team_member_id, rodoStateUpdateDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
         }
     }

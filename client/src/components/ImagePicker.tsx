@@ -68,7 +68,7 @@ const ImagePicker = forwardRef<ImagePickerHandle, ImagePickerProps>(
 
         if (isLoading) {
             return (
-                <p role="status" className="py-10 text-center text-sm text-ink-muted">
+                <p role="status" className="py-10 text-center text-sm text-slate-500">
                     Ładowanie obrazów…
                 </p>
             );
@@ -76,12 +76,12 @@ const ImagePicker = forwardRef<ImagePickerHandle, ImagePickerProps>(
 
         if (hasError) {
             return (
-                <div role="alert" className="rounded-xl border p-6 text-center app-status-danger">
-                    <p className="text-sm">Nie udało się pobrać biblioteki obrazów.</p>
+                <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+                    <p className="text-sm text-red-800">Nie udało się pobrać biblioteki obrazów.</p>
                     <button
                         type="button"
                         onClick={refresh}
-                        className="mt-3 rounded-lg px-3 py-2 text-sm font-medium text-danger-text hover:bg-danger-muted focus:outline-none focus:ring-2 focus:ring-danger-emphasis"
+                        className="mt-3 rounded-lg px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
                         Spróbuj ponownie
                     </button>
@@ -91,7 +91,7 @@ const ImagePicker = forwardRef<ImagePickerHandle, ImagePickerProps>(
 
         if (images.length === 0) {
             return (
-                <p className="rounded-xl border border-dashed border-line-strong p-8 text-center text-sm text-ink-muted">
+                <p className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
                     Brak obrazów w bibliotece.
                 </p>
             );
@@ -108,13 +108,13 @@ const ImagePicker = forwardRef<ImagePickerHandle, ImagePickerProps>(
                             disabled={busyId !== null}
                             aria-label={`${mode === "manage" ? "Usuń" : "Wybierz"} obraz ${image.title}`}
                             onClick={() => void onSelect(image)}
-                            className={`group overflow-hidden rounded-xl border bg-surface text-left shadow-sm transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                            className={`group overflow-hidden rounded-xl border bg-white text-left shadow-sm transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                                 mode === "manage"
-                                    ? "border-line hover:border-danger-border-strong hover:shadow-md focus:ring-danger-emphasis"
-                                    : "border-line hover:-translate-y-0.5 hover:border-brand-emphasis hover:shadow-md focus:ring-brand-focus"
+                                    ? "border-slate-200 hover:border-red-400 hover:shadow-md focus:ring-red-500"
+                                    : "border-slate-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md focus:ring-emerald-500"
                             }`}
                         >
-                            <span className="relative block overflow-hidden bg-surface-muted">
+                            <span className="relative block overflow-hidden bg-slate-100">
                                 <img
                                     src={resolveApiAssetUrl(image.filePath)}
                                     alt=""
@@ -124,14 +124,14 @@ const ImagePicker = forwardRef<ImagePickerHandle, ImagePickerProps>(
                                 />
                                 <span
                                     aria-hidden="true"
-                                    className={`absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full text-ink-inverse shadow ${
-                                        mode === "manage" ? "bg-danger" : "bg-brand"
+                                    className={`absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full text-white shadow ${
+                                        mode === "manage" ? "bg-red-600" : "bg-emerald-600"
                                     }`}
                                 >
                                     {mode === "manage" ? <FaTrash /> : <FaCheck />}
                                 </span>
                             </span>
-                            <span className="block truncate p-2 text-xs font-medium text-ink">
+                            <span className="block truncate p-2 text-xs font-medium text-slate-700">
                                 {isBusy ? "Usuwanie…" : image.title}
                             </span>
                         </button>

@@ -60,15 +60,15 @@ const ImageHandlingScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-canvas text-ink-heading">
+        <div className="min-h-screen bg-slate-50 text-slate-900">
             <AdminHeader navigate={navigate} />
             <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
                 <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
                         Biblioteka plików
                     </p>
                     <h1 className="mt-1 text-3xl font-bold tracking-tight">Zarządzanie obrazami</h1>
-                    <p className="mt-2 max-w-3xl text-sm text-ink-secondary">
+                    <p className="mt-2 max-w-3xl text-sm text-slate-600">
                         Dodawaj obrazy używane we wpisach, historii, regulaminie i pozostałych
                         treściach.
                     </p>
@@ -78,21 +78,23 @@ const ImageHandlingScreen = () => {
                     <p
                         role="status"
                         className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
-                            feedback.tone === "success" ? "app-status-success" : "app-status-danger"
+                            feedback.tone === "success"
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                : "border-red-200 bg-red-50 text-red-700"
                         }`}
                     >
                         {feedback.message}
                     </p>
                 )}
 
-                <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                     <h2 className="text-xl font-semibold">Dodaj obraz</h2>
-                    <p className="mb-5 mt-1 text-sm text-ink-muted">
+                    <p className="mb-5 mt-1 text-sm text-slate-500">
                         Plik zostanie zapisany w publicznej bibliotece obrazów.
                     </p>
                     <FileUploader
                         accept="image/jpeg,image/png,image/webp,image/gif"
-                        label="Kliknij lub przeciągnij obraz"
+                        label="Kliknij, aby wybrać obraz"
                         hint="JPG, PNG, WebP lub GIF · maksymalnie 16 MB"
                         disabled={uploading}
                         validateFile={validateImage}
@@ -106,7 +108,7 @@ const ImageHandlingScreen = () => {
                         <h2 id="images-heading" className="text-xl font-semibold">
                             Biblioteka obrazów
                         </h2>
-                        <p className="mt-1 text-sm text-ink-muted">
+                        <p className="mt-1 text-sm text-slate-500">
                             Użyj czerwonego przycisku na miniaturze, aby usunąć obraz.
                         </p>
                     </div>

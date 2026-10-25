@@ -73,17 +73,17 @@ const SchoolsTable = ({ schools = [], onRowClick, selectedRspo = null }: Schools
     };
 
     const pageButton =
-        "rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-ink transition hover:border-brand-border-strong hover:bg-brand-soft disabled:cursor-not-allowed disabled:opacity-40";
+        "rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40";
     const filterInput =
-        "mt-2 w-full rounded-lg border border-line bg-surface px-2.5 py-2 text-sm font-normal text-ink-strong outline-none placeholder:text-ink-subtle focus:border-brand-focus focus:ring-2 focus:ring-brand-muted";
+        "mt-2 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm font-normal text-slate-800 outline-none placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-line bg-canvas px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-ink-secondary">
-                    Strona <strong className="text-ink-heading">{visiblePage}</strong> z{" "}
-                    <strong className="text-ink-heading">{totalPages}</strong>
-                    <span className="ml-2 text-ink-muted">({filteredSchools.length} wyników)</span>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-600">
+                    Strona <strong className="text-slate-900">{visiblePage}</strong> z{" "}
+                    <strong className="text-slate-900">{totalPages}</strong>
+                    <span className="ml-2 text-slate-500">({filteredSchools.length} wyników)</span>
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                     <button
@@ -133,13 +133,13 @@ const SchoolsTable = ({ schools = [], onRowClick, selectedRspo = null }: Schools
 
             <div className="max-h-[38rem] overflow-auto">
                 <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
-                    <thead className="sticky top-0 z-10 bg-surface-muted shadow-table-header">
+                    <thead className="sticky top-0 z-10 bg-slate-100 shadow-[0_1px_0_rgb(203_213_225)]">
                         <tr>
                             {columns.map(({ key, label, width }) => (
                                 <th
                                     key={key}
                                     scope="col"
-                                    className={`${width} px-3 py-3 align-top font-semibold text-ink-strong`}
+                                    className={`${width} px-3 py-3 align-top font-semibold text-slate-800`}
                                 >
                                     <label>
                                         <span>{label}</span>
@@ -156,12 +156,12 @@ const SchoolsTable = ({ schools = [], onRowClick, selectedRspo = null }: Schools
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-line-subtle">
+                    <tbody className="divide-y divide-slate-100">
                         {paginatedSchools.length === 0 ? (
                             <tr>
                                 <td
                                     colSpan={columns.length}
-                                    className="px-6 py-14 text-center text-ink-muted"
+                                    className="px-6 py-14 text-center text-slate-500"
                                 >
                                     Brak szkół spełniających kryteria wyszukiwania.
                                 </td>
@@ -176,27 +176,21 @@ const SchoolsTable = ({ schools = [], onRowClick, selectedRspo = null }: Schools
                                         aria-selected={selected}
                                         onClick={() => onRowClick?.(school)}
                                         onKeyDown={(event) => activateRow(event, school)}
-                                        className={`${onRowClick ? "cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-focus" : ""} ${selected ? "bg-brand-soft" : "bg-surface hover:bg-canvas"}`}
+                                        className={`${onRowClick ? "cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500" : ""} ${selected ? "bg-emerald-50" : "bg-white hover:bg-slate-50"}`}
                                     >
-                                        <td className="whitespace-nowrap px-3 py-3 font-mono text-xs font-semibold text-ink">
+                                        <td className="whitespace-nowrap px-3 py-3 font-mono text-xs font-semibold text-slate-700">
                                             {school.rspo}
                                         </td>
-                                        <td className="px-3 py-3 font-medium text-ink-heading">
+                                        <td className="px-3 py-3 font-medium text-slate-900">
                                             {school.name}
                                         </td>
-                                        <td className="px-3 py-3 text-ink-secondary">
+                                        <td className="px-3 py-3 text-slate-600">
                                             {school.nameShort || "—"}
                                         </td>
-                                        <td className="px-3 py-3 text-ink-secondary">
-                                            {school.state}
-                                        </td>
-                                        <td className="px-3 py-3 text-ink-secondary">
-                                            {school.city}
-                                        </td>
-                                        <td className="px-3 py-3 text-ink-secondary">
-                                            {school.type}
-                                        </td>
-                                        <td className="px-3 py-3 text-ink-secondary">
+                                        <td className="px-3 py-3 text-slate-600">{school.state}</td>
+                                        <td className="px-3 py-3 text-slate-600">{school.city}</td>
+                                        <td className="px-3 py-3 text-slate-600">{school.type}</td>
+                                        <td className="px-3 py-3 text-slate-600">
                                             {school.addres}
                                         </td>
                                     </tr>

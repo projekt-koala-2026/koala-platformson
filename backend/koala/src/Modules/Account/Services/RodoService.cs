@@ -10,13 +10,13 @@ namespace koala.src.Modules.Account.Services
 {
     public interface IRodoService
     {
-        public Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoCreateDto rodoCreateDto);
-        public Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoUpdateDto rodoUpdateDto);
-        public Task DeleteRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId);
-        public Task<RodoDto> GetRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId);
-        public Task<string> GetRodoFileAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId);
+        public Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoCreateDto rodoCreateDto);
+        public Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoUpdateDto rodoUpdateDto);
+        public Task DeleteRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
+        public Task<RodoDto> GetRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
+        public Task<string> GetRodoFileAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
         public Task<(List<RodoDto>, ApiPagination)> GetRodosAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, PageQueryDto pageQueryDto);
-        public Task<RodoDto> SetRodoStateAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoStateUpdateDto rodoStateUpdateDto);
+        public Task<RodoDto> SetRodoStateAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoStateUpdateDto rodoStateUpdateDto);
     }
     public class RodoService : IRodoService
     {
@@ -30,7 +30,7 @@ namespace koala.src.Modules.Account.Services
             _db = db;
             _privateFilesPath = privateFilesPath;
         }
-        public async Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoCreateDto rodoCreateDto)
+        public async Task<RodoDto> AddRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoCreateDto rodoCreateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -47,10 +47,9 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
+            bool isUserTeamMember = await _db.UserTeams.AsNoTracking().AnyAsync(tm => tm.TeamId == teamId && tm.UserId == userId && tm.Position == ADMIN);
 
-            bool isUserTeamAdmin = await _db.UserTeams.AsNoTracking().AnyAsync(tm => tm.TeamId == teamId && tm.UserId == userId && tm.Position == ADMIN);
-
-            if (!isUserTeamAdmin)
+            if (!isUserTeamMember)
             {
                 throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
@@ -93,7 +92,7 @@ namespace koala.src.Modules.Account.Services
                 DateTime timeNow = DateTime.UtcNow;
                 rodo.Id = id;
                 rodo.TeamId = teamId;
-                rodo.MemberId = teamMemberId;
+                rodo.UserId = teamMemberId;
                 rodo.Type = extension;
                 rodo.State = "UNVERIFIED";
                 rodo.CreatedAt = timeNow;
@@ -135,10 +134,10 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.FileNotFound, "Error reading the saved file from disk");
             }
 
-            return new RodoDto(rodo.TeamId, rodo.MemberId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
+            return new RodoDto(rodo.TeamId, rodo.UserId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
 
         }
-        public async Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoUpdateDto rodoUpdateDto)
+        public async Task<RodoDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoUpdateDto rodoUpdateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -177,7 +176,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.FolderCreationError, "Error when creating a folder holding private files");
             }
 
-            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.MemberId == teamMemberId);
+            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.UserId == teamMemberId);
 
             if (rodo == null)
             {
@@ -206,7 +205,7 @@ namespace koala.src.Modules.Account.Services
                 DateTime timeNow = DateTime.UtcNow;
                 rodo.Id = id;
                 rodo.TeamId = teamId;
-                rodo.MemberId = teamMemberId;
+                rodo.UserId = teamMemberId;
                 rodo.Type = extension;
                 rodo.State = "UNVERIFIED";
                 rodo.UpdatedAt = timeNow;
@@ -223,9 +222,9 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.DatabaseError, "Error saving public file record to database");
             }
 
-            return new RodoDto(rodo.TeamId, rodo.MemberId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
+            return new RodoDto(rodo.TeamId, rodo.UserId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
         }
-        public async Task DeleteRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId)
+        public async Task DeleteRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -255,7 +254,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.BadRequest, "can only add a rodo for a existing team member that does not have a rodo");
             }
 
-            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.MemberId == teamMemberId);
+            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.UserId == teamMemberId);
 
             if (rodo == null)
             {
@@ -279,7 +278,7 @@ namespace koala.src.Modules.Account.Services
             _db.Rodos.Remove(rodo);
             await _db.SaveChangesAsync();
         }
-        public async Task<RodoDto> GetRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId)
+        public async Task<RodoDto> GetRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -310,16 +309,16 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.BadRequest, "can only add a rodo for a existing team member that does not have a rodo");
             }
 
-            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.MemberId == teamMemberId);
+            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.UserId == teamMemberId);
 
             if (rodo == null)
             {
                 throw new AccountException(AccountErrorCodes.RodoNotFound, "Error could not found rodo");
             }
 
-            return new RodoDto(rodo.TeamId, rodo.MemberId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
+            return new RodoDto(rodo.TeamId, rodo.UserId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
         }
-        public async Task<string> GetRodoFileAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId)
+        public async Task<string> GetRodoFileAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -350,7 +349,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.BadRequest, "can only add a rodo for a existing team member that does not have a rodo");
             }
 
-            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.MemberId == teamMemberId);
+            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.UserId == teamMemberId);
 
             if (rodo == null)
             {
@@ -392,11 +391,11 @@ namespace koala.src.Modules.Account.Services
             var rodos = queryResults
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
-                .Select(r => new RodoDto(r.TeamId, r.MemberId, r.State, r.CreatedAt, r.UpdatedAt)).ToList();
+                .Select(r => new RodoDto(r.TeamId, r.UserId, r.State, r.CreatedAt, r.UpdatedAt)).ToList();
 
             return (rodos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
-        public async Task<RodoDto> SetRodoStateAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid? teamMemberId, RodoStateUpdateDto rodoStateUpdateDto)
+        public async Task<RodoDto> SetRodoStateAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoStateUpdateDto rodoStateUpdateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -411,7 +410,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
-            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.MemberId == teamMemberId);
+            Rodo? rodo = await _db.Rodos.FirstOrDefaultAsync(r => r.TeamId == teamId && r.UserId == teamMemberId);
 
             if (rodo == null)
             {
@@ -421,7 +420,7 @@ namespace koala.src.Modules.Account.Services
             rodo.State = rodoStateUpdateDto.State;
             await _db.SaveChangesAsync();
 
-            return new RodoDto(rodo.TeamId, rodo.MemberId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
+            return new RodoDto(rodo.TeamId, rodo.UserId, rodo.State, rodo.CreatedAt, rodo.UpdatedAt);
         }
     }
 }

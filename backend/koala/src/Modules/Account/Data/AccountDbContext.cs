@@ -143,11 +143,11 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<Role>()
                 .HasData
                 (
-                    new Role { Id = Guid.Parse(static_id_guid_role_organization_admin), Name = "ORGANIZATION_ADMIN" },
-                    new Role { Id = Guid.Parse(static_id_guid_role_organization_editor), Name = "ORGANIZATION_EDITOR" },
-                    new Role { Id = Guid.Parse(static_id_guid_role_organization_reviewer), Name = "ORGANIZATION_REVIEWER" },
-                    new Role { Id = Guid.Parse(static_id_guid_role_team_admin), Name = "TEAM_ADMIN" },
-                    new Role { Id = Guid.Parse(static_id_guid_role_team_player), Name = "TEAM_PLAYER" }
+                    new Role { Id = Guid.Parse(static_id_guid_role_organization_admin), Name = "ORGANIZATION_ADMIN"},
+                    new Role { Id = Guid.Parse(static_id_guid_role_organization_editor), Name = "ORGANIZATION_EDITOR"},
+                    new Role { Id = Guid.Parse(static_id_guid_role_organization_reviewer), Name = "ORGANIZATION_REVIEWER"},
+                    new Role { Id = Guid.Parse(static_id_guid_role_team_admin), Name = "TEAM_ADMIN"},
+                    new Role { Id = Guid.Parse(static_id_guid_role_team_player), Name = "TEAM_PLAYER"}
                 );
 
 
@@ -166,7 +166,7 @@ namespace koala.src.Modules.Account.Data
 
             // TEAM_MEMBER CONFIG
             modelBuilder.Entity<TeamMember>()
-                .HasKey(tm => tm.Id);
+                .HasKey(tm => new { tm.MemberId, tm.TeamId });
             modelBuilder.Entity<TeamMember>()
                 .HasOne(tm => tm.Team)
                 .WithMany(t => t.TeamMembers)
@@ -213,9 +213,9 @@ namespace koala.src.Modules.Account.Data
                 .HasForeignKey(r => r.TeamId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Rodo>()
-                .HasOne(r => r.Member)
+                .HasOne(r => r.User)
                 .WithOne(u => u.Rodo)
-                .HasForeignKey<Rodo>(r => r.MemberId)
+                .HasForeignKey<Rodo>(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // MEMBERS CONFIG
@@ -224,7 +224,7 @@ namespace koala.src.Modules.Account.Data
 
             // USER_TEAMS CONFIG
             modelBuilder.Entity<UserTeam>()
-                .HasKey(ut => new { ut.UserId, ut.TeamId, ut.Position });
+                .HasKey(ut => new { ut.UserId, ut.TeamId });
             modelBuilder.Entity<UserTeam>()
                 .HasOne(ut => ut.User)
                 .WithMany(u => u.UserTeams)
