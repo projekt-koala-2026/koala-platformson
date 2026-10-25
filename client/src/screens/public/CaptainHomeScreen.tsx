@@ -1,5 +1,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { FaDownload, FaExchangeAlt, FaUpload } from "react-icons/fa";
+import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
@@ -36,6 +38,7 @@ const CaptainHomeScreen = () => {
     const [loading, setLoading] = useState(true);
     const [editingName, setEditingName] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isRodo, setIsRodo] = useState(false);
     const [createError, setCreateError] = useState("");
     const [saving, setSaving] = useState(false);
     const [feedback, setFeedback] = useState<Feedback>(null);
@@ -81,7 +84,7 @@ const CaptainHomeScreen = () => {
         () => schools.find((school) => school.id === schoolId),
         [schoolId, schools]
     );
-    const isCaptain = team?.teamMembers.some(
+    const isCaptain = team?.teamMembers?.some(
         (member) => member.id === currentUserId && member.position === "CAPTAIN"
     );
 
@@ -269,6 +272,39 @@ const CaptainHomeScreen = () => {
         setSaving(false);
     };
 
+    const addRodo = async (memberId: string, file?: File) => {
+        if (!team || !file) return;
+
+        if (file.type !== "application/pdf") {
+            setFeedback({ tone: "error", message: "Wybierz plik PDF." });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        setSaving(true);
+        setFeedback(null);
+
+        const result = await apiRequestResult<unknown>(
+            `${apiEndpoints.teams}/${team.id}/rodos/${memberId}`,
+            formData,
+            "POST",
+            navigate
+        );
+
+        setFeedback(
+            result.data
+                ? { tone: "success", message: "Plik PDF został przesłany." }
+                : { tone: "error", message: "Nie udało się przesłać pliku PDF." }
+        );
+        setSaving(false);
+    };
+    const removeRodo = async (memberId: string) => {
+        console.log(team?.id, team?.teamMembers, memberId);
+        setIsRodo(false);
+    };
+
     return (
         <div className="flex min-h-screen flex-col bg-slate-50">
             <PublicHeader navigate={navigate} />
@@ -449,6 +485,54 @@ const CaptainHomeScreen = () => {
                                             >
                                                 Usuń z drużyny
                                             </button>
+                                        )}
+                                        {roles.isGuardian && isRodo == false && (
+                                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                                                <FaUpload />
+                                                <span>Zgoda RODO</span>
+                                                <input
+                                                    type="file"
+                                                    accept=".pdf,application/pdf"
+                                                    className="sr-only"
+                                                    disabled={saving}
+                                                    onChange={(event) => {
+                                                        const file = event.currentTarget.files?.[0];
+                                                        if (file) void addRodo(member.id, file);
+                                                        event.currentTarget.value = "";
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
+                                        {roles.isGuardian && isRodo === true && (
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={() => void addRodo(member.id)}
+                                                    className="inline-flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2 text-xs font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50"
+                                                >
+                                                    <FaDownload />
+                                                    <span>Zgoda RODO</span>
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={() => void removeRodo(member.id)}
+                                                    className="rounded-lg bg-red-50 px-2 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                                                >
+                                                    <FaTrashCan />
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={() => void addRodo(member.id)}
+                                                    className="rounded-lg bg-blue-50 px-2 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                                                >
+                                                    <FaExchangeAlt />
+                                                </button>
+                                            </div>
                                         )}
                                     </li>
                                 ))}
