@@ -26,13 +26,13 @@ const PublicFooter = () => {
     }, [navigate]);
 
     return (
-        <footer className="mt-auto w-full border-t border-line bg-surface">
+        <footer className="mt-auto w-full border-t border-slate-200 bg-white">
             <div className="mx-auto max-w-6xl px-6 py-8">
                 {sponsors.length > 0 && (
                     <section aria-labelledby="sponsors-heading">
                         <h2
                             id="sponsors-heading"
-                            className="text-center text-sm font-semibold uppercase tracking-wide text-ink-muted"
+                            className="text-center text-sm font-semibold uppercase tracking-wide text-slate-500"
                         >
                             Nasi sponsorzy
                         </h2>
@@ -44,7 +44,7 @@ const PublicFooter = () => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     title={sponsor.description || sponsor.name}
-                                    className="flex min-h-16 w-36 items-center justify-center rounded-xl p-2 transition hover:bg-brand-soft focus:outline-none focus:ring-2 focus:ring-brand-focus"
+                                    className="flex min-h-16 w-36 items-center justify-center rounded-xl p-2 transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 >
                                     {sponsor.logoUrl ? (
                                         <img
@@ -54,7 +54,7 @@ const PublicFooter = () => {
                                             className="max-h-12 max-w-full object-contain grayscale transition hover:grayscale-0"
                                         />
                                     ) : (
-                                        <span className="text-center text-sm font-medium text-ink">
+                                        <span className="text-center text-sm font-medium text-slate-700">
                                             {sponsor.name}
                                         </span>
                                     )}
@@ -64,7 +64,7 @@ const PublicFooter = () => {
                     </section>
                 )}
                 <p
-                    className={`${sponsors.length > 0 ? "mt-7" : ""} text-center text-xs text-ink-muted`}
+                    className={`${sponsors.length > 0 ? "mt-7" : ""} text-center text-xs text-slate-500`}
                 >
                     © {new Date().getFullYear()} KOALA — Wielkopolski konkurs grup szkolnych.
                 </p>

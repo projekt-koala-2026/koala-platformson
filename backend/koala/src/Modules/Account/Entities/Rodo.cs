@@ -10,7 +10,7 @@ namespace koala.src.Modules.Account.Entities
         [Column("team_id")]
         public Guid TeamId { get; set; }
         [Column("user_id")]
-        public Guid? MemberId { get; set; }
+        public Guid UserId { get; set; }
         [Column("type")]
         public string Type { get; set; }
         [Column("state")]
@@ -20,7 +20,7 @@ namespace koala.src.Modules.Account.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
-        public Member? Member { get; set; } = null!;
+        public User User { get; set; } = null!;
         public Team Team { get; set; } = null!;
     }
 }

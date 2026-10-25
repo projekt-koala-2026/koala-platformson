@@ -28,7 +28,7 @@ const emptyForm: KoalicjantForm = {
     isVisible: true,
 };
 const inputClass =
-    "mt-1.5 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink-heading outline-none transition placeholder:text-ink-subtle focus:border-brand-focus focus:ring-2 focus:ring-brand-muted";
+    "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 
 const EditKoalicjantInfo = () => {
     const navigate = useNavigate();
@@ -159,13 +159,13 @@ const EditKoalicjantInfo = () => {
         <>
             <AdminHeader navigate={navigate} />
             <main className="mx-auto w-full max-w-6xl space-y-7 px-4 py-8 sm:px-6 lg:px-8">
-                <header className="flex flex-col gap-5 border-b border-line-subtle pb-6 sm:flex-row sm:items-end sm:justify-between">
+                <header className="flex flex-col gap-5 border-b border-slate-100 pb-6 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
                             Administracja
                         </p>
-                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Koalicjanci</h1>
-                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                        <h1 className="mt-2 text-3xl font-bold text-slate-900">Koalicjanci</h1>
+                        <p className="mt-3 max-w-2xl text-slate-600">
                             Zarządzaj osobami prezentowanymi na publicznej stronie KOALicjA.
                         </p>
                     </div>
@@ -183,19 +183,19 @@ const EditKoalicjantInfo = () => {
                 {feedback && (
                     <div
                         role={feedback.tone === "error" ? "alert" : "status"}
-                        className={`rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
+                        className={`rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}
                     >
                         {feedback.message}
                     </div>
                 )}
                 {loading ? (
-                    <div className="rounded-2xl border border-line bg-surface p-12 text-center text-sm text-ink-muted">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
                         Ładowanie koalicjantów…
                     </div>
                 ) : koalicjants.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-line bg-surface p-12 text-center">
-                        <h2 className="font-semibold text-ink-strong">Brak koalicjantów</h2>
-                        <p className="mt-2 text-sm text-ink-muted">
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
+                        <h2 className="font-semibold text-slate-800">Brak koalicjantów</h2>
+                        <p className="mt-2 text-sm text-slate-500">
                             Dodaj pierwszą osobę do publicznej prezentacji.
                         </p>
                     </div>
@@ -204,10 +204,10 @@ const EditKoalicjantInfo = () => {
                         {koalicjants.map((person) => (
                             <article
                                 key={person.id}
-                                className="flex min-h-56 flex-col rounded-2xl border border-line bg-surface p-5 shadow-sm"
+                                className="flex min-h-56 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
                             >
                                 <div className="flex items-start gap-4">
-                                    <div className="relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-2xl bg-brand-soft text-2xl font-bold text-brand-text">
+                                    <div className="relative grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-2xl bg-emerald-50 text-2xl font-bold text-emerald-700">
                                         <span>{person.name.charAt(0).toUpperCase()}</span>
                                         {person.profilePicture && (
                                             <img
@@ -221,20 +221,20 @@ const EditKoalicjantInfo = () => {
                                         )}
                                     </div>
                                     <div className="min-w-0">
-                                        <h2 className="text-lg font-semibold text-ink-heading">
+                                        <h2 className="text-lg font-semibold text-slate-900">
                                             {person.name}
                                         </h2>
                                         <span
-                                            className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${person.isVisible ? "bg-brand-soft text-brand-text" : "bg-surface-muted text-ink-secondary"}`}
+                                            className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${person.isVisible ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
                                         >
                                             {person.isVisible ? "Widoczny" : "Ukryty"}
                                         </span>
-                                        <p className="mt-2 line-clamp-4 text-sm leading-6 text-ink-secondary">
+                                        <p className="mt-2 line-clamp-4 text-sm leading-6 text-slate-600">
                                             {person.description || "Brak opisu."}
                                         </p>
                                     </div>
                                 </div>
-                                <div className="mt-auto flex gap-2 border-t border-line-subtle pt-4">
+                                <div className="mt-auto flex gap-2 border-t border-slate-100 pt-4">
                                     <Button
                                         text={
                                             <>
@@ -254,7 +254,7 @@ const EditKoalicjantInfo = () => {
                                         }
                                         disabled
                                         title="Usuwanie będzie dostępne po uzupełnieniu endpointu backendu."
-                                        className="bg-danger px-3 hover:bg-danger-hover focus:ring-danger-emphasis"
+                                        className="bg-red-600 px-3 hover:bg-red-700 focus:ring-red-500"
                                     />
                                 </div>
                             </article>
@@ -271,7 +271,7 @@ const EditKoalicjantInfo = () => {
                 <form onSubmit={submit} className="space-y-4">
                     <div className="grid gap-5 md:grid-cols-[1fr_12rem]">
                         <div className="space-y-4">
-                            <label className="block text-sm font-medium text-ink">
+                            <label className="block text-sm font-medium text-slate-700">
                                 Imię *
                                 <input
                                     value={form.nameFirst}
@@ -285,7 +285,7 @@ const EditKoalicjantInfo = () => {
                                     required
                                 />
                             </label>
-                            <label className="block text-sm font-medium text-ink">
+                            <label className="block text-sm font-medium text-slate-700">
                                 Nazwisko *
                                 <input
                                     value={form.nameLast}
@@ -299,7 +299,7 @@ const EditKoalicjantInfo = () => {
                                     required
                                 />
                             </label>
-                            <label className="block text-sm font-medium text-ink">
+                            <label className="block text-sm font-medium text-slate-700">
                                 E-mail *
                                 <input
                                     type="email"
@@ -314,7 +314,7 @@ const EditKoalicjantInfo = () => {
                                     required
                                 />
                             </label>
-                            <label className="block text-sm font-medium text-ink">
+                            <label className="block text-sm font-medium text-slate-700">
                                 Adres zdjęcia *
                                 <input
                                     value={form.profilePicture}
@@ -341,9 +341,9 @@ const EditKoalicjantInfo = () => {
                                     </>
                                 }
                                 onClick={() => setShowImages((visible) => !visible)}
-                                className="bg-ink hover:bg-ink-strong focus:ring-ink-muted"
+                                className="bg-slate-700 hover:bg-slate-800 focus:ring-slate-500"
                             />
-                            <label className="block text-sm font-medium text-ink">
+                            <label className="block text-sm font-medium text-slate-700">
                                 Opis
                                 <textarea
                                     value={form.description}
@@ -356,7 +356,7 @@ const EditKoalicjantInfo = () => {
                                     className={`${inputClass} min-h-28 resize-y`}
                                 />
                             </label>
-                            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-4">
+                            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                                 <input
                                     type="checkbox"
                                     checked={form.isVisible}
@@ -366,19 +366,19 @@ const EditKoalicjantInfo = () => {
                                             isVisible: event.target.checked,
                                         }))
                                     }
-                                    className="mt-0.5 h-4 w-4 rounded border-line-strong text-brand-text focus:ring-brand-focus"
+                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                                 />
                                 <span>
-                                    <span className="block text-sm font-medium text-ink">
+                                    <span className="block text-sm font-medium text-slate-700">
                                         Widoczny na stronie publicznej
                                     </span>
-                                    <span className="mt-1 block text-xs leading-5 text-ink-muted">
+                                    <span className="mt-1 block text-xs leading-5 text-slate-500">
                                         Wyłącz, aby ukryć koalicjanta bez usuwania danych.
                                     </span>
                                 </span>
                             </label>
                         </div>
-                        <div className="grid min-h-48 place-items-center overflow-hidden rounded-2xl border border-line bg-canvas">
+                        <div className="grid min-h-48 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
                             {form.profilePicture ? (
                                 <img
                                     src={resolveApiAssetUrl(form.profilePicture)}
@@ -386,23 +386,23 @@ const EditKoalicjantInfo = () => {
                                     className="h-48 w-full object-cover"
                                 />
                             ) : (
-                                <span className="px-4 text-center text-sm text-ink-subtle">
+                                <span className="px-4 text-center text-sm text-slate-400">
                                     Podgląd zdjęcia
                                 </span>
                             )}
                         </div>
                     </div>
                     {showImages && (
-                        <div className="rounded-2xl border border-line bg-canvas p-4">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                             <ImagePicker navigate={navigate} onSelect={chooseImage} />
                         </div>
                     )}
-                    <div className="flex justify-end gap-3 border-t border-line-subtle pt-4">
+                    <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
                         <button
                             type="button"
                             onClick={closeModal}
                             disabled={saving}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
                         >
                             Anuluj
                         </button>

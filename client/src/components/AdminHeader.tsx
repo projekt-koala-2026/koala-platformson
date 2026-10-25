@@ -7,7 +7,6 @@ import { clearStoredSession, isAdmin } from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
-import ThemeToggle from "./ThemeToggle";
 
 interface AdminHeaderProps {
     navigate: NavigateFunction;
@@ -60,18 +59,18 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
 
     return (
         <>
-            <header className="sticky top-0 z-40 border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md sm:px-6">
+            <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-md sm:px-6">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
                     <button
                         type="button"
                         onClick={() => navigate(homePath)}
                         aria-label="Przejdź na stronę główną panelu"
-                        className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus"
+                        className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500"
                     >
-                        <span className="block text-xl font-bold tracking-tight text-ink-heading">
+                        <span className="block text-xl font-bold tracking-tight text-slate-950">
                             KOALA
                         </span>
-                        <span className="block text-xs font-semibold text-brand-text">
+                        <span className="block text-xs font-semibold text-emerald-700">
                             Panel administracyjny
                         </span>
                     </button>
@@ -88,10 +87,10 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                                     key={link.path}
                                     aria-current={isActive ? "page" : undefined}
                                     onClick={() => navigate(link.path)}
-                                    className={`rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-focus ${
+                                    className={`rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                                         isActive
-                                            ? "bg-brand-soft text-brand-text-strong"
-                                            : "text-ink hover:bg-surface-muted hover:text-ink-heading"
+                                            ? "bg-emerald-50 text-emerald-900"
+                                            : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
                                     }`}
                                 >
                                     {link.label}
@@ -101,7 +100,6 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                     </nav>
 
                     <div className="flex items-center gap-3">
-                        <ThemeToggle />
                         <ProfileButton
                             options={[
                                 {

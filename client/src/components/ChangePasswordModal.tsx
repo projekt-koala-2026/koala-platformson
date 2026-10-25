@@ -59,16 +59,22 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
         <Modal isOpen={isOpen} onClose={close} title="Zmień hasło" maxWidth="md">
             <div className="space-y-5">
                 {error && (
-                    <p role="alert" className="rounded-xl border p-3 text-sm app-status-danger">
+                    <p
+                        role="alert"
+                        className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                    >
                         {error}
                     </p>
                 )}
                 {sent ? (
-                    <p role="status" className="rounded-xl border p-4 text-sm app-status-success">
+                    <p
+                        role="status"
+                        className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+                    >
                         Wysłaliśmy wiadomość z bezpiecznym linkiem do ustawienia nowego hasła.
                     </p>
                 ) : (
-                    <p className="text-sm leading-6 text-ink-secondary">
+                    <p className="text-sm leading-6 text-slate-600">
                         Ze względów bezpieczeństwa zmiana hasła odbywa się przez jednorazowy link
                         wysłany na adres e-mail przypisany do konta.
                     </p>
@@ -78,7 +84,7 @@ const ChangePasswordModal = ({ isOpen, onClose }: ChangePasswordModalProps) => {
                         type="button"
                         disabled={sending}
                         onClick={close}
-                        className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
+                        className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
                     >
                         {sent ? "Zamknij" : "Anuluj"}
                     </button>

@@ -19,7 +19,7 @@ type Feedback = { tone: "success" | "error"; message: string } | null;
 
 const emptyForm: EditionForm = { title: "" };
 const inputClass =
-    "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted";
+    "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100";
 
 const sortEditions = (editions: Edition[]) =>
     [...editions].sort(
@@ -193,21 +193,21 @@ const EditEditionScreen = () => {
     const statusFor = (edition: Edition) => {
         const end = new Date(edition.endDate).getTime();
         if (referenceTime <= end)
-            return { label: "Aktywna", className: "bg-brand-soft text-brand-text" };
-        return { label: "Zakończona", className: "bg-surface-muted text-ink-secondary" };
+            return { label: "Aktywna", className: "bg-emerald-50 text-emerald-700" };
+        return { label: "Zakończona", className: "bg-slate-100 text-slate-600" };
     };
 
     return (
-        <div className="min-h-screen bg-canvas text-ink-heading">
+        <div className="min-h-screen bg-slate-50 text-slate-900">
             <AdminHeader navigate={navigate} />
             <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
                 <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
                             Administracja
                         </p>
                         <h1 className="mt-1 text-3xl font-bold tracking-tight">Edycje konkursu</h1>
-                        <p className="mt-2 max-w-2xl text-sm text-ink-secondary">
+                        <p className="mt-2 max-w-2xl text-sm text-slate-600">
                             Zarządzaj okresami publikacji aktualności i materiałów konkursowych.
                         </p>
                     </div>
@@ -225,7 +225,7 @@ const EditEditionScreen = () => {
                 {feedback && (
                     <p
                         role={feedback.tone === "error" ? "alert" : "status"}
-                        className={`mt-6 rounded-xl border px-4 py-3 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
+                        className={`mt-6 rounded-xl border px-4 py-3 text-sm ${feedback.tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}
                     >
                         {feedback.message}
                     </p>
@@ -233,11 +233,11 @@ const EditEditionScreen = () => {
 
                 <section className="mt-8 space-y-4" aria-label="Lista edycji konkursu">
                     {loading ? (
-                        <div className="rounded-2xl border border-line bg-surface p-10 text-center text-sm text-ink-muted shadow-sm">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
                             Ładowanie edycji…
                         </div>
                     ) : editions.length === 0 ? (
-                        <p className="rounded-2xl border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-ink-muted">
+                        <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">
                             Brak utworzonych edycji.
                         </p>
                     ) : (
@@ -246,7 +246,7 @@ const EditEditionScreen = () => {
                             return (
                                 <article
                                     key={edition.id}
-                                    className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6"
+                                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
                                 >
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                         <div className="min-w-0">
@@ -260,7 +260,7 @@ const EditEditionScreen = () => {
                                                     {status.label}
                                                 </span>
                                             </div>
-                                            <p className="mt-2 text-sm text-ink-muted">
+                                            <p className="mt-2 text-sm text-slate-500">
                                                 <time dateTime={edition.startDate}>
                                                     {new Date(edition.startDate).toLocaleString(
                                                         "pl-PL"
@@ -303,7 +303,7 @@ const EditEditionScreen = () => {
                                                     }
                                                     disabled={deletingId === edition.id}
                                                     onClick={() => void endEdition(edition)}
-                                                    className="bg-warning px-3 hover:bg-warning-hover focus:ring-warning"
+                                                    className="bg-amber-600 px-3 hover:bg-amber-700 focus:ring-amber-500"
                                                 />
                                             )}
                                         </div>
@@ -323,11 +323,14 @@ const EditEditionScreen = () => {
             >
                 <form onSubmit={save} className="space-y-4">
                     {modalError && (
-                        <p role="alert" className="rounded-xl border p-3 text-sm app-status-danger">
+                        <p
+                            role="alert"
+                            className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                        >
                             {modalError}
                         </p>
                     )}
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block text-sm font-medium text-slate-700">
                         Tytuł edycji
                         <input
                             value={form.title}
@@ -346,7 +349,7 @@ const EditEditionScreen = () => {
                             type="button"
                             disabled={saving}
                             onClick={closeModal}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Anuluj
                         </button>

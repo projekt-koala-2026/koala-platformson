@@ -21,7 +21,7 @@ const Button = ({
         disabled={disabled}
         onClick={onClick}
         title={title}
-        className={`inline-flex min-h-10 appearance-none items-center justify-center gap-2 overflow-hidden rounded-xl border-0 bg-brand bg-clip-border px-4 py-2.5 text-sm font-medium text-ink-inverse shadow-sm transition hover:bg-brand-hover active:bg-brand-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-border-strong disabled:cursor-not-allowed disabled:bg-surface-disabled disabled:text-ink-secondary disabled:shadow-none ${className}`}
+        className={`inline-flex appearance-none items-center justify-center gap-2 overflow-hidden rounded-xl border-0 bg-emerald-600 bg-clip-border px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-300 ${className}`}
     >
         {text}
     </button>

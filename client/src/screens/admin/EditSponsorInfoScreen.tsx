@@ -25,7 +25,7 @@ const emptyForm: SponsorForm = {
     isVisible: true,
 };
 const inputClass =
-    "mt-1.5 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink-heading outline-none transition placeholder:text-ink-subtle focus:border-brand-focus focus:ring-2 focus:ring-brand-muted";
+    "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
 const isHttpUrl = (value: string) => {
     try {
         const url = new URL(value);
@@ -199,13 +199,13 @@ const EditSponsorInfo = () => {
         <>
             <AdminHeader navigate={navigate} />
             <main className="mx-auto w-full max-w-6xl space-y-7 px-4 py-8 sm:px-6 lg:px-8">
-                <header className="flex flex-col gap-5 border-b border-line-subtle pb-6 sm:flex-row sm:items-end sm:justify-between">
+                <header className="flex flex-col gap-5 border-b border-slate-100 pb-6 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
                             Administracja
                         </p>
-                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Sponsorzy</h1>
-                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                        <h1 className="mt-2 text-3xl font-bold text-slate-900">Sponsorzy</h1>
+                        <p className="mt-3 max-w-2xl text-slate-600">
                             Zarządzaj logotypami i odnośnikami wyświetlanymi w stopce strony.
                         </p>
                     </div>
@@ -222,19 +222,19 @@ const EditSponsorInfo = () => {
                 {feedback && (
                     <div
                         role={feedback.tone === "error" ? "alert" : "status"}
-                        className={`rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
+                        className={`rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}
                     >
                         {feedback.message}
                     </div>
                 )}
                 {loading ? (
-                    <div className="rounded-2xl border border-line bg-surface p-12 text-center text-sm text-ink-muted">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
                         Ładowanie sponsorów…
                     </div>
                 ) : sponsors.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-line bg-surface p-12 text-center">
-                        <h2 className="font-semibold text-ink-strong">Brak sponsorów</h2>
-                        <p className="mt-2 text-sm text-ink-muted">
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
+                        <h2 className="font-semibold text-slate-800">Brak sponsorów</h2>
+                        <p className="mt-2 text-sm text-slate-500">
                             Dodaj pierwszy wpis, aby pojawił się w stopce strony.
                         </p>
                     </div>
@@ -243,16 +243,16 @@ const EditSponsorInfo = () => {
                         {sponsors.map((sponsor) => (
                             <article
                                 key={sponsor.id}
-                                className="flex min-h-52 flex-col rounded-2xl border border-line bg-surface p-5 shadow-sm"
+                                className="flex min-h-52 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
                             >
                                 <div className="flex items-start gap-4">
-                                    <div className="relative grid h-20 w-28 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface-muted text-xl font-bold text-ink-subtle">
+                                    <div className="relative grid h-20 w-28 shrink-0 place-items-center overflow-hidden rounded-xl bg-slate-100 text-xl font-bold text-slate-400">
                                         <span>{sponsor.name.charAt(0).toUpperCase()}</span>
                                         {sponsor.logoUrl && (
                                             <img
                                                 src={sponsor.logoUrl}
                                                 alt={`Logo ${sponsor.name}`}
-                                                className="absolute inset-0 h-full w-full bg-surface object-contain p-2"
+                                                className="absolute inset-0 h-full w-full bg-white object-contain p-2"
                                                 onError={(event) => {
                                                     event.currentTarget.hidden = true;
                                                 }}
@@ -260,11 +260,11 @@ const EditSponsorInfo = () => {
                                         )}
                                     </div>
                                     <div className="min-w-0">
-                                        <h2 className="text-lg font-semibold text-ink-heading">
+                                        <h2 className="text-lg font-semibold text-slate-900">
                                             {sponsor.name}
                                         </h2>
                                         <span
-                                            className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${sponsor.isVisible ? "bg-brand-soft text-brand-text" : "bg-surface-muted text-ink-secondary"}`}
+                                            className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${sponsor.isVisible ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
                                         >
                                             {sponsor.isVisible ? "Widoczny" : "Ukryty"}
                                         </span>
@@ -272,17 +272,17 @@ const EditSponsorInfo = () => {
                                             href={sponsor.websiteUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-sm font-medium text-brand-text hover:underline"
+                                            className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-sm font-medium text-emerald-700 hover:underline"
                                         >
                                             <span className="truncate">{sponsor.websiteUrl}</span>
                                             <FaExternalLinkAlt className="shrink-0 text-xs" />
                                         </a>
                                     </div>
                                 </div>
-                                <p className="mt-4 flex-1 text-sm leading-6 text-ink-secondary">
+                                <p className="mt-4 flex-1 text-sm leading-6 text-slate-600">
                                     {sponsor.description || "Brak opisu."}
                                 </p>
-                                <div className="mt-5 flex gap-2 border-t border-line-subtle pt-4">
+                                <div className="mt-5 flex gap-2 border-t border-slate-100 pt-4">
                                     <Button
                                         text={
                                             <>
@@ -302,7 +302,7 @@ const EditSponsorInfo = () => {
                                         }
                                         onClick={() => void remove(sponsor)}
                                         disabled={pendingId === sponsor.id}
-                                        className="bg-danger px-3 hover:bg-danger-hover focus:ring-danger-emphasis"
+                                        className="bg-red-600 px-3 hover:bg-red-700 focus:ring-red-500"
                                     />
                                 </div>
                             </article>
@@ -317,7 +317,7 @@ const EditSponsorInfo = () => {
                 maxWidth="lg"
             >
                 <form onSubmit={submit} className="space-y-4">
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block text-sm font-medium text-slate-700">
                         Nazwa *
                         <input
                             value={form.name}
@@ -329,7 +329,7 @@ const EditSponsorInfo = () => {
                             required
                         />
                     </label>
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block text-sm font-medium text-slate-700">
                         Adres strony *
                         <input
                             type="url"
@@ -342,7 +342,7 @@ const EditSponsorInfo = () => {
                             required
                         />
                     </label>
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block text-sm font-medium text-slate-700">
                         Adres logo *
                         <input
                             type="url"
@@ -356,7 +356,7 @@ const EditSponsorInfo = () => {
                         />
                     </label>
                     {form.logoUrl && isHttpUrl(form.logoUrl) && (
-                        <div className="grid min-h-28 place-items-center rounded-xl border border-line bg-canvas p-4">
+                        <div className="grid min-h-28 place-items-center rounded-xl border border-slate-200 bg-slate-50 p-4">
                             <img
                                 src={form.logoUrl}
                                 alt="Podgląd logo"
@@ -364,7 +364,7 @@ const EditSponsorInfo = () => {
                             />
                         </div>
                     )}
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block text-sm font-medium text-slate-700">
                         Opis
                         <textarea
                             value={form.description}
@@ -374,7 +374,7 @@ const EditSponsorInfo = () => {
                             className={`${inputClass} min-h-24 resize-y`}
                         />
                     </label>
-                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-4">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <input
                             type="checkbox"
                             checked={form.isVisible}
@@ -384,13 +384,13 @@ const EditSponsorInfo = () => {
                                     isVisible: event.target.checked,
                                 }))
                             }
-                            className="mt-0.5 h-4 w-4 rounded border-line-strong text-brand-text focus:ring-brand-focus"
+                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                         />
                         <span>
-                            <span className="block text-sm font-medium text-ink">
+                            <span className="block text-sm font-medium text-slate-700">
                                 Widoczny na stronie publicznej
                             </span>
-                            <span className="mt-1 block text-xs leading-5 text-ink-muted">
+                            <span className="mt-1 block text-xs leading-5 text-slate-500">
                                 Wyłącz, aby ukryć sponsora bez usuwania jego danych.
                             </span>
                         </span>
@@ -400,7 +400,7 @@ const EditSponsorInfo = () => {
                             type="button"
                             onClick={closeModal}
                             disabled={saving}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
                         >
                             Anuluj
                         </button>

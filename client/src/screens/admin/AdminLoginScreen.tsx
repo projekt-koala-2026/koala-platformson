@@ -15,7 +15,7 @@ import {
 
 const LOGIN_ENDPOINT = apiEndpoints.sessions;
 const fieldClass =
-    "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted";
+    "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100";
 
 const AdminLoginScreen = () => {
     const navigate = useNavigate();
@@ -65,30 +65,30 @@ const AdminLoginScreen = () => {
     };
 
     return (
-        <main className="grid min-h-screen place-items-center bg-canvas p-4">
+        <main className="grid min-h-screen place-items-center bg-slate-50 p-4">
             <form
                 onSubmit={handleLogin}
-                className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8"
+                className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
             >
-                <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
                     Panel zarządzania
                 </p>
-                <h1 className="mt-2 text-2xl font-bold text-ink-heading">Zaloguj się</h1>
-                <p className="mt-2 text-sm text-ink-muted">
+                <h1 className="mt-2 text-2xl font-bold text-slate-900">Zaloguj się</h1>
+                <p className="mt-2 text-sm text-slate-500">
                     Użyj konta administratora, redaktora lub recenzenta.
                 </p>
 
                 {error && (
                     <p
                         role="alert"
-                        className="mt-5 rounded-xl border p-3 text-sm app-status-danger"
+                        className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
                     >
                         {error}
                     </p>
                 )}
 
                 <div className="mt-6 space-y-4">
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block text-sm font-medium text-slate-700">
                         Login lub e-mail
                         <input
                             className={fieldClass}
@@ -100,7 +100,7 @@ const AdminLoginScreen = () => {
                             required
                         />
                     </label>
-                    <label className="block text-sm font-medium text-ink">
+                    <label className="block text-sm font-medium text-slate-700">
                         Hasło
                         <input
                             className={fieldClass}
@@ -122,7 +122,7 @@ const AdminLoginScreen = () => {
                         type="button"
                         disabled={submitting}
                         onClick={() => navigate("/")}
-                        className="w-full rounded-lg px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-muted disabled:opacity-50"
+                        className="w-full rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
                     >
                         Wróć do strony konkursu
                     </button>
