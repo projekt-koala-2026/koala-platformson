@@ -37,3 +37,9 @@ class ResizeObserverStub {
 }
 
 vi.stubGlobal("ResizeObserver", ResizeObserverStub);
+
+vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    callback(0);
+    return 1;
+});
+vi.stubGlobal("cancelAnimationFrame", vi.fn());
