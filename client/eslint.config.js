@@ -7,7 +7,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 
 export default defineConfig([
-    globalIgnores(["dist"]),
+    globalIgnores(["dist", "coverage"]),
     {
         files: ["**/*.{js,jsx,ts,tsx}"],
         extends: [
@@ -37,6 +37,12 @@ export default defineConfig([
         },
         plugins: {
             "@typescript-eslint": tseslint,
+        },
+    },
+    {
+        files: ["tests/**/*.{ts,tsx}"],
+        rules: {
+            "react-refresh/only-export-components": "off",
         },
     },
 ]);
