@@ -4,12 +4,20 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
+import SelectListbox from "../../components/SelectListbox";
 import type { ApiRodo, ApiTeamDetails, RodoState } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequestResult, apiUrl } from "../../utils/apiFetcher";
 
 type StatusFilter = "ALL" | "UNVERIFIED" | "ACCEPTED" | "REJECTED";
 type Feedback = { tone: "success" | "warning" | "error"; message: string } | null;
+
+const statusFilterOptions = [
+    { value: "ALL", label: "Wszystkie" },
+    { value: "UNVERIFIED", label: "Do weryfikacji" },
+    { value: "ACCEPTED", label: "Zatwierdzone" },
+    { value: "REJECTED", label: "Odrzucone" },
+] as const;
 
 interface RodoApplication {
     key: string;
@@ -26,19 +34,19 @@ const statusMeta: Record<
 > = {
     UNVERIFIED: {
         label: "Do weryfikacji",
-        className: "border-amber-200 bg-amber-50 text-amber-800",
+        className: "app-status-warning",
     },
     ACCEPTED: {
         label: "Zatwierdzona",
-        className: "border-emerald-200 bg-emerald-50 text-emerald-800",
+        className: "app-status-success",
     },
     REJECTED: {
         label: "Odrzucona",
-        className: "border-red-200 bg-red-50 text-red-700",
+        className: "app-status-danger",
     },
     UNKNOWN: {
         label: "Nieznany status",
-        className: "border-slate-200 bg-slate-100 text-slate-700",
+        className: "border-line bg-surface-muted text-ink-secondary",
     },
 };
 
@@ -235,16 +243,16 @@ const AdminRodoScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900">
+        <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
             <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
                 <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                             Administracja
                         </p>
                         <h1 className="mt-1 text-3xl font-bold tracking-tight">Zgody RODO</h1>
-                        <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                        <p className="mt-2 max-w-3xl text-sm text-ink-muted">
                             Przeglądaj dokumenty przekazane przez opiekunów i ustawiaj wynik ich
                             weryfikacji.
                         </p>
@@ -266,10 +274,10 @@ const AdminRodoScreen = () => {
                         role={feedback.tone === "error" ? "alert" : "status"}
                         className={`mt-6 rounded-xl border px-4 py-3 text-sm ${
                             feedback.tone === "success"
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                                ? "app-status-success"
                                 : feedback.tone === "warning"
-                                  ? "border-amber-200 bg-amber-50 text-amber-800"
-                                  : "border-red-200 bg-red-50 text-red-700"
+                                  ? "app-status-warning"
+                                  : "app-status-danger"
                         }`}
                     >
                         {feedback.message}
@@ -281,78 +289,78 @@ const AdminRodoScreen = () => {
                     aria-label="Podsumowanie zgód"
                 >
                     {[
-                        { label: "Wszystkie", value: counts.all, tone: "text-slate-900" },
+                        { label: "Wszystkie", value: counts.all, tone: "text-ink-heading" },
                         {
                             label: "Do weryfikacji",
                             value: counts.unverified,
-                            tone: "text-amber-700",
+                            tone: "text-warning-text",
                         },
                         {
                             label: "Zatwierdzone",
                             value: counts.accepted,
-                            tone: "text-emerald-700",
+                            tone: "text-success-text",
                         },
-                        { label: "Odrzucone", value: counts.rejected, tone: "text-red-700" },
+                        { label: "Odrzucone", value: counts.rejected, tone: "text-danger-text" },
                     ].map((item) => (
                         <article
                             key={item.label}
-                            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                            className="rounded-2xl border border-line bg-surface p-5 shadow-panel"
                         >
-                            <p className="text-sm font-medium text-slate-500">{item.label}</p>
+                            <p className="text-sm font-medium text-ink-muted">{item.label}</p>
                             <p className={`mt-2 text-3xl font-bold ${item.tone}`}>{item.value}</p>
                         </article>
                     ))}
                 </section>
 
-                <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <section className="mt-6 rounded-2xl border border-line bg-surface p-5 shadow-panel">
                     <div className="grid gap-4 md:grid-cols-[1fr_240px]">
-                        <label className="block text-sm font-medium text-slate-700">
+                        <label className="block text-sm font-medium text-ink-secondary">
                             Szukaj po osobie lub drużynie
                             <input
                                 type="search"
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
                                 placeholder="np. Anna lub Drużyna Audytowa"
-                                className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                                className="mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading outline-none transition placeholder:text-ink-subtle focus:border-brand-focus focus:ring-2 focus:ring-brand-muted"
                             />
                         </label>
-                        <label className="block text-sm font-medium text-slate-700">
-                            Status
-                            <select
-                                value={statusFilter}
-                                onChange={(event) =>
-                                    setStatusFilter(event.target.value as StatusFilter)
-                                }
-                                className="app-select mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        <div>
+                            <span
+                                id="rodo-status-filter-label"
+                                className="block text-sm font-medium text-ink-secondary"
                             >
-                                <option value="ALL">Wszystkie</option>
-                                <option value="UNVERIFIED">Do weryfikacji</option>
-                                <option value="ACCEPTED">Zatwierdzone</option>
-                                <option value="REJECTED">Odrzucone</option>
-                            </select>
-                        </label>
+                                Status
+                            </span>
+                            <SelectListbox<StatusFilter>
+                                value={statusFilter}
+                                options={statusFilterOptions}
+                                onChange={setStatusFilter}
+                                ariaLabelledBy="rodo-status-filter-label"
+                                className="mt-2"
+                            />
+                        </div>
                     </div>
                 </section>
 
                 <section className="mt-6" aria-label="Lista zgód RODO">
                     {loading ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-sm text-slate-500 shadow-sm">
+                        <div className="rounded-2xl border border-line bg-surface p-12 text-center text-sm text-ink-muted shadow-panel">
                             Ładowanie zgód…
                         </div>
                     ) : visibleApplications.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-                            <p className="font-semibold text-slate-800">
+                        <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-12 text-center">
+                            <p className="font-semibold text-ink-heading">
                                 Brak zgód do wyświetlenia
                             </p>
-                            <p className="mt-2 text-sm text-slate-500">
+                            <p className="mt-2 text-sm text-ink-muted">
                                 Zmień filtry albo poczekaj, aż opiekunowie prześlą dokumenty.
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-panel">
                             <div className="overflow-x-auto">
                                 <table className="w-full min-w-[820px] text-left text-sm">
-                                    <thead className="bg-slate-100 text-slate-700">
+                                    <thead className="bg-surface-muted text-ink-secondary">
                                         <tr>
                                             <th className="px-4 py-3">Osoba</th>
                                             <th className="px-4 py-3">Drużyna</th>
@@ -361,23 +369,23 @@ const AdminRodoScreen = () => {
                                             <th className="px-4 py-3 text-right">Akcje</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-line-subtle">
                                         {visibleApplications.map((application) => {
                                             const status = statusFor(application.rodo.state);
                                             return (
                                                 <tr
                                                     key={application.key}
-                                                    className="hover:bg-slate-50"
+                                                    className="transition-colors hover:bg-surface-muted"
                                                 >
                                                     <td className="px-4 py-4">
-                                                        <p className="font-semibold text-slate-900">
+                                                        <p className="font-semibold text-ink-heading">
                                                             {application.personName}
                                                         </p>
-                                                        <p className="mt-0.5 text-xs text-slate-500">
+                                                        <p className="mt-0.5 text-xs text-ink-muted">
                                                             {application.personRole}
                                                         </p>
                                                     </td>
-                                                    <td className="px-4 py-4 text-slate-700">
+                                                    <td className="px-4 py-4 text-ink-secondary">
                                                         {application.team.name}
                                                     </td>
                                                     <td className="px-4 py-4">
@@ -387,7 +395,7 @@ const AdminRodoScreen = () => {
                                                             {status.label}
                                                         </span>
                                                     </td>
-                                                    <td className="px-4 py-4 text-slate-600">
+                                                    <td className="px-4 py-4 text-ink-muted">
                                                         {new Date(
                                                             application.rodo.updatedAt
                                                         ).toLocaleString("pl-PL")}
@@ -425,38 +433,38 @@ const AdminRodoScreen = () => {
             >
                 {selectedApplication && (
                     <div className="space-y-5">
-                        <dl className="grid gap-4 rounded-xl bg-slate-50 p-4 sm:grid-cols-2">
+                        <dl className="grid gap-4 rounded-xl bg-surface-muted p-4 sm:grid-cols-2">
                             <div>
-                                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                                     Osoba
                                 </dt>
-                                <dd className="mt-1 font-semibold text-slate-900">
+                                <dd className="mt-1 font-semibold text-ink-heading">
                                     {selectedApplication.personName}
                                 </dd>
-                                <dd className="text-sm text-slate-500">
+                                <dd className="text-sm text-ink-muted">
                                     {selectedApplication.personRole}
                                 </dd>
                             </div>
                             <div>
-                                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                                     Drużyna
                                 </dt>
-                                <dd className="mt-1 font-semibold text-slate-900">
+                                <dd className="mt-1 font-semibold text-ink-heading">
                                     {selectedApplication.team.name}
                                 </dd>
                             </div>
                             <div>
-                                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                                     Przesłano
                                 </dt>
-                                <dd className="mt-1 text-sm text-slate-700">
+                                <dd className="mt-1 text-sm text-ink-secondary">
                                     {new Date(selectedApplication.rodo.createdAt).toLocaleString(
                                         "pl-PL"
                                     )}
                                 </dd>
                             </div>
                             <div>
-                                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                                     Status
                                 </dt>
                                 <dd className="mt-1">
@@ -475,13 +483,13 @@ const AdminRodoScreen = () => {
                             href={fileUrlFor(selectedApplication)}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            className="inline-flex items-center gap-2 rounded-xl border border-line-strong bg-surface px-4 py-2.5 text-sm font-semibold text-ink-secondary shadow-sm transition hover:bg-surface-muted focus:outline-none focus:ring-2 focus:ring-brand-focus"
                         >
                             <FaEye aria-hidden="true" />
                             Otwórz przesłany dokument
                         </a>
 
-                        <div className="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:flex-wrap sm:justify-end">
+                        <div className="flex flex-col gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:flex-wrap sm:justify-end">
                             {selectedApplication.rodo.state !== "UNVERIFIED" && (
                                 <Button
                                     text={
@@ -494,7 +502,7 @@ const AdminRodoScreen = () => {
                                         void setRodoState(selectedApplication, "UNVERIFIED")
                                     }
                                     disabled={savingKey === selectedApplication.key}
-                                    className="bg-slate-600 hover:bg-slate-700"
+                                    className="bg-surface-subtle text-ink-strong hover:bg-surface-disabled active:bg-surface-active"
                                 />
                             )}
                             {selectedApplication.rodo.state !== "REJECTED" && (
@@ -509,7 +517,7 @@ const AdminRodoScreen = () => {
                                         void setRodoState(selectedApplication, "REJECTED")
                                     }
                                     disabled={savingKey === selectedApplication.key}
-                                    className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                                    className="bg-danger hover:bg-danger-hover active:bg-danger-active focus:ring-danger-focus"
                                 />
                             )}
                             {selectedApplication.rodo.state !== "ACCEPTED" && (
