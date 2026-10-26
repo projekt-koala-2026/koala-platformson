@@ -176,7 +176,7 @@ namespace koala.src.Modules.Account.Services
                                     <p style=""margin:0 0 24px; font-size:16px; line-height:1.6; color:#334155;"">
                                         Utwórz konto, jeśli chcesz odczuć radość i satysfakcję z rozwiązywania zadań matematycznych,
                                         szczególnie tych rozwijających logiczne myślenie, algorytmikę i umiejętność rozwiązywania problemów.
-                                        Zignoruj tę wiadomość, jeśli nie jesteś zainstalowany(-a) tak ciekawymi wyzwaniami 
+                                        Zignoruj tę wiadomość, jeśli nie jesteś zainteresowany(-a) tak ciekawymi wyzwaniami 
                                         lub po prostu nie prosiłeś(-aś) o rejestrację tego konta.
                                     </p>
                                     <table role=""presentation"" cellspacing=""0"" cellpadding=""0"">
