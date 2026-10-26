@@ -18,6 +18,8 @@ namespace koala.src.Modules.Core.Data
         public DbSet<TaskItem> Tasks => Set<TaskItem>();
         public DbSet<TaskItemTaskCorr> TaskItemTaskCorrs => Set<TaskItemTaskCorr>();
         public DbSet<TaskCorr> TaskCorrs => Set<TaskCorr>();
+        public DbSet<TaskItemTaskAnswer> TaskItemTaskAnswers => Set<TaskItemTaskAnswer>();
+        public DbSet<TaskAnswer> TaskAnswers => Set<TaskAnswer>();
         public DbSet<School> Schools => Set<School>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,6 +33,8 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<TaskItem>().ToTable("tasks");
             modelBuilder.Entity<TaskItemTaskCorr>().ToTable("task_item_task_corrs");
             modelBuilder.Entity<TaskCorr>().ToTable("task_corrs");
+            modelBuilder.Entity<TaskItemTaskAnswer>().ToTable("task_item_task_answers");
+            modelBuilder.Entity<TaskAnswer>().ToTable("task_answers");
             modelBuilder.Entity<School>().ToTable("schools");
 
             // EDITIONS CONFIG
@@ -78,6 +82,7 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<TaskCorr>()
                 .HasKey(tc => tc.Id);
 
+            // TASKITEM-TASKCORR CONFIG
             modelBuilder.Entity<TaskItemTaskCorr>()
                 .HasKey(ttc => new { ttc.TaskItemId, ttc.TaskCorrId });
             modelBuilder.Entity<TaskItemTaskCorr>()
@@ -89,6 +94,24 @@ namespace koala.src.Modules.Core.Data
                 .HasOne(ttc => ttc.TaskCorr)
                 .WithOne(tc => tc.TaskItemTaskCorr)
                 .HasForeignKey<TaskItemTaskCorr>(ttc => ttc.TaskCorrId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //TASKANS CONFIG
+            modelBuilder.Entity<TaskAnswer>()
+                .HasKey(ta => ta.Id);
+
+            // TASKITEM-TASKANSWER CONFIG
+            modelBuilder.Entity<TaskItemTaskAnswer>()
+                .HasKey(tta => new { tta.TaskItemId, tta.TaskAnswerId });
+            modelBuilder.Entity<TaskItemTaskAnswer>()
+                .HasOne(tta => tta.TaskItem)
+                .WithMany(t => t.TaskItemTaskAnswers)
+                .HasForeignKey(tta => tta.TaskItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<TaskItemTaskAnswer>()
+                .HasOne(tta => tta.TaskAnswer)
+                .WithOne(ta => ta.TaskItemTaskAnswer)
+                .HasForeignKey<TaskItemTaskAnswer>(tta => tta.TaskAnswerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // SCHOOLS CONFIG

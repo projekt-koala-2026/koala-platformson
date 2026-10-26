@@ -18,5 +18,6 @@ namespace koala.src.Modules.Core.Entities
 
         public SubEditionTask SubEditionTask { get; set; } = null!;
         public ICollection<TaskItemTaskCorr> TaskItemTaskCorrs { get; set; } = new List<TaskItemTaskCorr>();
+        public ICollection<TaskItemTaskAnswer> TaskItemTaskAnswers { get; set; } = new List<TaskItemTaskAnswer>();
     }
 }
