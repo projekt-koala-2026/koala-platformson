@@ -88,7 +88,7 @@ namespace koala.src.Modules.Account.Services
             {
                 if (!validTeamRoleNames.Contains(role))
                 {
-                    throw new AccountException(AccountErrorCodes.IncorrectRoles, "Specified role is not a team user role");
+                    throw new AccountException(AccountErrorCodes.IncorrectRoles, "Specified role is not a valid user role");
                 }
             }
 

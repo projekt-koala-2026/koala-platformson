@@ -13,7 +13,7 @@ namespace koala.src.Modules.Account.Dtos
 
     public class UserQueryDtoValidator : AbstractValidator<UserQueryDto>
     {
-        UserQueryDtoValidator()
+        public UserQueryDtoValidator()
         {
             RuleFor(x => x.NameFirst)
                 .MaximumLength(50).WithMessage("NameFirst field cannot be larger than 50 characters!")

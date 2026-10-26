@@ -3,6 +3,7 @@ using koala.src.Shared.Account;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using StackExchange.Redis;
+using koala.src.Shared.Validation;
 
 namespace koala.src.Shared
 {
@@ -76,6 +77,9 @@ namespace koala.src.Shared
                 });
 
             services.AddAuthorization();
+
+            // 4. Adding filter for handling auto FluentValidation for Dtos
+            services.AddScoped<FluentValidationFilter, FluentValidationFilter>();
 
             return services;
         }

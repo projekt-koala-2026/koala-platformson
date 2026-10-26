@@ -3,6 +3,7 @@ using Scalar.AspNetCore;
 using koala.src.Modules.Account;
 using koala.src.Modules.Cms;
 using koala.src.Modules.Core;
+using koala.src.Shared.Validation;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +14,6 @@ IConfigurationRoot configuration = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
 
-builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // MODULES INIT
@@ -40,6 +40,10 @@ builder.Services.AddCors(options =>
                   .AllowCredentials();
         });
 });
+
+builder.Services.AddControllers(options =>
+{ options.Filters.AddService<FluentValidationFilter>(); }
+);
 
 var app = builder.Build();
 

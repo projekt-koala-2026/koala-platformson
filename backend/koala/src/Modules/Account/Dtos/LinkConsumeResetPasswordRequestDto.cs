@@ -9,7 +9,7 @@ namespace koala.src.Modules.Account.Dtos
 
     public class LinkConsumeResetPasswordRequestDtoValidator : AbstractValidator<LinkConsumeResetPasswordRequestDto>
     {
-        LinkConsumeResetPasswordRequestDtoValidator()
+        public LinkConsumeResetPasswordRequestDtoValidator()
         {
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Password field cannot be empty!")

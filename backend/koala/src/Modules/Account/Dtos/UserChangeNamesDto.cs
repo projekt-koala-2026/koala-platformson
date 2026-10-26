@@ -10,7 +10,7 @@ namespace koala.src.Modules.Account.Dtos
 
     public class UserChangeNamesDtoValidator : AbstractValidator<UserChangeNamesDto>
     {
-        UserChangeNamesDtoValidator()
+        public UserChangeNamesDtoValidator()
         {
             RuleFor(x => x.NameFirst)
                 .NotEmpty().WithMessage("NameFirst field cannot be empty!")

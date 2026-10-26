@@ -13,7 +13,7 @@ namespace koala.src.Modules.Account.Dtos
 
     public class LinkConsumeRegisterRequestDtoValidator : AbstractValidator<LinkConsumeRegisterRequestDto>
     {
-        LinkConsumeRegisterRequestDtoValidator()
+        public LinkConsumeRegisterRequestDtoValidator()
         {
             RuleFor(x => x.NameFirst)
                 .NotEmpty().WithMessage("NameFirst field cannot be empty!")
