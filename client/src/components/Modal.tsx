@@ -61,7 +61,7 @@ const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg" }: ModalProps
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-backdrop/45 p-4 backdrop-blur-sm"
             onMouseDown={(event) => {
                 if (event.target === event.currentTarget) onClose();
             }}
@@ -72,22 +72,24 @@ const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg" }: ModalProps
                 aria-modal="true"
                 aria-labelledby={titleId}
                 tabIndex={-1}
-                className={`max-h-[90vh] w-full ${widths[maxWidth]} animate-[fadeIn_.18s_ease-out] overflow-y-auto rounded-2xl border border-slate-100 bg-white p-5 shadow-2xl outline-none sm:p-6`}
+                className={`flex max-h-[calc(100dvh-2rem)] w-full ${widths[maxWidth]} animate-[fadeIn_.18s_ease-out] flex-col overflow-hidden rounded-2xl border border-line-subtle bg-surface shadow-2xl outline-none`}
             >
-                <header className="mb-5 flex items-center justify-between gap-4">
-                    <h2 id={titleId} className="text-lg font-semibold text-slate-900">
+                <header className="flex shrink-0 items-center justify-between gap-4 border-b border-line-subtle px-5 py-4 sm:px-6">
+                    <h2 id={titleId} className="text-lg font-semibold text-ink-heading">
                         {title}
                     </h2>
                     <button
                         type="button"
                         aria-label="Zamknij"
                         onClick={onClose}
-                        className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="shrink-0 rounded-lg p-2 text-ink-muted transition hover:bg-surface-muted hover:text-ink-heading focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus"
                     >
                         <FaTimes aria-hidden="true" />
                     </button>
                 </header>
-                {children}
+                <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6">
+                    {children}
+                </div>
             </section>
         </div>
     );

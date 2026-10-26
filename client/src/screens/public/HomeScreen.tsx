@@ -61,15 +61,15 @@ const HomeScreen = () => {
     );
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
                 <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
+                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
                         Konkurs KOALA
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold text-slate-900">Aktualności</h1>
-                    <p className="mt-3 max-w-2xl text-slate-600">
+                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Aktualności</h1>
+                    <p className="mt-3 max-w-2xl text-ink-secondary">
                         Najważniejsze informacje, terminy i komunikaty dotyczące bieżącej edycji.
                     </p>
                 </header>
@@ -77,7 +77,7 @@ const HomeScreen = () => {
                 {hasError && (
                     <p
                         role="status"
-                        className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                        className="mb-5 rounded-xl border px-4 py-3 text-sm app-status-warning"
                     >
                         Nie udało się pobrać wszystkich danych. Wyświetlana lista może być niepełna.
                     </p>
@@ -85,15 +85,15 @@ const HomeScreen = () => {
 
                 <section aria-label="Aktualności konkursu" className="space-y-5">
                     {loading ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
+                        <div className="rounded-2xl border border-line bg-surface p-10 text-center text-sm text-ink-muted shadow-sm">
                             Ładowanie aktualności…
                         </div>
                     ) : visiblePosts.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-                            <h2 className="text-lg font-semibold text-slate-800">
+                        <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-10 text-center">
+                            <h2 className="text-lg font-semibold text-ink-strong">
                                 Brak aktualności
                             </h2>
-                            <p className="mt-2 text-sm text-slate-500">
+                            <p className="mt-2 text-sm text-ink-muted">
                                 {editions.length === 0
                                     ? "Nie rozpoczęto jeszcze aktywnej edycji konkursu."
                                     : "Dla trwającej edycji nie opublikowano jeszcze żadnych wiadomości."}
@@ -103,9 +103,9 @@ const HomeScreen = () => {
                         visiblePosts.map((post) => (
                             <article
                                 key={post.id}
-                                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8"
+                                className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-8"
                             >
-                                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
                                     <time dateTime={post.createdAt}>
                                         {new Date(post.createdAt).toLocaleDateString("pl-PL", {
                                             year: "numeric",
@@ -117,7 +117,7 @@ const HomeScreen = () => {
                                         ? ` · ${editionNames.get(post.editionId)}`
                                         : ""}
                                 </p>
-                                <h2 className="mt-2 break-words text-xl font-semibold text-slate-900">
+                                <h2 className="mt-2 break-words text-xl font-semibold text-ink-heading">
                                     {post.title}
                                 </h2>
                                 <div className="mt-5">
