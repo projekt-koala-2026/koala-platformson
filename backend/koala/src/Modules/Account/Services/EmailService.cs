@@ -131,7 +131,7 @@ namespace koala.src.Modules.Account.Services
                 </html>";
 
             // Send via the existing email service with high priority.
-            await SendEmailAsync(toEmail, "Password Reset", htmlMessage, isHighPriority: true);
+            await SendEmailAsync(toEmail, "Resetuj hasło", htmlMessage, isHighPriority: true);
         }
 
         public async Task SendRegisterEmailAsync(string toEmail, string registerToken)
