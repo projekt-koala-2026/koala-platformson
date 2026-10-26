@@ -463,7 +463,7 @@ const CaptainHomeScreen = () => {
                                 Członkowie drużyny
                             </h2>
                             <ul className="mt-4 divide-y divide-slate-100">
-                                {team.teamMembers.map((member) => (
+                                {team.teamMembers?.map((member) => (
                                     <li
                                         key={member.id}
                                         className="flex flex-wrap items-center justify-between gap-3 py-3"
