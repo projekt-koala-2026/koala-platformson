@@ -28,6 +28,7 @@ const administratorLinks = [
     ...editorLinks,
     { label: "Szkoły", path: "/admin/schools" },
     { label: "Drużyny", path: "/admin/teams" },
+    { label: "RODO", path: "/admin/rodos" },
 ];
 
 const desktopPaths = new Set([
@@ -37,6 +38,7 @@ const desktopPaths = new Set([
     "/admin/history",
     "/admin/rules",
     "/admin/problems",
+    "/admin/rodos",
 ]);
 
 const AdminHeader = ({ navigate }: AdminHeaderProps) => {
