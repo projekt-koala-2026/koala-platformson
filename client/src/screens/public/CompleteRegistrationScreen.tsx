@@ -7,7 +7,7 @@ import { apiEndpoints } from "../../utils/apiEndpoints";
 import { apiRequestResult } from "../../utils/apiFetcher";
 
 const inputClass =
-    "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100";
+    "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:bg-surface-muted";
 
 const isStrongPassword = (password: string) =>
     password.length >= 8 &&
@@ -72,21 +72,21 @@ const CompleteRegistrationScreen = () => {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="grid flex-1 place-items-center px-4 py-10 sm:px-6">
-                <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                <section className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Rejestracja
                     </p>
-                    <h1 className="mt-2 text-2xl font-bold text-slate-900">
+                    <h1 className="mt-2 text-2xl font-bold text-ink-heading">
                         Dokończ tworzenie konta
                     </h1>
 
                     {!token ? (
                         <p
                             role="alert"
-                            className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                            className="mt-5 rounded-xl border p-3 text-sm app-status-danger"
                         >
                             W adresie brakuje tokenu rejestracyjnego.
                         </p>
@@ -95,12 +95,12 @@ const CompleteRegistrationScreen = () => {
                             {error && (
                                 <p
                                     role="alert"
-                                    className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                                    className="rounded-xl border p-3 text-sm app-status-danger"
                                 >
                                     {error}
                                 </p>
                             )}
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label className="block text-sm font-medium text-ink">
                                 Imię
                                 <input
                                     className={inputClass}
@@ -110,7 +110,7 @@ const CompleteRegistrationScreen = () => {
                                     required
                                 />
                             </label>
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label className="block text-sm font-medium text-ink">
                                 Nazwisko
                                 <input
                                     className={inputClass}
@@ -120,7 +120,7 @@ const CompleteRegistrationScreen = () => {
                                     required
                                 />
                             </label>
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label className="block text-sm font-medium text-ink">
                                 Hasło
                                 <input
                                     className={inputClass}
@@ -132,7 +132,7 @@ const CompleteRegistrationScreen = () => {
                                     required
                                 />
                             </label>
-                            <label className="flex items-start gap-3 text-sm text-slate-700">
+                            <label className="flex items-start gap-3 text-sm text-ink">
                                 <input
                                     className="mt-1"
                                     type="checkbox"
@@ -142,7 +142,7 @@ const CompleteRegistrationScreen = () => {
                                 />
                                 Akceptuję regulamin konkursu.
                             </label>
-                            <label className="flex items-start gap-3 text-sm text-slate-700">
+                            <label className="flex items-start gap-3 text-sm text-ink">
                                 <input
                                     className="mt-1"
                                     type="checkbox"

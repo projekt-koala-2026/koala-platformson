@@ -7,6 +7,7 @@ import { clearStoredSession, getOrganizationHomePath, getUserRoles } from "../ut
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
+import ThemeToggle from "./ThemeToggle";
 
 interface PublicHeaderProps {
     navigate: NavigateFunction;
@@ -48,18 +49,18 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
 
     return (
         <>
-            <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-md sm:px-6">
+            <header className="sticky top-0 z-40 border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md sm:px-6">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
                     <button
                         type="button"
                         onClick={() => navigate("/")}
                         aria-label="Przejdź na stronę główną"
-                        className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500"
+                        className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus"
                     >
-                        <span className="block text-xl font-bold tracking-tight text-slate-950">
+                        <span className="block text-xl font-bold tracking-tight text-ink-heading">
                             KOALA
                         </span>
-                        <span className="hidden text-xs font-semibold text-emerald-700 sm:block">
+                        <span className="hidden text-xs font-semibold text-brand-text sm:block">
                             Kombinatoryka · Algorytmika · Logika
                         </span>
                     </button>
@@ -76,10 +77,10 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                     key={link.path}
                                     onClick={() => navigate(link.path)}
                                     aria-current={isActive ? "page" : undefined}
-                                    className={`rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                                    className={`rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-focus ${
                                         isActive
-                                            ? "bg-emerald-50 text-emerald-900"
-                                            : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                                            ? "bg-brand-soft text-brand-text-strong"
+                                            : "text-ink hover:bg-surface-muted hover:text-ink-heading"
                                     }`}
                                 >
                                     {link.label}
@@ -89,6 +90,7 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                     </nav>
 
                     <div className="flex items-center gap-3">
+                        <ThemeToggle />
                         {isLoggedIn ? (
                             <ProfileButton
                                 options={[
@@ -127,7 +129,7 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                             <button
                                 type="button"
                                 onClick={() => navigate("/login")}
-                                className="hidden appearance-none overflow-hidden rounded-xl border-0 bg-emerald-600 bg-clip-border px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-300 sm:inline-flex"
+                                className="hidden min-h-10 appearance-none items-center overflow-hidden rounded-xl border-0 bg-brand bg-clip-border px-4 py-2 text-sm font-medium text-ink-inverse shadow-sm transition hover:bg-brand-hover active:bg-brand-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-border-strong lg:inline-flex"
                             >
                                 Zaloguj
                             </button>
