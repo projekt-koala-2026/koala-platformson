@@ -5,6 +5,7 @@ export const apiEndpoints = {
     links: `${API_ROOT}/account/links`,
     users: `${API_ROOT}/account/users`,
     teams: `${API_ROOT}/account/teams`,
+    teamRodos: (teamId: string) => `${API_ROOT}/account/teams/${teamId}/rodos`,
     editions: `${API_ROOT}/core/editions`,
     activeEdition: `${API_ROOT}/core/editions/active-edition`,
     schools: `${API_ROOT}/core/schools`,
