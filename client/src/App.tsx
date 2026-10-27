@@ -36,7 +36,7 @@ const teamMembers: Role[] = ["TEAM_PLAYER", "TEAM_ADMIN"];
 
 const RouteFallback = () => (
     <main className="flex min-h-[40vh] items-center justify-center px-4" role="status">
-        <span className="text-sm font-medium text-slate-500">Ładowanie widoku…</span>
+        <span className="text-sm font-medium text-ink-muted">Ładowanie widoku…</span>
     </main>
 );
 
