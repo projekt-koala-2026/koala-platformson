@@ -73,6 +73,8 @@ export interface ApiStaticPage {
 
 export interface ApiTeamMember {
     id: string;
+    nameFist: string;
+    nameLast: string;
     position: "CAPTAIN" | "ADMIN" | "PLAYER" | string;
 }
 
@@ -82,16 +84,27 @@ export interface ApiTeamJoinCode {
     expiresAt: string;
 }
 
-export interface ApiTeam {
+export type ApiTeamCaptain = {
+    id: string;
+    nameFirst: string;
+    nameLast: string;
+    email: string;
+    censored: boolean;
+    roles: string[];
+};
+
+export type ApiTeam = {
     id: string;
     editionId: string;
     schoolId: string;
     name: string;
     isCensored: boolean;
     createdAt: string;
+    teamCaptain: ApiTeamCaptain | null;
+    teamAdmin: ApiTeamCaptain | null;
     teamMembers: ApiTeamMember[];
     joinCode: ApiTeamJoinCode | null;
-}
+};
 
 export interface Team {
     id: string;
