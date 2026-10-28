@@ -59,6 +59,21 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskCorrDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
+        [Authorize]
+        [HttpPut("/{task_id}/team/{team_id}")]
+        public async Task<IActionResult> UpdateTaskAnswerTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromBody] UpdateTaskAnswerTeamDto updateTaskAnswerTeamDto)
+        {
+            var response = await _taskService.UpdateTaskAnswerTeamAsync(User, task_id, team_id, updateTaskAnswerTeamDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskAnswerDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpGet("/{task_id}")]
+        public async Task<IActionResult> GetTaskAnswers([FromRoute] Guid task_id ,[FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var responseData, var responsePagination) = await _taskService.GetTaskAnswersAsync(User, task_id, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskAnswerDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        } 
 
     }
 }

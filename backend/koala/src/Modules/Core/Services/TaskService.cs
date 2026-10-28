@@ -212,6 +212,109 @@ namespace koala.src.Modules.Core.Services
             return (TaskCorrs, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
+        public async Task<TaskAnswerDto> UpdateTaskAnswerTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, UpdateTaskAnswerTeamDto updateTaskAnswerTeamDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            var task = await _db.TaskAnswers.FirstOrDefaultAsync(e => e.TaskId == task_id);
+
+            if (task == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+            }
+
+            task.TeamId = team_id; 
+
+            if(isOrganizationAdmin)
+            {
+                task.Reviewer1Id = updateTaskAnswerTeamDto.Reviewer1Id;
+                task.Reviewer2Id = updateTaskAnswerTeamDto.Reviewer2Id;
+                task.AutoReviewState = updateTaskAnswerTeamDto.AutoReviewState;
+                task.Review1State = updateTaskAnswerTeamDto.Review1State;
+                task.Review2State = updateTaskAnswerTeamDto.Review2State;
+
+                await _db.SaveChangesAsync();
+
+                return new TaskAnswerDto(
+                task.TeamId,
+                task.TaskId,
+                task.Reviewer1Id,
+                task.Reviewer2Id,
+                task.AutoReviewState,
+                task.Review1State,
+                task.Review2State,
+                task.TeamAnswer,
+                task.Version
+                );
+            }
+
+            task.TeamAnswer = updateTaskAnswerTeamDto.TeamAnswer;
+            task.Version++;
+
+            await _db.SaveChangesAsync();
+
+            return new TaskAnswerDto(
+                task.TeamId,
+                task.TaskId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                task.TeamAnswer,
+                task.Version
+            );
+        }
+
+        public async Task<(List<TaskAnswerDto>, ApiPagination)> GetTaskAnswersAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, PageQueryDto pageQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var query = _db.TaskAnswers.Include(t => t.TaskItem).Where(t => t.TaskItem.Id == task_id).AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+
+            var entities = await query
+                .OrderBy(e => e.TeamId)
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .ToListAsync();
+
+            var TaskAnswers = entities.Select(e =>
+            {
+                return new TaskAnswerDto(
+                    e.TeamId,
+                    e.TaskItem.Id,
+                    e.Reviewer1Id,
+                    e.Reviewer2Id,
+                    e.AutoReviewState,
+                    e.Review1State,
+                    e.Review2State,
+                    e.TeamAnswer,
+                    e.Version
+                );
+            }).ToList();
+
+            return (TaskAnswers, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+        }
+
 
     }
 

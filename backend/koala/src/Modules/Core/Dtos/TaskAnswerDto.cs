@@ -1,6 +1,7 @@
-namespace koala.src.Modules.Core.DTOs
+namespace koala.src.Modules.Core.Dtos
 {
-    public record TaskAnswerDto(
+    public record TaskAnswerDto
+    (
         Guid TeamId,
         Guid TaskId,
         Guid? Reviewer1Id,
