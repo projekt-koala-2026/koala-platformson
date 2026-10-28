@@ -13,12 +13,12 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="src\Modules\**\Tests\*.cs" />
-        <Compile Remove="src\Modules\**\UnitTests\*.cs" />
-        <Compile Remove="src\Modules\**\IntegrationTests\*.cs" />
+		<Compile Remove="src/Modules/**/Tests/**/*.cs" />
     </ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
+		<PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
 		<PackageReference Include="MailKit" Version="4.17.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />

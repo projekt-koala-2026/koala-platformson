@@ -3,7 +3,6 @@ using koala.src.Modules.Account.Data;
 using koala.src.Modules.Account.Services;
 using koala.src.Shared.Account;
 using FluentValidation;
-using koala.src.Modules.Account.Dtos;
 
 namespace koala.src.Modules.Account
 {

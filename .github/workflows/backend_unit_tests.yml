@@ -23,13 +23,13 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore koala-unit-tests.csproj
         working-directory: backend/koala
 
       - name: Build solution
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build koala-unit-tests.csproj --no-restore --configuration Release
         working-directory: backend/koala
 
       - name: Run xUnit tests
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test koala-unit-tests.csproj --no-build --configuration Release --verbosity normal
         working-directory: backend/koala

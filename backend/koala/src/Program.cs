@@ -47,7 +47,6 @@ builder.Services.AddControllers(options =>
 
 var app = builder.Build();
 
-CmsModuleExtensions.AddCmsModule(app, app.Configuration);
 
 app.UseCors("AllowFrontend");
 
@@ -67,6 +66,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseExceptionHandler();
 
+CmsModuleExtensions.AddCmsModule(app, app.Configuration);
+SharedExtension.AddSharedModule(app, app.Configuration);
 
 app.MapControllers();
 

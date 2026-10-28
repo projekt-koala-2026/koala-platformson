@@ -46,7 +46,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(claims, "SessionCookie"));
 
-            var requestDto = new CreateTeamRequestDto
+            var requestDto = new TeamCreateRequestDto
             (
                 "Nowa Druzyna Testowa",
                 TestDataSeeder.MOCK_ID_SCHOOL_3
@@ -127,7 +127,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(claims, "SessionCookie"));
 
-            var requestDto = new MemberUpsertRequestDto
+            var requestDto = new TeamMemberUpsertRequestDto
             (
                 "Jan",
                 "Kowalski"
@@ -164,7 +164,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             ClaimsPrincipal? unauthenticatedPrincipal = null;
 
-            var requestDto = new CreateTeamRequestDto
+            var requestDto = new TeamCreateRequestDto
             (
                 "Test Team",
                 TestDataSeeder.MOCK_ID_SCHOOL_1

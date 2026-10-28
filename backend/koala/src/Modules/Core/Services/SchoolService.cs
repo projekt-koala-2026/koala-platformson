@@ -23,20 +23,20 @@ namespace koala.src.Modules.Core.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            if(!isOrganizationAdmin)
+            if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             //TODO check here if that all that is unique???
             var school = await _db.Schools.FirstOrDefaultAsync(s => s.Rspo == createSchoolRequestDto.Rspo);
 
-            if(school != null)
+            if (school != null)
             {
                 throw new CoreException(CoreErrorCodes.SchoolAlreadyExists, "School with this rspo or full name already exists");
             }
@@ -84,19 +84,19 @@ namespace koala.src.Modules.Core.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            if(!isOrganizationAdmin)
+            if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var school = await _db.Schools.FirstOrDefaultAsync(s => s.Id == id);
 
-            if(school == null)
+            if (school == null)
             {
                 throw new CoreException(CoreErrorCodes.SchoolNotFound, "School with this id does not exist");
             }
@@ -136,19 +136,19 @@ namespace koala.src.Modules.Core.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            if(!isOrganizationAdmin)
+            if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var school = await _db.Schools.FirstOrDefaultAsync(s => s.Id == id);
 
-            if(school == null)
+            if (school == null)
             {
                 throw new CoreException(CoreErrorCodes.SchoolNotFound, "School with this id does not exist");
             }
@@ -162,19 +162,19 @@ namespace koala.src.Modules.Core.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            if(!isOrganizationAdmin)
+            if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var schools = await _db.Schools.Where(s => ids.Contains(s.Id)).ToListAsync();
 
-            if(schools.Count == 0)
+            if (schools.Count == 0)
             {
                 throw new CoreException(CoreErrorCodes.SchoolNotFound, "Not a single school with provided ids exists");
             }
@@ -183,22 +183,41 @@ namespace koala.src.Modules.Core.Services
             await _db.SaveChangesAsync();
         }
 
+        public async Task DeleteAllSchoolsAsync(ClaimsPrincipal? claimsPrincipal)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+            }
+
+            await _db.Schools.ExecuteDeleteAsync();
+        }
+
+
         public async Task<int> ImportSchoolsAsync(ClaimsPrincipal? claimsPrincipal, ImportSchoolRequestDto importSchoolRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            if(!isOrganizationAdmin)
+            if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
-            
-            var file = importSchoolRequestDto.File; 
+
+            var file = importSchoolRequestDto.File;
             if (file == null || file.Length == 0)
                 return 0;
 
@@ -222,7 +241,7 @@ namespace koala.src.Modules.Core.Services
 
             var expectedHeaders = new[] { "Numer RSPO", "Nazwa", "Województwo", "Miejscowość", "Ulica", "Numer budynku", "Typ" };
             var actualHeaders = csv.HeaderRecord;
-        
+
             if (actualHeaders == null || !expectedHeaders.All(h => actualHeaders.Contains(h)))
             {
                 throw new CoreException(CoreErrorCodes.InvalidImportSchoolFile, "The uploaded CSV file is missing one or more required columns.");
@@ -241,7 +260,7 @@ namespace koala.src.Modules.Core.Services
                     Road = csv.GetField("Ulica")!,               // Mapped to separate Road column
                     Building = csv.GetField("Numer budynku")!,   // Mapped to separate house column
                     Type = csv.GetField("Typ")!,                 // Mapped to Type
-                    Email = string.Empty,                       // Default/Empty if not in CSV
+                    Email = csv.GetField("E-mail")!,                       // Default/Empty if not in CSV
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -262,7 +281,7 @@ namespace koala.src.Modules.Core.Services
 
             var queryResult = await query.FirstOrDefaultAsync(s => s.Id == id);
 
-            if(queryResult == null)
+            if (queryResult == null)
             {
                 throw new CoreException(CoreErrorCodes.SchoolNotFound, "Could not find a school with this id");
             }
@@ -284,7 +303,7 @@ namespace koala.src.Modules.Core.Services
             );
         }
 
-        public async Task<(List<SchoolDto>,ApiPagination)> GetSchoolsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<(List<SchoolDto>, ApiPagination)> GetSchoolsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
             //CHECK IF WE CAN GIVE PUBLIC ACCESS TO SCHOOLS DATA ?
             var query = _db.Schools.AsNoTracking().AsQueryable();
