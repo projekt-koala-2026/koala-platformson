@@ -734,6 +734,80 @@ const CaptainHomeScreen = () => {
                     </div>
                 </form>
             </Modal>
+            <Modal
+                isOpen={addingMember}
+                onClose={closeAddMember}
+                title="Dodaj członków drużyny"
+                maxWidth="lg"
+            >
+                <form onSubmit={addMember} className="space-y-5">
+                    <p className="text-sm text-ink-muted">
+                        Podaj imię i nazwisko trzech osób. Każda osoba zostanie dodana osobno.
+                    </p>
+                    {newMembers.map((member, index) => (
+                        <fieldset
+                            key={index}
+                            className="grid gap-4 rounded-xl border border-line-subtle p-4 sm:grid-cols-2"
+                        >
+                            <legend className="px-1 text-sm font-semibold text-ink-heading">
+                                Osoba {index + 1}
+                            </legend>
+                            <label className="block text-sm font-medium text-ink">
+                                Imię
+                                <input
+                                    className={inputClass}
+                                    value={member.nameFirst}
+                                    onChange={(event) =>
+                                        setNewMembers((current) =>
+                                            current.map((item, itemIndex) =>
+                                                itemIndex === index
+                                                    ? { ...item, nameFirst: event.target.value }
+                                                    : item
+                                            )
+                                        )
+                                    }
+                                    disabled={saving}
+                                    required
+                                    autoFocus={index === 0}
+                                />
+                            </label>
+                            <label className="block text-sm font-medium text-ink">
+                                Nazwisko
+                                <input
+                                    className={inputClass}
+                                    value={member.nameLast}
+                                    onChange={(event) =>
+                                        setNewMembers((current) =>
+                                            current.map((item, itemIndex) =>
+                                                itemIndex === index
+                                                    ? { ...item, nameLast: event.target.value }
+                                                    : item
+                                            )
+                                        )
+                                    }
+                                    disabled={saving}
+                                    required
+                                />
+                            </label>
+                        </fieldset>
+                    ))}
+                    <div className="flex flex-col-reverse gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:justify-end">
+                        <button
+                            type="button"
+                            onClick={closeAddMember}
+                            disabled={saving}
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
+                        >
+                            Anuluj
+                        </button>
+                        <Button
+                            type="submit"
+                            text={saving ? "Dodawanie…" : "Dodaj 3 osoby"}
+                            disabled={saving}
+                        />
+                    </div>
+                </form>
+            </Modal>
             <PublicFooter />
         </div>
     );
