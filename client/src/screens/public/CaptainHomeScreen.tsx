@@ -8,7 +8,14 @@ import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import SchoolsTable from "../../components/SchoolsTable";
-import type { ApiTeam, ApiTeamJoinCode, ApiTeamMember, School } from "../../types/models";
+import type {
+    ApiSchool,
+    ApiTeam,
+    ApiTeamJoinCode,
+    ApiTeamMember,
+    School,
+} from "../../types/models";
+import { adaptSchool } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequestResult, apiUrl } from "../../utils/apiFetcher";
 import { getStoredUserId, getUserRoles } from "../../utils/authService";
@@ -43,17 +50,63 @@ const CaptainHomeScreen = () => {
     const [feedback, setFeedback] = useState<Feedback>(null);
 
     useEffect(() => {
-        if (!team || !roles.isGuardian) {
-            setRodoByMember({});
-            return;
+        let active = true;
+
+        if (loading) {
+            void Promise.all([
+                apiRequestResult<ApiTeam[]>(
+                    `${apiEndpoints.teams}/me?${firstPage}`,
+                    null,
+                    "GET",
+                    navigate
+                ),
+                apiRequestResult<ApiSchool[]>(
+                    `${apiEndpoints.schools}?${firstPage}`,
+                    null,
+                    "GET",
+                    navigate
+                ),
+            ]).then(([teamResult, schoolResult]) => {
+                if (!active) return;
+
+                const loadedTeams = teamResult.data ?? [];
+                const loadedTeam = loadedTeams[0] ?? null;
+
+                setTeams(loadedTeams);
+                setTeam(loadedTeam);
+                setTeamName(loadedTeam?.name ?? "");
+                setSchoolId(loadedTeam?.schoolId ?? "");
+                setSchools((schoolResult.data ?? []).map(adaptSchool));
+
+                if (!teamResult.data || !schoolResult.data) {
+                    setFeedback({
+                        tone: "error",
+                        message: "Nie udało się pobrać wszystkich danych panelu drużyny.",
+                    });
+                }
+
+                setLoading(false);
+            });
+
+            return () => {
+                active = false;
+            };
         }
 
-        let active = true;
+        if (!team || !roles.isGuardian) {
+            setRodoByMember({});
+            return () => {
+                active = false;
+            };
+        }
+
         const memberIds: (string | null)[] = [
             null,
             ...(team.teamMembers ?? []).map((member) => member.id),
         ];
+
         setRodoByMember(Object.fromEntries(memberIds.map((id) => [id ?? "captain", null])));
+
         void Promise.all(
             memberIds.map(async (memberId) => {
                 const result = await apiRequestResult<unknown>(
@@ -62,22 +115,26 @@ const CaptainHomeScreen = () => {
                     "GET",
                     navigate
                 );
+
                 const hasRodo =
                     result.status === 200
                         ? true
                         : result.status === 400 || result.status === 404
                           ? false
                           : null;
+
                 return [memberId ?? "captain", hasRodo] as const;
             })
         ).then((statuses) => {
-            if (active) setRodoByMember(Object.fromEntries(statuses));
+            if (active) {
+                setRodoByMember(Object.fromEntries(statuses));
+            }
         });
 
         return () => {
             active = false;
         };
-    }, [navigate, roles.isGuardian, team]);
+    }, [loading, navigate, roles.isGuardian, team]);
 
     const selectedSchool = useMemo(
         () => schools.find((school) => school.id === schoolId),
@@ -758,6 +815,28 @@ const CaptainHomeScreen = () => {
                                         )}
                                     </li>
                                 ))}
+                                <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                    <div>
+                                        <p className="font-mono text-sm text-ink">
+                                            {team.teamAdmin?.nameFirst} {team.teamAdmin?.nameLast}
+                                        </p>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                            Opiekun drużyny
+                                        </p>
+                                    </div>
+                                    {isCaptain && (
+                                        <button
+                                            type="button"
+                                            disabled={saving}
+                                            onClick={() =>
+                                                void removeMember(team.teamAdmin?.id ?? "")
+                                            }
+                                            className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                        >
+                                            Usuń z drużyny
+                                        </button>
+                                    )}
+                                </li>
                             </ul>
                             {isCaptain && (
                                 <Button
