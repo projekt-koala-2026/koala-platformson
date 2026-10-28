@@ -557,7 +557,6 @@ const CaptainHomeScreen = () => {
                                 </>
                             )}
                         </section>
-
                         <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-ink-heading">
                                 Kod dołączenia
@@ -589,6 +588,83 @@ const CaptainHomeScreen = () => {
                                 Członkowie drużyny
                             </h2>
                             <ul className="mt-4 divide-y divide-slate-100">
+                                <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                    <div>
+                                        <p className="font-mono text-sm text-ink">
+                                            {team.teamCaptain?.nameFirst}{" "}
+                                            {team.teamCaptain?.nameLast}
+                                        </p>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                            Kapitan drużyny
+                                        </p>
+                                    </div>
+                                    {roles.isGuardian && rodoByMember.captain === false && (
+                                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
+                                            <FaUpload />
+                                            <span>Zgoda RODO</span>
+                                            <input
+                                                type="file"
+                                                accept=".pdf,application/pdf"
+                                                className="sr-only"
+                                                disabled={saving}
+                                                onChange={(event) => {
+                                                    const file = event.currentTarget.files?.[0];
+                                                    if (file) void addRodo(null, file);
+                                                    event.currentTarget.value = "";
+                                                }}
+                                            />
+                                        </label>
+                                    )}
+                                    {roles.isGuardian && rodoByMember.captain === true && (
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                type="button"
+                                                disabled={saving}
+                                                onClick={() => void downloadRodo(null)}
+                                                className="inline-flex items-center gap-2 rounded-lg bg-success-soft px-4 py-2 text-xs font-semibold text-success-text hover:brightness-95 disabled:opacity-50"
+                                            >
+                                                <FaDownload />
+                                                <span>Zgoda RODO</span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled={saving}
+                                                onClick={() => void removeRodo(null)}
+                                                className="rounded-lg bg-danger-soft px-2 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                aria-label="Usuń zgodę RODO kapitana"
+                                            >
+                                                <FaTrashCan />
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled={saving}
+                                                onClick={() =>
+                                                    document
+                                                        .getElementById("captain-rodo-replace")
+                                                        ?.click()
+                                                }
+                                                aria-label="Zastąp zgodę RODO kapitana"
+                                                className="rounded-lg bg-brand-soft px-2 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted disabled:opacity-50"
+                                            >
+                                                <FaExchangeAlt />
+                                            </button>
+                                            <input
+                                                id="captain-rodo-replace"
+                                                type="file"
+                                                accept=".pdf,application/pdf"
+                                                className="sr-only"
+                                                disabled={saving}
+                                                onChange={(event) => {
+                                                    const file = event.currentTarget.files?.[0];
+                                                    if (file) void addRodo(null, file);
+                                                    event.currentTarget.value = "";
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </li>
                                 {team.teamMembers?.map((member) => (
                                     <li
                                         key={member.id}
