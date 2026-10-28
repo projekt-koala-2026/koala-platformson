@@ -81,24 +81,22 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900">
+        <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Strona statyczna
                     </p>
                     <h1 className="mt-1 text-3xl font-bold tracking-tight">{title}</h1>
-                    <p className="mt-2 max-w-3xl text-sm text-slate-600">{description}</p>
+                    <p className="mt-2 max-w-3xl text-sm text-ink-secondary">{description}</p>
                 </div>
 
                 {feedback && (
                     <div
                         role="status"
                         className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
-                            feedback.tone === "success"
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                                : "border-red-200 bg-red-50 text-red-800"
+                            feedback.tone === "success" ? "app-status-success" : "app-status-danger"
                         }`}
                     >
                         {feedback.message}
@@ -106,14 +104,14 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
                 )}
 
                 {loading ? (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm">
+                    <div className="rounded-2xl border border-line bg-surface p-8 text-center text-sm text-ink-muted shadow-sm">
                         Ładowanie treści…
                     </div>
                 ) : (
                     <div className="grid gap-8 xl:grid-cols-2">
-                        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                        <section className="min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
                             <h2 className="text-xl font-semibold">Edytor</h2>
-                            <p className="mb-5 mt-1 text-sm text-slate-500">
+                            <p className="mb-5 mt-1 text-sm text-ink-muted">
                                 Zmiany są widoczne w podglądzie po prawej stronie.
                             </p>
                             <MarkdownEditor
@@ -125,9 +123,9 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
                             />
                         </section>
 
-                        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                            <div className="mb-5 border-b border-slate-100 pb-4">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                        <section className="min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
+                            <div className="mb-5 border-b border-line-subtle pb-4">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
                                     Podgląd strony
                                 </p>
                                 <h2 className="mt-1 text-xl font-semibold">{title}</h2>
@@ -135,7 +133,7 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
                             {markdownBody.trim() ? (
                                 <MarkdownRenderer content={markdownBody} />
                             ) : (
-                                <p className="text-sm text-slate-400">
+                                <p className="text-sm text-ink-subtle">
                                     Strona nie zawiera jeszcze treści.
                                 </p>
                             )}

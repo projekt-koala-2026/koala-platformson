@@ -87,7 +87,7 @@ namespace koala.src.Modules.Account.Controllers
         }
         [Authorize]
         [HttpPut("{id}/rodos/{team_member_id?}/file")]
-        public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromBody] RodoUpsertDto rodoUpdateDto)
+        public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] string? team_member_id, [FromForm] RodoUpdateDto rodoUpdateDto)
         {
             Guid? memberId = null;
             if (!string.IsNullOrWhiteSpace(team_member_id) && !team_member_id.Equals("null", StringComparison.OrdinalIgnoreCase) && Guid.TryParse(team_member_id, out var validGuid))

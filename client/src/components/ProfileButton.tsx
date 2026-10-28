@@ -36,7 +36,7 @@ const ProfileButton = ({ options }: ProfileButtonProps) => {
                 aria-controls={menuId}
                 aria-haspopup="menu"
                 onClick={() => setIsOpen((value) => !value)}
-                className="grid h-10 w-10 appearance-none place-items-center overflow-hidden rounded-full border-0 bg-emerald-600 bg-clip-border text-sm text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-300"
+                className="grid h-10 w-10 appearance-none place-items-center overflow-hidden rounded-full border-0 bg-brand bg-clip-border text-sm text-ink-inverse shadow-sm transition hover:bg-brand-hover active:bg-brand-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-border-strong"
             >
                 <FaUser aria-hidden="true" />
             </button>
@@ -44,7 +44,7 @@ const ProfileButton = ({ options }: ProfileButtonProps) => {
                 <div
                     id={menuId}
                     role="menu"
-                    className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+                    className="absolute right-0 top-12 z-50 max-h-[min(70dvh,28rem)] w-52 origin-top-right overflow-y-auto overscroll-contain rounded-2xl border border-line bg-surface p-2 shadow-xl"
                 >
                     {options.map((option) => (
                         <button
@@ -56,7 +56,7 @@ const ProfileButton = ({ options }: ProfileButtonProps) => {
                                 setIsOpen(false);
                                 void option.onClick();
                             }}
-                            className="block w-full rounded-lg p-3 text-left text-sm font-medium text-slate-800 transition hover:bg-emerald-50 hover:text-emerald-900 focus:bg-emerald-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                            className="block w-full rounded-lg p-3 text-left text-sm font-medium text-ink-strong transition hover:bg-brand-soft hover:text-brand-text-strong active:bg-brand-muted focus-visible:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {option.label}
                         </button>

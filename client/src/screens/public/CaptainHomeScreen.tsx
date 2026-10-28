@@ -19,7 +19,7 @@ import { apiRequestResult } from "../../utils/apiFetcher";
 import { getStoredUserId, getUserRoles } from "../../utils/authService";
 
 const inputClass =
-    "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100";
+    "mt-1.5 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink-heading outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:bg-surface-muted";
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 
@@ -270,20 +270,20 @@ const CaptainHomeScreen = () => {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
                 <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Panel drużyn
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold text-slate-900">Twoje drużyny</h1>
-                    <p className="mt-3 max-w-2xl text-slate-600">
+                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
+                    <p className="mt-3 max-w-2xl text-ink-secondary">
                         Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
                     </p>
                 </header>
                 {teams.length > 1 && (
-                    <label className="mb-6 block max-w-xl text-sm font-medium text-slate-700">
+                    <label className="mb-6 block max-w-xl text-sm font-medium text-ink">
                         Wyświetlana drużyna
                         <select
                             value={team?.id ?? ""}
@@ -306,9 +306,11 @@ const CaptainHomeScreen = () => {
                 {team && roles.isGuardian && (
                     <form
                         onSubmit={joinTeam}
-                        className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                        className="mb-6 rounded-2xl border border-line bg-surface p-5 shadow-sm"
                     >
-                        <h2 className="font-semibold text-slate-900">Dołącz do kolejnej drużyny</h2>
+                        <h2 className="font-semibold text-ink-heading">
+                            Dołącz do kolejnej drużyny
+                        </h2>
                         <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                             <input
                                 value={joinCode}
@@ -329,21 +331,21 @@ const CaptainHomeScreen = () => {
                 {feedback && (
                     <p
                         role={feedback.tone === "error" ? "alert" : "status"}
-                        className={`mb-6 rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}
+                        className={`mb-6 rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
                     >
                         {feedback.message}
                     </p>
                 )}
                 {loading ? (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-14 text-center text-sm text-slate-500 shadow-sm">
+                    <div className="rounded-2xl border border-line bg-surface p-14 text-center text-sm text-ink-muted shadow-sm">
                         Ładowanie danych drużyny…
                     </div>
                 ) : team ? (
                     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
                             {editingName ? (
                                 <form onSubmit={submitTeam} className="space-y-4">
-                                    <label className="block text-sm font-medium text-slate-700">
+                                    <label className="block text-sm font-medium text-ink">
                                         Nazwa drużyny
                                         <input
                                             className={inputClass}
@@ -361,7 +363,7 @@ const CaptainHomeScreen = () => {
                                         />
                                         <button
                                             type="button"
-                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted"
                                             onClick={() => {
                                                 setTeamName(team.name);
                                                 setEditingName(false);
@@ -373,16 +375,16 @@ const CaptainHomeScreen = () => {
                                 </form>
                             ) : (
                                 <>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
                                         Zarejestrowana drużyna
                                     </p>
-                                    <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                                    <h2 className="mt-2 text-2xl font-bold text-ink-heading">
                                         {team.name}
                                     </h2>
-                                    <p className="mt-2 text-sm text-slate-500">
+                                    <p className="mt-2 text-sm text-ink-muted">
                                         {selectedSchool?.name ?? `Szkoła: ${team.schoolId}`}
                                     </p>
-                                    <p className="mt-1 text-sm text-slate-500">
+                                    <p className="mt-1 text-sm text-ink-muted">
                                         Status nazwy:{" "}
                                         {team.isCensored
                                             ? "oczekuje na akceptację"
@@ -398,20 +400,22 @@ const CaptainHomeScreen = () => {
                                 </>
                             )}
                         </section>
-                        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Kod dołączenia</h2>
+                        <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
+                            <h2 className="text-lg font-semibold text-ink-heading">
+                                Kod dołączenia
+                            </h2>
                             {team.joinCode ? (
-                                <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-center">
-                                    <p className="font-mono text-2xl font-bold tracking-widest text-emerald-900">
+                                <div className="mt-4 rounded-xl bg-brand-soft p-4 text-center">
+                                    <p className="font-mono text-2xl font-bold tracking-widest text-brand-text-strong">
                                         {team.joinCode.joinCode}
                                     </p>
-                                    <p className="mt-2 text-xs text-emerald-700">
+                                    <p className="mt-2 text-xs text-brand-text">
                                         Ważny do{" "}
                                         {new Date(team.joinCode.expiresAt).toLocaleString("pl-PL")}
                                     </p>
                                 </div>
                             ) : (
-                                <p className="mt-3 text-sm text-slate-500">Brak aktywnego kodu.</p>
+                                <p className="mt-3 text-sm text-ink-muted">Brak aktywnego kodu.</p>
                             )}
                             {isCaptain && (
                                 <Button
@@ -422,21 +426,21 @@ const CaptainHomeScreen = () => {
                                 />
                             )}
                         </section>
-                        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-                            <h2 className="text-lg font-semibold text-slate-900">
+                        <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm lg:col-span-2">
+                            <h2 className="text-lg font-semibold text-ink-heading">
                                 Członkowie drużyny
                             </h2>
-                            <ul className="mt-4 divide-y divide-slate-100">
+                            <ul className="mt-4 divide-y divide-line-subtle">
                                 {team.teamMembers.map((member) => (
                                     <li
                                         key={member.id}
                                         className="flex flex-wrap items-center justify-between gap-3 py-3"
                                     >
                                         <div>
-                                            <p className="font-mono text-sm text-slate-700">
+                                            <p className="font-mono text-sm text-ink">
                                                 {member.id}
                                             </p>
-                                            <p className="text-xs text-slate-500">
+                                            <p className="text-xs text-ink-muted">
                                                 {member.position}
                                             </p>
                                         </div>
@@ -445,7 +449,7 @@ const CaptainHomeScreen = () => {
                                                 type="button"
                                                 disabled={saving}
                                                 onClick={() => void removeMember(member.id)}
-                                                className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                                                className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
                                             >
                                                 Usuń z drużyny
                                             </button>
@@ -458,7 +462,7 @@ const CaptainHomeScreen = () => {
                                     text={saving ? "Usuwanie…" : "Usuń drużynę"}
                                     onClick={() => void deleteTeam()}
                                     disabled={saving}
-                                    className="mt-6 bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                                    className="mt-6 bg-danger hover:bg-danger-hover focus:ring-danger-emphasis"
                                 />
                             )}
                         </section>
@@ -467,12 +471,12 @@ const CaptainHomeScreen = () => {
                     <div className="space-y-6">
                         <form
                             onSubmit={joinTeam}
-                            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                            className="rounded-2xl border border-line bg-surface p-6 shadow-sm"
                         >
-                            <h2 className="text-xl font-semibold text-slate-900">
+                            <h2 className="text-xl font-semibold text-ink-heading">
                                 Dołącz do drużyny
                             </h2>
-                            <p className="mt-1 text-sm text-slate-500">
+                            <p className="mt-1 text-sm text-ink-muted">
                                 Wpisz kod otrzymany od kapitana.
                             </p>
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -504,7 +508,7 @@ const CaptainHomeScreen = () => {
                 maxWidth="xl"
             >
                 <form onSubmit={submitTeam} className="space-y-6">
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-ink">
                         Nazwa drużyny
                         <input
                             className={inputClass}
@@ -520,15 +524,15 @@ const CaptainHomeScreen = () => {
                         <div className="mb-4">
                             <h3
                                 id="create-team-school-heading"
-                                className="font-semibold text-slate-900"
+                                className="font-semibold text-ink-heading"
                             >
                                 Wybierz szkołę
                             </h3>
-                            <p className="mt-1 text-sm text-slate-500">
+                            <p className="mt-1 text-sm text-ink-muted">
                                 Kliknij odpowiedni wiersz w tabeli.
                             </p>
                             {selectedSchool && (
-                                <p className="mt-2 text-sm font-semibold text-emerald-700">
+                                <p className="mt-2 text-sm font-semibold text-brand-text">
                                     Wybrano: {selectedSchool.name}
                                 </p>
                             )}
@@ -544,20 +548,17 @@ const CaptainHomeScreen = () => {
                     </section>
 
                     {createError && (
-                        <p
-                            role="alert"
-                            className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-                        >
+                        <p role="alert" className="rounded-xl border p-3 text-sm app-status-danger">
                             {createError}
                         </p>
                     )}
 
-                    <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                    <div className="flex flex-col-reverse gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:justify-end">
                         <button
                             type="button"
                             onClick={closeCreateTeam}
                             disabled={saving}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
                         >
                             Anuluj
                         </button>

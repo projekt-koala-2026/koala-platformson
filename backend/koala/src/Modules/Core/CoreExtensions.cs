@@ -16,7 +16,7 @@ namespace koala.src.Modules.Core
                 options.UseNpgsql
                 (
                     dbConnStr,
-                    npgsqlOptions =>npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "core")
+                    npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "core")
                 ));
 
             // 2. HOSTED SERVICES (RUNING ON BACKEND START)
@@ -26,7 +26,8 @@ namespace koala.src.Modules.Core
             services.AddScoped<ICoreModule, CoreService>();
             services.AddScoped<EditionService, EditionService>();
             services.AddScoped<SchoolService, SchoolService>();
-        
+            services.AddScoped<TaskService, TaskService>();
+
             // 4. EXCEPTION HANDLERS
             services.AddExceptionHandler<CoreExceptionHandler>();
             services.AddProblemDetails();
