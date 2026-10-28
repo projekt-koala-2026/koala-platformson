@@ -31,28 +31,33 @@ const RuleScreen = () => {
     }, [navigate]);
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-                <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">
+                <header className="mb-8">
+                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
                         Dokumentacja konkursu
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold text-slate-900">Regulamin</h1>
-                    <div className="mt-8">
+                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Regulamin</h1>
+                    <p className="mt-3 max-w-2xl text-ink-secondary">
+                        Zasady uczestnictwa, przebieg konkursu i sposób oceniania drużyn.
+                    </p>
+                </header>
+                <article className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-8">
+                    <div>
                         {loading ? (
-                            <p className="text-sm text-slate-500">Ładowanie regulaminu…</p>
+                            <p className="text-sm text-ink-muted">Ładowanie regulaminu…</p>
                         ) : hasError ? (
                             <p
                                 role="alert"
-                                className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+                                className="rounded-xl border p-4 text-sm app-status-danger"
                             >
                                 Nie udało się pobrać regulaminu. Spróbuj ponownie później.
                             </p>
                         ) : rules.trim() ? (
                             <MarkdownRenderer content={rules} />
                         ) : (
-                            <p className="text-sm text-slate-500">
+                            <p className="text-sm text-ink-muted">
                                 Regulamin nie został jeszcze opublikowany.
                             </p>
                         )}

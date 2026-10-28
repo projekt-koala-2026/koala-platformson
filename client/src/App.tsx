@@ -7,6 +7,7 @@ import type { Role } from "./types/models";
 import { getAuthArea, getOrganizationHomePath, getUserRoles } from "./utils/authService";
 
 const AdminLoginScreen = lazy(() => import("./screens/admin/AdminLoginScreen"));
+const AdminRodoScreen = lazy(() => import("./screens/admin/AdminRodoScreen"));
 const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));
 const EditionsScreen = lazy(() => import("./screens/admin/EditEditionScreen"));
 const EditHistory = lazy(() => import("./screens/admin/EditHistoryScreen"));
@@ -36,7 +37,7 @@ const teamMembers: Role[] = ["TEAM_PLAYER", "TEAM_ADMIN"];
 
 const RouteFallback = () => (
     <main className="flex min-h-[40vh] items-center justify-center px-4" role="status">
-        <span className="text-sm font-medium text-slate-500">Ładowanie widoku…</span>
+        <span className="text-sm font-medium text-ink-muted">Ładowanie widoku…</span>
     </main>
 );
 
@@ -172,6 +173,14 @@ export default function App() {
                             element={
                                 <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
                                     <AdminTeamsScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/rodos"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <AdminRodoScreen />
                                 </ProtectedRoute>
                             }
                         />
