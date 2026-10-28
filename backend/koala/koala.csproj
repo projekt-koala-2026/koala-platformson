@@ -13,7 +13,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="src/Modules/**/Tests/**/*.cs" />
+		<Compile Remove="src/**/Tests/**/*.cs" />
     </ItemGroup>
 
 	<ItemGroup>
