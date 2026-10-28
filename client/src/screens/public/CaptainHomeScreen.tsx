@@ -41,7 +41,6 @@ const CaptainHomeScreen = () => {
     const [newMembers, setNewMembers] = useState([
         { nameFirst: "", nameLast: "" },
         { nameFirst: "", nameLast: "" },
-        { nameFirst: "", nameLast: "" },
     ]);
     const [memberError, setMemberError] = useState("");
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -277,16 +276,25 @@ const CaptainHomeScreen = () => {
         } else setFeedback({ tone: "error", message: "Nie udało się usunąć drużyny." });
         setSaving(false);
     };
+
     const addMember = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (!team) return;
 
-        const membersToAdd = newMembers.map((member) => ({
-            NameFirst: member.nameFirst.trim(),
-            NameLast: member.nameLast.trim(),
-        }));
+        const membersToAdd = newMembers
+            .map((member) => ({
+                NameFirst: member.nameFirst.trim(),
+                NameLast: member.nameLast.trim(),
+            }))
+            .filter((member) => member.NameFirst || member.NameLast);
+
+        if (membersToAdd.length === 0) {
+            setMemberError("Wpisz imię i nazwisko przynajmniej jednej osoby.");
+            return;
+        }
+
         if (membersToAdd.some((member) => !member.NameFirst || !member.NameLast)) {
-            setMemberError("Uzupełnij imię i nazwisko każdej z 2 osób.");
+            setMemberError("Uzupełnij imię i nazwisko każdej rozpoczętej osoby.");
             return;
         }
 
@@ -324,12 +332,15 @@ const CaptainHomeScreen = () => {
                 { nameFirst: "", nameLast: "" },
                 { nameFirst: "", nameLast: "" },
             ]);
-            setFeedback({ tone: "success", message: "Dodano 2 osoby do drużyny." });
+            setFeedback({
+                tone: "success",
+                message: `Dodano ${addedCount} ${addedCount === 1 ? "osobę" : "osoby"} do drużyny.`,
+            });
         } else if (addedCount > 0) {
             setAddingMember(false);
             setFeedback({
                 tone: "error",
-                message: `Dodano ${addedCount} z 2 osób. Sprawdź limit miejsc przed ponowną próbą.`,
+                message: `Dodano ${addedCount} z ${membersToAdd.length} osób. Sprawdź limit miejsc przed ponowną próbą.`,
             });
         } else {
             setMemberError("Nie udało się dodać osób do drużyny.");
@@ -347,7 +358,7 @@ const CaptainHomeScreen = () => {
         ]);
     };
 
-    const addRodo = async (memberId: string, file?: File) => {
+    const addRodo = async (memberId?: string, file?: File) => {
         if (!team || !file) return;
 
         if (file.type !== "application/pdf") {
@@ -375,7 +386,7 @@ const CaptainHomeScreen = () => {
         );
         setSaving(false);
     };
-    const removeRodo = async (memberId: string) => {
+    const removeRodo = async (memberId?: string) => {
         console.log(team?.id, team?.teamMembers, memberId);
         setIsRodo(false);
     };
@@ -486,35 +497,105 @@ const CaptainHomeScreen = () => {
                                 </form>
                             ) : (
                                 <>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
-                                        Zarejestrowana drużyna
-                                    </p>
-                                    <h2 className="mt-2 text-2xl font-bold text-ink-heading">
-                                        {team.name}
-                                    </h2>
-                                    <p className="mt-2 text-sm text-ink-muted">
-                                        {selectedSchool?.name ?? `Szkoła: ${team.schoolId}`}
-                                    </p>
-                                    <p className="mt-1 text-sm text-ink-muted">
-                                        Status nazwy:{" "}
-                                        {team.isCensored
-                                            ? "oczekuje na akceptację"
-                                            : "zaakceptowana"}
-                                    </p>
-                                    {isCaptain && (
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                text="Edytuj nazwę"
-                                                onClick={() => setEditingName(true)}
-                                                className="mt-5"
-                                            />
-                                            <Button
-                                                text="Dodaj członka"
-                                                onClick={() => setAddingMember(true)}
-                                                className="mt-5"
-                                            />
+                                    <div className="flex gap-3">
+                                        <div>
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                                Zarejestrowana drużyna
+                                            </p>
+                                            <h2 className="mt-2 text-2xl font-bold text-ink-heading">
+                                                {team.name}
+                                            </h2>
+                                            <p className="mt-2 text-sm text-ink-muted">
+                                                {selectedSchool?.name ?? `Szkoła: ${team.schoolId}`}
+                                            </p>
+                                            <p className="mt-1 text-sm text-ink-muted">
+                                                Status nazwy:{" "}
+                                                {team.isCensored
+                                                    ? "oczekuje na akceptację"
+                                                    : "zaakceptowana"}
+                                            </p>
+                                            {isCaptain && (
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        text="Edytuj nazwę"
+                                                        onClick={() => setEditingName(true)}
+                                                        className="mt-5"
+                                                    />
+                                                    <Button
+                                                        text="Dodaj członka"
+                                                        onClick={() => setAddingMember(true)}
+                                                        className="mt-5"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+                                        <div>
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                                Kapitan drużyny
+                                            </p>
+                                            <h2 className="mt-2 text-2xl font-bold text-ink-heading">
+                                                {team.name}
+                                            </h2>
+                                            <p className="mt-2 text-sm text-ink-muted">
+                                                {selectedSchool?.name ?? `Szkoła: ${team.schoolId}`}
+                                            </p>
+                                            <p className="mt-1 text-sm text-ink-muted">
+                                                Status nazwy:{" "}
+                                                {team.isCensored
+                                                    ? "oczekuje na akceptację"
+                                                    : "zaakceptowana"}
+                                            </p>
+                                            {roles.isGuardian && isRodo == false && (
+                                                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100">
+                                                    <FaUpload />
+                                                    <span>Zgoda RODO</span>
+                                                    <input
+                                                        type="file"
+                                                        accept=".pdf,application/pdf"
+                                                        className="sr-only"
+                                                        disabled={saving}
+                                                        onChange={(event) => {
+                                                            const file =
+                                                                event.currentTarget.files?.[0];
+                                                            if (file) void addRodo();
+                                                            event.currentTarget.value = "";
+                                                        }}
+                                                    />
+                                                </label>
+                                            )}
+                                            {roles.isGuardian && isRodo === true && (
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving}
+                                                        onClick={() => void addRodo()}
+                                                        className="inline-flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2 text-xs font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50"
+                                                    >
+                                                        <FaDownload />
+                                                        <span>Zgoda RODO</span>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving}
+                                                        onClick={() => void removeRodo()}
+                                                        className="rounded-lg bg-red-50 px-2 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                                                    >
+                                                        <FaTrashCan />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving}
+                                                        onClick={() => void addRodo()}
+                                                        className="rounded-lg bg-blue-50 px-2 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                                                    >
+                                                        <FaExchangeAlt />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 </>
                             )}
                         </section>
@@ -556,7 +637,7 @@ const CaptainHomeScreen = () => {
                                     >
                                         <div>
                                             <p className="font-mono text-sm text-ink">
-                                                {member.id}
+                                                {member.nameFist} {member.nameLast}
                                             </p>
                                             <p className="text-xs text-ink-muted">
                                                 {member.position}
@@ -769,7 +850,6 @@ const CaptainHomeScreen = () => {
                                         )
                                     }
                                     disabled={saving}
-                                    required
                                     autoFocus={index === 0}
                                 />
                             </label>
@@ -788,7 +868,6 @@ const CaptainHomeScreen = () => {
                                         )
                                     }
                                     disabled={saving}
-                                    required
                                 />
                             </label>
                         </fieldset>
