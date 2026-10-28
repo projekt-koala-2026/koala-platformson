@@ -10,7 +10,7 @@ import PublicHeader from "../../components/PublicHeader";
 import SchoolsTable from "../../components/SchoolsTable";
 import type { ApiTeam, ApiTeamJoinCode, ApiTeamMember, School } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiRequestResult, apiUrl } from "../../utils/apiFetcher";
 import { getStoredUserId, getUserRoles } from "../../utils/authService";
 
 const inputClass =
@@ -379,12 +379,45 @@ const CaptainHomeScreen = () => {
         setSaving(false);
     };
 
-    const removeRodo = async (memberId?: string) => {
-        console.log(team?.id, team?.teamMembers, memberId);
-        setRodoByMember((current) => ({ ...current, [memberId ?? "captain"]: null }));
+    const removeRodo = async (memberId: string | null) => {
+        if (!team) return;
+        const memberKey = memberId ?? "captain";
+        setSaving(true);
+        const result = await apiRequestResult<unknown>(
+            `${apiEndpoints.teams}/${team.id}/rodos/${memberId ?? "null"}`,
+            null,
+            "DELETE",
+            navigate
+        );
+        if (result.status === 200 || result.status === 204) {
+            setRodoByMember((current) => ({ ...current, [memberKey]: false }));
+            setFeedback({ tone: "success", message: "Zgoda RODO została usunięta." });
+        } else setFeedback({ tone: "error", message: "Nie udało się usunąć zgody RODO." });
+        setSaving(false);
     };
 
-    const downloadRodo = async (memberId?: string) => {};
+    const downloadRodo = async (memberId: string | null) => {
+        if (!team) return;
+        setSaving(true);
+        try {
+            const response = await fetch(
+                `${apiUrl}${apiEndpoints.teams}/${team.id}/rodos/${memberId ?? "null"}/file`,
+                { credentials: "include" }
+            );
+            if (!response.ok) throw new Error("RODO download failed");
+            const objectUrl = URL.createObjectURL(await response.blob());
+            const link = document.createElement("a");
+            link.href = objectUrl;
+            link.download = `rodo-${memberId ?? "captain"}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        } catch {
+            setFeedback({ tone: "error", message: "Nie udało się pobrać pliku RODO." });
+        }
+        setSaving(false);
+    };
 
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
