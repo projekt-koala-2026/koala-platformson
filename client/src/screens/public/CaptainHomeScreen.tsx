@@ -37,6 +37,12 @@ const CaptainHomeScreen = () => {
     const [joinCode, setJoinCode] = useState("");
     const [loading, setLoading] = useState(true);
     const [editingName, setEditingName] = useState(false);
+    const [addingMember, setAddingMember] = useState(false);
+    const [newMembers, setNewMembers] = useState([
+        { nameFirst: "", nameLast: "" },
+        { nameFirst: "", nameLast: "" },
+        { nameFirst: "", nameLast: "" },
+    ]);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isRodo, setIsRodo] = useState(false);
     const [createError, setCreateError] = useState("");
@@ -84,9 +90,8 @@ const CaptainHomeScreen = () => {
         () => schools.find((school) => school.id === schoolId),
         [schoolId, schools]
     );
-    const isCaptain = team?.teamMembers?.some(
-        (member) => member.id === currentUserId && member.position === "CAPTAIN"
-    );
+
+    const isCaptain = team?.teamCaptain?.id === currentUserId;
 
     const submitTeam = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -271,6 +276,74 @@ const CaptainHomeScreen = () => {
         } else setFeedback({ tone: "error", message: "Nie udało się usunąć drużyny." });
         setSaving(false);
     };
+    const addMember = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!team) return;
+
+        const membersToAdd = newMembers.map((member) => ({
+            NameFirst: member.nameFirst.trim(),
+            NameLast: member.nameLast.trim(),
+        }));
+        if (membersToAdd.some((member) => !member.NameFirst || !member.NameLast)) {
+            setFeedback({ tone: "error", message: "Uzupełnij imię i nazwisko każdej z 3 osób." });
+            return;
+        }
+
+        setSaving(true);
+        setFeedback(null);
+        let addedCount = 0;
+        for (const member of membersToAdd) {
+            const result = await apiRequestResult<unknown>(
+                `${apiEndpoints.teams}/${team.id}/member`,
+                member,
+                "POST",
+                navigate
+            );
+            if (result.status !== 200 && result.status !== 201 && result.status !== 204) break;
+            addedCount += 1;
+        }
+
+        if (addedCount > 0) {
+            const refreshed = await apiRequestResult<ApiTeam[]>(
+                `${apiEndpoints.teams}/me?${firstPage}`,
+                null,
+                "GET",
+                navigate
+            );
+            if (refreshed.data) {
+                setTeams(refreshed.data);
+                setTeam(refreshed.data.find((item) => item.id === team.id) ?? team);
+            }
+        }
+
+        if (addedCount === membersToAdd.length) {
+            setAddingMember(false);
+            setNewMembers([
+                { nameFirst: "", nameLast: "" },
+                { nameFirst: "", nameLast: "" },
+                { nameFirst: "", nameLast: "" },
+            ]);
+            setFeedback({ tone: "success", message: "Dodano 3 osoby do drużyny." });
+        } else if (addedCount > 0) {
+            setFeedback({
+                tone: "error",
+                message: `Dodano ${addedCount} z 3 osób. Sprawdź limit miejsc i spróbuj ponownie.`,
+            });
+        } else {
+            setFeedback({ tone: "error", message: "Nie udało się dodać osób do drużyny." });
+        }
+        setSaving(false);
+    };
+
+    const closeAddMember = () => {
+        if (saving) return;
+        setAddingMember(false);
+        setNewMembers([
+            { nameFirst: "", nameLast: "" },
+            { nameFirst: "", nameLast: "" },
+            { nameFirst: "", nameLast: "" },
+        ]);
+    };
 
     const addRodo = async (memberId: string, file?: File) => {
         if (!team || !file) return;
@@ -427,11 +500,18 @@ const CaptainHomeScreen = () => {
                                             : "zaakceptowana"}
                                     </p>
                                     {isCaptain && (
-                                        <Button
-                                            text="Edytuj nazwę"
-                                            onClick={() => setEditingName(true)}
-                                            className="mt-5"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                text="Edytuj nazwę"
+                                                onClick={() => setEditingName(true)}
+                                                className="mt-5"
+                                            />
+                                            <Button
+                                                text="Dodaj członka"
+                                                onClick={() => setAddingMember(true)}
+                                                className="mt-5"
+                                            />
+                                        </div>
                                     )}
                                 </>
                             )}
