@@ -23,7 +23,9 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore koala-unit-tests.csproj --no-cache
+        run: |
+          dotnet restore koala.csproj --no-cache
+          dotnet restore koala-unit-tests.csproj --no-cache
         working-directory: ./backend/koala
 
       - name: Build solution
