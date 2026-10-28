@@ -106,6 +106,45 @@ export type ApiTeam = {
     joinCode: ApiTeamJoinCode | null;
 };
 
+export interface ApiTeamUser {
+    id: string;
+    nameFirst: string;
+    nameLast: string;
+    email: string;
+    censored: boolean;
+    roles: Role[];
+}
+
+export interface ApiNamedTeamMember {
+    id: string;
+    // Backend currently exposes the property with this typo.
+    nameFist: string;
+    nameLast: string;
+}
+
+export interface ApiTeamDetails {
+    id: string;
+    editionId: string;
+    schoolId: string;
+    name: string;
+    isCensored: boolean;
+    createdAt: string;
+    teamCaptain: ApiTeamUser | null;
+    teamAdmin: ApiTeamUser | null;
+    teamMembers: ApiNamedTeamMember[];
+    joinCode: ApiTeamJoinCode | null;
+}
+
+export type RodoState = "UNVERIFIED" | "ACCEPTED" | "REJECTED" | string;
+
+export interface ApiRodo {
+    teamId: string;
+    memberId: string | null;
+    state: RodoState;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface Team {
     id: string;
     teamName?: string;
