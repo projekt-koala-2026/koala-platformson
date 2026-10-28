@@ -43,6 +43,7 @@ const CaptainHomeScreen = () => {
         { nameFirst: "", nameLast: "" },
         { nameFirst: "", nameLast: "" },
     ]);
+    const [memberError, setMemberError] = useState("");
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isRodo, setIsRodo] = useState(false);
     const [createError, setCreateError] = useState("");
@@ -285,11 +286,12 @@ const CaptainHomeScreen = () => {
             NameLast: member.nameLast.trim(),
         }));
         if (membersToAdd.some((member) => !member.NameFirst || !member.NameLast)) {
-            setFeedback({ tone: "error", message: "Uzupełnij imię i nazwisko każdej z 3 osób." });
+            setMemberError("Uzupełnij imię i nazwisko każdej z 2 osób.");
             return;
         }
 
         setSaving(true);
+        setMemberError("");
         setFeedback(null);
         let addedCount = 0;
         for (const member of membersToAdd) {
@@ -321,16 +323,16 @@ const CaptainHomeScreen = () => {
             setNewMembers([
                 { nameFirst: "", nameLast: "" },
                 { nameFirst: "", nameLast: "" },
-                { nameFirst: "", nameLast: "" },
             ]);
-            setFeedback({ tone: "success", message: "Dodano 3 osoby do drużyny." });
+            setFeedback({ tone: "success", message: "Dodano 2 osoby do drużyny." });
         } else if (addedCount > 0) {
+            setAddingMember(false);
             setFeedback({
                 tone: "error",
-                message: `Dodano ${addedCount} z 3 osób. Sprawdź limit miejsc i spróbuj ponownie.`,
+                message: `Dodano ${addedCount} z 2 osób. Sprawdź limit miejsc przed ponowną próbą.`,
             });
         } else {
-            setFeedback({ tone: "error", message: "Nie udało się dodać osób do drużyny." });
+            setMemberError("Nie udało się dodać osób do drużyny.");
         }
         setSaving(false);
     };
@@ -338,8 +340,8 @@ const CaptainHomeScreen = () => {
     const closeAddMember = () => {
         if (saving) return;
         setAddingMember(false);
+        setMemberError("");
         setNewMembers([
-            { nameFirst: "", nameLast: "" },
             { nameFirst: "", nameLast: "" },
             { nameFirst: "", nameLast: "" },
         ]);
@@ -742,7 +744,7 @@ const CaptainHomeScreen = () => {
             >
                 <form onSubmit={addMember} className="space-y-5">
                     <p className="text-sm text-ink-muted">
-                        Podaj imię i nazwisko trzech osób. Każda osoba zostanie dodana osobno.
+                        Podaj imię i nazwisko osób, które chcesz dodać do drużyny.
                     </p>
                     {newMembers.map((member, index) => (
                         <fieldset
@@ -791,6 +793,11 @@ const CaptainHomeScreen = () => {
                             </label>
                         </fieldset>
                     ))}
+                    {memberError && (
+                        <p role="alert" className="rounded-xl border p-3 text-sm app-status-danger">
+                            {memberError}
+                        </p>
+                    )}
                     <div className="flex flex-col-reverse gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:justify-end">
                         <button
                             type="button"
@@ -802,7 +809,7 @@ const CaptainHomeScreen = () => {
                         </button>
                         <Button
                             type="submit"
-                            text={saving ? "Dodawanie…" : "Dodaj 3 osoby"}
+                            text={saving ? "Dodawanie…" : "Dodaj osoby"}
                             disabled={saving}
                         />
                     </div>
