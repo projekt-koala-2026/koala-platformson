@@ -28,6 +28,19 @@ jobs:
           dotnet restore koala-unit-tests.csproj --no-cache
         working-directory: ./backend/koala
 
+      - name: Debug test project
+        run: |
+          pwd
+          ls -la
+          echo "---- TEST PROJECT ----"
+          cat koala-unit-tests.csproj
+          echo "---- PACKAGES ----"
+          dotnet list koala-unit-tests.csproj package
+          echo "---- NUGET CACHE ----"
+          ls -la ~/.nuget/packages/moq || true
+          ls -la ~/.nuget/packages/xunit || true
+        working-directory: ./backend/koala
+
       - name: Build solution
         run: dotnet build koala-unit-tests.csproj --no-restore --configuration Release
         working-directory: ./backend/koala
