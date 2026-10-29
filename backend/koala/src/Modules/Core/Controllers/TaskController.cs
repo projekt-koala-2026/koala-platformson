@@ -60,12 +60,13 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("/{task_id}/team/{team_id}")]
-        public async Task<IActionResult> UpdateTaskAnswerTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromBody] UpdateTaskAnswerTeamDto updateTaskAnswerTeamDto)
+        [HttpPut("/{task_id}/user/{team_id}")]
+        public async Task<IActionResult> UpdateTaskAnswerTeamUser([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromBody] SubmitTaskAnswerDto submitTaskAnswerDto)
         {
-            var response = await _taskService.UpdateTaskAnswerTeamAsync(User, task_id, team_id, updateTaskAnswerTeamDto);
+            var response = await _taskService.UpdateTaskAnswerTeamUserAsync(User, task_id, team_id, submitTaskAnswerDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskAnswerDto>(true, DateTime.UtcNow, null, null, response));
         }
+
 
         [Authorize]
         [HttpGet("/{task_id}")]

@@ -97,9 +97,10 @@ namespace koala.src.Modules.Core.Data
             //TASKANS CONFIG
             modelBuilder.Entity<TaskAnswer>()
                 .HasKey(ta => new { ta.TeamId, ta.TaskId });
+
             modelBuilder.Entity<TaskAnswer>()
                 .HasOne(ta => ta.TaskItem)
-                .WithMany()
+                .WithMany(t => t.TaskAnswers)
                 .HasForeignKey(ta => ta.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -108,11 +109,6 @@ namespace koala.src.Modules.Core.Data
                     .IsRequired();
             modelBuilder.Entity<TaskAnswer>()
                 .Property(ta => ta.TeamAnswer)
-                    .IsRequired();
-
-            modelBuilder.Entity<TaskAnswer>()
-                .Property(ta => ta.Version)
-                    .IsConcurrencyToken()
                     .IsRequired();
 
             // SCHOOLS CONFIG

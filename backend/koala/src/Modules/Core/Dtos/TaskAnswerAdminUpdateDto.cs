@@ -1,6 +1,6 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record UpdateTaskAnswerTeamDto
+    public record UpdateTaskAnswerAdminDto
     (
         Guid TeamId,
         Guid TaskId,

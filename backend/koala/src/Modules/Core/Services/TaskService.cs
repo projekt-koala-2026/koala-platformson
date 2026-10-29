@@ -212,10 +212,9 @@ namespace koala.src.Modules.Core.Services
             return (TaskCorrs, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<TaskAnswerDto> UpdateTaskAnswerTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, UpdateTaskAnswerTeamDto updateTaskAnswerTeamDto)
+        public async Task<TaskAnswerDto> UpdateTaskAnswerTeamUserAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, SubmitTaskAnswerDto submitTaskAnswerDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
@@ -229,32 +228,14 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
             }
 
-            task.TeamId = team_id; 
-
-            if(isOrganizationAdmin)
+            if (task.Version != submitTaskAnswerDto.Version)
             {
-                task.Reviewer1Id = updateTaskAnswerTeamDto.Reviewer1Id;
-                task.Reviewer2Id = updateTaskAnswerTeamDto.Reviewer2Id;
-                task.AutoReviewState = updateTaskAnswerTeamDto.AutoReviewState;
-                task.Review1State = updateTaskAnswerTeamDto.Review1State;
-                task.Review2State = updateTaskAnswerTeamDto.Review2State;
-
-                await _db.SaveChangesAsync();
-
-                return new TaskAnswerDto(
-                task.TeamId,
-                task.TaskId,
-                task.Reviewer1Id,
-                task.Reviewer2Id,
-                task.AutoReviewState,
-                task.Review1State,
-                task.Review2State,
-                task.TeamAnswer,
-                task.Version
-                );
+                throw new CoreException(CoreErrorCodes.Conflict, "Masz stare dane. Odśwież stronę i spróbuj ponownie.");
             }
 
-            task.TeamAnswer = updateTaskAnswerTeamDto.TeamAnswer;
+            task.TeamId = team_id; 
+
+            task.TeamAnswer = submitTaskAnswerDto.TeamAnswer;
             task.Version++;
 
             await _db.SaveChangesAsync();
