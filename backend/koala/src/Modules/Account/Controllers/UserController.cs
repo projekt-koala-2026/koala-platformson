@@ -19,7 +19,7 @@ namespace koala.src.Modules.Account.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        public async Task<IActionResult> RegisterUser([FromBody] RegisterUserRequestDto requestDto)
+        public async Task<IActionResult> RegisterUser([FromBody] UserRegisterRequestDto requestDto)
         {
             await _userService.RegisterUserAsync(User, requestDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
@@ -36,21 +36,21 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> GetUser([FromRoute] Guid id)
         {
             var data = await _userService.GetUserAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, data));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<UserDto>(true, DateTime.UtcNow, null, null, data));
         }
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetUsers([FromQuery] PageQueryDto pageQueryDto, [FromQuery] UserQueryDto userQueryDto)
         {
-            var result = await _userService.GetUsersAsync(User, pageQueryDto, userQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, result.Pagination, result.Data));
+            (var result, var pagination) = await _userService.GetUsersAsync(User, pageQueryDto, userQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<UserDto>>(true, DateTime.UtcNow, null, pagination, result));
         }
         [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUserNames([FromRoute] Guid id, [FromBody] UserChangeNamesDto request)
         {
             var data = await _userService.UpdateUserNamesAsync(User, id, request);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, data));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<UserDto>(true, DateTime.UtcNow, null, null, data));
         }
         [Authorize]
         [HttpPost("censor/{id}")]

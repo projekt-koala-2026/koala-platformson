@@ -50,6 +50,14 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(200, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
+        [Authorize]
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAllSchools()
+        {
+            await _schoolService.DeleteAllSchoolsAsync(User);
+            return StatusCode(200, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+
         [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSchool([FromRoute] Guid id)

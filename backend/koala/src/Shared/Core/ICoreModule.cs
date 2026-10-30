@@ -6,5 +6,6 @@ namespace koala.src.Shared.Core
     {
         Task<_EditionDto?> Internal_GetTheActiveEditionAsync();
         Task<bool> Internal_ExistSchoolAsync(Guid id);
+        Task<(List<string>, ApiPagination)> Internal_GetSchoolsEmailsAsync(PageQueryDto pageQueryDto);
     }
 }

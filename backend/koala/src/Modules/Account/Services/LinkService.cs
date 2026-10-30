@@ -11,11 +11,11 @@ namespace koala.src.Modules.Account.Services
 {
     public interface ILinkService
     {
-        public Task ConsumeRegisterLinkAsync(Guid token, ConsumeRegisterLinkRequestDto requestDto);
-        public Task ConsumeResetPasswordLinkAsync(Guid token, ConsumeResetPasswordLinkRequestDto requestDto);
-        public Task GenerateResetPasswordLinkAsync(GenerateResetPasswordLinkRequestDto requestDto);
+        public Task ConsumeRegisterLinkAsync(Guid token, LinkConsumeRegisterRequestDto requestDto);
+        public Task ConsumeResetPasswordLinkAsync(Guid token, LinkConsumeResetPasswordRequestDto requestDto);
+        public Task GenerateResetPasswordLinkAsync(LinkGenerateResetPasswordRequestDto requestDto);
         public Task DeleteUserLinkAsync(ClaimsPrincipal? claimsPrincipal, Guid id);
-        public Task<LinkListDto> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
+        public Task<(List<LinkDto>, ApiPagination)> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
         public Task DeleteUserLinksAsync(ClaimsPrincipal? claimsPrincipal);
     }
     public class LinkService : ILinkService
@@ -27,7 +27,7 @@ namespace koala.src.Modules.Account.Services
             _db = db;
             _emailService = emailService;
         }
-        public async Task ConsumeRegisterLinkAsync(Guid token, ConsumeRegisterLinkRequestDto requestDto)
+        public async Task ConsumeRegisterLinkAsync(Guid token, LinkConsumeRegisterRequestDto requestDto)
         {
             DateTime timeNow = DateTime.UtcNow;
             var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.Active == true) && (l.Type == "REGISTER"));
@@ -60,7 +60,7 @@ namespace koala.src.Modules.Account.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task ConsumeResetPasswordLinkAsync(Guid token, ConsumeResetPasswordLinkRequestDto requestDto)
+        public async Task ConsumeResetPasswordLinkAsync(Guid token, LinkConsumeResetPasswordRequestDto requestDto)
         {
             DateTime timeNow = DateTime.UtcNow;
             var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.Active == true) && (l.Type == "RESETPASSWORD"));
@@ -86,7 +86,7 @@ namespace koala.src.Modules.Account.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task GenerateResetPasswordLinkAsync(GenerateResetPasswordLinkRequestDto requestDto)
+        public async Task GenerateResetPasswordLinkAsync(LinkGenerateResetPasswordRequestDto requestDto)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email && u.Verified == true);
             if (user == null)
@@ -132,7 +132,7 @@ namespace koala.src.Modules.Account.Services
             );
         }
 
-        public async Task<LinkListDto> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<(List<LinkDto>, ApiPagination)> GetActiveUserLinksAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
@@ -153,7 +153,7 @@ namespace koala.src.Modules.Account.Services
                 .Take(pageQueryDto.PageSize)
                 .ToList();
 
-            return new LinkListDto(links, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
+            return (links, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResult.Count));
         }
 
         public async Task DeleteUserLinkAsync(ClaimsPrincipal? claimsPrincipal, Guid id)

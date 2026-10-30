@@ -3,6 +3,12 @@ using koala.src.Shared.Account;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using StackExchange.Redis;
+using koala.src.Shared.Validation;
+using Hangfire;
+using Hangfire.AspNetCore;
+using Hangfire.PostgreSql;
+using Hangfire.Dashboard;
+using Microsoft.AspNetCore.Authentication;
 
 namespace koala.src.Shared
 {
@@ -77,7 +83,62 @@ namespace koala.src.Shared
 
             services.AddAuthorization();
 
+            // 4. Adding filter for handling auto FluentValidation for Dtos
+            services.AddScoped<FluentValidationFilter, FluentValidationFilter>();
+
+            // 5. Adding a queue for background tasks
+            // 3. Hangfire
+            services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(options =>
+                {
+                    options.UseNpgsqlConnection(configuration.GetConnectionString("Local_Database_Postgres"));
+                },
+                new PostgreSqlStorageOptions
+                {
+                    SchemaName = "hangfire"
+                }));
+            services.AddHangfireServer(options =>
+                {
+                    options.Queues = new[] { "critical", "default" };
+                    options.WorkerCount = 8;
+                });
+
             return services;
         }
+
+        public static void AddSharedModule(WebApplication app, IConfiguration configuration)
+        {
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new[]
+                {
+                    new DelegateAuthorizationFilter(context =>
+                    {
+                        var httpContext = context.GetHttpContext();
+
+                        if (httpContext.User.Identity?.IsAuthenticated != true)
+                        {
+                            var authResult = httpContext.AuthenticateAsync("SessionCookie").Result;
+                            if (authResult.Succeeded && authResult.Principal != null)
+                            {
+                                httpContext.User = authResult.Principal;
+                            }
+                        }
+
+                        return (httpContext.User.Identity?.IsAuthenticated == true && httpContext.User.IsInRole("ORGANIZATION_ADMIN"));
+                    })
+                }
+            });
+        }
     }
+}
+
+public class DelegateAuthorizationFilter : IDashboardAuthorizationFilter
+{
+    private readonly Func<DashboardContext, bool> _func;
+    public DelegateAuthorizationFilter(Func<DashboardContext, bool> func) => _func = func;
+    public bool Authorize(DashboardContext context) => _func(context);
 }

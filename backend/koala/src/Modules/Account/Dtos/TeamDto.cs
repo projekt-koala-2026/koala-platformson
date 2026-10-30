@@ -10,7 +10,7 @@ namespace koala.src.Modules.Account.Dtos
         DateTime CreatedAt,
         UserDto TeamCaptain,
         UserDto? TeamAdmin,
-        List<TeamMemberDto>? TeamMembers,
+        List<TeamMemberDto> TeamMembers,
         TeamJoinCodeDto? JoinCode
     );
 }
