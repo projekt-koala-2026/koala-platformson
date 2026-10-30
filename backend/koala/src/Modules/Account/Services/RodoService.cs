@@ -191,7 +191,7 @@ namespace koala.src.Modules.Account.Services
 
             try
             {
-                await using (var stream = new FileStream(physicalPath, FileMode.CreateNew))
+                await using (var stream = new FileStream(physicalPath, FileMode.Create))
                 {
                     await rodoUpdateDto.File.CopyToAsync(stream);
                 }

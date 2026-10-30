@@ -645,6 +645,9 @@ const CaptainHomeScreen = () => {
                                             <Button
                                                 text="Dodaj członka"
                                                 onClick={() => setAddingMember(true)}
+                                                disabled={
+                                                    saving || (team.teamMembers?.length ?? 0) >= 2
+                                                }
                                                 className="mt-5"
                                             />
                                         </div>
@@ -911,32 +914,34 @@ const CaptainHomeScreen = () => {
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        <form
-                            onSubmit={joinTeam}
-                            className="rounded-2xl border border-line bg-surface p-6 shadow-sm"
-                        >
-                            <h2 className="text-xl font-semibold text-ink-heading">
-                                Dołącz do drużyny
-                            </h2>
-                            <p className="mt-1 text-sm text-ink-muted">
-                                Wpisz kod otrzymany od kapitana.
-                            </p>
-                            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                                <input
-                                    value={joinCode}
-                                    onChange={(event) => setJoinCode(event.target.value)}
-                                    className={`${inputClass} mt-0 font-mono uppercase`}
-                                    placeholder="Kod dołączenia"
-                                    disabled={saving}
-                                    required
-                                />
-                                <Button
-                                    type="submit"
-                                    text={saving ? "Dołączanie…" : "Dołącz"}
-                                    disabled={saving}
-                                />
-                            </div>
-                        </form>
+                        {roles.isGuardian && (
+                            <form
+                                onSubmit={joinTeam}
+                                className="rounded-2xl border border-line bg-surface p-6 shadow-sm"
+                            >
+                                <h2 className="text-xl font-semibold text-ink-heading">
+                                    Dołącz do drużyny
+                                </h2>
+                                <p className="mt-1 text-sm text-ink-muted">
+                                    Wpisz kod otrzymany od kapitana.
+                                </p>
+                                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                                    <input
+                                        value={joinCode}
+                                        onChange={(event) => setJoinCode(event.target.value)}
+                                        className={`${inputClass} mt-0 font-mono uppercase`}
+                                        placeholder="Kod dołączenia"
+                                        disabled={saving}
+                                        required
+                                    />
+                                    <Button
+                                        type="submit"
+                                        text={saving ? "Dołączanie…" : "Dołącz"}
+                                        disabled={saving}
+                                    />
+                                </div>
+                            </form>
+                        )}
                         {roles.isCaptain && (
                             <Button text="Utwórz nową drużynę" onClick={openCreateTeam} />
                         )}

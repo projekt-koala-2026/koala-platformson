@@ -140,13 +140,8 @@ namespace koala.src.Modules.Account.Services
                 </body>
                 </html>";
 
-<<<<<<< HEAD
-            // Send via the existing email service with high priority.
-            await SendEmailAsync(toEmail, "Resetuj hasło", htmlMessage, isHighPriority: true);
-=======
             BackgroundJob.Enqueue<EmailService>("critical", x => x.SendEmailAsync(toEmail, "Password Reset", htmlMessage, true));
             await Task.CompletedTask;
->>>>>>> development
         }
 
         public async Task SendRegisterEmailAsync(string toEmail, string registerToken)
@@ -224,11 +219,7 @@ namespace koala.src.Modules.Account.Services
         </body>
         </html>";
 
-<<<<<<< HEAD
-            // 4. Send via your existing email service method (marked high priority)
-            await SendEmailAsync(toEmail, "Zaproszenie do rejestracji w Konkursie Koala", htmlMessage, isHighPriority: true);
-=======
-            BackgroundJob.Enqueue<EmailService>("critical", x => x.SendEmailAsync(toEmail, "Register Account", htmlMessage, true));
+            BackgroundJob.Enqueue<EmailService>("critical", x => x.SendEmailAsync(toEmail, "Zaproszenie do wzięcia udziału w konkursie Koala", htmlMessage, true));
             await Task.CompletedTask;
         }
 
@@ -305,7 +296,6 @@ namespace koala.src.Modules.Account.Services
         public async Task SendBulkEmailToTeamGuardiansAsync(string body)
         {
 
->>>>>>> development
         }
     }
 }
