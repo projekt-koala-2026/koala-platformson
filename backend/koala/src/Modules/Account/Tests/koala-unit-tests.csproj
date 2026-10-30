@@ -14,8 +14,8 @@
 
     <ItemGroup>
         <Compile Remove="**/*" />
-        <Compile Include="src/**/Tests/*.cs" />
-        <Compile Include="src/**/Tests/UnitTests/**/*.cs" />
+        <Compile Include="./*.cs" />
+        <Compile Include="./UnitTests/**/*.cs" />
     </ItemGroup>
 
 	<ItemGroup>
@@ -31,7 +31,7 @@
 	</ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="koala.csproj" />
+        <ProjectReference Include="../../../../koala.csproj" />
     </ItemGroup>
 
 </Project>

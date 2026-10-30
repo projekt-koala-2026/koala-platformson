@@ -24,16 +24,15 @@ jobs:
 
       - name: Restore dependencies
         run: |
-          rm -rf obj bin
-          dotnet restore koala.csproj --no-cache
+          dotnet clean koala-unit-tests.csproj
           dotnet restore koala-unit-tests.csproj --no-cache
           dotnet list koala-unit-tests.csproj package
-        working-directory: ./backend/koala
+        working-directory: ./backend/koala/src/Modules/Account/Tests
 
       - name: Build solution
         run: dotnet build koala-unit-tests.csproj --no-restore --configuration Release
-        working-directory: ./backend/koala
+        working-directory: ./backend/koala/src/Modules/Account/Tests
 
       - name: Run xUnit tests
         run: dotnet test koala-unit-tests.csproj --no-build --configuration Release --verbosity normal
-        working-directory: ./backend/koala
+        working-directory: ./backend/koala/src/Modules/Account/Tests
