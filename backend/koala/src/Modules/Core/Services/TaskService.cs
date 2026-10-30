@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using koala.src.Modules.Account.Services;
 using koala.src.Modules.Core.Data;
 using koala.src.Modules.Core.Dtos;
 using koala.src.Modules.Core.Entities;
 using koala.src.Shared;
+using koala.src.Shared.Account;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,10 +13,12 @@ namespace koala.src.Modules.Core.Services
     public class TaskService
     {
         private readonly CoreDbContext _db;
+        private readonly IAccountModule _accountModule;
 
-        public TaskService(CoreDbContext db)
+        public TaskService(CoreDbContext db, IAccountModule accountModule)
         {
             _db = db;
+            _accountModule = accountModule;
         }
 
         public async Task<TaskCorrDto> CreateTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, CreateTaskCorrDto createTaskCorrDto)
@@ -211,6 +215,112 @@ namespace koala.src.Modules.Core.Services
 
             return (TaskCorrs, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
+
+        public async Task<TaskAnswerDto> UpdateTaskAnswerTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, SubmitTaskAnswerDto submitTaskAnswerDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            if (!isTeamPlayer)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
+            }
+
+            var teamInfo = await _accountModule.Internal_GetTeamInfo(team_id);
+            if (teamInfo.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
+            }
+
+            var task = await _db.TaskAnswers.FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id);
+
+            if (task == null)
+            {
+                task = new TaskAnswer
+                {
+                    TeamId = team_id,
+                    TaskId = task_id,
+                    Version = submitTaskAnswerDto.Version,
+                    Review1State = null,
+                    Review2State = null,
+                    Reviewer1Id = null,
+                    Reviewer2Id = null,
+                    AutoReviewState = null,
+                    TeamAnswer = submitTaskAnswerDto.TeamAnswer
+                };
+            }
+
+            if (task.Version != submitTaskAnswerDto.Version)
+            {
+                throw new CoreException(CoreErrorCodes.Conflict, "U cant update when having stale data");
+            }
+
+            task.TeamAnswer = submitTaskAnswerDto.TeamAnswer;
+            task.Version++;
+
+            await _db.SaveChangesAsync();
+
+            return new TaskAnswerDto(
+                task.TeamId,
+                task.TaskId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                task.TeamAnswer,
+                task.Version
+            );
+        }
+
+        public async Task<(List<TaskAnswerDto>, ApiPagination)> GetTaskAnswersAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, PageQueryDto pageQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var query = _db.TaskAnswers.Include(t => t.TaskItem).Where(t => t.TaskItem.Id == task_id).AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+
+            var entities = await query
+                .OrderBy(e => e.TeamId)
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .ToListAsync();
+
+            var TaskAnswers = entities.Select(e =>
+            {
+                return new TaskAnswerDto(
+                    e.TeamId,
+                    e.TaskItem.Id,
+                    e.Reviewer1Id,
+                    e.Reviewer2Id,
+                    e.AutoReviewState,
+                    e.Review1State,
+                    e.Review2State,
+                    e.TeamAnswer,
+                    e.Version
+                );
+            }).ToList();
+
+            return (TaskAnswers, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+        }
+
 
     }
 

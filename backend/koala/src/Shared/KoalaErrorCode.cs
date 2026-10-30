@@ -10,5 +10,6 @@ namespace koala.src.Shared
         public const int FileCreationError = 4;
         public const int DatabaseError = 5;
         public const int BadRequest = 6;
+        public const int Conflict = 7;
     }
 }
