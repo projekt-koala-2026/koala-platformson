@@ -288,14 +288,20 @@ namespace koala.src.Modules.Account.Services
             }
 
             var teamMemberToUpdate = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.MemberId == teamMemberId);
+            var memberToUpdate = await _db.Members.FirstOrDefaultAsync(m => m.Id == teamMemberId);
 
             if (teamMemberToUpdate == null)
             {
                 throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
             }
 
-            teamMemberToUpdate.Member.NameFirst = requestDto.NameFirst;
-            teamMemberToUpdate.Member.NameLast = requestDto.NameLast;
+            if (memberToUpdate == null)
+            {
+                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member");
+            }
+
+            memberToUpdate.NameFirst = requestDto.NameFirst;
+            memberToUpdate.NameLast = requestDto.NameLast;
 
             await _db.SaveChangesAsync();
 
