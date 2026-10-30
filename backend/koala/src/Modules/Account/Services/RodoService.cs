@@ -204,7 +204,6 @@ namespace koala.src.Modules.Account.Services
             try
             {
                 DateTime timeNow = DateTime.UtcNow;
-                rodo.Id = id;
                 rodo.TeamId = teamId;
                 rodo.MemberId = teamMemberId;
                 rodo.Type = extension;
