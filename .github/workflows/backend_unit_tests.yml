@@ -25,6 +25,7 @@ jobs:
       - name: Restore dependencies
         run: |
           rm -rf obj bin
+          dotnet restore koala.csproj --no-cache
           dotnet restore koala-unit-tests.csproj --no-cache
           dotnet list koala-unit-tests.csproj package
         working-directory: ./backend/koala

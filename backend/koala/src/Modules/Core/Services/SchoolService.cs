@@ -260,7 +260,7 @@ namespace koala.src.Modules.Core.Services
                     Road = csv.GetField("Ulica")!,               // Mapped to separate Road column
                     Building = csv.GetField("Numer budynku")!,   // Mapped to separate house column
                     Type = csv.GetField("Typ")!,                 // Mapped to Type
-                    Email = csv.GetField("E-mail")!,                       // Default/Empty if not in CSV
+                    Email = csv.GetField("E-mail")!,             // Mapped to Email         
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
