@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using koala.src.Modules.Account.Services;
 using koala.src.Modules.Core.Data;
 using koala.src.Modules.Core.Dtos;
 using koala.src.Modules.Core.Entities;
 using koala.src.Shared;
+using koala.src.Shared.Account;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,10 +13,12 @@ namespace koala.src.Modules.Core.Services
     public class TaskService
     {
         private readonly CoreDbContext _db;
+        private readonly IAccountModule _accountModule;
 
-        public TaskService(CoreDbContext db)
+        public TaskService(CoreDbContext db, IAccountModule accountModule)
         {
             _db = db;
+            _accountModule = accountModule;
         }
 
         public async Task<TaskCorrDto> CreateTaskCorrAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, CreateTaskCorrDto createTaskCorrDto)
@@ -212,7 +216,7 @@ namespace koala.src.Modules.Core.Services
             return (TaskCorrs, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<TaskAnswerDto> UpdateTaskAnswerTeamUserAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, SubmitTaskAnswerDto submitTaskAnswerDto)
+        public async Task<TaskAnswerDto> UpdateTaskAnswerTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, SubmitTaskAnswerDto submitTaskAnswerDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -221,19 +225,40 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
             }
 
-            var task = await _db.TaskAnswers.FirstOrDefaultAsync(e => e.TaskId == task_id);
+            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            if (!isTeamPlayer)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
+            }
+
+            var teamInfo = await _accountModule.Internal_GetTeamInfo(team_id);
+            if (teamInfo.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
+            }
+
+            var task = await _db.TaskAnswers.FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id);
 
             if (task == null)
             {
-                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+                task = new TaskAnswer
+                {
+                    TeamId = team_id,
+                    TaskId = task_id,
+                    Version = submitTaskAnswerDto.Version,
+                    Review1State = null,
+                    Review2State = null,
+                    Reviewer1Id = null,
+                    Reviewer2Id = null,
+                    AutoReviewState = null,
+                    TeamAnswer = submitTaskAnswerDto.TeamAnswer
+                };
             }
 
             if (task.Version != submitTaskAnswerDto.Version)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "Masz stare dane. Odśwież stronę i spróbuj ponownie.");
+                throw new CoreException(CoreErrorCodes.Conflict, "U cant update when having stale data");
             }
-
-            task.TeamId = team_id; 
 
             task.TeamAnswer = submitTaskAnswerDto.TeamAnswer;
             task.Version++;

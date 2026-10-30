@@ -5,6 +5,6 @@ namespace koala.src.Shared.Account
     public interface IAccountModule
     {
         Task<_SessionResponseDto?> Internal_ValidateSessionFromPrincipalAsync(ClaimsPrincipal? principal);
-        Task Internal_GetUsersByIdsAsync();
+        Task<_TeamResponseDto> Internal_GetTeamInfo(Guid team_id);
     }
 }
