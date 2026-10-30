@@ -4,7 +4,7 @@ namespace koala.src.Modules.Account.Dtos
 {
     public record EmailSendRequestDto
     (
-        string MessgaeSubject,
+        string MessageSubject,
         string MessageBody
     );
 
@@ -12,8 +12,8 @@ namespace koala.src.Modules.Account.Dtos
     {
         public EmailSendRequestDtoValidator()
         {
-            RuleFor(x => x.MessgaeSubject)
-                .NotEmpty().WithMessage("MessgaeSubject field cannot be empty!");
+            RuleFor(x => x.MessageSubject)
+                .NotEmpty().WithMessage("MessageSubject field cannot be empty!");
 
             RuleFor(x => x.MessageBody)
                 .NotEmpty().WithMessage("MessageBody field cannot be empty!");

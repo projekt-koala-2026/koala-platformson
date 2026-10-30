@@ -239,7 +239,7 @@ namespace koala.src.Modules.Core.Services
             await csv.ReadAsync();
             csv.ReadHeader();
 
-            var expectedHeaders = new[] { "Numer RSPO", "Nazwa", "Województwo", "Miejscowość", "Ulica", "Numer budynku", "Typ" };
+            var expectedHeaders = new[] { "Numer RSPO", "Nazwa", "Województwo", "Miejscowość", "Ulica", "Numer budynku", "Typ", "E-mail" };
             var actualHeaders = csv.HeaderRecord;
 
             if (actualHeaders == null || !expectedHeaders.All(h => actualHeaders.Contains(h)))

@@ -173,7 +173,7 @@ namespace koala.src.Modules.Account.Services
                     </div>
                 </body>
                 </html>";
-            _backgroundJobClient.Enqueue<EmailService>(processor => processor.SchoolEmailSendBulkJobAsync(80, 0, requestDto.MessgaeSubject, htmlMessage, false));
+            _backgroundJobClient.Enqueue<EmailService>(processor => processor.SchoolEmailSendBulkJobAsync(80, 0, requestDto.MessageSubject, htmlMessage, false));
             await Task.CompletedTask;
         }
 
