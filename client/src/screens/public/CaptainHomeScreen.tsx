@@ -9,6 +9,7 @@ import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import SchoolsTable from "../../components/SchoolsTable";
 import type {
+    ApiRodo,
     ApiSchool,
     ApiTeam,
     ApiTeamJoinCode,
@@ -44,7 +45,8 @@ const CaptainHomeScreen = () => {
     ]);
     const [memberError, setMemberError] = useState("");
     const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [rodoByMember, setRodoByMember] = useState<Record<string, boolean | null>>({});
+    const [rodoByMember, setRodoByMember] = useState<Record<string, boolean>>({});
+    const [rodoStateByMember, setRodoStateByMember] = useState<Record<string, string | null>>({});
     const [createError, setCreateError] = useState("");
     const [saving, setSaving] = useState(false);
     const [feedback, setFeedback] = useState<Feedback>(null);
@@ -93,8 +95,9 @@ const CaptainHomeScreen = () => {
             };
         }
 
-        if (!team || !roles.isGuardian) {
+        if (!team) {
             setRodoByMember({});
+            setRodoStateByMember({});
             return () => {
                 active = false;
             };
@@ -105,36 +108,69 @@ const CaptainHomeScreen = () => {
             ...(team.teamMembers ?? []).map((member) => member.id),
         ];
 
-        setRodoByMember(Object.fromEntries(memberIds.map((id) => [id ?? "captain", null])));
+        setRodoByMember(Object.fromEntries(memberIds.map((id) => [id ?? "captain", false])));
+        setRodoStateByMember(Object.fromEntries(memberIds.map((id) => [id ?? "captain", null])));
 
         void Promise.all(
             memberIds.map(async (memberId) => {
-                const result = await apiRequestResult<unknown>(
+                const result = await apiRequestResult<ApiRodo>(
                     `${apiEndpoints.teams}/${team.id}/rodos/${memberId ?? "null"}`,
                     null,
                     "GET",
                     navigate
                 );
 
-                const hasRodo =
-                    result.status === 200
-                        ? true
-                        : result.status === 400 || result.status === 404
-                          ? false
-                          : null;
+                const hasRodo = result.status === 200;
 
-                return [memberId ?? "captain", hasRodo] as const;
+                return [
+                    memberId ?? "captain",
+                    { hasRodo, state: result.data?.state ?? null },
+                ] as const;
             })
         ).then((statuses) => {
             if (active) {
-                setRodoByMember(Object.fromEntries(statuses));
+                setRodoByMember(
+                    Object.fromEntries(statuses.map(([key, value]) => [key, value.hasRodo]))
+                );
+                setRodoStateByMember(
+                    Object.fromEntries(statuses.map(([key, value]) => [key, value.state]))
+                );
             }
         });
 
         return () => {
             active = false;
         };
-    }, [loading, navigate, roles.isGuardian, team]);
+    }, [loading, navigate, team]);
+
+    const statusMeta: Record<
+        "UNVERIFIED" | "ACCEPTED" | "REJECTED",
+        { label: string; className: string }
+    > = {
+        UNVERIFIED: {
+            label: "Do weryfikacji",
+            className: "app-status-warning",
+        },
+        ACCEPTED: {
+            label: "Zatwierdzona",
+            className: "app-status-success",
+        },
+        REJECTED: {
+            label: "Odrzucona",
+            className: "app-status-danger",
+        },
+    };
+
+    const rodoStatusFor = (memberKey: string) => {
+        const state = rodoStateByMember[memberKey];
+        if (!state || !(state in statusMeta)) {
+            return {
+                label: "Brak zgody",
+                className: "border-line bg-surface-muted text-ink-secondary",
+            };
+        }
+        return statusMeta[state as keyof typeof statusMeta];
+    };
 
     const selectedSchool = useMemo(
         () => schools.find((school) => school.id === schoolId),
@@ -431,6 +467,7 @@ const CaptainHomeScreen = () => {
 
         if (result.status === 200 || result.status === 204) {
             setRodoByMember((current) => ({ ...current, [memberKey]: true }));
+            setRodoStateByMember((current) => ({ ...current, [memberKey]: "UNVERIFIED" }));
             setFeedback({ tone: "success", message: "Plik PDF został zapisany." });
         } else setFeedback({ tone: "error", message: "Nie udało się zapisać pliku PDF." });
         setSaving(false);
@@ -448,6 +485,7 @@ const CaptainHomeScreen = () => {
         );
         if (result.status === 200 || result.status === 204) {
             setRodoByMember((current) => ({ ...current, [memberKey]: false }));
+            setRodoStateByMember((current) => ({ ...current, [memberKey]: null }));
             setFeedback({ tone: "success", message: "Zgoda RODO została usunięta." });
         } else setFeedback({ tone: "error", message: "Nie udało się usunąć zgody RODO." });
         setSaving(false);
@@ -645,15 +683,25 @@ const CaptainHomeScreen = () => {
                                 Członkowie drużyny
                             </h2>
                             <ul className="mt-4 divide-y divide-slate-100">
-                                <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                <li className="relative flex flex-wrap items-center justify-between gap-3 py-3">
                                     <div>
                                         <p className="font-mono text-sm text-ink">
                                             {team.teamCaptain?.nameFirst}{" "}
                                             {team.teamCaptain?.nameLast}
                                         </p>
+
                                         <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
                                             Kapitan drużyny
                                         </p>
+                                    </div>
+                                    <div className="absolute left-1/2 -translate-x-1/2 text-center">
+                                        {roles.isGuardian && rodoStatusFor("captain") && (
+                                            <span
+                                                className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor("captain")!.className}`}
+                                            >
+                                                {rodoStatusFor("captain")!.label}
+                                            </span>
+                                        )}
                                     </div>
                                     {roles.isGuardian && rodoByMember.captain === false && (
                                         <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
@@ -725,7 +773,7 @@ const CaptainHomeScreen = () => {
                                 {team.teamMembers?.map((member) => (
                                     <li
                                         key={member.id}
-                                        className="flex flex-wrap items-center justify-between gap-3 py-3"
+                                        className="relative flex flex-wrap items-center justify-between gap-3 py-3"
                                     >
                                         <div>
                                             <p className="font-mono text-sm text-ink">
@@ -734,6 +782,15 @@ const CaptainHomeScreen = () => {
                                             <p className="text-xs text-ink-muted">
                                                 {member.position}
                                             </p>
+                                        </div>
+                                        <div className="absolute left-1/2 -translate-x-1/2 text-center">
+                                            {roles.isGuardian && rodoStatusFor(member.id) && (
+                                                <span
+                                                    className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor(member.id)!.className}`}
+                                                >
+                                                    {rodoStatusFor(member.id)!.label}
+                                                </span>
+                                            )}
                                         </div>
                                         {isCaptain && member.position !== "CAPTAIN" && (
                                             <button
