@@ -18,6 +18,7 @@ namespace koala.src.Modules.Core.Data
         public DbSet<TaskItem> Tasks => Set<TaskItem>();
         public DbSet<TaskItemTaskCorr> TaskItemTaskCorrs => Set<TaskItemTaskCorr>();
         public DbSet<TaskCorr> TaskCorrs => Set<TaskCorr>();
+        public DbSet<TaskAnswer> TaskAnswers => Set<TaskAnswer>();
         public DbSet<School> Schools => Set<School>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,6 +32,7 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<TaskItem>().ToTable("tasks");
             modelBuilder.Entity<TaskItemTaskCorr>().ToTable("task_item_task_corrs");
             modelBuilder.Entity<TaskCorr>().ToTable("task_corrs");
+            modelBuilder.Entity<TaskAnswer>().ToTable("task_answers");
             modelBuilder.Entity<School>().ToTable("schools");
 
             // EDITIONS CONFIG
@@ -78,6 +80,7 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<TaskCorr>()
                 .HasKey(tc => tc.Id);
 
+            // TASKITEM-TASKCORR CONFIG
             modelBuilder.Entity<TaskItemTaskCorr>()
                 .HasKey(ttc => new { ttc.TaskItemId, ttc.TaskCorrId });
             modelBuilder.Entity<TaskItemTaskCorr>()
@@ -90,6 +93,23 @@ namespace koala.src.Modules.Core.Data
                 .WithOne(tc => tc.TaskItemTaskCorr)
                 .HasForeignKey<TaskItemTaskCorr>(ttc => ttc.TaskCorrId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            //TASKANS CONFIG
+            modelBuilder.Entity<TaskAnswer>()
+                .HasKey(ta => new { ta.TeamId, ta.TaskId });
+
+            modelBuilder.Entity<TaskAnswer>()
+                .HasOne(ta => ta.TaskItem)
+                .WithMany(t => t.TaskAnswers)
+                .HasForeignKey(ta => ta.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TaskAnswer>()
+                .Property(ta => ta.TeamId)
+                    .IsRequired();
+            modelBuilder.Entity<TaskAnswer>()
+                .Property(ta => ta.TeamAnswer)
+                    .IsRequired();
 
             // SCHOOLS CONFIG
             modelBuilder.Entity<School>()
