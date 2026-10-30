@@ -117,6 +117,52 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.ToTable("subedition_tasks", "core");
                 });
 
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskAnswer", b =>
+                {
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<bool?>("AutoReviewState")
+                        .HasColumnType("boolean")
+                        .HasColumnName("auto_review_state");
+
+                    b.Property<bool?>("Review1State")
+                        .HasColumnType("boolean")
+                        .HasColumnName("review_1_state");
+
+                    b.Property<bool?>("Review2State")
+                        .HasColumnType("boolean")
+                        .HasColumnName("review_2_state");
+
+                    b.Property<Guid?>("Reviewer1Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewer_1_id");
+
+                    b.Property<Guid?>("Reviewer2Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewer_2_id");
+
+                    b.Property<string>("TeamAnswer")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("team_answer");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("TeamId", "TaskId");
+
+                    b.HasIndex("TaskId");
+
+                    b.ToTable("task_answers", "core");
+                });
+
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskCorr", b =>
                 {
                     b.Property<Guid>("Id")
@@ -281,6 +327,17 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.Navigation("TaskItem");
                 });
 
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskAnswer", b =>
+                {
+                    b.HasOne("koala.src.Modules.Core.Entities.TaskItem", "TaskItem")
+                        .WithMany("TaskAnswers")
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaskItem");
+                });
+
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItemTaskCorr", b =>
                 {
                     b.HasOne("koala.src.Modules.Core.Entities.TaskCorr", "TaskCorr")
@@ -323,6 +380,8 @@ namespace koala.src.Modules.Core.Data.Migrations
                 {
                     b.Navigation("SubEditionTask")
                         .IsRequired();
+
+                    b.Navigation("TaskAnswers");
 
                     b.Navigation("TaskItemTaskCorrs");
                 });

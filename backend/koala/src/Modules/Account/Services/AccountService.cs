@@ -23,18 +23,18 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"User must be valid authenticated");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "User must be valid authenticated");
             }
 
             Guid sessionToken = ClaimsHelper.GetSessionTokenGuid(claimsPrincipal);
 
             if (sessionToken == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Invalid or missing session token claim.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing session token claim.");
             }
-        
+
             var redisKey = $"koala:account:Session:{sessionToken}";
-        
+
             // STRIKE CACHE
             var cachedSessionJson = await _cache.GetValueAtKeyAsync(redisKey);
             if (!string.IsNullOrEmpty(cachedSessionJson))
@@ -45,22 +45,22 @@ namespace koala.src.Modules.Account.Services
                     if (cachedSession.ExpiresAt <= DateTimeOffset.UtcNow)
                     {
                         await _cache.RemoveKeyAsync(redisKey);
-                        throw new AccountException(AccountErrorCodes.Unauthenticated,"Session has expired in cache.");
+                        throw new AccountException(AccountErrorCodes.Unauthenticated, "Session has expired in cache.");
                     }
                     return cachedSession;
                 }
             }
-        
+
             // STRIKE DATABASE
             var session = await _db.Sessions
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.Token == sessionToken && s.Active);
-        
+
             if (session == null || session.ExpiresAt <= DateTimeOffset.UtcNow)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated,"Session not found or expired in database.");
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Session not found or expired in database.");
             }
-        
+
             // Get latest roles
             var userRolesNames = await _db.UserRoles
                 .AsNoTracking()
@@ -68,13 +68,13 @@ namespace koala.src.Modules.Account.Services
                 .Select(ur => ur.Role.Name)
                 .Distinct()
                 .ToListAsync();
-        
+
             var sessionDto = new _SessionResponseDto(
-                session.Id, 
-                session.Token, 
-                session.UserId, 
-                session.CreatedAt, 
-                session.ExpiresAt, 
+                session.Id,
+                session.Token,
+                session.UserId,
+                session.CreatedAt,
+                session.ExpiresAt,
                 userRolesNames,
                 new UserDto
                 (
@@ -86,13 +86,17 @@ namespace koala.src.Modules.Account.Services
                     userRolesNames
                 )
             );
-        
+
             // IF FOUND IN DB AND IS VALID SESSION SAVE BACK TO REDIS
             TimeSpan timeSpanExpiry = session.ExpiresAt - DateTimeOffset.UtcNow;
             await _cache.SetValueAtKeyAsync(redisKey, JsonSerializer.Serialize(sessionDto), timeSpanExpiry);
-        
+
             return sessionDto;
         }
-        public async Task Internal_GetUsersByIdsAsync(){}
+        public async Task<_TeamResponseDto> Internal_GetTeamInfo(Guid team_id)
+        {
+            var team = _db.Teams.AsNoTracking().Include(t => t.UserTeams).FirstOrDefault(t => t.Id == team_id);
+            return new _TeamResponseDto(team.Id, team.UserTeams.FirstOrDefault(ut => ut.Position == "CAPTAIN").UserId, team.UserTeams.FirstOrDefault(ut => ut.Position == "ADMIN").UserId, "");
+        }
     }
 }

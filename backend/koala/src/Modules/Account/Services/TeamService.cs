@@ -13,12 +13,12 @@ namespace koala.src.Modules.Account.Services
 {
     public interface ITeamService
     {
-        public Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, CreateTeamRequestDto requestDto);
+        public Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, TeamCreateRequestDto requestDto);
         public Task DeleteTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
-        public Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, MemberUpsertRequestDto requestDto);
-        public Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, MemberUpsertRequestDto requestDto);
+        public Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamMemberUpsertRequestDto requestDto);
+        public Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, TeamMemberUpsertRequestDto requestDto);
         public Task DeleteTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
-        public Task<TeamDto> UpdateTeamNameAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, UpdateTeamNameRequestDto requestDto);
+        public Task<TeamDto> UpdateTeamNameAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamUpdateNameRequestDto requestDto);
         public Task<TeamJoinCodeDto> CreateJoinTeamCodeAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
         public Task<TeamDto> JoinTeamWithCodeAsync(ClaimsPrincipal? claimsPrincipal, string JoinCode);
         public Task<(List<TeamDto>, ApiPagination)> GetMyTeamsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, TeamQueryDto teamQueryDto);
@@ -61,7 +61,7 @@ namespace koala.src.Modules.Account.Services
             _coreService = coreService;
         }
 
-        public async Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, CreateTeamRequestDto requestDto)
+        public async Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, TeamCreateRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -155,7 +155,7 @@ namespace koala.src.Modules.Account.Services
                     user.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
                 ),
                 null,
-                null,
+                new List<TeamMemberDto>(),
                 null
             );
         }
@@ -199,7 +199,7 @@ namespace koala.src.Modules.Account.Services
 
             return;
         }
-        public async Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, MemberUpsertRequestDto requestDto)
+        public async Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamMemberUpsertRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -257,7 +257,7 @@ namespace koala.src.Modules.Account.Services
 
             return await _db.TeamMembers.Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
         }
-        public async Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, MemberUpsertRequestDto requestDto)
+        public async Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, TeamMemberUpsertRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -288,14 +288,20 @@ namespace koala.src.Modules.Account.Services
             }
 
             var teamMemberToUpdate = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.MemberId == teamMemberId);
+            var memberToUpdate = await _db.Members.FirstOrDefaultAsync(m => m.Id == teamMemberId);
 
             if (teamMemberToUpdate == null)
             {
                 throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
             }
 
-            teamMemberToUpdate.Member.NameFirst = requestDto.NameFirst;
-            teamMemberToUpdate.Member.NameLast = requestDto.NameLast;
+            if (memberToUpdate == null)
+            {
+                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member");
+            }
+
+            memberToUpdate.NameFirst = requestDto.NameFirst;
+            memberToUpdate.NameLast = requestDto.NameLast;
 
             await _db.SaveChangesAsync();
 
@@ -352,7 +358,7 @@ namespace koala.src.Modules.Account.Services
             return;
         }
 
-        public async Task<TeamDto> UpdateTeamNameAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, UpdateTeamNameRequestDto requestDto)
+        public async Task<TeamDto> UpdateTeamNameAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamUpdateNameRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -474,7 +480,7 @@ namespace koala.src.Modules.Account.Services
                     TeamId = teamId,
                     JoinCode = TeamJoinCodeGenerator.GenerateCode(8),
                     CreatedAt = timeNow,
-                    ExpiresAt = timeNow.AddHours(2.0f)
+                    ExpiresAt = timeNow.AddDays(1)
                 };
 
                 await _db.TeamJoinCodes.AddAsync(teamJoinCode);
@@ -483,7 +489,7 @@ namespace koala.src.Modules.Account.Services
             {
                 teamJoinCode.JoinCode = TeamJoinCodeGenerator.GenerateCode(8);
                 teamJoinCode.CreatedAt = timeNow;
-                teamJoinCode.ExpiresAt = timeNow.AddMinutes(30.0f);
+                teamJoinCode.ExpiresAt = timeNow.AddDays(1);
             }
 
             await _db.SaveChangesAsync();
@@ -505,7 +511,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin can user the join code");
+                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin can use the join code");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();

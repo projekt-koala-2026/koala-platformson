@@ -1,4 +1,5 @@
 using koala.src.Modules.Account.Dtos;
+using koala.src.Modules.Account.Entities;
 using koala.src.Modules.Account.Services;
 using koala.src.Shared;
 using koala.src.Shared.Account;
@@ -19,21 +20,21 @@ namespace koala.src.Modules.Account.Controllers
         }
         [AllowAnonymous]
         [HttpPost("register/{token}")]
-        public async Task<IActionResult> LinkRegisterAccount([FromRoute] Guid token, [FromBody] ConsumeRegisterLinkRequestDto requestDto)
+        public async Task<IActionResult> LinkRegisterAccount([FromRoute] Guid token, [FromBody] LinkConsumeRegisterRequestDto requestDto)
         {
             await _linkService.ConsumeRegisterLinkAsync(token, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [AllowAnonymous]
         [HttpPost("reset-password/{token}")]
-        public async Task<IActionResult> LinkResetPasswordAccount([FromRoute] Guid token, [FromBody] ConsumeResetPasswordLinkRequestDto requestDto)
+        public async Task<IActionResult> LinkResetPasswordAccount([FromRoute] Guid token, [FromBody] LinkConsumeResetPasswordRequestDto requestDto)
         {
             await _linkService.ConsumeResetPasswordLinkAsync(token, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [AllowAnonymous]
         [HttpPost("reset-password")]
-        public async Task<IActionResult> CreateResetPasswordLink([FromBody] GenerateResetPasswordLinkRequestDto requestDto)
+        public async Task<IActionResult> CreateResetPasswordLink([FromBody] LinkGenerateResetPasswordRequestDto requestDto)
         {
             await _linkService.GenerateResetPasswordLinkAsync(requestDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
@@ -42,15 +43,15 @@ namespace koala.src.Modules.Account.Controllers
         [HttpGet]
         public async Task<IActionResult> GetActiveUserLinks([FromQuery] PageQueryDto pageQueryDto)
         {
-            var response = await _linkService.GetActiveUserLinksAsync(User, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, response.Pagination, response.Data));
+            (var response, var pagination) = await _linkService.GetActiveUserLinksAsync(User, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<LinkDto>>(true, DateTime.UtcNow, null, pagination, response));
         }
         [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUserLink([FromRoute] Guid id)
         {
             await _linkService.DeleteUserLinkAsync(User, id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<LinkListDto>(true, DateTime.UtcNow, null, null, null));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
         [HttpDelete]

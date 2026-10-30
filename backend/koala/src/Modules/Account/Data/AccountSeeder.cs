@@ -39,7 +39,7 @@ namespace koala.src.Modules.Account.Data
                     Email = "admin",
                     NameFirst = null,
                     NameLast = null,
-                    PasswordHash = PasswordHasher.Hash("admin"), 
+                    PasswordHash = PasswordHasher.Hash("admin"),
                     Verified = true,
                     AcceptedRodo = true,
                     AcceptedRules = true,
