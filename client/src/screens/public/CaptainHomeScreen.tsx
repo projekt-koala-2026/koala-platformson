@@ -815,28 +815,32 @@ const CaptainHomeScreen = () => {
                                         )}
                                     </li>
                                 ))}
-                                <li className="flex flex-wrap items-center justify-between gap-3 py-3">
-                                    <div>
-                                        <p className="font-mono text-sm text-ink">
-                                            {team.teamAdmin?.nameFirst} {team.teamAdmin?.nameLast}
-                                        </p>
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
-                                            Opiekun drużyny
-                                        </p>
-                                    </div>
-                                    {isCaptain && (
-                                        <button
-                                            type="button"
-                                            disabled={saving}
-                                            onClick={() =>
-                                                void removeMember(team.teamAdmin?.id ?? "")
-                                            }
-                                            className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
-                                        >
-                                            Usuń z drużyny
-                                        </button>
-                                    )}
-                                </li>
+                                {team.teamAdmin && team.teamAdmin.id !== team.teamCaptain?.id && (
+                                    <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                        <div>
+                                            <p className="font-mono text-sm text-ink">
+                                                {team.teamAdmin?.nameFirst}{" "}
+                                                {team.teamAdmin?.nameLast}
+                                            </p>
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                                Opiekun drużyny
+                                            </p>
+                                        </div>
+                                        {isCaptain && (
+                                            <button
+                                                type="button"
+                                                // Brakuje endpointu do usuwania opiekuna drużyny, więc przycisk jest disabled
+                                                disabled
+                                                onClick={() =>
+                                                    void removeMember(team.teamAdmin?.id ?? "")
+                                                }
+                                                className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                            >
+                                                Usuń z drużyny
+                                            </button>
+                                        )}
+                                    </li>
+                                )}
                             </ul>
                             {isCaptain && (
                                 <Button
