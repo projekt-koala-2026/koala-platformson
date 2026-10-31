@@ -321,6 +321,51 @@ namespace koala.src.Modules.Core.Services
             return (TaskAnswers, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
+        public async Task<TaskAnswerDto> UpdateTaskAnswerTeamAdminAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, UpdateTaskAnswerAdminDto updateTaskAnswerAdminDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var task = await _db.TaskAnswers.FirstOrDefaultAsync(e => e.TaskId == task_id);
+
+            if (task == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+            }
+
+
+            task.Reviewer1Id = updateTaskAnswerAdminDto.Reviewer1Id;
+            task.Reviewer2Id = updateTaskAnswerAdminDto.Reviewer2Id;
+            task.AutoReviewState = updateTaskAnswerAdminDto.AutoReviewState;
+            task.Review1State = updateTaskAnswerAdminDto.Review1State;
+            task.Review2State = updateTaskAnswerAdminDto.Review2State;
+
+            await _db.SaveChangesAsync();
+
+            return new TaskAnswerDto(
+            task.TeamId,
+            task.TaskId,
+            task.Reviewer1Id,
+            task.Reviewer2Id,
+            task.AutoReviewState,
+            task.Review1State,
+            task.Review2State,
+            task.TeamAnswer,
+            task.Version
+            );
+        }
+
+
 
     }
 
