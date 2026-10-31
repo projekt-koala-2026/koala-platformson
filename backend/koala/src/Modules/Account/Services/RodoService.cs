@@ -184,14 +184,14 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.RodoNotFound, "Error could not found rodo");
             }
 
-            var id = Guid.CreateVersion7();
+            var id = rodo.Id;
             var extension = Path.GetExtension(rodoUpdateDto.File.FileName);
             var path = $"{id}{extension}";
             var physicalPath = Path.Combine(_privateFilesPath, path);
 
             try
             {
-                await using (var stream = new FileStream(physicalPath, FileMode.CreateNew))
+                await using (var stream = new FileStream(physicalPath, FileMode.Create))
                 {
                     await rodoUpdateDto.File.CopyToAsync(stream);
                 }
