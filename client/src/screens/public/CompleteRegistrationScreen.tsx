@@ -28,6 +28,8 @@ const CompleteRegistrationScreen = () => {
     const [acceptedRules, setAcceptedRules] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [onboardingOpen, setOnboardingOpen] = useState(true);
+    const [onboardingStep, setOnboardingStep] = useState(0);
 
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -82,7 +84,171 @@ const CompleteRegistrationScreen = () => {
                     <h1 className="mt-2 text-2xl font-bold text-ink-heading">
                         Dokończ tworzenie konta
                     </h1>
+                    {token && onboardingOpen && (
+                        <div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop/60 px-4 py-6"
+                            role="presentation"
+                        >
+                            <section
+                                role="dialog"
+                                aria-modal="true"
+                                aria-labelledby="onboarding-title"
+                                aria-describedby="onboarding-description"
+                                className="w-full max-w-lg rounded-2xl border border-line bg-surface p-6 text-ink sm:p-8"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                                        Zanim zaczniesz
+                                    </p>
 
+                                    <button
+                                        type="button"
+                                        onClick={() => setOnboardingOpen(false)}
+                                        className="rounded-lg px-3 py-1 text-xl text-ink-muted hover:bg-surface-muted hover:text-ink-heading"
+                                        aria-label="Zamknij wprowadzenie"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="mt-5 flex gap-2" aria-label="Postęp">
+                                    {[0, 1].map((step) => (
+                                        <div
+                                            key={step}
+                                            className={`h-1.5 flex-1 rounded-full ${
+                                                onboardingStep >= step
+                                                    ? "bg-brand"
+                                                    : "bg-line-strong"
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+
+                                {onboardingStep === 0 ? (
+                                    <>
+                                        <h2
+                                            id="onboarding-title"
+                                            className="mt-4 text-xl font-bold text-ink-heading"
+                                        >
+                                            Poznaj zasady konkursu
+                                        </h2>
+
+                                        <p
+                                            id="onboarding-description"
+                                            className="mt-3 text-sm leading-6 text-ink-secondary"
+                                        >
+                                            Przed utworzeniem konta zapoznaj się z regulaminem
+                                            konkursu. Znajdziesz w nim zasady udziału, warunki
+                                            uczestnictwa oraz informacje o obowiązkach uczestników.
+                                        </p>
+
+                                        <a
+                                            href="/rules"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-4 inline-flex font-medium text-brand-text underline underline-offset-4 hover:text-brand-text-strong"
+                                        >
+                                            Przeczytaj regulamin konkursu
+                                        </a>
+
+                                        <div className="mt-5 rounded-xl bg-surface-muted p-4 text-sm leading-6 text-ink-secondary">
+                                            W formularzu samodzielnie zaznaczysz pole potwierdzające
+                                            akceptację regulaminu. Zapoznaj się z jego treścią przed
+                                            podjęciem decyzji.
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h2
+                                            id="onboarding-title"
+                                            className="mt-4 text-xl font-bold text-ink-heading"
+                                        >
+                                            Twoje dane i prywatność
+                                        </h2>
+
+                                        <p
+                                            id="onboarding-description"
+                                            className="mt-3 text-sm leading-6 text-ink-secondary"
+                                        >
+                                            Podczas rejestracji podajesz imię, nazwisko, adres
+                                            e-mail i hasło. Dane osobowe są przetwarzane zgodnie z
+                                            RODO.
+                                        </p>
+                                        <div className="mt-5 rounded-xl border border-brand-border bg-brand-soft p-4 text-sm leading-6 text-ink">
+                                            <p className="font-semibold text-ink-heading">
+                                                Co warto wiedzieć?
+                                            </p>
+                                            <ul className="mt-2 list-disc space-y-1 pl-5">
+                                                <li>
+                                                    Administratorem Twoich danych jest WMI UAM.??
+                                                </li>
+                                                <li>
+                                                    Twoje dane będą przetwarzane na potrzeby
+                                                    konkursu KOALA i zostaną usunięte po roku od
+                                                    zakończenia ostatniej edycji konkursu.
+                                                </li>
+                                                <li>
+                                                    Poznaj swoje prawa dotyczące danych osobowych.
+                                                    <a
+                                                        href="/polityka-prywatnosci"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="mt-4 inline-flex font-medium text-brand-text underline underline-offset-4 hover:text-brand-text-strong"
+                                                    >
+                                                        Przeczytaj politykę prywatności - do
+                                                        wstawienia zasady RODO
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <p className="mt-4 text-xs leading-5 text-ink-muted">
+                                            Przejście dalej nie oznacza automatycznej zgody. Decyzję
+                                            podejmiesz samodzielnie w formularzu rejestracji.
+                                        </p>
+                                    </>
+                                )}
+
+                                <div className="mt-7 flex items-center justify-between gap-3">
+                                    {onboardingStep === 0 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOnboardingOpen(false)}
+                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink-secondary hover:bg-surface-muted"
+                                        >
+                                            Pomiń wprowadzenie
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOnboardingStep(0)}
+                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink-secondary hover:bg-surface-muted"
+                                        >
+                                            Wstecz
+                                        </button>
+                                    )}
+
+                                    {onboardingStep === 0 ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOnboardingStep(1)}
+                                            className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-ink-inverse transition hover:bg-brand-hover"
+                                        >
+                                            Dalej
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setOnboardingOpen(false)}
+                                            className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-ink-inverse transition hover:bg-brand-hover"
+                                        >
+                                            Przejdź do formularza
+                                        </button>
+                                    )}
+                                </div>
+                            </section>
+                        </div>
+                    )}
                     {!token ? (
                         <p
                             role="alert"

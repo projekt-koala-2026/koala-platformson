@@ -46,17 +46,16 @@ export const apiRequestResult = async <T = unknown>(
     navigate?: NavigateFunction
 ): Promise<ApiResult<T>> => {
     try {
+        const isMultipart = options instanceof FormData;
         const fetchConfig: RequestInit = {
             method: method,
             cache: method === "GET" || method === "HEAD" ? "no-store" : undefined,
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: isMultipart ? undefined : { "Content-Type": "application/json" },
             credentials: "include",
         };
 
         if (options !== null && options !== undefined && method !== "GET" && method !== "HEAD") {
-            fetchConfig.body = JSON.stringify(options);
+            fetchConfig.body = isMultipart ? options : JSON.stringify(options);
         }
 
         const response = await fetch(apiUrl + url, fetchConfig);
