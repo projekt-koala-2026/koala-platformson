@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core.Entities
 {
-    public class TaskAnswer
+    public class TaskSubmission
     {
         
         [Column("team_id")]
@@ -16,9 +16,9 @@ namespace koala.src.Modules.Core.Entities
         [Column("auto_review_state")]
         public bool? AutoReviewState { get; set; }
         [Column("review_1_state")]
-        public bool? Review1State { get; set; }
+        public bool? Review1Score { get; set; }
         [Column("review_2_state")]
-        public bool? Review2State { get; set; }
+        public bool? Review2Score { get; set; }
 
         [Column("team_answer")]
         public string TeamAnswer { get; set; } = string.Empty;

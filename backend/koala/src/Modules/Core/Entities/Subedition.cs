@@ -7,9 +7,16 @@ namespace koala.src.Modules.Core.Entities
     {
         [Column("id")]
         public Guid Id { get; set; }
-
+        [Column("edition_id")]
+        public Guid EditionId { get; set; }
         [Column("name")]
         public string Name { get; set; }
+        [Column("answer_open")]
+        public DateTime AnswerOpen { get; set; }
+        [Column("answer_close")]
+        public DateTime? AnswerClose { get; set; }
+        [Column("state")]
+        public string State { get; set; }
 
         [Column("date_start")]
         public DateTime DateStart { get; set; }
@@ -23,7 +30,7 @@ namespace koala.src.Modules.Core.Entities
         [Column("expires_at")]
         public DateTime? ExpiresAt { get; set; }
 
-        public EditionSubEdition EditionSubEdition { get; set; } = null!;
-        public ICollection<SubEditionTask> SubEditionTasks { get; set; } = new List<SubEditionTask>();
+        public Edition Edition { get; set; } = null!;
+        public ICollection<TaskItem> TaskItems { get; set; } = new List<TaskItem>();
     }
 }

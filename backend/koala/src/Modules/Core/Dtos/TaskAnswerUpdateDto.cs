@@ -1,8 +1,8 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record UpdateTaskCorrDto
+    public record UpdateTaskAnswerDto
     (
         Guid TaskItemId,
-        string CorrectAnswer
+        string Answer
     );
 }

@@ -10,16 +10,16 @@ namespace koala.src.Modules.Core
         public const int EditionNotFound = 600;
         public const int ActiveEditionNotFound = 601;
         public const int ActiveEditionAlreadyExists = 602;
-        public const int SubeditionNotFound = 603;
+        public const int SubEditionNotFound = 603;
         public const int SchoolNotFound = 604;
         public const int SchoolAlreadyExists = 606;
         public const int InvalidImportSchoolFile = 607;
         public const int TaskNotFound = 608;
-        public const int TaskCorrNotFound = 609;
+        public const int TaskAnswerNotFound = 609;
         public const int EditionAlreadyExsits = 610;
         public const int SubEditionAlreadyExsits = 611;
         public const int TaskAlreadyExsits = 612;
-        public const int TaskCorrAlreadyExsits = 613;
+        public const int TaskAnswerAlreadyExsits = 613;
     }
     public class CoreException : Exception
     {
@@ -47,7 +47,7 @@ namespace koala.src.Modules.Core
                     CoreErrorCodes.EditionNotFound => StatusCodes.Status404NotFound,
                     CoreErrorCodes.ActiveEditionNotFound => StatusCodes.Status404NotFound,
                     CoreErrorCodes.ActiveEditionAlreadyExists => StatusCodes.Status409Conflict,
-                    CoreErrorCodes.SubeditionNotFound => StatusCodes.Status404NotFound,
+                    CoreErrorCodes.SubEditionNotFound => StatusCodes.Status404NotFound,
                     CoreErrorCodes.TaskNotFound => StatusCodes.Status404NotFound,
                     _ => StatusCodes.Status400BadRequest
                 };
