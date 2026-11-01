@@ -24,23 +24,31 @@ namespace koala.src.Modules.Core.Controllers
         public async Task<IActionResult> CreateAndStartEdition([FromBody] CreateEditionDto createEditionDto)
         {
             var response = await _editionService.CreateEditionAsync(User, createEditionDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/name")]
-        public async Task<IActionResult> UpdateEdition([FromRoute] Guid edition_id, [FromBody] UpdateEditionNameDto updateEditionNameDto)
+        [HttpPut("{edition_id}")]
+        public async Task<IActionResult> UpdateEdition([FromRoute] Guid edition_id, [FromBody] EditionUpdateDto editionUpdateDto)
         {
-            var response = await _editionService.UpdateEditionAsync(User, edition_id, updateEditionNameDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            var response = await _editionService.UpdateEditionAsync(User, edition_id, editionUpdateDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/end")]
-        public async Task<IActionResult> EndEdition([FromRoute] Guid edition_id)
+        [HttpPut("{edition_id}/activate")]
+        public async Task<IActionResult> EditionActivate([FromRoute] Guid edition_id)
         {
-            var response = await _editionService.ExpireEditionAsync(User, edition_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            var response = await _editionService.EditionActivateAsync(User, edition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpPut("{edition_id}/close")]
+        public async Task<IActionResult> EditionClose([FromRoute] Guid edition_id)
+        {
+            var response = await _editionService.EditionCloseAsync(User, edition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [AllowAnonymous]

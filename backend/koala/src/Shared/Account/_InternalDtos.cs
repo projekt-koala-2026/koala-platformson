@@ -17,7 +17,7 @@ namespace koala.src.Shared.Account
     (
         Guid TeamId,
         Guid CaptainId,
-        Guid GuardianId,
-        string Type
+        Guid? GuardianId,
+        string Tier
     );
 }

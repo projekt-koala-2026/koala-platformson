@@ -29,6 +29,7 @@ namespace koala.src.Modules.Account.Entities
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<Session> Sessions { get; set; } = new List<Session>();
         public ICollection<Link> Links { get; set; } = new List<Link>();
-        public ICollection<UserTeam> UserTeams { get; set; } = new List<UserTeam>();
+        public Team? CaptainTeam { get; set; } = null;
+        public ICollection<Team> GuardianTeams { get; set; } = new List<Team>();
     }
 }

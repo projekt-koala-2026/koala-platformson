@@ -4,6 +4,7 @@ using koala.src.Modules.Core.Dtos;
 using koala.src.Modules.Core.Entities;
 using koala.src.Shared;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.CodeAnalysis.Differencing;
 using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Core.Services
@@ -32,13 +33,6 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            bool isThereAnActiveEdition = _db.Editions.Where(e => e.ExpiresAt == null).AsNoTracking().Any();
-
-            if (isThereAnActiveEdition)
-            {
-                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists, "There is already an active edition, cannot create a new one without ending last one first");
-            }
-
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Name == createEditionDto.Name);
 
             if (edition != null)
@@ -52,17 +46,21 @@ namespace koala.src.Modules.Core.Services
             {
                 Id = Guid.CreateVersion7(),
                 Name = createEditionDto.Name,
+                State = EditionStates.STATE_INACTIVE,
+                TeamRegisterOpen = createEditionDto.TeamRegisterOpen,
+                TeamRegisterClose = createEditionDto.TeamRegisterClose,
                 CreatedAt = timeNow,
-                ExpiresAt = null
+                UpdatedAt = timeNow,
+                Version = 1
             };
 
             _db.Editions.Add(edition);
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
 
-        public async Task<EditionDto> UpdateEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateEditionNameDto updateEditionNameDto)
+        public async Task<EditionDto> UpdateEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, EditionUpdateDto editionUpdateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -77,7 +75,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            bool isEditionWithNewNameAlreadyInDb = await _db.Editions.AnyAsync(e => e.Name == updateEditionNameDto.Name && e.Id != id);
+            bool isEditionWithNewNameAlreadyInDb = await _db.Editions.AnyAsync(e => e.Name == editionUpdateDto.Name && e.Id != id);
 
             if (isEditionWithNewNameAlreadyInDb == true)
             {
@@ -91,13 +89,20 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition of provided id does not exist");
             }
 
-            edition.Name = updateEditionNameDto.Name;
+            if (edition.Version != editionUpdateDto.Version)
+            {
+                throw new CoreException(CoreErrorCodes.Conflict, "Editions versions do not match make sure u have the freshest data");
+            }
+
+            edition.Name = editionUpdateDto.Name;
+            edition.TeamRegisterOpen = editionUpdateDto.TeamRegisterOpen;
+            edition.TeamRegisterClose = editionUpdateDto.TeanRegisterClose;
+            edition.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
-
-        public async Task<EditionDto> ExpireEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
+        public async Task<EditionDto> EditionActivateAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -112,34 +117,72 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id);
+            bool isAnyEditionActive = await _db.Editions.AnyAsync(e => e.State == EditionStates.STATE_ACTIVE);
+            if (isAnyEditionActive)
+            {
+                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists, "There already exists another editions that is curently active canot have two editions active at once");
+            }
+
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id && e.State == EditionStates.STATE_INACTIVE);
 
             if (edition == null)
             {
-                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition of provided id does not exist");
+                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition of provided id does not exist or canot be activated becouse it was closed or is active already");
             }
 
             DateTime timeNow = DateTime.UtcNow;
 
-            edition.ExpiresAt = timeNow;
+            edition.State = EditionStates.STATE_ACTIVE;
+            edition.UpdatedAt = timeNow;
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+        }
+        public async Task<EditionDto> EditionCloseAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id && e.State == EditionStates.STATE_ACTIVE);
+
+            if (edition == null)
+            {
+                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition of provided id does not exist or canot be closed becouse it is not active");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+            edition.State = EditionStates.STATE_CLOSED;
+            edition.UpdatedAt = timeNow;
+            await _db.SaveChangesAsync();
+
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
 
         public async Task<(List<EditionDto>, ApiPagination)> GetEditionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, EditionQueryDto editionQueryDto)
         {
             var query = _db.Editions.AsNoTracking().AsQueryable();
 
-            if (editionQueryDto.ShowActive != null)
+            if (!string.IsNullOrWhiteSpace(editionQueryDto.States))
             {
-                if (editionQueryDto.ShowActive.Value)
+                var targetStates = editionQueryDto.States
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(s => s.ToUpperInvariant())
+                    .ToList();
+
+                if (targetStates.Count > 0)
                 {
-                    query = query.Where(e => e.ExpiresAt == null);
-                }
-                else
-                {
-                    query = query.Where(e => e.ExpiresAt != null);
+                    query = query.Where(e => targetStates.Contains(e.State));
                 }
             }
 
@@ -151,8 +194,12 @@ namespace koala.src.Modules.Core.Services
                 (
                     e.Id,
                     e.Name,
+                    e.State,
+                    e.TeamRegisterOpen,
+                    e.TeamRegisterClose,
                     e.CreatedAt,
-                    e.ExpiresAt
+                    e.UpdatedAt,
+                    e.Version
                 ))
                 .ToList();
 
@@ -161,14 +208,14 @@ namespace koala.src.Modules.Core.Services
 
         public async Task<EditionDto> GetActiveEditionAsync(ClaimsPrincipal? claimsPrincipal)
         {
-            var edition = await _db.Editions.AsNoTracking().FirstOrDefaultAsync(e => e.ExpiresAt == null);
+            var edition = await _db.Editions.AsNoTracking().FirstOrDefaultAsync(e => e.State == EditionStates.STATE_ACTIVE);
 
             if (edition == null)
             {
                 throw new CoreException(CoreErrorCodes.EditionNotFound, "There is no current active edition at the moment");
             }
 
-            return new EditionDto(edition.Id, edition.Name, edition.CreatedAt, edition.ExpiresAt);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
 
         public async Task<SubEditionDto> CreateSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, CreateSubeditionDto createSubeditionDto)
@@ -189,9 +236,9 @@ namespace koala.src.Modules.Core.Services
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id);
 
-            if (edition.ExpiresAt != null)
+            if (edition.State != EditionStates.STATE_CLOSED)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be created for the current active edition");
+                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be created for the active and inactive edition");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Name == createSubeditionDto.Name && e.EditionSubEdition.EditionId == id);
@@ -248,9 +295,9 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition does not exist");
             }
 
-            if (edition.ExpiresAt != null)
+            if (edition.State != EditionStates.STATE_CLOSED)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be updated for the current active edition");
+                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be updated for the active and inactive edition");
             }
 
             bool isSubEditionWithNewNameAlreadyInDb = await _db.SubEditions.AnyAsync(e => e.Name == updateSubEditionDto.Name && e.Id != subedition_id && e.EditionSubEdition.EditionId == edition_id);

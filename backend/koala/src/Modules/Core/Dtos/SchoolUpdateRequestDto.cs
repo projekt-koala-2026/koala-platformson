@@ -1,6 +1,6 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record UpdateSchoolRequestDto
+    public record SchoolUpdateRequestDto
     (
         string NameFull,
         string NameShort,
@@ -10,6 +10,7 @@ namespace koala.src.Modules.Core.Dtos
         string Building,
         string Rspo,
         string Type,
-        string Email
+        string Email,
+        int Version
     );
 }

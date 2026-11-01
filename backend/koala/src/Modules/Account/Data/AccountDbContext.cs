@@ -121,8 +121,6 @@ namespace koala.src.Modules.Account.Data
         public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
         public DbSet<TeamJoinCode> TeamJoinCodes => Set<TeamJoinCode>();
         public DbSet<Rodo> Rodos => Set<Rodo>();
-        public DbSet<Member> Members => Set<Member>();
-        public DbSet<UserTeam> UserTeams => Set<UserTeam>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -136,8 +134,6 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<Team>().ToTable("teams");
             modelBuilder.Entity<TeamMember>().ToTable("team_members");
             modelBuilder.Entity<Rodo>().ToTable("rodos");
-            modelBuilder.Entity<Member>().ToTable("members");
-            modelBuilder.Entity<UserTeam>().ToTable("user_teams");
 
             // ROLE CONFIG
             modelBuilder.Entity<Role>()
@@ -150,6 +146,24 @@ namespace koala.src.Modules.Account.Data
                     new Role { Id = Guid.Parse(static_id_guid_role_team_player), Name = "TEAM_PLAYER" }
                 );
 
+            // USER CONFIG
+            modelBuilder.Entity<User>()
+                .HasKey(u => u.Id);
+
+            // TEAMS CONFIG
+            modelBuilder.Entity<Team>()
+                .HasOne(t => t.Captain)
+                .WithOne(u => u.CaptainTeam)
+                .HasForeignKey<Team>(t => t.CaptainId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Team>()
+                .HasIndex(t => t.CaptainId)
+                .IsUnique();
+            modelBuilder.Entity<Team>()
+                .HasOne(t => t.Guardian)
+                .WithMany(u => u.GuardianTeams)
+                .HasForeignKey(t => t.GuardianId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // USER_ROLES CONFIG
             modelBuilder.Entity<UserRole>()
@@ -173,8 +187,10 @@ namespace koala.src.Modules.Account.Data
                 .HasForeignKey(tm => tm.TeamId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<TeamMember>()
-                .HasOne(tm => tm.Member)
-                .WithOne(m => m.TeamMember);
+                .HasOne(tm => tm.Rodo)
+                .WithOne(r => r.TeamMember)
+                .HasForeignKey<TeamMember>(tm => tm.RodoId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // TEAM_JOIN_CODE CONFIG
             modelBuilder.Entity<TeamJoinCode>()
@@ -208,31 +224,8 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<Rodo>()
                 .HasKey(r => r.Id);
             modelBuilder.Entity<Rodo>()
-                .HasOne(r => r.Team)
-                .WithMany(t => t.Rodos)
-                .HasForeignKey(r => r.TeamId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Rodo>()
-                .HasOne(r => r.Member)
-                .WithOne(u => u.Rodo)
-                .HasForeignKey<Rodo>(r => r.MemberId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // MEMBERS CONFIG
-            modelBuilder.Entity<Member>()
-                .HasKey(m => m.Id);
-
-            // USER_TEAMS CONFIG
-            modelBuilder.Entity<UserTeam>()
-                .HasKey(ut => new { ut.UserId, ut.TeamId, ut.Position });
-            modelBuilder.Entity<UserTeam>()
-                .HasOne(ut => ut.User)
-                .WithMany(u => u.UserTeams)
-                .HasForeignKey(ut => ut.UserId);
-            modelBuilder.Entity<UserTeam>()
-                .HasOne(ut => ut.Team)
-                .WithMany(t => t.UserTeams)
-                .HasForeignKey(ut => ut.TeamId);
+                .HasOne(r => r.TeamMember)
+                .WithOne(tm => tm.Rodo);
         }
     };
 }

@@ -3,7 +3,9 @@ using koala.src.Modules.Account.Data;
 using koala.src.Modules.Account.Dtos;
 using koala.src.Modules.Account.Entities;
 using koala.src.Modules.Account.Services;
+using koala.src.Modules.Core;
 using koala.src.Modules.Core.Dtos;
+using koala.src.Modules.Core.Entities;
 using koala.src.Shared;
 using koala.src.Shared.Core;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +26,20 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             var coreMock = new Mock<ICoreModule>();
             coreMock.Setup(c => c.Internal_GetTheActiveEditionAsync())
-                .ReturnsAsync(new _EditionDto(TestDataSeeder.MOCK_ID_EDITION_1, "Active Edition", DateTime.UtcNow, null));
+                .ReturnsAsync
+                (
+                    new _EditionDto
+                    (
+                        TestDataSeeder.MOCK_ID_EDITION_1,
+                        "Active Edition",
+                        EditionStates.STATE_ACTIVE,
+                        TestDataSeeder.TIME_CREATED.AddDays(-1),
+                        TestDataSeeder.TIME_CREATED.AddDays(1),
+                        TestDataSeeder.TIME_CREATED,
+                        TestDataSeeder.TIME_CREATED,
+                        TestDataSeeder.VERSION
+                    )
+                );
 
             var service = new TeamService(_db, coreMock.Object);
             return (service, _db, coreMock);
@@ -36,8 +51,27 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             //NOTE: USER8 IS AN TEAM_ADMIN AND CANOT CREATE A TEAM
             var (service, db, coreMock) = await this.SetupTestEnvironment();
 
-            coreMock.Setup(c => c.Internal_ExistSchoolAsync(TestDataSeeder.MOCK_ID_SCHOOL_3))
-                .ReturnsAsync(true);
+            coreMock.Setup(c => c.Internal_GetSchoolAsync(TestDataSeeder.MOCK_ID_SCHOOL_3))
+                .ReturnsAsync
+                (
+                    new _SchoolDto
+                    (
+                        TestDataSeeder.MOCK_ID_SCHOOL_3,
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        SchoolTypes.TYPE_1_TIER_1,
+                        SchoolTiers.TIER_1,
+                        "TEST",
+                        TestDataSeeder.TIME_CREATED,
+                        TestDataSeeder.TIME_CREATED,
+                        TestDataSeeder.VERSION
+                    )
+                );
 
             var claims = new List<Claim>
             {
@@ -130,7 +164,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var requestDto = new TeamMemberUpsertRequestDto
             (
                 "Jan",
-                "Kowalski"
+                "Kowalski",
+                TestDataSeeder.VERSION
             );
 
             var exception = await Assert.ThrowsAsync<AccountException>(() => service.AddTeamMemberAsync(claimsPrincipal, TestDataSeeder.ID_TEAM_1, requestDto));
@@ -159,8 +194,27 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         {
             //NOTE: UNAUTHENTICATED USER CANOT CREATE A TEAM
             var (service, _, coreMock) = await this.SetupTestEnvironment();
-            coreMock.Setup(c => c.Internal_ExistSchoolAsync(TestDataSeeder.MOCK_ID_SCHOOL_1))
-                .ReturnsAsync(true);
+            coreMock.Setup(c => c.Internal_GetSchoolAsync(TestDataSeeder.MOCK_ID_SCHOOL_1))
+                .ReturnsAsync
+                (
+                    new _SchoolDto
+                    (
+                        TestDataSeeder.MOCK_ID_SCHOOL_1,
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        "TEST",
+                        SchoolTypes.TYPE_1_TIER_1,
+                        SchoolTiers.TIER_1,
+                        "TEST",
+                        TestDataSeeder.TIME_CREATED,
+                        TestDataSeeder.TIME_CREATED,
+                        TestDataSeeder.VERSION
+                    )
+                );
 
             ClaimsPrincipal? unauthenticatedPrincipal = null;
 

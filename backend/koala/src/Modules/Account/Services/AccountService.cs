@@ -95,8 +95,14 @@ namespace koala.src.Modules.Account.Services
         }
         public async Task<_TeamResponseDto> Internal_GetTeamInfo(Guid team_id)
         {
-            var team = _db.Teams.AsNoTracking().Include(t => t.UserTeams).FirstOrDefault(t => t.Id == team_id);
-            return new _TeamResponseDto(team.Id, team.UserTeams.FirstOrDefault(ut => ut.Position == "CAPTAIN").UserId, team.UserTeams.FirstOrDefault(ut => ut.Position == "ADMIN").UserId, "");
+            var team = _db.Teams.AsNoTracking().FirstOrDefault(t => t.Id == team_id);
+            return new _TeamResponseDto
+                (
+                    team.Id,
+                    team.CaptainId,
+                    team.GuardianId,
+                    team.Tier
+                );
         }
     }
 }
