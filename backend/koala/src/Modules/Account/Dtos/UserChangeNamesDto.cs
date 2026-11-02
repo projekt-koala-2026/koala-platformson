@@ -5,7 +5,8 @@ namespace koala.src.Modules.Account.Dtos
     public record UserChangeNamesDto
     (
         string NameFirst,
-        string NameLast
+        string NameLast,
+        int Version
     );
 
     public class UserChangeNamesDtoValidator : AbstractValidator<UserChangeNamesDto>
@@ -21,6 +22,9 @@ namespace koala.src.Modules.Account.Dtos
                 .NotEmpty().WithMessage("NameLast field cannot be empty!")
                 .MaximumLength(50).WithMessage("NameLast field cannot be larger than 50 characters!")
                 .Matches(@"^[\p{L}\s-]+$").WithMessage("NameLast field can only contain letters, spaces, or hyphens!");
+
+            RuleFor(x => x.Version)
+                .GreaterThan(0).WithMessage("Version field must be greater than 0");
         }
     }
 }

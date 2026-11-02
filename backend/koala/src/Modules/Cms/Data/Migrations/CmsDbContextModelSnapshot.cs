@@ -40,7 +40,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<bool>("IsVisiable")
+                    b.Property<bool>("IsVisible")
                         .HasColumnType("boolean")
                         .HasColumnName("is_visiable");
 
@@ -91,7 +91,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("edition_id");
 
-                    b.Property<bool>("IsVisable")
+                    b.Property<bool>("IsVisible")
                         .HasColumnType("boolean")
                         .HasColumnName("is_visable");
 
@@ -168,7 +168,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<bool>("IsVisiable")
+                    b.Property<bool>("IsVisible")
                         .HasColumnType("boolean")
                         .HasColumnName("is_visiable");
 

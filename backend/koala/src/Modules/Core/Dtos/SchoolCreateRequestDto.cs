@@ -1,6 +1,6 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record CreateSchoolRequestDto
+    public record SchoolCreateRequestDto
     (
         string NameFull,
         string NameShort,

@@ -12,13 +12,10 @@ namespace koala.src.Modules.Core.Data
         }
 
         public DbSet<Edition> Editions => Set<Edition>();
-        public DbSet<EditionSubEdition> EditionSubEditions => Set<EditionSubEdition>();
         public DbSet<SubEdition> SubEditions => Set<SubEdition>();
-        public DbSet<SubEditionTask> SubEditionTasks => Set<SubEditionTask>();
-        public DbSet<TaskItem> Tasks => Set<TaskItem>();
-        public DbSet<TaskItemTaskCorr> TaskItemTaskCorrs => Set<TaskItemTaskCorr>();
-        public DbSet<TaskCorr> TaskCorrs => Set<TaskCorr>();
+        public DbSet<TaskItem> TaskItems => Set<TaskItem>();
         public DbSet<TaskAnswer> TaskAnswers => Set<TaskAnswer>();
+        public DbSet<TaskSubmission> TaskSubmissions => Set<TaskSubmission>();
         public DbSet<School> Schools => Set<School>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,13 +23,10 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.HasDefaultSchema("core");
 
             modelBuilder.Entity<Edition>().ToTable("editions");
-            modelBuilder.Entity<EditionSubEdition>().ToTable("edition_subeditions");
             modelBuilder.Entity<SubEdition>().ToTable("subeditions");
-            modelBuilder.Entity<SubEditionTask>().ToTable("subedition_tasks");
             modelBuilder.Entity<TaskItem>().ToTable("tasks");
-            modelBuilder.Entity<TaskItemTaskCorr>().ToTable("task_item_task_corrs");
-            modelBuilder.Entity<TaskCorr>().ToTable("task_corrs");
             modelBuilder.Entity<TaskAnswer>().ToTable("task_answers");
+            modelBuilder.Entity<TaskSubmission>().ToTable("task_submissions");
             modelBuilder.Entity<School>().ToTable("schools");
 
             // EDITIONS CONFIG
@@ -44,17 +38,10 @@ namespace koala.src.Modules.Core.Data
                 .HasKey(s => s.Id);
 
             // EDITION-SUBEDITION CONFIG
-            modelBuilder.Entity<EditionSubEdition>()
-                .HasKey(es => new { es.EditionId, es.SubEditionId });
-            modelBuilder.Entity<EditionSubEdition>()
-                .HasOne(es => es.Edition)
-                .WithMany(e => e.EditionSubEditions)
-                .HasForeignKey(es => es.EditionId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<EditionSubEdition>()
-                .HasOne(es => es.SubEdition)
-                .WithOne(s => s.EditionSubEdition)
-                .HasForeignKey<EditionSubEdition>(es => es.SubEditionId)
+            modelBuilder.Entity<SubEdition>()
+                .HasOne(s => s.Edition)
+                .WithMany(e => e.SubEditions)
+                .HasForeignKey(s => s.EditionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
 
@@ -63,53 +50,32 @@ namespace koala.src.Modules.Core.Data
                 .HasKey(t => t.Id);
 
             // SUBEDITION-TASK CONFIG
-            modelBuilder.Entity<SubEditionTask>()
-                .HasKey(st => new { st.SubEditionId, st.TaskId });
-            modelBuilder.Entity<SubEditionTask>()
-                .HasOne(st => st.SubEdition)
-                .WithMany(s => s.SubEditionTasks)
-                .HasForeignKey(st => st.SubEditionId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<SubEditionTask>()
-                .HasOne(st => st.TaskItem)
-                .WithOne(t => t.SubEditionTask)
-                .HasForeignKey<SubEditionTask>(st => st.TaskId)
+            modelBuilder.Entity<TaskItem>()
+                .HasOne(t => t.SubEdition)
+                .WithMany(s => s.TaskItems)
+                .HasForeignKey(t => t.SubEditionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            //TASKCORRS CONFIG
-            modelBuilder.Entity<TaskCorr>()
-                .HasKey(tc => tc.Id);
-
-            // TASKITEM-TASKCORR CONFIG
-            modelBuilder.Entity<TaskItemTaskCorr>()
-                .HasKey(ttc => new { ttc.TaskItemId, ttc.TaskCorrId });
-            modelBuilder.Entity<TaskItemTaskCorr>()
-                .HasOne(ttc => ttc.TaskItem)
-                .WithMany(t => t.TaskItemTaskCorrs)
-                .HasForeignKey(ttc => ttc.TaskItemId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<TaskItemTaskCorr>()
-                .HasOne(ttc => ttc.TaskCorr)
-                .WithOne(tc => tc.TaskItemTaskCorr)
-                .HasForeignKey<TaskItemTaskCorr>(ttc => ttc.TaskCorrId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            //TASKANS CONFIG
+            //TASKANSWERS CONFIG
             modelBuilder.Entity<TaskAnswer>()
-                .HasKey(ta => new { ta.TeamId, ta.TaskId });
+                .HasKey(ta => ta.Id);
 
+            // TASKITEM-TASKANSWER CONFIG
             modelBuilder.Entity<TaskAnswer>()
-                .HasOne(ta => ta.TaskItem)
-                .WithMany(t => t.TaskAnswers)
-                .HasForeignKey(ta => ta.TaskId)
+                .HasOne(t => t.TaskItem)
+                .WithMany(ta => ta.TaskAnswers)
+                .HasForeignKey(t => t.TaskItemId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<TaskAnswer>()
-                .Property(ta => ta.TeamId)
-                    .IsRequired();
-            modelBuilder.Entity<TaskAnswer>()
-                .Property(ta => ta.TeamAnswer)
-                    .IsRequired();
+            //TASKSUBMISSIONS CONFIG
+            modelBuilder.Entity<TaskSubmission>()
+                .HasKey(ts => new { ts.TeamId, ts.TaskId });
+
+            modelBuilder.Entity<TaskSubmission>()
+                .HasOne(ts => ts.TaskItem)
+                .WithMany(t => t.TaskSubmissions)
+                .HasForeignKey(ts => ts.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // SCHOOLS CONFIG
             modelBuilder.Entity<School>()

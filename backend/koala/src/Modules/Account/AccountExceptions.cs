@@ -13,13 +13,14 @@ namespace koala.src.Modules.Account
         public const int SessionNotFound = 203;
         public const int TeamMemberNotFound = 204;
         public const int TeamJoinCodeNotFound = 205;
-         public const int RodoNotFound = 206;
+        public const int RodoNotFound = 206;
         public const int IncorrectPassword = 210;
         public const int IncorrectRoles = 211;
         public const int UserIsAPartOfTeamAlready = 220;
         public const int TeamMemberAlreadyExists = 221;
         public const int TeamMemberCountMax = 222;
         public const int UserAlreadyExists = 223;
+        public const int TeamChangesNoLongerPermited = 224;
         public const int _EXTERNAL_ActiveEditionNotFound = 350;
         public const int _EXTERNAL_SchoolNotFound = 351;
     }
@@ -34,7 +35,7 @@ namespace koala.src.Modules.Account
 
     public class AccountExceptionHandler : IExceptionHandler
     {
-        public AccountExceptionHandler() {}
+        public AccountExceptionHandler() { }
 
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {

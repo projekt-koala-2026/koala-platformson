@@ -14,6 +14,8 @@ namespace koala.src.Modules.Account.Services
         public Task<_SessionResponseDto> CreateSessionAsync(LoginRequestDto requestDto);
         public Task DeleteSessionAsync(ClaimsPrincipal? claimsPrincipal, Guid session_id);
         public Task<(List<SessionDto>, ApiPagination)> GetSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
+        public Task DeactivateSessionAsync(ClaimsPrincipal? claimsPrincipal, Guid session_id);
+        public Task<(List<SessionDto>, ApiPagination)> GetActiveSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto);
         public Task DeleteSessionsAsync(ClaimsPrincipal? claimsPrincipal);
     }
     public class SessionService : ISessionService
@@ -52,8 +54,9 @@ namespace koala.src.Modules.Account.Services
                 Token = Guid.NewGuid(),
                 UserId = user.Id,
                 CreatedAt = timeNow,
+                UpdatedAt = timeNow,
                 ExpiresAt = timeNow.AddHours(12.0f),
-                Active = true
+                State = SessionStates.STATE_ACTIVE
             };
 
             await _db.Sessions.AddAsync(session);
@@ -84,7 +87,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             var session = await _db.Sessions
-                .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == session_id && s.Active == true);
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == session_id);
 
             if (session == null)
             {
@@ -93,6 +96,33 @@ namespace koala.src.Modules.Account.Services
 
             await _cache.RemoveKeyAsync($"koala:account:Session:{session.Token}");
             _db.Sessions.Remove(session);
+            await _db.SaveChangesAsync();
+        }
+        public async Task DeactivateSessionAsync(ClaimsPrincipal? claimsPrincipal, Guid session_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            if (!isAuthenticated)
+            {
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
+            }
+
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+            if (userId == Guid.Empty)
+            {
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
+            }
+
+            var session = await _db.Sessions
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == session_id && s.State == SessionStates.STATE_ACTIVE);
+
+            if (session == null)
+            {
+                throw new AccountException(AccountErrorCodes.SessionNotFound, "Invalid session was already deactivated or does not exist");
+            }
+
+            await _cache.RemoveKeyAsync($"koala:account:Session:{session.Token}");
+            session.State = SessionStates.STATE_INACTIVE;
+            session.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
         public async Task<(List<SessionDto>, ApiPagination)> GetSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
@@ -109,9 +139,32 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
-            var queryResults = await _db.Sessions.Where(s => s.UserId == userId && s.Active == true).AsNoTracking().AsQueryable().ToListAsync();
+            var queryResults = await _db.Sessions.Where(s => s.UserId == userId).AsNoTracking().AsQueryable().ToListAsync();
             var sessions = queryResults
-                .Select(s => new SessionDto(s.Id, s.UserId, s.CreatedAt, s.ExpiresAt))
+                .Select(s => new SessionDto(s.Id, s.UserId, s.State, s.CreatedAt, s.UpdatedAt, s.ExpiresAt))
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .ToList();
+
+            return (sessions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
+        }
+        public async Task<(List<SessionDto>, ApiPagination)> GetActiveSessionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            if (!isAuthenticated)
+            {
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
+            }
+
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+            if (userId == Guid.Empty)
+            {
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
+            }
+
+            var queryResults = await _db.Sessions.Where(s => s.UserId == userId && s.State == SessionStates.STATE_ACTIVE).AsNoTracking().AsQueryable().ToListAsync();
+            var sessions = queryResults
+                .Select(s => new SessionDto(s.Id, s.UserId, s.State, s.CreatedAt, s.UpdatedAt, s.ExpiresAt))
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
                 .ToList();
@@ -133,7 +186,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             var sessions = await _db.Sessions
-                .Where(s => s.UserId == userId && s.Active == true)
+                .Where(s => s.UserId == userId)
                 .ToListAsync();
 
             foreach (var session in sessions)

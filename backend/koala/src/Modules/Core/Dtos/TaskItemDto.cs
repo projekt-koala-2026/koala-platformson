@@ -5,7 +5,10 @@ namespace koala.src.Modules.Core.Dtos
         Guid Id,
         Guid SubEditionId,
         string Name,
+        string Tier,
         string ContentJson,
-        DateTime? UpdatedAt
+        DateTime CreatedAt,
+        DateTime UpdatedAt,
+        int Version
     );
 }

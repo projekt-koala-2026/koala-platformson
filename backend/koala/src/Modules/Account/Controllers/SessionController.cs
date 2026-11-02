@@ -60,22 +60,36 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
-        [HttpGet]
+        [HttpGet("/active")]
         public async Task<IActionResult> GetActiveUserSessions([FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var response, var pagination) = await _sessionService.GetActiveSessionsAsync(User, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<SessionDto>>(true, DateTime.UtcNow, null, pagination, response));
+        }
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetUserSessions([FromQuery] PageQueryDto pageQueryDto)
         {
             (var response, var pagination) = await _sessionService.GetSessionsAsync(User, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<SessionDto>>(true, DateTime.UtcNow, null, pagination, response));
         }
         [Authorize]
-        [HttpDelete("{session_id}")]
+        [HttpPut("{session_id}/deactivate")]
         public async Task<IActionResult> DeActivateUserSession([FromRoute] Guid session_id)
+        {
+            await _sessionService.DeactivateSessionAsync(User, session_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+        [Authorize]
+        [HttpDelete("{session_id}")]
+        public async Task<IActionResult> DeleteUserSession([FromRoute] Guid session_id)
         {
             await _sessionService.DeleteSessionAsync(User, session_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
         [HttpDelete("all")]
-        public async Task<IActionResult> DeActivateUserSessions()
+        public async Task<IActionResult> DeleteUserSessions()
         {
             await _sessionService.DeleteSessionsAsync(User);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));

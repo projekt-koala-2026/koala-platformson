@@ -1,7 +1,9 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record CreateEditionDto
+    public record EditionCreateDto
     (
-        string Name
+        string Name,
+        DateTime TeamRegisterOpen,
+        DateTime TeamRegisterClose
     );
 }

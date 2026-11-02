@@ -4,7 +4,11 @@ namespace koala.src.Modules.Core.Dtos
     (
         Guid Id,
         string Name,
+        string State,
+        DateTime TeamRegisterOpen,
+        DateTime TeamRegisterClose,
         DateTime CreatedAt,
-        DateTime? ExpiredAt
+        DateTime UpdatedAt,
+        int Version
     );
 }

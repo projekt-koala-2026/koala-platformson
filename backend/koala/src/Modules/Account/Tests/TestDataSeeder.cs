@@ -38,14 +38,9 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         public static Guid ID_LINK_2 = Guid.CreateVersion7();
         public static Guid ID_LINK_3 = Guid.CreateVersion7();
         public static Guid ID_LINK_4 = Guid.CreateVersion7();
-        public static Guid ID_MEMBER_1 = Guid.CreateVersion7();
-        public static Guid ID_MEMBER_2 = Guid.CreateVersion7();
-        public static Guid ID_MEMBER_3 = Guid.CreateVersion7();
         public static Guid ID_TEAM_MEMBER_1 = Guid.CreateVersion7();
         public static Guid ID_TEAM_MEMBER_2 = Guid.CreateVersion7();
         public static Guid ID_TEAM_MEMBER_3 = Guid.CreateVersion7();
-        public static Guid ID_TEAM_MEMBER_4 = Guid.CreateVersion7();
-        public static Guid ID_TEAM_MEMBER_5 = Guid.CreateVersion7();
         public static Guid ID_TEAM_JOIN_CODE_1 = Guid.CreateVersion7();
         public static Guid ID_SESSION_1 = Guid.CreateVersion7();
         public static Guid ID_SESSION_2 = Guid.CreateVersion7();
@@ -145,14 +140,13 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         public static string NAME_LAST_MEMBER_1 = "Kucharek";
         public static string NAME_LAST_MEMBER_2 = "Lewandowska";
         public static string NAME_LAST_MEMBER_3 = "Zielińska";
-        public static string TYPE_LINK_1 = "REGISTER";
-        public static string TYPE_LINK_2 = "RESETPASSWORD";
         public static string POSITION_USER_TEAM_1 = "ADMIN";
         public static string POSITION_USER_TEAM_2 = "CAPTAIN";
         public static DateTime TIME_CREATED = DateTime.UtcNow;
         public static DateTime TIME_EXPIRES_SESSION = TIME_CREATED.AddHours(12);
         public static DateTime TIME_EXPIRES_LINK = TIME_CREATED.AddDays(1);
         public static DateTime TIME_EXPIRES_TEAM_JOIN_CODE = TIME_CREATED.AddDays(1);
+        public static int VERSION = 1;
         public static async Task<AccountDbContext> SeedDb(AccountDbContext db)
         {
             List<Role> roles = new List<Role>
@@ -205,32 +199,101 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             List<Team> teams = new List<Team>
             {
-                new Team { Id = ID_TEAM_1, Name = NAME_TEAM_1, EditionId = MOCK_ID_EDITION_1, SchoolId = MOCK_ID_SCHOOL_1, NameAccepted = true, CreatedAt = TIME_CREATED},
-                new Team { Id = ID_TEAM_2, Name = NAME_TEAM_2, EditionId = MOCK_ID_EDITION_1, SchoolId = MOCK_ID_SCHOOL_2, NameAccepted = false, CreatedAt = TIME_CREATED},
-            };
-            List<UserTeam> userTeams = new List<UserTeam>
-            {
-                new UserTeam { UserId = ID_USER_8, TeamId = ID_TEAM_1, Position = POSITION_USER_TEAM_1},
-                new UserTeam { UserId = ID_USER_10, TeamId = ID_TEAM_1, Position = POSITION_USER_TEAM_2},
-                new UserTeam { UserId = ID_USER_11, TeamId = ID_TEAM_2, Position = POSITION_USER_TEAM_2},
-            };
-            List<Member> members = new List<Member>
-            {
-                new Member { Id = ID_MEMBER_1, NameFirst = NAME_FIRST_MEMBER_1, NameLast = NAME_LAST_MEMBER_1},
-                new Member { Id = ID_MEMBER_2, NameFirst = NAME_FIRST_MEMBER_2, NameLast = NAME_LAST_MEMBER_2},
-                new Member { Id = ID_MEMBER_3, NameFirst = NAME_FIRST_MEMBER_3, NameLast = NAME_LAST_MEMBER_3},
+                new Team
+                {
+                    Id = ID_TEAM_1,
+                    Name = NAME_TEAM_1,
+                    Tier = TeamTiers.TIER_1,
+                    EditionId = MOCK_ID_EDITION_1,
+                    SchoolId = MOCK_ID_SCHOOL_1,
+                    CaptainId = ID_USER_10,
+                    GuardianId = ID_USER_8,
+                    NameAccepted = true,
+                    CreatedAt = TIME_CREATED,
+                    UpdatedAt = TIME_CREATED,
+                    Version = VERSION
+                    },
+                new Team
+                {
+                    Id = ID_TEAM_2,
+                    Name = NAME_TEAM_2,
+                    Tier = TeamTiers.TIER_2,
+                    EditionId = MOCK_ID_EDITION_1,
+                    SchoolId = MOCK_ID_SCHOOL_2,
+                    CaptainId = ID_USER_11,
+                    GuardianId = null,
+                    NameAccepted = false,
+                    CreatedAt = TIME_CREATED,
+                    UpdatedAt = TIME_CREATED,
+                    Version = VERSION
+                    },
             };
             List<TeamMember> teamMembers = new List<TeamMember>
             {
-                new TeamMember { Id = ID_TEAM_MEMBER_1, MemberId = null, TeamId = ID_TEAM_1},
-                new TeamMember { Id = ID_TEAM_MEMBER_2, MemberId = ID_MEMBER_1, TeamId = ID_TEAM_1},
-                new TeamMember { Id = ID_TEAM_MEMBER_3, MemberId = ID_MEMBER_2, TeamId = ID_TEAM_1},
-                new TeamMember { Id = ID_TEAM_MEMBER_4, MemberId = null, TeamId = ID_TEAM_2},
-                new TeamMember { Id = ID_TEAM_MEMBER_5, MemberId = ID_MEMBER_3, TeamId = ID_TEAM_2},
+                new TeamMember
+                {
+                    Id = ID_USER_10,
+                    TeamId = ID_TEAM_1,
+                    RodoId = null,
+                    RodoState = TeamMemberRodoState.RODOSTATE_NONE,
+                    NameFirst = null,
+                    NameLast = null,
+                    CreatedAt = TIME_CREATED,
+                    UpdatedAt = TIME_CREATED,
+                    Version = VERSION
+                },
+                new TeamMember
+                {
+                    Id = ID_TEAM_MEMBER_1,
+                    TeamId = ID_TEAM_1,
+                    RodoId = null,
+                    RodoState = TeamMemberRodoState.RODOSTATE_NONE,
+                    NameFirst = NAME_FIRST_MEMBER_1,
+                    NameLast = NAME_LAST_MEMBER_1,
+                    CreatedAt = TIME_CREATED,
+                    UpdatedAt = TIME_CREATED,
+                    Version = VERSION
+                },
+                new TeamMember
+                {
+                    Id = ID_TEAM_MEMBER_2,
+                    TeamId = ID_TEAM_1,
+                    RodoId = null,
+                    RodoState = TeamMemberRodoState.RODOSTATE_NONE,
+                    NameFirst = NAME_FIRST_MEMBER_2,
+                    NameLast = NAME_LAST_MEMBER_2,
+                    CreatedAt = TIME_CREATED,
+                    UpdatedAt = TIME_CREATED,
+                    Version = VERSION
+                },
+                new TeamMember
+                {
+                    Id = ID_USER_11,
+                    TeamId = ID_TEAM_2,
+                    RodoId = null,
+                    RodoState = TeamMemberRodoState.RODOSTATE_NONE,
+                    NameFirst = null,
+                    NameLast = null,
+                    CreatedAt = TIME_CREATED,
+                    UpdatedAt = TIME_CREATED,
+                    Version = VERSION
+                },
+                new TeamMember
+                {
+                    Id = ID_TEAM_MEMBER_3,
+                    TeamId = ID_TEAM_2,
+                    RodoId = null,
+                    RodoState = TeamMemberRodoState.RODOSTATE_NONE,
+                    NameFirst = NAME_FIRST_MEMBER_3,
+                    NameLast = NAME_LAST_MEMBER_3,
+                    CreatedAt = TIME_CREATED,
+                    UpdatedAt = TIME_CREATED,
+                    Version = VERSION
+                },
             };
             List<TeamJoinCode> teamJoinCodes = new List<TeamJoinCode>
             {
-                new TeamJoinCode { TeamId = ID_TEAM_1, JoinCode = CODE_TEAM_JOIN_CODE_1, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_TEAM_JOIN_CODE},
+                new TeamJoinCode { TeamId = ID_TEAM_1, JoinCode = CODE_TEAM_JOIN_CODE_1, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_TEAM_JOIN_CODE},
             };
             List<Rodo> rodos = new List<Rodo>
             {
@@ -238,21 +301,21 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             List<Link> links = new List<Link>
             {
-                new Link { Id = ID_LINK_1, UserId = ID_USER_13, Token = TOKEN_LINK_1, Active = true, Type = TYPE_LINK_1, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_2, UserId = ID_USER_14, Token = TOKEN_LINK_2, Active = true, Type = TYPE_LINK_1, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_3, UserId = ID_USER_15, Token = TOKEN_LINK_3, Active = true, Type = TYPE_LINK_1, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_4, UserId = ID_USER_12, Token = TOKEN_LINK_4, Active = true, Type = TYPE_LINK_2, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_1, UserId = ID_USER_13, Token = TOKEN_LINK_1, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_2, UserId = ID_USER_14, Token = TOKEN_LINK_2, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_3, UserId = ID_USER_15, Token = TOKEN_LINK_3, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_4, UserId = ID_USER_12, Token = TOKEN_LINK_4, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_PASSWORD_RESET, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
             };
             List<Session> sessions = new List<Session>
             {
-                new Session { Id = ID_SESSION_1, UserId = ID_USER_1, Token = TOKEN_SESSION_1, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_2, UserId = ID_USER_1, Token = TOKEN_SESSION_2, Active = false, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_3, UserId = ID_USER_1, Token = TOKEN_SESSION_3, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_4, UserId = ID_USER_3, Token = TOKEN_SESSION_4, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_5, UserId = ID_USER_8, Token = TOKEN_SESSION_5, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_6, UserId = ID_USER_10, Token = TOKEN_SESSION_6, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_7, UserId = ID_USER_11, Token = TOKEN_SESSION_7, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_8, UserId = ID_USER_12, Token = TOKEN_SESSION_8, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_1, UserId = ID_USER_1, Token = TOKEN_SESSION_1, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_2, UserId = ID_USER_1, Token = TOKEN_SESSION_2, State = SessionStates.STATE_INACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_3, UserId = ID_USER_1, Token = TOKEN_SESSION_3, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_4, UserId = ID_USER_3, Token = TOKEN_SESSION_4, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_5, UserId = ID_USER_8, Token = TOKEN_SESSION_5, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_6, UserId = ID_USER_10, Token = TOKEN_SESSION_6, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_7, UserId = ID_USER_11, Token = TOKEN_SESSION_7, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_8, UserId = ID_USER_12, Token = TOKEN_SESSION_8, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
             };
 
             await db.Users.AddRangeAsync(users);
@@ -260,10 +323,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             await db.Teams.AddRangeAsync(teams);
             await db.Links.AddRangeAsync(links);
             await db.Sessions.AddRangeAsync(sessions);
-            await db.Members.AddRangeAsync(members);
             await db.TeamJoinCodes.AddRangeAsync(teamJoinCodes);
             await db.TeamMembers.AddRangeAsync(teamMembers);
-            await db.UserTeams.AddRangeAsync(userTeams);
             await db.UserRoles.AddRangeAsync(userRoles);
 
             await db.SaveChangesAsync();
