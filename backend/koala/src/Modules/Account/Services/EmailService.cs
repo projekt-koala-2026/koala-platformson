@@ -74,27 +74,69 @@ namespace koala.src.Modules.Account.Services
             // Professional, responsive HTML email template
             string htmlMessage = $@"
                 <!DOCTYPE html>
-                <html>
+                <html lang=""pl"">
                 <head>
                     <meta charset=""utf-8"">
-                    <style>
-                        body {{ font-family: Arial, sans-serif; background-color: #f4f4f7; color: #333; margin: 0; padding: 0; }}
-                        .container {{ max-width: 600px; margin: 40px auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }}
-                        .button {{ display: inline-block; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; margin-top: 20px; }}
-                        .footer {{ margin-top: 30px; font-size: 12px; color: #888; text-align: center; }}
-                    </style>
+                    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+                    <title>Resetowanie hasła</title>
                 </head>
-                <body>
-                    <div class=""container"">
-                        <h2>Password Reset Request</h2>
-                        <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
-                        <p>To reset your password, click the button below:</p>
-                        <a href=""{resetLink}"" class=""button"">Reset Password</a>
-                        <p style=""margin-top: 20px; font-size: 13px; color: #666;"">Or copy and paste this link into your browser:<br><a href=""{resetLink}"">{resetLink}</a></p>
-                        <div class=""footer"">
-                            <p>&copy; 2026 University Engineering Project. All rights reserved.</p>
-                        </div>
-                    </div>
+                <body style=""margin:0; padding:0; background-color:#f1f5f9; font-family:Arial,Helvetica,sans-serif; color:#0f172a;"">
+                    <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""background-color:#f1f5f9; padding:32px 12px;"">
+                        <tr>
+                            <td align=""center"">
+                                <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0""
+                                    style=""max-width:600px; background-color:#ffffff; border-radius:16px; overflow:hidden;"">
+                                    <tr>
+                                        <td style=""padding:28px 32px; background-color:#ecfdf5; border-bottom:1px solid #d1fae5;"">
+                                            <div style=""font-size:24px; font-weight:bold; letter-spacing:1px; color:#020617;"">
+                                                KOALA
+                                            </div>
+                                            <div style=""margin-top:5px; font-size:12px; font-weight:bold; color:#047857;"">
+                                                Kombinatoryka · Algorytmika · Logika
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style=""padding:32px;"">
+                                            <h1 style=""margin:0 0 16px; font-size:24px; line-height:1.3; color:#0f172a;"">
+                                                Resetowanie hasła
+                                            </h1>
+                                            <p style=""margin:0 0 16px; font-size:16px; line-height:1.6; color:#334155;"">
+                                                Otrzymaliśmy prośbę o zmianę hasła do Twojego konta.
+                                            </p>
+                                            <p style=""margin:0 0 24px; font-size:16px; line-height:1.6; color:#334155;"">
+                                                Kliknij przycisk poniżej, aby ustawić nowe hasło:
+                                            </p>
+                                            <table role=""presentation"" cellspacing=""0"" cellpadding=""0"">
+                                                <tr>
+                                                    <td align=""center"" style=""border-radius:10px; background-color:#059669;"">
+                                                        <a href=""{resetLink}""
+                                                        style=""display:inline-block; padding:14px 24px; border:1px solid #059669; border-radius:10px; color:#ffffff; font-size:16px; font-weight:bold; text-decoration:none;"">
+                                                            Zmień hasło
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <p style=""margin:24px 0 8px; font-size:13px; line-height:1.5; color:#64748b;"">
+                                                Jeśli przycisk nie działa, skopiuj ten link i wklej go do przeglądarki:
+                                            </p>
+                                            <p style=""margin:0; font-size:13px; line-height:1.5; word-break:break-all;"">
+                                                <a href=""{resetLink}"" style=""color:#047857;"">{resetLink}</a>
+                                            </p>
+                                            <p style=""margin:24px 0 0; font-size:14px; line-height:1.6; color:#64748b;"">
+                                                Jeśli nie prosiłeś(-aś) o zmianę hasła, zignoruj tę wiadomość. Twoje obecne hasło pozostanie bez zmian.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style=""padding:20px 32px; background-color:#f8fafc; text-align:center; color:#94a3b8; font-size:12px; line-height:1.5;"">
+                                            <p>&copy; Konkurs Koala. All rights reserved.</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
                 </body>
                 </html>";
 
@@ -111,31 +153,73 @@ namespace koala.src.Modules.Account.Services
             // 3. Professional, responsive HTML email template
             string htmlMessage = $@"
                 <!DOCTYPE html>
-                <html>
+                <html lang=""pl"">
                 <head>
                     <meta charset=""utf-8"">
-                    <style>
-                        body {{ font-family: Arial, sans-serif; background-color: #f4f4f7; color: #333; margin: 0; padding: 0; }}
-                        .container {{ max-width: 600px; margin: 40px auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }}
-                        .button {{ display: inline-block; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; margin-top: 20px; }}
-                        .footer {{ margin-top: 30px; font-size: 12px; color: #888; text-align: center; }}
-                    </style>
+                    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+                    <title>Zaproszenie do Konkursu Koala</title>
                 </head>
-                <body>
-                    <div class=""container"">
-                        <h2>Register Request</h2>
-                        <p>We received a request to register an account for this email. If you didn't make this request, you can safely ignore this email.</p>
-                        <p>To register, click the button below:</p>
-                        <a href=""{registerLink}"" class=""button"">Register</a>
-                        <p style=""margin-top: 20px; font-size: 13px; color: #666;"">Or copy and paste this link into your browser:<br><a href=""{registerLink}"">{registerLink}</a></p>
-                        <div class=""footer"">
-                            <p>&copy; 2026 University Engineering Project. All rights reserved.</p>
-                        </div>
-                    </div>
-                </body>
-                </html>";
+        <body style=""margin:0; padding:0; background-color:#f1f5f9; font-family:Arial,Helvetica,sans-serif; color:#0f172a;"">
+            <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0"" style=""background-color:#f1f5f9; padding:32px 12px;"">
+                <tr>
+                    <td align=""center"">
+                        <table role=""presentation"" width=""100%"" cellspacing=""0"" cellpadding=""0""
+                            style=""max-width:600px; background-color:#ffffff; border-radius:16px; overflow:hidden;"">
+                            <tr>
+                                <td style=""padding:28px 32px; background-color:#ecfdf5; border-bottom:1px solid #d1fae5;"">
+                                    <div style=""font-size:24px; font-weight:bold; letter-spacing:1px; color:#020617;"">
+                                        KOALA
+                                    </div>
+                                    <div style=""margin-top:5px; font-size:12px; font-weight:bold; color:#047857;"">
+                                        Kombinatoryka · Algorytmika · Logika
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style=""padding:32px;"">
+                                    <h1 style=""margin:0 0 16px; font-size:24px; line-height:1.3; color:#0f172a;"">
+                                        Dołącz do Konkursu Koala!
+                                    </h1>
+                                    <p style=""margin:0 0 16px; font-size:16px; line-height:1.6; color:#334155;"">
+                                        Otrzymaliśmy prośbę o rejestrację konta powiązanego z tym adresem e-mail.
+                                    </p>
+                                    <p style=""margin:0 0 24px; font-size:16px; line-height:1.6; color:#334155;"">
+                                        Utwórz konto, jeśli chcesz odczuć radość i satysfakcję z rozwiązywania zadań matematycznych,
+                                        szczególnie tych rozwijających logiczne myślenie, algorytmikę i umiejętność rozwiązywania problemów.
+                                        Zignoruj tę wiadomość, jeśli nie jesteś zainteresowany(-a) tak ciekawymi wyzwaniami 
+                                        lub po prostu nie prosiłeś(-aś) o rejestrację tego konta.
+                                    </p>
+                                    <table role=""presentation"" cellspacing=""0"" cellpadding=""0"">
+                                        <tr>
+                                            <td align=""center"" style=""border-radius:10px; background-color:#059669;"">
+                                                <a href=""{registerLink}""
+                                                   style=""display:inline-block; padding:14px 24px; border:1px solid #059669; border-radius:10px; color:#ffffff; font-size:16px; font-weight:bold; text-decoration:none;"">
+                                                    Zarejestruj się
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style=""margin:24px 0 8px; font-size:13px; line-height:1.5; color:#64748b;"">
+                                        Jeśli przycisk nie działa, skopiuj ten link i wklej go do przeglądarki:
+                                    </p>
+                                    <p style=""margin:0; font-size:13px; line-height:1.5; word-break:break-all;"">
+                                        <a href=""{registerLink}"" style=""color:#047857;"">{registerLink}</a>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style=""padding:20px 32px; background-color:#f8fafc; text-align:center; color:#94a3b8; font-size:12px; line-height:1.5;"">
+                                   <p>&copy; Konkurs Koala. All rights reserved.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>";
 
-            BackgroundJob.Enqueue<EmailService>("critical", x => x.SendEmailAsync(toEmail, "Register Account", htmlMessage, true));
+            BackgroundJob.Enqueue<EmailService>("critical", x => x.SendEmailAsync(toEmail, "Zaproszenie do wzięcia udziału w konkursie Koala", htmlMessage, true));
             await Task.CompletedTask;
         }
 
