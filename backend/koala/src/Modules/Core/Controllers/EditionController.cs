@@ -93,6 +93,22 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
+        [HttpPut("{edition_id}/activate_subedition/{subedition_id}")]
+        public async Task<IActionResult> ActivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        {
+            var response = await _editionService.ActivateSubEditionAsync(User, edition_id, subedition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpPut("{edition_id}/deactivate_subedition/{subedition_id}")]
+        public async Task<IActionResult> DeactivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        {
+            var response = await _editionService.DeactivateSubEditionAsync(User, edition_id, subedition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
         [HttpDelete("{edition_id}/subeditions/{subedition_id}")]
         public async Task<IActionResult> DeleteSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
         {

@@ -341,6 +341,62 @@ namespace koala.src.Modules.Core.Services
             await _db.SaveChangesAsync();
         }
 
+        public async Task<SubEditionDto> ActivateSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
+
+            if (subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist");
+            }
+
+            subedition.State = "Active";
+            await _db.SaveChangesAsync();
+
+            return new SubEditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.AnswerOpen, subedition.AnswerClose, subedition.State, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
+        }
+
+        public async Task<SubEditionDto> DeactivateSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
+
+            if (subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist");
+            }
+
+            subedition.State = "Inactive";
+            await _db.SaveChangesAsync();
+
+            return new SubEditionDto(subedition.Id, subedition.EditionId, subedition.Name, subedition.AnswerOpen, subedition.AnswerClose, subedition.State, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
+        }
+
         public async Task<TaskItemDto> CreateTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, CreateTaskItemDto createTaskDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
