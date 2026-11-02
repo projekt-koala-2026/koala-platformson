@@ -4,8 +4,8 @@ namespace koala.src.Modules.Account.Entities
 {
     public static class TeamTiers
     {
-        public static string TIER_1 = "TIER_1";
-        public static string TIER_2 = "TIER_2";
+        public const string TIER_1 = "TIER_1";
+        public const string TIER_2 = "TIER_2";
     }
     public class Team
     {

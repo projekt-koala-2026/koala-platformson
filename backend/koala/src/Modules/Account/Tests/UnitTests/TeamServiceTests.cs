@@ -141,8 +141,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             Assert.NotNull(result);
             Assert.Equal(TestDataSeeder.ID_TEAM_2, result.Id);
-            Assert.NotNull(result.TeamAdmin);
-            Assert.Equal(TestDataSeeder.ID_USER_8, result.TeamAdmin.Id);
+            Assert.NotNull(result.TeamGuardian);
+            Assert.Equal(TestDataSeeder.ID_USER_8, result.TeamGuardian.Id);
             Assert.Equal(TestDataSeeder.ID_USER_11, result.TeamCaptain.Id);
             Assert.NotEmpty(result.TeamMembers);
             Assert.Single(result.TeamMembers);

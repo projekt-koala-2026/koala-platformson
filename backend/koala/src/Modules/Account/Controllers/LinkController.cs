@@ -40,10 +40,17 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
-        [HttpGet]
+        [HttpGet("/active")]
         public async Task<IActionResult> GetActiveUserLinks([FromQuery] PageQueryDto pageQueryDto)
         {
             (var response, var pagination) = await _linkService.GetActiveUserLinksAsync(User, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<LinkDto>>(true, DateTime.UtcNow, null, pagination, response));
+        }
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetUserLinks([FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var response, var pagination) = await _linkService.GetUserLinksAsync(User, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<LinkDto>>(true, DateTime.UtcNow, null, pagination, response));
         }
         [Authorize]
@@ -51,6 +58,13 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> DeleteUserLink([FromRoute] Guid id)
         {
             await _linkService.DeleteUserLinkAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+        [Authorize]
+        [HttpPut("{id}/deactivate")]
+        public async Task<IActionResult> DeactivateUserLink([FromRoute] Guid id)
+        {
+            await _linkService.DeactivateUserLinkAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]

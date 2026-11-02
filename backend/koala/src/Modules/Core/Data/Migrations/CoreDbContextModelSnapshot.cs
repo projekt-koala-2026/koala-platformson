@@ -48,30 +48,20 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.ToTable("editions", "core");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.EditionSubEdition", b =>
-                {
-                    b.Property<Guid>("EditionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("edition_id");
-
-                    b.Property<Guid>("SubEditionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("subedition_id");
-
-                    b.HasKey("EditionId", "SubEditionId");
-
-                    b.HasIndex("SubEditionId")
-                        .IsUnique();
-
-                    b.ToTable("edition_subeditions", "core");
-                });
-
             modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEdition", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<DateTime?>("AnswerClose")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("answer_close");
+
+                    b.Property<DateTime>("AnswerOpen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("answer_open");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -85,6 +75,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_start");
 
+                    b.Property<Guid>("EditionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("edition_id");
+
                     b.Property<DateTime?>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
@@ -94,30 +88,98 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("state");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("EditionId");
 
                     b.ToTable("subeditions", "core");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEditionTask", b =>
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskAnswer", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("answer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("TaskItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_item_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskItemId");
+
+                    b.ToTable("task_answers", "core");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContentJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("content_json");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
                     b.Property<Guid>("SubEditionId")
                         .HasColumnType("uuid")
                         .HasColumnName("subedition_id");
 
-                    b.Property<Guid>("TaskId")
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("Version")
                         .HasColumnType("uuid")
-                        .HasColumnName("task_id");
+                        .HasColumnName("version");
 
-                    b.HasKey("SubEditionId", "TaskId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("TaskId")
-                        .IsUnique();
+                    b.HasIndex("SubEditionId");
 
-                    b.ToTable("subedition_tasks", "core");
+                    b.ToTable("tasks", "core");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskAnswer", b =>
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskSubmission", b =>
                 {
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid")
@@ -131,11 +193,11 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("auto_review_state");
 
-                    b.Property<bool?>("Review1State")
+                    b.Property<bool?>("Review1Score")
                         .HasColumnType("boolean")
                         .HasColumnName("review_1_state");
 
-                    b.Property<bool?>("Review2State")
+                    b.Property<bool?>("Review2Score")
                         .HasColumnType("boolean")
                         .HasColumnName("review_2_state");
 
@@ -160,68 +222,7 @@ namespace koala.src.Modules.Core.Data.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("task_answers", "core");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskCorr", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("CorrectAnswer")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("correct_answer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("task_corrs", "core");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("ContentJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("content_json");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("tasks", "core");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItemTaskCorr", b =>
-                {
-                    b.Property<Guid>("TaskItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("task_item_id");
-
-                    b.Property<Guid>("TaskCorrId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("task_corr_id");
-
-                    b.HasKey("TaskItemId", "TaskCorrId");
-
-                    b.HasIndex("TaskCorrId")
-                        .IsUnique();
-
-                    b.ToTable("task_item_task_corrs", "core");
+                    b.ToTable("task_submissions", "core");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Core.School", b =>
@@ -289,48 +290,43 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.ToTable("schools", "core");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.EditionSubEdition", b =>
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEdition", b =>
                 {
                     b.HasOne("koala.src.Modules.Core.Entities.Edition", "Edition")
-                        .WithMany("EditionSubEditions")
+                        .WithMany("SubEditions")
                         .HasForeignKey("EditionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("koala.src.Modules.Core.Entities.SubEdition", "SubEdition")
-                        .WithOne("EditionSubEdition")
-                        .HasForeignKey("koala.src.Modules.Core.Entities.EditionSubEdition", "SubEditionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Edition");
-
-                    b.Navigation("SubEdition");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEditionTask", b =>
-                {
-                    b.HasOne("koala.src.Modules.Core.Entities.SubEdition", "SubEdition")
-                        .WithMany("SubEditionTasks")
-                        .HasForeignKey("SubEditionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("koala.src.Modules.Core.Entities.TaskItem", "TaskItem")
-                        .WithOne("SubEditionTask")
-                        .HasForeignKey("koala.src.Modules.Core.Entities.SubEditionTask", "TaskId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SubEdition");
-
-                    b.Navigation("TaskItem");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskAnswer", b =>
                 {
                     b.HasOne("koala.src.Modules.Core.Entities.TaskItem", "TaskItem")
                         .WithMany("TaskAnswers")
+                        .HasForeignKey("TaskItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaskItem");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItem", b =>
+                {
+                    b.HasOne("koala.src.Modules.Core.Entities.SubEdition", "SubEdition")
+                        .WithMany("TaskItems")
+                        .HasForeignKey("SubEditionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SubEdition");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskSubmission", b =>
+                {
+                    b.HasOne("koala.src.Modules.Core.Entities.TaskItem", "TaskItem")
+                        .WithMany("TaskSubmissions")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -338,52 +334,21 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.Navigation("TaskItem");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItemTaskCorr", b =>
-                {
-                    b.HasOne("koala.src.Modules.Core.Entities.TaskCorr", "TaskCorr")
-                        .WithOne("TaskItemTaskCorr")
-                        .HasForeignKey("koala.src.Modules.Core.Entities.TaskItemTaskCorr", "TaskCorrId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("koala.src.Modules.Core.Entities.TaskItem", "TaskItem")
-                        .WithMany("TaskItemTaskCorrs")
-                        .HasForeignKey("TaskItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TaskCorr");
-
-                    b.Navigation("TaskItem");
-                });
-
             modelBuilder.Entity("koala.src.Modules.Core.Entities.Edition", b =>
                 {
-                    b.Navigation("EditionSubEditions");
+                    b.Navigation("SubEditions");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEdition", b =>
                 {
-                    b.Navigation("EditionSubEdition")
-                        .IsRequired();
-
-                    b.Navigation("SubEditionTasks");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskCorr", b =>
-                {
-                    b.Navigation("TaskItemTaskCorr")
-                        .IsRequired();
+                    b.Navigation("TaskItems");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItem", b =>
                 {
-                    b.Navigation("SubEditionTask")
-                        .IsRequired();
-
                     b.Navigation("TaskAnswers");
 
-                    b.Navigation("TaskItemTaskCorrs");
+                    b.Navigation("TaskSubmissions");
                 });
 #pragma warning restore 612, 618
         }

@@ -10,8 +10,12 @@ namespace koala.src.Modules.Account.Entities
         public string JoinCode { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
         [Column("expires_at")]
         public DateTime ExpiresAt { get; set; }
+        [Column("version")]
+        public int Version { get; set; }
         public Team Team { get; set; } = null!;
     }
 }

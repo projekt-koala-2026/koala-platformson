@@ -8,7 +8,9 @@ namespace koala.src.Modules.Account.Dtos
         string NameLast,
         string Password,
         bool AcceptedRodo,
-        bool AcceptedRules
+        bool AcceptedRules,
+        bool DeclaredAtLeast13,
+        bool DeclaredAtLeast18
     );
 
     public class LinkConsumeRegisterRequestDtoValidator : AbstractValidator<LinkConsumeRegisterRequestDto>
@@ -39,6 +41,10 @@ namespace koala.src.Modules.Account.Dtos
 
             RuleFor(x => x.AcceptedRules)
                 .Equal(true).WithMessage("AcceptedRules field must be true!");
+
+            RuleFor(x => x)
+                .Must(x => x.DeclaredAtLeast13 != x.DeclaredAtLeast18)
+                .WithMessage("You must confirm your age by checking at least one age requirement box!");
         }
     }
 }

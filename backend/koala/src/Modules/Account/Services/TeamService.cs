@@ -144,8 +144,11 @@ namespace koala.src.Modules.Account.Services
                 team.EditionId,
                 team.SchoolId,
                 team.Name,
+                team.Tier,
                 !team.NameAccepted,
                 team.CreatedAt,
+                team.UpdatedAt,
+                team.Version,
                 new UserDto
                 (
                     user.Id,
@@ -523,7 +526,7 @@ namespace koala.src.Modules.Account.Services
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null
                 ? null
-                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
+                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
             UserDto? teamAdminDto = null;
             UserDto teamCaptainDto = new UserDto
             (
@@ -553,8 +556,11 @@ namespace koala.src.Modules.Account.Services
                 captain.CaptainTeam.EditionId,
                 captain.CaptainTeam.SchoolId,
                 captain.CaptainTeam.Name,
-                captain.CaptainTeam.NameAccepted,
+                captain.CaptainTeam.Tier,
+                !captain.CaptainTeam.NameAccepted,
                 captain.CaptainTeam.CreatedAt,
+                captain.CaptainTeam.UpdatedAt,
+                captain.CaptainTeam.Version,
                 teamCaptainDto,
                 teamAdminDto,
                 teamMembers,
@@ -628,7 +634,7 @@ namespace koala.src.Modules.Account.Services
 
             await _db.SaveChangesAsync();
 
-            return new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
+            return new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
         }
 
         public async Task<TeamDto> JoinTeamWithCodeAsync(ClaimsPrincipal? claimsPrincipal, string JoinCode)
@@ -721,7 +727,7 @@ namespace koala.src.Modules.Account.Services
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null
                 ? null
-                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
+                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
 
             UserDto teamCaptainDto = new UserDto
             (
@@ -749,8 +755,11 @@ namespace koala.src.Modules.Account.Services
                 team.EditionId,
                 team.SchoolId,
                 team.Name,
-                team.NameAccepted,
+                team.Tier,
+                !team.NameAccepted,
                 team.CreatedAt,
+                team.UpdatedAt,
+                team.Version,
                 teamCaptainDto,
                 teamGuardianDto,
                 teamMembers,
@@ -806,8 +815,11 @@ namespace koala.src.Modules.Account.Services
                     qr.EditionId,
                     qr.SchoolId,
                     qr.Name,
+                    qr.Tier,
                     !qr.NameAccepted,
                     qr.CreatedAt,
+                    qr.UpdatedAt,
+                    qr.Version,
 
                     new UserDto
                     (
@@ -848,7 +860,7 @@ namespace koala.src.Modules.Account.Services
 
                     qr.TeamJoinCode == null || qr.TeamJoinCode.ExpiresAt <= DateTime.UtcNow
                         ? null
-                        : new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.ExpiresAt)
+                        : new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.UpdatedAt, qr.TeamJoinCode.ExpiresAt)
                 ))
                 .ToListAsync();
 
@@ -909,7 +921,7 @@ namespace koala.src.Modules.Account.Services
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null || teamJoinCode.ExpiresAt <= DateTime.UtcNow
                 ? null
-                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
+                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
 
             UserDto teamCaptainDto = new UserDto
             (
@@ -936,8 +948,11 @@ namespace koala.src.Modules.Account.Services
                 team.EditionId,
                 team.SchoolId,
                 team.Name,
-                team.NameAccepted,
+                team.Tier,
+                !team.NameAccepted,
                 team.CreatedAt,
+                team.UpdatedAt,
+                team.Version,
                 teamCaptainDto,
                 teamAdminDto,
                 teamMembers,
@@ -1006,8 +1021,11 @@ namespace koala.src.Modules.Account.Services
                     qr.EditionId,
                     qr.SchoolId,
                     qr.Name,
+                    qr.Tier,
                     !qr.NameAccepted,
                     qr.CreatedAt,
+                    qr.UpdatedAt,
+                    qr.Version,
 
                     new UserDto
                     (
@@ -1048,7 +1066,7 @@ namespace koala.src.Modules.Account.Services
 
                     qr.TeamJoinCode == null || qr.TeamJoinCode.ExpiresAt <= DateTime.UtcNow
                         ? null
-                        : new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.ExpiresAt)
+                        : new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.UpdatedAt, qr.TeamJoinCode.ExpiresAt)
                 ))
                 .ToListAsync();
 

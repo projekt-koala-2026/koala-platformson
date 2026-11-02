@@ -22,8 +22,16 @@ namespace koala.src.Modules.Account.Entities
         public bool AcceptedRodo { get; set; }
         [Column("accepted_rules")]
         public bool AcceptedRules { get; set; }
+        [Column("declared_at_least_13")]
+        public bool DeclaredAtLeast13 { get; set; }
+        [Column("declared_at_least_18")]
+        public bool DeclaredAtLeast18 { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+        [Column("version")]
+        public int Version { get; set; }
         [Column("verified_at")]
         public DateTime? VerifiedAt { get; set; }
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();

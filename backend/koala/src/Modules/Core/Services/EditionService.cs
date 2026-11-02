@@ -18,7 +18,7 @@ namespace koala.src.Modules.Core.Services
             _db = db;
         }
 
-        public async Task<EditionDto> CreateEditionAsync(ClaimsPrincipal? claimsPrincipal, CreateEditionDto createEditionDto)
+        public async Task<EditionDto> CreateEditionAsync(ClaimsPrincipal? claimsPrincipal, EditionCreateDto createEditionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -173,18 +173,22 @@ namespace koala.src.Modules.Core.Services
         {
             var query = _db.Editions.AsNoTracking().AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(editionQueryDto.States))
+            if (editionQueryDto.States.Count != 0)
             {
-                var targetStates = editionQueryDto.States
-                    .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .Select(s => s.ToUpperInvariant())
-                    .ToList();
-
-                if (targetStates.Count > 0)
+                foreach (var state in editionQueryDto.States)
                 {
-                    query = query.Where(e => targetStates.Contains(e.State));
+                    if (!string.IsNullOrWhiteSpace(state))
+                    {
+                        if (state != EditionStates.STATE_ACTIVE || state != EditionStates.STATE_INACTIVE || state != EditionStates.STATE_CLOSED)
+                        {
+                            throw new CoreException(CoreErrorCodes.BadRequest, "The states are not valid states");
+                        }
+                    }
                 }
+
             }
+
+            query = query.Where(e => editionQueryDto.States.Contains(e.State));
 
             var queryResult = await query.ToListAsync();
             var editions = queryResult
@@ -218,7 +222,7 @@ namespace koala.src.Modules.Core.Services
             return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
 
-        public async Task<SubEditionDto> CreateSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, CreateSubeditionDto createSubeditionDto)
+        public async Task<SubEditionDto> CreateSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, SubEditionCreateDto createSubEditionDto)
         {
 
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -241,7 +245,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be created for the active and inactive edition");
             }
 
-            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Name == createSubeditionDto.Name && e.EditionSubEdition.EditionId == id);
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Name == createSubEditionDto.Name && e.EditionId == id);
 
             if (subedition != null)
             {
@@ -251,29 +255,36 @@ namespace koala.src.Modules.Core.Services
             DateTime timeNow = DateTime.UtcNow;
 
 
-            SubEdition newSubedition = new SubEdition
+            SubEdition newSubEdition = new SubEdition
             {
                 Id = Guid.CreateVersion7(),
-                Name = createSubeditionDto.Name,
-                DateStart = createSubeditionDto.DateStart,
-                DateEnd = createSubeditionDto.DateEnd,
+                Name = createSubEditionDto.Name,
+                AnswerOpen = createSubEditionDto.AnswerOpen,
+                AnswerClose = createSubEditionDto.AnswerClose,
+                State = SubEditionStates.STATE_INACTIVE,
                 CreatedAt = timeNow,
-                ExpiresAt = null
+                UpdatedAt = timeNow,
+                Version = 1
             };
 
-            EditionSubEdition newEditionSubEdition = new EditionSubEdition
-            {
-                EditionId = id,
-                SubEditionId = newSubedition.Id
-            };
-            await _db.SubEditions.AddAsync(newSubedition);
-            await _db.EditionSubEditions.AddAsync(newEditionSubEdition);
+            await _db.SubEditions.AddAsync(newSubEdition);
             await _db.SaveChangesAsync();
 
-            return new SubEditionDto(newSubedition.Id, newEditionSubEdition.EditionId, newSubedition.Name, newSubedition.DateStart, newSubedition.DateEnd, newSubedition.CreatedAt, newSubedition.ExpiresAt);
+            return new SubEditionDto
+            (
+                newSubEdition.Id,
+                newSubEdition.EditionId,
+                newSubEdition.Name,
+                newSubEdition.AnswerOpen,
+                newSubEdition.AnswerClose,
+                newSubEdition.State,
+                newSubEdition.CreatedAt,
+                newSubEdition.UpdatedAt,
+                newSubEdition.Version
+            );
         }
 
-        public async Task<SubEditionDto> UpdateSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, UpdateSubEditionDto updateSubEditionDto)
+        public async Task<SubEditionDto> UpdateSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, SubEditionUpdateDto updateSubEditionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -288,63 +299,86 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id && e.State != EditionStates.STATE_CLOSED);
 
             if (edition == null)
             {
-                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition does not exist");
+                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition does not exist or is closed");
             }
 
-            if (edition.State != EditionStates.STATE_CLOSED)
-            {
-                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be updated for the active and inactive edition");
-            }
-
-            bool isSubEditionWithNewNameAlreadyInDb = await _db.SubEditions.AnyAsync(e => e.Name == updateSubEditionDto.Name && e.Id != subedition_id && e.EditionSubEdition.EditionId == edition_id);
+            bool isSubEditionWithNewNameAlreadyInDb = await _db.SubEditions.AnyAsync(e => e.Name == updateSubEditionDto.Name && e.Id != subedition_id && e.EditionId == edition_id);
 
             if (isSubEditionWithNewNameAlreadyInDb == true)
             {
                 throw new CoreException(CoreErrorCodes.SubEditionAlreadyExsits, "SubEdition with this name already exist thus canot update this subedition name to it");
             }
 
-            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id);
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.State != SubEditionStates.STATE_CLOSED);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubeditionNotFound, "Subedition of provided id does not exist");
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is closed");
+            }
+
+            if (subedition.Version != updateSubEditionDto.Version)
+            {
+                throw new CoreException(CoreErrorCodes.Conflict, "SubEditions versions do not match make sure u have the freshest data");
             }
 
             DateTime timeNow = DateTime.UtcNow;
 
             subedition.Name = updateSubEditionDto.Name;
-            subedition.DateStart = updateSubEditionDto.DateStart;
-            subedition.DateEnd = updateSubEditionDto.DateEnd;
+            subedition.AnswerOpen = updateSubEditionDto.AnswerOpen;
+            subedition.AnswerClose = updateSubEditionDto.AnswerClose;
+            subedition.UpdatedAt = timeNow;
+            subedition.Version++;
             await _db.SaveChangesAsync();
 
-            return new SubEditionDto(subedition.Id, subedition.EditionSubEdition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
+            return new SubEditionDto
+            (
+                subedition.Id,
+                subedition.EditionId,
+                subedition.Name,
+                subedition.AnswerOpen,
+                subedition.AnswerClose,
+                subedition.State,
+                subedition.CreatedAt,
+                subedition.UpdatedAt,
+                subedition.Version
+            );
         }
 
-        public async Task<SubEditionDto> GetSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
+        public async Task<SubEditionDto> GetSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
         {
             var subedition = await _db.SubEditions
                 .AsNoTracking()
-                .Include(e => e.EditionSubEdition)
-                .FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionSubEdition.EditionId == edition_id);
+                .Include(e => e.Edition)
+                .FirstOrDefaultAsync(e => e.Id == subedition_id && e.Edition.Id == edition_id);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubeditionNotFound, "Subedition not found");
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition not found");
             }
 
-            return new SubEditionDto(subedition.Id, subedition.EditionSubEdition.EditionId, subedition.Name, subedition.DateStart, subedition.DateEnd, subedition.CreatedAt, subedition.ExpiresAt);
+            return new SubEditionDto
+            (
+                subedition.Id,
+                subedition.EditionId,
+                subedition.Name,
+                subedition.AnswerOpen,
+                subedition.AnswerClose,
+                subedition.State,
+                subedition.CreatedAt,
+                subedition.UpdatedAt,
+                subedition.Version
+            );
         }
 
-        public async Task<(List<SubEditionDto>, ApiPagination)> GetSubeditionsAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, PageQueryDto pageQueryDto)
+        public async Task<(List<SubEditionDto>, ApiPagination)> GetSubEditionsAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, PageQueryDto pageQueryDto)
         {
             var query = _db.SubEditions
                 .AsNoTracking()
-                .Include(e => e.EditionSubEdition)
-                .Where(e => e.EditionSubEdition.EditionId == edition_id);
+                .Where(se => se.EditionId == edition_id);
 
             var totalCount = await query.CountAsync();
 
@@ -353,19 +387,21 @@ namespace koala.src.Modules.Core.Services
                 .Take(pageQueryDto.PageSize)
                 .Select(e => new SubEditionDto(
                             e.Id,
-                            e.EditionSubEdition.EditionId,
+                            e.EditionId,
                             e.Name,
-                            e.DateStart,
-                            e.DateEnd,
+                            e.AnswerOpen,
+                            e.AnswerClose,
+                            e.State,
                             e.CreatedAt,
-                            e.ExpiresAt
+                            e.UpdatedAt,
+                            e.Version
                         ))
                         .ToListAsync();
 
             return (subeditions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task DeleteSubeditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
+        public async Task DeleteSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -380,19 +416,18 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionSubEdition.EditionId == edition_id);
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id && e.State == SubEditionStates.STATE_INACTIVE);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubeditionNotFound, "Subedition of provided id does not exist");
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is active or closed can only delete the inactive subeditions");
             }
 
             _db.SubEditions.Remove(subedition);
-            _db.EditionSubEditions.Remove(subedition.EditionSubEdition);
             await _db.SaveChangesAsync();
         }
 
-        public async Task<TaskItemDto> CreateTaskAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, CreateTaskItemDto createTaskDto)
+        public async Task<SubEditionDto> ActivateSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -407,14 +442,92 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionSubEdition.EditionId == edition_id);
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id && e.State != SubEditionStates.STATE_CLOSED);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubeditionNotFound, "Subedition of provided id does not exist");
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is closed");
             }
 
-            var newTask = await _db.Tasks.FirstOrDefaultAsync(t => t.Name == createTaskDto.Name && t.SubEditionTask.SubEditionId == subedition_id);
+            subedition.State = SubEditionStates.STATE_ACTIVE;
+            await _db.SaveChangesAsync();
+
+            return new SubEditionDto
+            (
+                subedition.Id,
+                subedition.EditionId,
+                subedition.Name,
+                subedition.AnswerOpen,
+                subedition.AnswerClose,
+                subedition.State,
+                subedition.CreatedAt,
+                subedition.UpdatedAt,
+                subedition.Version
+            );
+        }
+
+        public async Task<SubEditionDto> CloseSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id && e.State == SubEditionStates.STATE_ACTIVE);
+
+            if (subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not active");
+            }
+
+            subedition.State = SubEditionStates.STATE_CLOSED;
+            await _db.SaveChangesAsync();
+
+            return new SubEditionDto
+            (
+                subedition.Id,
+                subedition.EditionId,
+                subedition.Name,
+                subedition.AnswerOpen,
+                subedition.AnswerClose,
+                subedition.State,
+                subedition.CreatedAt,
+                subedition.UpdatedAt,
+                subedition.Version
+            );
+        }
+
+        public async Task<TaskItemDto> CreateTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, TaskItemCreateDto createTaskDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
+
+            if (subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not a part of the this edition");
+            }
+
+            var newTask = await _db.TaskItems.FirstOrDefaultAsync(t => t.Name == createTaskDto.Name && t.SubEditionId == subedition_id);
 
             if (newTask != null)
             {
@@ -426,31 +539,33 @@ namespace koala.src.Modules.Core.Services
             newTask = new TaskItem
             {
                 Id = Guid.CreateVersion7(),
+                SubEditionId = subedition_id,
                 Name = createTaskDto.Name,
                 ContentJson = createTaskDto.ContentJson,
-                UpdatedAt = timeNow
+                Tier = createTaskDto.Tier,
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
             };
 
-            SubEditionTask newSubEditionTask = new SubEditionTask
-            {
-                SubEditionId = subedition_id,
-                TaskId = newTask.Id
-            };
 
-            await _db.Tasks.AddAsync(newTask);
-            await _db.SubEditionTasks.AddAsync(newSubEditionTask);
+            await _db.TaskItems.AddAsync(newTask);
             await _db.SaveChangesAsync();
 
-            return new TaskItemDto(
+            return new TaskItemDto
+            (
                 newTask.Id,
-                newTask.SubEditionTask.SubEditionId,
+                newTask.SubEditionId,
                 newTask.Name,
+                newTask.Tier,
                 newTask.ContentJson,
-                newTask.UpdatedAt
+                newTask.CreatedAt,
+                newTask.UpdatedAt,
+                newTask.Version
             );
         }
 
-        public async Task DeleteTaskAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid task_id)
+        public async Task DeleteTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid task_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -465,63 +580,69 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var task = await _db.Tasks.FirstOrDefaultAsync(e => e.Id == task_id && e.SubEditionTask.SubEditionId == subedition_id && e.SubEditionTask.SubEdition.EditionSubEdition.EditionId == edition_id);
+            var task = await _db.TaskItems.FirstOrDefaultAsync(e => e.Id == task_id && e.SubEditionId == subedition_id && e.SubEdition.EditionId == edition_id);
 
             if (task == null)
             {
                 throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
             }
 
-            _db.Tasks.Remove(task);
+            _db.TaskItems.Remove(task);
             await _db.SaveChangesAsync();
         }
 
-        public async Task<TaskItemDto> GetTaskAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid task_id)
+        public async Task<TaskItemDto> GetTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid task_id)
         {
-            var task = await _db.Tasks
+            var task = await _db.TaskItems
                 .AsNoTracking()
-                .Include(e => e.SubEditionTask)
-                .ThenInclude(e => e.SubEdition)
-                .ThenInclude(e => e.EditionSubEdition)
-                .FirstOrDefaultAsync(e => e.Id == task_id && e.SubEditionTask.SubEditionId == subedition_id && e.SubEditionTask.SubEdition.EditionSubEdition.EditionId == edition_id);
+                .Include(e => e.SubEdition)
+                .ThenInclude(e => e.Edition)
+                .FirstOrDefaultAsync(e => e.Id == task_id && e.SubEditionId == subedition_id && e.SubEdition.EditionId == edition_id);
 
             if (task == null)
             {
                 throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
             }
 
-            return new TaskItemDto(
+            return new TaskItemDto
+            (
                 task.Id,
-                task.SubEditionTask.SubEditionId,
+                task.SubEditionId,
                 task.Name,
+                task.Tier,
                 task.ContentJson,
-                task.UpdatedAt
+                task.CreatedAt,
+                task.UpdatedAt,
+                task.Version
             );
         }
 
-        public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTasksAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, PageQueryDto pageQueryDto)
+        public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTaskItemsAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, PageQueryDto pageQueryDto)
         {
-            var query = _db.Tasks.AsNoTracking();
+            var query = _db.TaskItems.AsNoTracking();
 
             var totalCount = await query.CountAsync();
             var entities = await query
-                .Include(e => e.SubEditionTask)
-                .ThenInclude(e => e.SubEdition)
-                .ThenInclude(e => e.EditionSubEdition)
+                .Include(e => e.SubEdition)
+                .ThenInclude(e => e.Edition)
                 .OrderBy(e => e.Id)
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
                 .ToListAsync();
 
-            var tasks = entities.Where(e => e.SubEditionTask.SubEditionId == subedition_id && e.SubEditionTask.SubEdition.EditionSubEdition.EditionId == edition_id).Select(e => new TaskItemDto(
+            var TaskItems = entities.Where(e => e.SubEdition.Id == subedition_id && e.SubEdition.Edition.Id == edition_id).Select(e => new TaskItemDto
+            (
                 e.Id,
-                e.SubEditionTask.SubEditionId,
+                e.SubEditionId,
                 e.Name,
+                e.Tier,
                 e.ContentJson,
-                e.UpdatedAt
+                e.CreatedAt,
+                e.UpdatedAt,
+                e.Version
             )).ToList();
 
-            return (tasks, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+            return (TaskItems, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
     }
 }

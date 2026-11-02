@@ -4,9 +4,9 @@ namespace koala.src.Modules.Core.Entities
 {
     public static class EditionStates
     {
-        public static string STATE_ACTIVE = "ACTIVE";
-        public static string STATE_INACTIVE = "INACTIVE";
-        public static string STATE_CLOSED = "CLOSED";
+        public const string STATE_ACTIVE = "ACTIVE";
+        public const string STATE_INACTIVE = "INACTIVE";
+        public const string STATE_CLOSED = "CLOSED";
     }
     public class Edition
     {
@@ -26,6 +26,6 @@ namespace koala.src.Modules.Core.Entities
         public DateTime UpdatedAt { get; set; }
         [Column("version")]
         public int Version { get; set; }
-        public ICollection<EditionSubEdition> EditionSubEditions { get; set; } = new List<EditionSubEdition>();
+        public ICollection<SubEdition> SubEditions { get; set; } = new List<SubEdition>();
     };
 }

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using koala.src.Modules.Account.Data;
 using koala.src.Modules.Account.Dtos;
+using koala.src.Modules.Account.Entities;
 using koala.src.Shared;
 using koala.src.Shared.Account;
 using Microsoft.EntityFrameworkCore;
@@ -54,11 +55,18 @@ namespace koala.src.Modules.Account.Services
             // STRIKE DATABASE
             var session = await _db.Sessions
                 .Include(s => s.User)
-                .FirstOrDefaultAsync(s => s.Token == sessionToken && s.Active);
+                .FirstOrDefaultAsync(s => s.Token == sessionToken && s.State == SessionStates.STATE_ACTIVE);
 
-            if (session == null || session.ExpiresAt <= DateTimeOffset.UtcNow)
+            if (session == null)
             {
                 throw new AccountException(AccountErrorCodes.Unauthenticated, "Session not found or expired in database.");
+            }
+
+            if (session.ExpiresAt <= DateTimeOffset.UtcNow)
+            {
+                session.State = SessionStates.STATE_INACTIVE;
+                await _db.SaveChangesAsync();
+                throw new AccountException(AccountErrorCodes.Unauthenticated, "Session expired.");
             }
 
             // Get latest roles

@@ -4,6 +4,7 @@ namespace koala.src.Modules.Account.Dtos
     (
         string JoinCode,
         DateTime CreatedAt,
+        DateTime UpdatedAt,
         DateTime ExpiresAt
     );
 }

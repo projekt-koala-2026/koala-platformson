@@ -21,7 +21,7 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateAndStartEdition([FromBody] CreateEditionDto createEditionDto)
+        public async Task<IActionResult> CreateAndStartEdition([FromBody] EditionCreateDto createEditionDto)
         {
             var response = await _editionService.CreateEditionAsync(User, createEditionDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
@@ -70,73 +70,89 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost("{edition_id}/subeditions")]
-        public async Task<IActionResult> CreateSubedition([FromRoute] Guid edition_id, [FromBody] CreateSubeditionDto createSubeditionDto)
+        public async Task<IActionResult> CreateSubEdition([FromRoute] Guid edition_id, [FromBody] SubEditionCreateDto createSubEditionDto)
         {
-            var response = await _editionService.CreateSubeditionAsync(User, edition_id, createSubeditionDto);
+            var response = await _editionService.CreateSubEditionAsync(User, edition_id, createSubEditionDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
         [HttpPut("{edition_id}/subeditions/{subedition_id}")]
-        public async Task<IActionResult> UpdateSubedition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] UpdateSubEditionDto updateSubEditionDto)
+        public async Task<IActionResult> UpdateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] SubEditionUpdateDto updateSubEditionDto)
         {
-            var response = await _editionService.UpdateSubeditionAsync(User, edition_id, subedition_id, updateSubEditionDto);
+            var response = await _editionService.UpdateSubEditionAsync(User, edition_id, subedition_id, updateSubEditionDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [AllowAnonymous]
         [HttpGet("{edition_id}/subeditions/{subedition_id}")]
-        public async Task<IActionResult> GetSubedition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        public async Task<IActionResult> GetSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
         {
-            var response = await _editionService.GetSubeditionAsync(User, edition_id, subedition_id);
+            var response = await _editionService.GetSubEditionAsync(User, edition_id, subedition_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [AllowAnonymous]
         [HttpGet("{edition_id}/subeditions")]
-        public async Task<IActionResult> GetSubeditions([FromRoute] Guid edition_id, [FromQuery] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetSubEditions([FromRoute] Guid edition_id, [FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _editionService.GetSubeditionsAsync(User, edition_id, pageQueryDto);
+            (var responseData, var responsePagination) = await _editionService.GetSubEditionsAsync(User, edition_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         [Authorize]
-        [HttpDelete("{edition_id}/subeditions/{subedition_id}")]
-        public async Task<IActionResult> DeleteSubedition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        [HttpPut("{edition_id}/activate_subedition/{subedition_id}")]
+        public async Task<IActionResult> ActivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
         {
-            await _editionService.DeleteSubeditionAsync(User, edition_id, subedition_id);
+            var response = await _editionService.ActivateSubEditionAsync(User, edition_id, subedition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpPut("{edition_id}/deactivate_subedition/{subedition_id}")]
+        public async Task<IActionResult> DeactivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        {
+            var response = await _editionService.CloseSubEditionAsync(User, edition_id, subedition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpDelete("{edition_id}/subeditions/{subedition_id}")]
+        public async Task<IActionResult> DeleteSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        {
+            await _editionService.DeleteSubEditionAsync(User, edition_id, subedition_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
         [HttpPost("{edition_id}/subeditions/{subedition_id}/tasks")]
-        public async Task<IActionResult> CreateTask([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] CreateTaskItemDto createTaskDto)
+        public async Task<IActionResult> CreateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] TaskItemCreateDto createTaskDto)
         {
-            var response = await _editionService.CreateTaskAsync(User, edition_id, subedition_id, createTaskDto);
+            var response = await _editionService.CreateTaskItemAsync(User, edition_id, subedition_id, createTaskDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
         [HttpDelete("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
-        public async Task<IActionResult> DeleteTask([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
+        public async Task<IActionResult> DeleteTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
         {
-            await _editionService.DeleteTaskAsync(User, edition_id, subedition_id, task_id);
+            await _editionService.DeleteTaskItemAsync(User, edition_id, subedition_id, task_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [AllowAnonymous]
         [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
-        public async Task<IActionResult> GetTask([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
+        public async Task<IActionResult> GetTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
         {
-            var response = await _editionService.GetTaskAsync(User, edition_id, subedition_id, task_id);
+            var response = await _editionService.GetTaskItemAsync(User, edition_id, subedition_id, task_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [AllowAnonymous]
         [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks")]
-        public async Task<IActionResult> GetTasks([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromQuery] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetTaskItems([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _editionService.GetTasksAsync(User, edition_id, subedition_id, pageQueryDto);
+            (var responseData, var responsePagination) = await _editionService.GetTaskItemsAsync(User, edition_id, subedition_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
     }

@@ -140,8 +140,6 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         public static string NAME_LAST_MEMBER_1 = "Kucharek";
         public static string NAME_LAST_MEMBER_2 = "Lewandowska";
         public static string NAME_LAST_MEMBER_3 = "Zielińska";
-        public static string TYPE_LINK_1 = "REGISTER";
-        public static string TYPE_LINK_2 = "RESETPASSWORD";
         public static string POSITION_USER_TEAM_1 = "ADMIN";
         public static string POSITION_USER_TEAM_2 = "CAPTAIN";
         public static DateTime TIME_CREATED = DateTime.UtcNow;
@@ -295,7 +293,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             List<TeamJoinCode> teamJoinCodes = new List<TeamJoinCode>
             {
-                new TeamJoinCode { TeamId = ID_TEAM_1, JoinCode = CODE_TEAM_JOIN_CODE_1, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_TEAM_JOIN_CODE},
+                new TeamJoinCode { TeamId = ID_TEAM_1, JoinCode = CODE_TEAM_JOIN_CODE_1, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_TEAM_JOIN_CODE},
             };
             List<Rodo> rodos = new List<Rodo>
             {
@@ -303,21 +301,21 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             List<Link> links = new List<Link>
             {
-                new Link { Id = ID_LINK_1, UserId = ID_USER_13, Token = TOKEN_LINK_1, Active = true, Type = TYPE_LINK_1, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_2, UserId = ID_USER_14, Token = TOKEN_LINK_2, Active = true, Type = TYPE_LINK_1, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_3, UserId = ID_USER_15, Token = TOKEN_LINK_3, Active = true, Type = TYPE_LINK_1, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_4, UserId = ID_USER_12, Token = TOKEN_LINK_4, Active = true, Type = TYPE_LINK_2, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_1, UserId = ID_USER_13, Token = TOKEN_LINK_1, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_2, UserId = ID_USER_14, Token = TOKEN_LINK_2, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_3, UserId = ID_USER_15, Token = TOKEN_LINK_3, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_4, UserId = ID_USER_12, Token = TOKEN_LINK_4, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_PASSWORD_RESET, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
             };
             List<Session> sessions = new List<Session>
             {
-                new Session { Id = ID_SESSION_1, UserId = ID_USER_1, Token = TOKEN_SESSION_1, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_2, UserId = ID_USER_1, Token = TOKEN_SESSION_2, Active = false, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_3, UserId = ID_USER_1, Token = TOKEN_SESSION_3, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_4, UserId = ID_USER_3, Token = TOKEN_SESSION_4, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_5, UserId = ID_USER_8, Token = TOKEN_SESSION_5, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_6, UserId = ID_USER_10, Token = TOKEN_SESSION_6, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_7, UserId = ID_USER_11, Token = TOKEN_SESSION_7, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_8, UserId = ID_USER_12, Token = TOKEN_SESSION_8, Active = true, CreatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_1, UserId = ID_USER_1, Token = TOKEN_SESSION_1, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_2, UserId = ID_USER_1, Token = TOKEN_SESSION_2, State = SessionStates.STATE_INACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_3, UserId = ID_USER_1, Token = TOKEN_SESSION_3, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_4, UserId = ID_USER_3, Token = TOKEN_SESSION_4, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_5, UserId = ID_USER_8, Token = TOKEN_SESSION_5, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_6, UserId = ID_USER_10, Token = TOKEN_SESSION_6, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_7, UserId = ID_USER_11, Token = TOKEN_SESSION_7, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_8, UserId = ID_USER_12, Token = TOKEN_SESSION_8, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
             };
 
             await db.Users.AddRangeAsync(users);
