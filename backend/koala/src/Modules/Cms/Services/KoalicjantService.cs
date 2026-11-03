@@ -17,9 +17,9 @@ namespace koala.src.Modules.Cms.Services
         public async Task<KoalicjantDto> UpdateKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateKoalicjantRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
@@ -29,20 +29,20 @@ namespace koala.src.Modules.Cms.Services
             bool isNull = koalicjant == null;
 
             bool isSelf = false;
-            
-            if(!isNull)
+
+            if (!isNull)
             {
                 isSelf = koalicjant.UserId.Equals(ClaimsHelper.GetUserGuid(claimsPrincipal));
             }
 
-            if(!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
+            if (!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission.");
             }
 
-            if(isNull)
+            if (isNull)
             {
-                throw new CmsException(CmsErrorCodes.KoalicjantNotFound, "Could not find koalicjant with provided id");
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Could not find koalicjant with provided id");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -77,7 +77,7 @@ namespace koala.src.Modules.Cms.Services
 
             var query = _db.Koalicjants.AsNoTracking().AsQueryable();
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 query = query.Where(k => k.IsVisible == true);
             }
@@ -99,7 +99,7 @@ namespace koala.src.Modules.Cms.Services
                     )
                 ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
 
-            return (koalicjants , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,queryResults.Count));
+            return (koalicjants, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
 
         public async Task<KoalicjantDto> GetKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
@@ -109,7 +109,7 @@ namespace koala.src.Modules.Cms.Services
 
             var query = _db.Koalicjants.AsNoTracking().AsQueryable();
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 query = query.Where(k => k.IsVisible == true);
             }

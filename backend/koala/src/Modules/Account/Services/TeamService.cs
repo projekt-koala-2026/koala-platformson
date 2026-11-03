@@ -67,7 +67,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -75,33 +75,33 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player can create a team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player can create a team");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if (activeEdition == null)
             {
-                throw new AccountException(AccountErrorCodes._EXTERNAL_ActiveEditionNotFound, "There is no active edition under which the team could be created");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "There is no active edition under which the team could be created");
             }
 
             var school = await _coreService.Internal_GetSchoolAsync(requestDto.SchoolId);
 
             if (school == null)
             {
-                throw new AccountException(AccountErrorCodes._EXTERNAL_SchoolNotFound, "There is no school with provided id under which the team could be created");
+                throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "There is no school with provided id under which the team could be created");
             }
 
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
             }
 
             bool isCaptainAlready = user.CaptainTeam != null ? true : false;
             if (isCaptainAlready)
             {
-                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User already is part of a team, cannot be a part of more than one team");
+                throw new KoalaException(KoalaErrorCodes.UserIsCaptainOfTeamAlready, "User already is part of a team, cannot be a part of more than one team");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -170,7 +170,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -178,31 +178,31 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player with position captain can manage the team");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if (activeEdition == null)
             {
-                throw new AccountException(AccountErrorCodes._EXTERNAL_ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
             }
 
             bool isCaptain = captain.CaptainTeam != null ? true : false;
             if (!isCaptain)
             {
-                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
             }
 
             if (captain.CaptainTeam.Id != teamId)
             {
-                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+                throw new KoalaException(KoalaErrorCodes.UserNotPartOfThisTeam, "User is not a captain of this team");
             }
 
             var teamMembers = await _db.TeamMembers.Where(tm => tm.TeamId == teamId).ToListAsync();
@@ -220,7 +220,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -228,7 +228,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player with position captain can manage the team");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
@@ -242,31 +242,31 @@ namespace koala.src.Modules.Account.Services
 
             if (!(activeEdition.TeamRegisterOpen <= timeNow) && !(timeNow <= activeEdition.TeamRegisterClose))
             {
-                throw new AccountException(AccountErrorCodes.TeamChangesNoLongerPermited, "Time span for team changes no longer permited");
+                throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
 
             var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
             }
 
             bool isCaptain = captain.CaptainTeam != null ? true : false;
             if (!isCaptain)
             {
-                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
             }
 
             if (captain.CaptainTeam.Id != teamId)
             {
-                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+                throw new KoalaException(KoalaErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
             int membersCount = await _db.TeamMembers.Where(tm => tm.TeamId == teamId).CountAsync();
 
             if (membersCount >= 4)
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberCountMax, "Team is full");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberLimitExceeded, "Team is full");
             }
 
             TeamMember newTeamMember = new TeamMember
@@ -308,7 +308,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -316,7 +316,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player with position captain can manage the team");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
@@ -330,36 +330,36 @@ namespace koala.src.Modules.Account.Services
 
             if (!(activeEdition.TeamRegisterOpen <= timeNow) && !(timeNow <= activeEdition.TeamRegisterClose))
             {
-                throw new AccountException(AccountErrorCodes.TeamChangesNoLongerPermited, "Time span for team changes no longer permited");
+                throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
 
             var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
             }
 
             bool isCaptain = captain.CaptainTeam != null ? true : false;
             if (!isCaptain)
             {
-                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
             }
 
             if (captain.CaptainTeam.Id != teamId)
             {
-                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+                throw new KoalaException(KoalaErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
             var teamMemberToUpdate = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.Id != userId);
 
             if (teamMemberToUpdate == null)
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
             }
 
             if (teamMemberToUpdate.Version != requestDto.Version)
             {
-                throw new AccountException(AccountErrorCodes.Conflict, "Member field version does not match make sure u have the fresh data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Member field version does not match make sure u have the fresh data");
             }
 
             teamMemberToUpdate.NameFirst = requestDto.NameFirst;
@@ -391,7 +391,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -399,7 +399,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player with position captain can manage the team");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
@@ -413,31 +413,31 @@ namespace koala.src.Modules.Account.Services
 
             if (!(activeEdition.TeamRegisterOpen <= timeNow) && !(timeNow <= activeEdition.TeamRegisterClose))
             {
-                throw new AccountException(AccountErrorCodes.TeamChangesNoLongerPermited, "Time span for team changes no longer permited");
+                throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
 
             var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
             }
 
             bool isCaptain = captain.CaptainTeam != null ? true : false;
             if (!isCaptain)
             {
-                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
             }
 
             if (captain.CaptainTeam.Id != teamId)
             {
-                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+                throw new KoalaException(KoalaErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
             var teamMemberToDelete = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.Id != userId);
 
             if (teamMemberToDelete == null)
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
             }
 
             _db.TeamMembers.Remove(teamMemberToDelete);
@@ -453,7 +453,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -461,43 +461,43 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player with position captain can manage the team");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
 
             if (activeEdition == null)
             {
-                throw new AccountException(AccountErrorCodes._EXTERNAL_ActiveEditionNotFound, "Cannot edit team name when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit team name when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
 
             if (!(activeEdition.TeamRegisterOpen <= timeNow) && !(timeNow <= activeEdition.TeamRegisterClose))
             {
-                throw new AccountException(AccountErrorCodes.TeamChangesNoLongerPermited, "Time span for team changes no longer permited");
+                throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
 
             var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
             }
 
             bool isCaptain = captain.CaptainTeam != null ? true : false;
             if (!isCaptain)
             {
-                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
             }
 
             if (captain.CaptainTeam.Id != teamId)
             {
-                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+                throw new KoalaException(KoalaErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
             if (captain.CaptainTeam.Version != requestDto.Version)
             {
-                throw new AccountException(AccountErrorCodes.Conflict, "team version field does not match make sure u have the fresh data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "team version field does not match make sure u have the fresh data");
             }
 
             captain.CaptainTeam.Name = requestDto.Name;
@@ -574,7 +574,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -582,7 +582,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player with position captain can manage the team");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
@@ -597,18 +597,18 @@ namespace koala.src.Modules.Account.Services
             var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
             }
 
             bool isCaptain = captain.CaptainTeam != null ? true : false;
             if (!isCaptain)
             {
-                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
             }
 
             if (captain.CaptainTeam.Id != teamId)
             {
-                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+                throw new KoalaException(KoalaErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
             TeamJoinCode? teamJoinCode = await _db.TeamJoinCodes.FirstOrDefaultAsync(tjc => tjc.TeamId == teamId);
@@ -643,7 +643,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
@@ -651,7 +651,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin can use the join code");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin can use the join code");
             }
 
             var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
@@ -667,7 +667,7 @@ namespace koala.src.Modules.Account.Services
 
             if (teamJoinCode == null)
             {
-                throw new AccountException(AccountErrorCodes.TeamJoinCodeNotFound, "The join code does not exist or is expired");
+                throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code does not exist or is expired");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -677,29 +677,26 @@ namespace koala.src.Modules.Account.Services
                 _db.TeamJoinCodes.Remove(teamJoinCode);
                 await _db.SaveChangesAsync();
 
-                throw new AccountException(
-                    AccountErrorCodes.TeamJoinCodeNotFound,
-                    "The join code is invalid or has expired."
-                );
+                throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code is invalid or has expired.");
             }
 
             if (teamJoinCode.Team.EditionId != activeEdition.Id)
             {
-                throw new AccountException(AccountErrorCodes.TeamJoinCodeNotFound, "The join code belongs to an inactive edition");
+                throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code belongs to an inactive edition");
             }
 
             // MAKE SURE ONLY ONE TEAM ADMIN PER TEAM AND WELL TEAM PLAYER CANT JOIN SINCE A TEAM WITH NO CAPTAIN CAN EXIST AND ONLY ONE CAPTAIN PER TEAM IS ALLOWED
             var team = await _db.Teams.FirstOrDefaultAsync(t => t.Id == teamJoinCode.TeamId);
             if (team == null)
             {
-                throw new AccountException(AccountErrorCodes.TeamNotFound, "team for this join code does not exist");
+                throw new KoalaException(KoalaErrorCodes.TeamNotFound, "team for this join code does not exist");
             }
 
             bool teamHasAdmin = team.GuardianId != null ? true : false;
 
             if (teamHasAdmin)
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberCountMax, "This team already has an admin");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberLimitExceeded, "This team already has an admin");
             }
 
             team.GuardianId = userId;
@@ -773,7 +770,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -782,12 +779,12 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer && !isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team members can view their teams");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team members can view their teams");
             }
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Corrupted auth cookie");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Corrupted auth cookie");
             }
 
             var query = _db.Teams
@@ -875,7 +872,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
@@ -885,21 +882,21 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer && !isTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team members and admin can view the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team members and admin can view the team");
             }
 
             bool isTeamMember = await _db.Teams.AnyAsync(tm => tm.Id == teamId && (tm.CaptainId == userId || tm.GuardianId == userId));
 
             if (!isTeamMember && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team members and admin can view the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team members and admin can view the team");
             }
 
             var team = await _db.Teams.AsNoTracking().FirstOrDefaultAsync(t => t.Id == teamId);
 
             if (team == null)
             {
-                throw new AccountException(AccountErrorCodes.TeamNotFound, "The provided id does not belong to any team");
+                throw new KoalaException(KoalaErrorCodes.TeamNotFound, "The provided id does not belong to any team");
             }
 
             var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId && tm.Id != team.CaptainId)
@@ -965,14 +962,14 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only admin can view all the teams");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only admin can view all the teams");
             }
 
             var query = _db.Teams

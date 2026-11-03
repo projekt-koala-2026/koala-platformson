@@ -216,8 +216,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 TestDataSeeder.PASSWORD_USER_13
             );
 
-            var exception = await Assert.ThrowsAsync<AccountException>(() => service.CreateSessionAsync(requestDto));
-            Assert.Equal(AccountErrorCodes.UserNotFound, exception.ErrorCode);
+            var exception = await Assert.ThrowsAsync<KoalaException>(() => service.CreateSessionAsync(requestDto));
+            Assert.Equal(KoalaErrorCodes.InvalidCredentials, exception.ErrorCode);
         }
 
         [Fact]
@@ -227,8 +227,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             ClaimsPrincipal? unauthenticatedPrincipal = null;
 
-            var exception = await Assert.ThrowsAsync<AccountException>(() => service.DeleteSessionAsync(unauthenticatedPrincipal, TestDataSeeder.ID_SESSION_1));
-            Assert.Equal(AccountErrorCodes.Unauthenticated, exception.ErrorCode);
+            var exception = await Assert.ThrowsAsync<KoalaException>(() => service.DeleteSessionAsync(unauthenticatedPrincipal, TestDataSeeder.ID_SESSION_1));
+            Assert.Equal(KoalaErrorCodes.Unauthenticated, exception.ErrorCode);
         }
     }
 }

@@ -236,7 +236,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only admin can send emails");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only admin can send emails");
             }
 
             string htmlMessage = $@"
@@ -301,7 +301,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only admin can send emails");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only admin can send emails");
             }
 
             _backgroundJobClient.Enqueue<EmailService>(processor => processor.CaptainsEmailSendBulkJobAsync(80, 0, requestDto.MessageSubject, requestDto.MessageBody, false));
@@ -346,7 +346,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only admin can send emails");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only admin can send emails");
             }
 
             _backgroundJobClient.Enqueue<EmailService>(processor => processor.GuardiansEmailSendBulkJobAsync(80, 0, requestDto.MessageSubject, requestDto.MessageBody, false));

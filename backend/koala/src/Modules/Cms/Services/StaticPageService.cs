@@ -14,26 +14,26 @@ namespace koala.src.Modules.Cms.Services
         {
             _db = db;
         }
-        public async Task<StaticPageDto> UpdateStaticPagesAsync(ClaimsPrincipal? claimsPrincipal,Guid id, UpdateStaticPageRequestDto requestDto)
+        public async Task<StaticPageDto> UpdateStaticPagesAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateStaticPageRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to update static page");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to update static page");
             }
 
             var staticPage = await _db.StaticPages.FirstOrDefaultAsync(sp => sp.Id == id);
 
-            if(staticPage == null)
+            if (staticPage == null)
             {
-                throw new CmsException(CmsErrorCodes.StaticPageNotFound, "Specified static page does not exist");
+                throw new KoalaException(KoalaErrorCodes.StaticPageNotFound, "Specified static page does not exist");
             }
 
             try
@@ -42,7 +42,7 @@ namespace koala.src.Modules.Cms.Services
             }
             catch (JsonException)
             {
-                throw new CmsException(CmsErrorCodes.InvalidJsonStructure, "This is not a valid json");
+                throw new KoalaException(KoalaErrorCodes.InvalidJson, "This is not a valid json");
             }
 
             DateTime timeNow = DateTime.UtcNow;

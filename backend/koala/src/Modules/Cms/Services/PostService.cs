@@ -19,16 +19,16 @@ namespace koala.src.Modules.Cms.Services
         public async Task<PostDto> CreatePostAsync(ClaimsPrincipal? claimsPrincipal, CreatePostRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             //TODO: CHECK IF ACTIVE / REAL EDITION
@@ -50,29 +50,29 @@ namespace koala.src.Modules.Cms.Services
             await _db.Posts.AddAsync(post);
             await _db.SaveChangesAsync();
 
-            return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisible,post.Version);
+            return new PostDto(post.Id, post.EditionId, post.Name, post.ContentJson, post.CreatedAt, post.UpdatedAt, post.IsVisible, post.Version);
         }
 
         public async Task<PostDto> UpdatePostAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdatePostRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id ==id);
+            var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id == id);
 
-            if(post == null)
+            if (post == null)
             {
-                throw new CmsException(CmsErrorCodes.PostNotFound, "Could not find post with provided id");
+                throw new KoalaException(KoalaErrorCodes.PostNotFound, "Could not find post with provided id");
             }
 
             //TODO: CHECK IF ACTIVE / REAL EDITION
@@ -88,29 +88,29 @@ namespace koala.src.Modules.Cms.Services
 
             await _db.SaveChangesAsync();
 
-            return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisible,post.Version);
+            return new PostDto(post.Id, post.EditionId, post.Name, post.ContentJson, post.CreatedAt, post.UpdatedAt, post.IsVisible, post.Version);
         }
 
         public async Task DeletePostAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id ==id);
+            var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id == id);
 
-            if(post == null)
+            if (post == null)
             {
-                throw new CmsException(CmsErrorCodes.PostNotFound, "Could not find post with provided id");
+                throw new KoalaException(KoalaErrorCodes.PostNotFound, "Could not find post with provided id");
             }
 
             _db.Posts.Remove(post);
@@ -122,24 +122,24 @@ namespace koala.src.Modules.Cms.Services
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHidden == true))
+            if (!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHidden == true))
             {
-                throw new CmsException(CmsErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var query = _db.Posts.AsNoTracking().AsQueryable();
 
-            if(postQueryDto.EditionId != null)
+            if (postQueryDto.EditionId != null)
             {
                 query = query.Where(p => p.EditionId == postQueryDto.EditionId);
             }
 
-            if(!string.IsNullOrEmpty(postQueryDto.Name))
+            if (!string.IsNullOrEmpty(postQueryDto.Name))
             {
                 query = query.Where(p => p.Name == postQueryDto.Name);
             }
 
-            if(postQueryDto.ShowHidden != null)
+            if (postQueryDto.ShowHidden != null)
             {
                 query = query.Where(p => p.IsVisible == !postQueryDto.ShowHidden);
             }
@@ -161,7 +161,7 @@ namespace koala.src.Modules.Cms.Services
                     )
                 ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
 
-            return (posts , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,queryResults.Count));
+            return (posts, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
 
         public async Task<PostDto> GetPostAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
@@ -171,16 +171,16 @@ namespace koala.src.Modules.Cms.Services
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 query = query.Where(p => p.IsVisible == true);
             }
 
             var queryResults = await query.FirstOrDefaultAsync(p => p.Id == id);
 
-            if(queryResults == null)
+            if (queryResults == null)
             {
-                throw new CmsException(CmsErrorCodes.PostNotFound, "Post with this id does not exist");
+                throw new KoalaException(KoalaErrorCodes.PostNotFound, "Post with this id does not exist");
             }
 
             PostDto post = new PostDto

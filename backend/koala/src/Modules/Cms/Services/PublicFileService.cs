@@ -21,16 +21,16 @@ namespace koala.src.Modules.Cms.Services
         public async Task<PublicFileDto> AddFileAsync(ClaimsPrincipal? claimsPrincipal, CreatePublicFileRequestDto createPublicFileRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(KoalaErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             try
@@ -39,7 +39,7 @@ namespace koala.src.Modules.Cms.Services
             }
             catch
             {
-                throw new CmsException(CmsErrorCodes.FolderCreationError, "Error when creating a folder holding public files");    
+                throw new KoalaException(KoalaErrorCodes.FolderCreationFailure, "Error when creating a folder holding public files");
             }
 
             var id = Guid.CreateVersion7();
@@ -47,7 +47,7 @@ namespace koala.src.Modules.Cms.Services
             var path = $"{id}{extension}";
             var physicalPath = Path.Combine(_publicFilesPath, path);
             try
-            {       
+            {
                 await using (var stream = new FileStream(physicalPath, FileMode.CreateNew))
                 {
                     await createPublicFileRequestDto.File.CopyToAsync(stream);
@@ -55,7 +55,7 @@ namespace koala.src.Modules.Cms.Services
             }
             catch
             {
-                throw new CmsException(CmsErrorCodes.FileCreationError, "Error creating a public file");
+                throw new KoalaException(KoalaErrorCodes.FileCreationFailure, "Error creating a public file");
             }
 
             PublicFile publicFile = new PublicFile();
@@ -80,32 +80,32 @@ namespace koala.src.Modules.Cms.Services
                     File.Delete(physicalPath);
                 }
 
-                throw new CmsException(CmsErrorCodes.DatabaseError, "Error saving public file record to database");
+                throw new KoalaException(KoalaErrorCodes.DatabaseError, "Error saving public file record to database");
             }
 
             return new PublicFileDto(publicFile.Id, publicFile.Name, publicFile.Path, publicFile.Type, publicFile.CreatedAt, publicFile.Version);
         }
 
-        public async Task DeleteFileAsync(ClaimsPrincipal? claimsPrincipal,Guid id)
+        public async Task DeleteFileAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var publicFile = await _db.PublicFiles.FirstOrDefaultAsync(pf => pf.Id == id);
 
-            if(publicFile == null)
+            if (publicFile == null)
             {
-                throw new CmsException(CmsErrorCodes.FileNotFound, "Could not find such file");
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "Could not find such file");
             }
 
             _db.PublicFiles.Remove(publicFile);
@@ -126,26 +126,26 @@ namespace koala.src.Modules.Cms.Services
         public async Task<(List<PublicFileDto>, ApiPagination)> GetFilesAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, PublicFileQueryDto publicFileQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var query = _db.PublicFiles.AsNoTracking().AsQueryable();
 
-            if(!string.IsNullOrEmpty(publicFileQueryDto.Type))
+            if (!string.IsNullOrEmpty(publicFileQueryDto.Type))
             {
                 query = query.Where(pf => pf.Type == publicFileQueryDto.Type);
             }
 
-            if(!string.IsNullOrEmpty(publicFileQueryDto.Name))
+            if (!string.IsNullOrEmpty(publicFileQueryDto.Name))
             {
                 query = query.Where(pf => pf.Name == publicFileQueryDto.Name);
             }

@@ -32,14 +32,14 @@ namespace koala.src.Modules.Account.Services
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "Did not found a user for this email");
+                throw new KoalaException(KoalaErrorCodes.InvalidCredentials, "Invalid credentials");
             }
 
             (bool Verified, bool NeedsRehash, string? NewHash) = PasswordHasher.VerifyAndMaybeRehash(user.PasswordHash!, requestDto.Password);
 
             if (!Verified)
             {
-                throw new AccountException(AccountErrorCodes.IncorrectPassword, "Incorrect password.");
+                throw new KoalaException(KoalaErrorCodes.InvalidCredentials, "Invalid credentials.");
             }
 
             if (NeedsRehash)
@@ -77,13 +77,13 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Principal is null.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
             var session = await _db.Sessions
@@ -91,7 +91,7 @@ namespace koala.src.Modules.Account.Services
 
             if (session == null)
             {
-                throw new AccountException(AccountErrorCodes.SessionNotFound, "Invalid session id");
+                throw new KoalaException(KoalaErrorCodes.SessionNotFound, "Invalid session id");
             }
 
             await _cache.RemoveKeyAsync($"koala:account:Session:{session.Token}");
@@ -103,13 +103,13 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Principal is null.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
             var session = await _db.Sessions
@@ -117,7 +117,7 @@ namespace koala.src.Modules.Account.Services
 
             if (session == null)
             {
-                throw new AccountException(AccountErrorCodes.SessionNotFound, "Invalid session was already deactivated or does not exist");
+                throw new KoalaException(KoalaErrorCodes.SessionNotFound, "Invalid session was already deactivated or does not exist");
             }
 
             await _cache.RemoveKeyAsync($"koala:account:Session:{session.Token}");
@@ -130,13 +130,13 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Principal is null.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
             var queryResults = await _db.Sessions.Where(s => s.UserId == userId).AsNoTracking().AsQueryable().ToListAsync();
@@ -153,13 +153,13 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Principal is null.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
             var queryResults = await _db.Sessions.Where(s => s.UserId == userId && s.State == SessionStates.STATE_ACTIVE).AsNoTracking().AsQueryable().ToListAsync();
@@ -176,13 +176,13 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Principal is null.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Principal is null.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
             var sessions = await _db.Sessions

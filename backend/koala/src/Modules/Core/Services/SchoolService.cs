@@ -50,12 +50,12 @@ namespace koala.src.Modules.Core.Services
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             //TODO check here if that all that is unique???
@@ -63,14 +63,14 @@ namespace koala.src.Modules.Core.Services
 
             if (school != null)
             {
-                throw new CoreException(CoreErrorCodes.SchoolAlreadyExists, "School with this rspo or full name already exists");
+                throw new KoalaException(KoalaErrorCodes.SchoolAlreadyExists, "School with this rspo or full name already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (SchoolValidateTypeAndGetTier(schoolCreateRequestDto.Type, out string tier))
+            if (!SchoolValidateTypeAndGetTier(schoolCreateRequestDto.Type, out string tier))
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Invalid school type");
+                throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "Invalid school type");
             }
 
             school = new School
@@ -121,29 +121,29 @@ namespace koala.src.Modules.Core.Services
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var school = await _db.Schools.FirstOrDefaultAsync(s => s.Id == id);
 
             if (school == null)
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "School with this id does not exist");
+                throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "School with this id does not exist");
             }
 
             if (school.Version != schoolUpdateRequestDto.Version)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "Updated school version does not match make sure u have the freshest data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Updated school version does not match make sure u have the freshest data");
             }
 
-            if (SchoolValidateTypeAndGetTier(schoolUpdateRequestDto.Type, out string tier))
+            if (!SchoolValidateTypeAndGetTier(schoolUpdateRequestDto.Type, out string tier))
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Invalid school type");
+                throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "Invalid school type");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -188,19 +188,19 @@ namespace koala.src.Modules.Core.Services
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var school = await _db.Schools.FirstOrDefaultAsync(s => s.Id == id);
 
             if (school == null)
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "School with this id does not exist");
+                throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "School with this id does not exist");
             }
 
             _db.Schools.Remove(school);
@@ -214,19 +214,19 @@ namespace koala.src.Modules.Core.Services
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var schools = await _db.Schools.Where(s => ids.Contains(s.Id)).ToListAsync();
 
             if (schools.Count == 0)
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Not a single school with provided ids exists");
+                throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "Not a single school with provided ids exists");
             }
 
             _db.Schools.RemoveRange(schools);
@@ -240,12 +240,12 @@ namespace koala.src.Modules.Core.Services
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             await _db.Schools.ExecuteDeleteAsync();
@@ -258,12 +258,12 @@ namespace koala.src.Modules.Core.Services
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var file = schoolImportRequestDto.File;
@@ -293,7 +293,7 @@ namespace koala.src.Modules.Core.Services
 
             if (actualHeaders == null || !expectedHeaders.All(h => actualHeaders.Contains(h)))
             {
-                throw new CoreException(CoreErrorCodes.InvalidImportSchoolFile, "The uploaded CSV file is missing one or more required columns.");
+                throw new KoalaException(KoalaErrorCodes.FileReadFailure, "The uploaded CSV file is missing one or more required columns.");
             }
 
             while (await csv.ReadAsync())
@@ -340,7 +340,7 @@ namespace koala.src.Modules.Core.Services
 
             if (queryResult == null)
             {
-                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Could not find a school with this id");
+                throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "Could not find a school with this id");
             }
 
             return new SchoolDto

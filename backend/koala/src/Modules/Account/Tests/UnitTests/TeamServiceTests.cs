@@ -86,8 +86,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 TestDataSeeder.MOCK_ID_SCHOOL_3
             );
 
-            var exception = await Assert.ThrowsAsync<AccountException>(() => service.CreateTeamAsync(claimsPrincipal, requestDto));
-            Assert.Equal(AccountErrorCodes.Forbidden, exception.ErrorCode);
+            var exception = await Assert.ThrowsAsync<KoalaException>(() => service.CreateTeamAsync(claimsPrincipal, requestDto));
+            Assert.Equal(KoalaErrorCodes.Forbidden, exception.ErrorCode);
         }
 
         [Fact]
@@ -168,8 +168,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 TestDataSeeder.VERSION
             );
 
-            var exception = await Assert.ThrowsAsync<AccountException>(() => service.AddTeamMemberAsync(claimsPrincipal, TestDataSeeder.ID_TEAM_1, requestDto));
-            Assert.Equal(AccountErrorCodes.Forbidden, exception.ErrorCode);
+            var exception = await Assert.ThrowsAsync<KoalaException>(() => service.AddTeamMemberAsync(claimsPrincipal, TestDataSeeder.ID_TEAM_1, requestDto));
+            Assert.Equal(KoalaErrorCodes.Forbidden, exception.ErrorCode);
         }
 
         [Fact]
@@ -185,8 +185,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(claims, "SessionCookie"));
 
-            var exception = await Assert.ThrowsAsync<AccountException>(() => service.DeleteTeamMemberAsync(claimsPrincipal, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_2));
-            Assert.Equal(AccountErrorCodes.Forbidden, exception.ErrorCode);
+            var exception = await Assert.ThrowsAsync<KoalaException>(() => service.DeleteTeamMemberAsync(claimsPrincipal, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_2));
+            Assert.Equal(KoalaErrorCodes.Forbidden, exception.ErrorCode);
         }
 
         [Fact]
@@ -224,9 +224,9 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 TestDataSeeder.MOCK_ID_SCHOOL_1
             );
 
-            var exception = await Assert.ThrowsAsync<AccountException>(() => service.CreateTeamAsync(unauthenticatedPrincipal, requestDto));
+            var exception = await Assert.ThrowsAsync<KoalaException>(() => service.CreateTeamAsync(unauthenticatedPrincipal, requestDto));
 
-            Assert.Equal(AccountErrorCodes.Unauthenticated, exception.ErrorCode);
+            Assert.Equal(KoalaErrorCodes.Unauthenticated, exception.ErrorCode);
         }
     }
 }

@@ -24,14 +24,14 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User must be valid authenticated");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User must be valid authenticated");
             }
 
             Guid sessionToken = ClaimsHelper.GetSessionTokenGuid(claimsPrincipal);
 
             if (sessionToken == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid or missing session token claim.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing session token claim.");
             }
 
             var redisKey = $"koala:account:Session:{sessionToken}";
@@ -46,7 +46,7 @@ namespace koala.src.Modules.Account.Services
                     if (cachedSession.ExpiresAt <= DateTimeOffset.UtcNow)
                     {
                         await _cache.RemoveKeyAsync(redisKey);
-                        throw new AccountException(AccountErrorCodes.Unauthenticated, "Session has expired in cache.");
+                        throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Session has expired in cache.");
                     }
                     return cachedSession;
                 }
@@ -59,14 +59,14 @@ namespace koala.src.Modules.Account.Services
 
             if (session == null)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Session not found or expired in database.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Session not found or expired in database.");
             }
 
             if (session.ExpiresAt <= DateTimeOffset.UtcNow)
             {
                 session.State = SessionStates.STATE_INACTIVE;
                 await _db.SaveChangesAsync();
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Session expired.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Session expired.");
             }
 
             // Get latest roles

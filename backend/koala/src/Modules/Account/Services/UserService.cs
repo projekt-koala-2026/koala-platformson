@@ -37,13 +37,13 @@ namespace koala.src.Modules.Account.Services
 
             if (isAuthenticated && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Forbidden");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Forbidden");
             }
 
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email);
             if (user != null && user.Verified == true)
             {
-                throw new AccountException(AccountErrorCodes.UserAlreadyExists, "User with this email already exists");
+                throw new KoalaException(KoalaErrorCodes.UserAlreadyExists, "User with this email already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -95,7 +95,7 @@ namespace koala.src.Modules.Account.Services
             {
                 if (!validTeamRoleNames.Contains(role))
                 {
-                    throw new AccountException(AccountErrorCodes.IncorrectRoles, "Specified role is not a valid user role");
+                    throw new KoalaException(KoalaErrorCodes.UserInvalidRoles, "Specified role is not a valid user role");
                 }
             }
 
@@ -134,7 +134,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -143,17 +143,17 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
             }
             var userRolesNames = await _db.UserRoles
                 .AsNoTracking()
@@ -169,7 +169,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -178,17 +178,17 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
             }
             return new UserDeclarationDto(user.Id, user.AcceptedRodo, user.AcceptedRules, user.DeclaredAtLeast13, user.DeclaredAtLeast18);
         }
@@ -197,7 +197,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -205,17 +205,17 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             if (!isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
             }
 
             var rolesRequiring18 = new[] { RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_ORGANIZATION_REVIEWER, RoleNames.NAME_TEAM_GUARDIAN };
@@ -223,17 +223,17 @@ namespace koala.src.Modules.Account.Services
             bool requires18 = user.UserRoles.Any(r => rolesRequiring18.Contains(r.Role.Name));
             if (requires18 && !requestDto.DeclaredAtLeast18)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "Your roles requires you to confirm you are at least 18 years old.");
+                throw new KoalaException(KoalaErrorCodes.UserRoleAgeRequirementNotMet, "Your roles requires you to confirm you are at least 18 years old.");
             }
 
             bool isCaptain = user.UserRoles.Any(r => r.Role.Name == RoleNames.NAME_TEAM_CAPTAIN);
             if (isCaptain && !requestDto.DeclaredAtLeast13 && !requestDto.DeclaredAtLeast18)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "Captains role requires you are at least 13 years old.");
+                throw new KoalaException(KoalaErrorCodes.UserRoleAgeRequirementNotMet, "Captains role requires you are at least 13 years old.");
             }
             if (user.Version != requestDto.Version)
             {
-                throw new AccountException(AccountErrorCodes.Conflict, "Version does not match make sure u have fresh data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Version does not match make sure u have fresh data");
             }
 
             user.DeclaredAtLeast13 = requestDto.DeclaredAtLeast13;
@@ -250,7 +250,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -258,12 +258,12 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Dont have permission to do it");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Dont have permission to do it");
             }
 
             var query = _db.Users
@@ -320,7 +320,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -329,22 +329,22 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
             if (!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
             }
 
             if (user.Version != request.Version)
             {
-                throw new AccountException(AccountErrorCodes.Conflict, "Version does not match make sure u have fresh data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Version does not match make sure u have fresh data");
             }
 
             var roles = await _db.Roles.ToListAsync();
@@ -360,7 +360,7 @@ namespace koala.src.Modules.Account.Services
             {
                 if (!validTeamRoleNames.Contains(role))
                 {
-                    throw new AccountException(AccountErrorCodes.IncorrectRoles, "Specified role is not a valid user role");
+                    throw new KoalaException(KoalaErrorCodes.UserInvalidRoles, "Specified role is not a valid user role");
                 }
             }
 
@@ -375,13 +375,13 @@ namespace koala.src.Modules.Account.Services
             bool requires18 = request.UserRoles.Any(r => rolesRequiring18.Contains(r));
             if (requires18 && !user.DeclaredAtLeast18)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "Your selected roles require you to confirm you are at least 18 years old.");
+                throw new KoalaException(KoalaErrorCodes.UserRoleAgeRequirementNotMet, "Your selected roles require you to confirm you are at least 18 years old.");
             }
 
             bool isCaptain = request.UserRoles.Contains(RoleNames.NAME_TEAM_CAPTAIN);
             if (isCaptain && !user.DeclaredAtLeast13 && !user.DeclaredAtLeast18)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "Captain role requires you to be at least 13 years old.");
+                throw new KoalaException(KoalaErrorCodes.UserRoleAgeRequirementNotMet, "Captain role requires you to be at least 13 years old.");
             }
 
             await _db.UserRoles.Where(ur => ur.UserId == id).ExecuteDeleteAsync();
@@ -416,7 +416,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -425,22 +425,22 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
             if (!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
             }
 
             if (user.Version != request.Version)
             {
-                throw new AccountException(AccountErrorCodes.Conflict, "Version does not match make sure u have fresh data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Version does not match make sure u have fresh data");
             }
 
             user.NameFirst = request.NameFirst;
@@ -463,7 +463,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -472,18 +472,18 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
             if (!isOrganizationAdmin && !isSelf)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
             }
 
             _db.Users.Remove(user);
@@ -495,7 +495,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -503,23 +503,23 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
             }
 
             if (user.Version != requestDto.Version)
             {
-                throw new AccountException(AccountErrorCodes.Conflict, "Version does not match make sure u have fresh data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Version does not match make sure u have fresh data");
             }
 
             user.Censored = true;
@@ -533,7 +533,7 @@ namespace koala.src.Modules.Account.Services
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
@@ -541,23 +541,23 @@ namespace koala.src.Modules.Account.Services
 
             if (userId == Guid.Empty)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid claims principal missing user id");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
-                throw new AccountException(AccountErrorCodes.UserNotFound, "User does not exist");
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
             }
 
             if (user.Version != requestDto.Version)
             {
-                throw new AccountException(AccountErrorCodes.Conflict, "Version does not match make sure u have fresh data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Version does not match make sure u have fresh data");
             }
 
             user.Censored = false;

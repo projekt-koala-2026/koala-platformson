@@ -20,16 +20,16 @@ namespace koala.src.Modules.Cms.Services
         public async Task<SponsorDto> CreateSponsorAsync(ClaimsPrincipal? claimsPrincipal, CreateSponsorRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -48,32 +48,32 @@ namespace koala.src.Modules.Cms.Services
             await _db.Sponsors.AddAsync(sponsor);
             await _db.SaveChangesAsync();
 
-            return new SponsorDto(sponsor.Id,sponsor.Name,sponsor.ContentJson,sponsor.IsVisible,sponsor.UpdatedAt,sponsor.CreatedAt,sponsor.Version);
+            return new SponsorDto(sponsor.Id, sponsor.Name, sponsor.ContentJson, sponsor.IsVisible, sponsor.UpdatedAt, sponsor.CreatedAt, sponsor.Version);
         }
-        public async Task<SponsorDto> UpdateSponsorAsync(ClaimsPrincipal? claimsPrincipal,Guid id, UpdateSponsorRequestDto requestDto)
+        public async Task<SponsorDto> UpdateSponsorAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateSponsorRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var sponsor = await _db.Sponsors.FirstOrDefaultAsync(s => s.Id == id);
 
-            if(sponsor == null)
+            if (sponsor == null)
             {
-                throw new CmsException(CmsErrorCodes.SponsorNotFound, "Could not find sponsor for this id");
+                throw new KoalaException(KoalaErrorCodes.SponsorNotFound, "Could not find sponsor for this id");
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            
+
             sponsor.Name = requestDto.Name;
             sponsor.ContentJson = requestDto.ContentJson;
             sponsor.IsVisible = requestDto.IsVisible;
@@ -82,30 +82,30 @@ namespace koala.src.Modules.Cms.Services
 
             await _db.SaveChangesAsync();
 
-            return new SponsorDto(sponsor.Id,sponsor.Name,sponsor.ContentJson,sponsor.IsVisible,sponsor.UpdatedAt,sponsor.CreatedAt,sponsor.Version);
+            return new SponsorDto(sponsor.Id, sponsor.Name, sponsor.ContentJson, sponsor.IsVisible, sponsor.UpdatedAt, sponsor.CreatedAt, sponsor.Version);
         }
-        public async Task DeleteSponsorAsync(ClaimsPrincipal? claimsPrincipal,Guid id)
+        public async Task DeleteSponsorAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var sponsor = await _db.Sponsors.FirstOrDefaultAsync(s => s.Id == id);
 
-            if(sponsor == null)
+            if (sponsor == null)
             {
-                throw new CmsException(CmsErrorCodes.SponsorNotFound, "Could not find sponsor for this id");
+                throw new KoalaException(KoalaErrorCodes.SponsorNotFound, "Could not find sponsor for this id");
             }
-            
+
             _db.Sponsors.Remove(sponsor);
             await _db.SaveChangesAsync();
         }
@@ -116,7 +116,7 @@ namespace koala.src.Modules.Cms.Services
 
             var query = _db.Sponsors.AsNoTracking().AsQueryable();
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 query = query.Where(s => s.IsVisible == true);
             }
@@ -137,7 +137,7 @@ namespace koala.src.Modules.Cms.Services
                     )
                 ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
 
-            return (sponsors , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,queryResults.Count));
+            return (sponsors, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
 
         public async Task<SponsorDto> GetSponsorAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
@@ -147,7 +147,7 @@ namespace koala.src.Modules.Cms.Services
 
             var query = _db.Sponsors.AsNoTracking().AsQueryable();
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 query = query.Where(s => s.IsVisible == true);
             }
