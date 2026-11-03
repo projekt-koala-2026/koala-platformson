@@ -402,6 +402,51 @@ namespace koala.src.Modules.Core.Services
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
+        public async Task<(List<TaskSubmissionDto>, ApiPagination)> GetTasksWithConflictsAsync(ClaimsPrincipal? claimsPrincipal, Guid reviewer_id, PageQueryDto pageQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationReviewer = ClaimsHelper.IsOrganizationReviewer(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationReviewer)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var query = _db.TaskSubmissions.Where(t =>(t.Reviewer1Id == reviewer_id || t.Reviewer2Id == reviewer_id) && t.Review1Score != t.Review2Score && t.Review1Score != null && t.Review2Score != null).AsNoTracking();
+
+            var totalCount = await query.CountAsync();
+
+            var entities = await query
+                .OrderBy(e => e.TeamId)
+                .ThenBy(e => e.TaskId)
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+                .Take(pageQueryDto.PageSize)
+                .ToListAsync();
+
+            var TaskSubmissions = entities.Select(e =>
+            {
+                return new TaskSubmissionDto(
+                    e.TeamId,
+                    e.TaskId,
+                    e.Reviewer1Id,
+                    e.Reviewer2Id,
+                    e.AutoReviewState,
+                    e.Review1Score,
+                    e.Review2Score,
+                    e.TeamAnswer,
+                    e.Version
+                );
+            }).ToList();
+
+            return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+        }
+
+
 
     }
 

@@ -91,5 +91,14 @@ namespace koala.src.Modules.Core.Controllers
             (var responseData, var responsePagination) = await _taskService.GetTasksToReviewAsync(User, reviewer_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
+
+        [Authorize]
+        [HttpGet("/conflicts/me/{reviewer_id}")]
+        public async Task<IActionResult> GetTasksWithConflicts([FromRoute] Guid reviewer_id, [FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var responseData, var responsePagination) = await _taskService.GetTasksWithConflictsAsync(User, reviewer_id, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        }
+
     }
 }
