@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace koala.src.Modules.Core.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class CoreRefactor : Migration
+    public partial class FixCompetitionResourceMenagment : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -62,6 +62,21 @@ namespace koala.src.Modules.Core.Data.Migrations
                 schema: "core",
                 table: "task_answers");
 
+            migrationBuilder.DropColumn(
+                name: "date_end",
+                schema: "core",
+                table: "subeditions");
+
+            migrationBuilder.DropColumn(
+                name: "expires_at",
+                schema: "core",
+                table: "subeditions");
+
+            migrationBuilder.DropColumn(
+                name: "expires_at",
+                schema: "core",
+                table: "editions");
+
             migrationBuilder.RenameColumn(
                 name: "version",
                 schema: "core",
@@ -92,6 +107,23 @@ namespace koala.src.Modules.Core.Data.Migrations
                 table: "task_answers",
                 newName: "IX_task_answers_task_item_id");
 
+            migrationBuilder.RenameColumn(
+                name: "date_start",
+                schema: "core",
+                table: "subeditions",
+                newName: "updated_at");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "updated_at",
+                schema: "core",
+                table: "tasks",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone",
+                oldNullable: true);
+
             migrationBuilder.AddColumn<DateTime>(
                 name: "created_at",
                 schema: "core",
@@ -109,20 +141,20 @@ namespace koala.src.Modules.Core.Data.Migrations
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
 
             migrationBuilder.AddColumn<string>(
-                name: "type",
+                name: "tier",
                 schema: "core",
                 table: "tasks",
                 type: "text",
                 nullable: false,
                 defaultValue: "");
 
-            migrationBuilder.AddColumn<Guid>(
+            migrationBuilder.AddColumn<int>(
                 name: "version",
                 schema: "core",
                 table: "tasks",
-                type: "uuid",
+                type: "integer",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: 0);
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "created_at",
@@ -137,14 +169,16 @@ namespace koala.src.Modules.Core.Data.Migrations
                 schema: "core",
                 table: "task_answers",
                 type: "timestamp with time zone",
-                nullable: true);
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "answer_close",
                 schema: "core",
                 table: "subeditions",
                 type: "timestamp with time zone",
-                nullable: true);
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
             migrationBuilder.AddColumn<DateTime>(
                 name: "answer_open",
@@ -170,6 +204,70 @@ namespace koala.src.Modules.Core.Data.Migrations
                 nullable: false,
                 defaultValue: "");
 
+            migrationBuilder.AddColumn<int>(
+                name: "version",
+                schema: "core",
+                table: "subeditions",
+                type: "integer",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<string>(
+                name: "tier",
+                schema: "core",
+                table: "schools",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<int>(
+                name: "version",
+                schema: "core",
+                table: "schools",
+                type: "integer",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<string>(
+                name: "state",
+                schema: "core",
+                table: "editions",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "team_register_close",
+                schema: "core",
+                table: "editions",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "team_register_open",
+                schema: "core",
+                table: "editions",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "updated_at",
+                schema: "core",
+                table: "editions",
+                type: "timestamp with time zone",
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+
+            migrationBuilder.AddColumn<int>(
+                name: "version",
+                schema: "core",
+                table: "editions",
+                type: "integer",
+                nullable: false,
+                defaultValue: 0);
+
             migrationBuilder.AddPrimaryKey(
                 name: "PK_task_answers",
                 schema: "core",
@@ -188,7 +286,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                     auto_review_state = table.Column<bool>(type: "boolean", nullable: true),
                     review_1_state = table.Column<bool>(type: "boolean", nullable: true),
                     review_2_state = table.Column<bool>(type: "boolean", nullable: true),
-                    team_answer = table.Column<string>(type: "text", nullable: false),
+                    state = table.Column<string>(type: "text", nullable: false),
+                    submission = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     version = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -300,7 +401,7 @@ namespace koala.src.Modules.Core.Data.Migrations
                 table: "tasks");
 
             migrationBuilder.DropColumn(
-                name: "type",
+                name: "tier",
                 schema: "core",
                 table: "tasks");
 
@@ -339,6 +440,46 @@ namespace koala.src.Modules.Core.Data.Migrations
                 schema: "core",
                 table: "subeditions");
 
+            migrationBuilder.DropColumn(
+                name: "version",
+                schema: "core",
+                table: "subeditions");
+
+            migrationBuilder.DropColumn(
+                name: "tier",
+                schema: "core",
+                table: "schools");
+
+            migrationBuilder.DropColumn(
+                name: "version",
+                schema: "core",
+                table: "schools");
+
+            migrationBuilder.DropColumn(
+                name: "state",
+                schema: "core",
+                table: "editions");
+
+            migrationBuilder.DropColumn(
+                name: "team_register_close",
+                schema: "core",
+                table: "editions");
+
+            migrationBuilder.DropColumn(
+                name: "team_register_open",
+                schema: "core",
+                table: "editions");
+
+            migrationBuilder.DropColumn(
+                name: "updated_at",
+                schema: "core",
+                table: "editions");
+
+            migrationBuilder.DropColumn(
+                name: "version",
+                schema: "core",
+                table: "editions");
+
             migrationBuilder.RenameColumn(
                 name: "Version",
                 schema: "core",
@@ -368,6 +509,21 @@ namespace koala.src.Modules.Core.Data.Migrations
                 schema: "core",
                 table: "task_answers",
                 newName: "IX_task_answers_task_id");
+
+            migrationBuilder.RenameColumn(
+                name: "updated_at",
+                schema: "core",
+                table: "subeditions",
+                newName: "date_start");
+
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "updated_at",
+                schema: "core",
+                table: "tasks",
+                type: "timestamp with time zone",
+                nullable: true,
+                oldClrType: typeof(DateTime),
+                oldType: "timestamp with time zone");
 
             migrationBuilder.AddColumn<bool>(
                 name: "auto_review_state",
@@ -402,6 +558,27 @@ namespace koala.src.Modules.Core.Data.Migrations
                 schema: "core",
                 table: "task_answers",
                 type: "uuid",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "date_end",
+                schema: "core",
+                table: "subeditions",
+                type: "timestamp with time zone",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "expires_at",
+                schema: "core",
+                table: "subeditions",
+                type: "timestamp with time zone",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "expires_at",
+                schema: "core",
+                table: "editions",
+                type: "timestamp with time zone",
                 nullable: true);
 
             migrationBuilder.AddPrimaryKey(
