@@ -84,5 +84,12 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
+        [Authorize]
+        [HttpGet("/to-review/me/{reviewer_id}")]
+        public async Task<IActionResult> GetTasksToReview([FromRoute] Guid reviewer_id, [FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var responseData, var responsePagination) = await _taskService.GetTasksToReviewAsync(User, reviewer_id, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        }
     }
 }
