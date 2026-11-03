@@ -16,6 +16,8 @@ const isStrongPassword = (password: string) =>
     /\d/.test(password) &&
     /[\W_]/.test(password);
 
+type AgeDeclaration = "AT_LEAST_13" | "AT_LEAST_18" | null;
+
 const CompleteRegistrationScreen = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -24,6 +26,7 @@ const CompleteRegistrationScreen = () => {
     const [nameFirst, setNameFirst] = useState("");
     const [nameLast, setNameLast] = useState("");
     const [password, setPassword] = useState("");
+    const [ageDeclaration, setAgeDeclaration] = useState<AgeDeclaration>(null);
     const [acceptedRodo, setAcceptedRodo] = useState(false);
     const [acceptedRules, setAcceptedRules] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -45,6 +48,10 @@ const CompleteRegistrationScreen = () => {
             setError("Zaakceptuj regulamin oraz zgodę na przetwarzanie danych.");
             return;
         }
+        if (!ageDeclaration) {
+            setError("Wybierz przedziaĹ‚ wiekowy wymagany do utworzenia konta.");
+            return;
+        }
 
         setSubmitting(true);
         startLoading();
@@ -56,6 +63,8 @@ const CompleteRegistrationScreen = () => {
                 password,
                 acceptedRodo,
                 acceptedRules,
+                declaredAtLeast13: ageDeclaration === "AT_LEAST_13",
+                declaredAtLeast18: ageDeclaration === "AT_LEAST_18",
             },
             "POST",
             navigate
@@ -298,6 +307,37 @@ const CompleteRegistrationScreen = () => {
                                     required
                                 />
                             </label>
+                            <fieldset>
+                                <legend className="text-sm font-medium text-ink">
+                                    Potwierdzenie wieku
+                                </legend>
+                                <div className="mt-2 grid gap-2">
+                                    <label className="flex items-start gap-3 rounded-xl border border-line px-3 py-3 text-sm text-ink">
+                                        <input
+                                            className="mt-1"
+                                            type="radio"
+                                            name="age-declaration"
+                                            checked={ageDeclaration === "AT_LEAST_13"}
+                                            onChange={() => setAgeDeclaration("AT_LEAST_13")}
+                                            disabled={submitting}
+                                            required
+                                        />
+                                        Mam co najmniej 13 lat, ale nie ukoĹ„czyĹ‚em/-am 18 lat.
+                                    </label>
+                                    <label className="flex items-start gap-3 rounded-xl border border-line px-3 py-3 text-sm text-ink">
+                                        <input
+                                            className="mt-1"
+                                            type="radio"
+                                            name="age-declaration"
+                                            checked={ageDeclaration === "AT_LEAST_18"}
+                                            onChange={() => setAgeDeclaration("AT_LEAST_18")}
+                                            disabled={submitting}
+                                            required
+                                        />
+                                        Mam co najmniej 18 lat.
+                                    </label>
+                                </div>
+                            </fieldset>
                             <label className="flex items-start gap-3 text-sm text-ink">
                                 <input
                                     className="mt-1"

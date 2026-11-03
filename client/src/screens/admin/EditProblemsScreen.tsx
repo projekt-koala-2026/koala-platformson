@@ -59,7 +59,7 @@ const EditProblemsScreen = () => {
         let active = true;
         void Promise.all([
             apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+                `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate

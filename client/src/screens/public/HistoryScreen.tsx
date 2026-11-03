@@ -22,7 +22,7 @@ const HistoryScreen = () => {
         void Promise.all([
             apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
             apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+                `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
@@ -36,10 +36,9 @@ const HistoryScreen = () => {
         ]).then(([staticPages, editionData, postData]) => {
             if (!active) return;
             const historyPage = staticPages?.find((item) => item.name === "HISTORY_PAGE");
-            const now = Date.now();
             const pastEditions = (editionData ?? [])
                 .map(adaptEdition)
-                .filter((edition) => new Date(edition.endDate).getTime() < now)
+                .filter((edition) => edition.state === "CLOSED")
                 .sort(
                     (first, second) =>
                         new Date(second.endDate).getTime() - new Date(first.endDate).getTime()

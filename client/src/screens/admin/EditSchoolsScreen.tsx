@@ -373,7 +373,7 @@ const AdminSchoolsScreen = () => {
         setFeedback(null);
         const { data: updated } = await apiRequestResult<ApiSchool>(
             `${apiEndpoints.schools}/${source.id}`,
-            payload,
+            { ...payload, version: source.version },
             "PUT",
             navigate
         );

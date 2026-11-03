@@ -19,16 +19,7 @@ type SidePanel = "preview" | "posts";
 const emptyForm = { title: "", markdownBody: "", editionId: "", isVisible: true };
 
 const pickDefaultEdition = (editions: Edition[]) => {
-    const now = Date.now();
-    return (
-        editions.find((edition) => {
-            const start = new Date(edition.startDate).getTime();
-            const end = new Date(edition.endDate).getTime();
-            return start <= now && now <= end;
-        })?.id ??
-        editions[0]?.id ??
-        ""
-    );
+    return editions.find((edition) => edition.state === "ACTIVE")?.id ?? editions[0]?.id ?? "";
 };
 
 const EditPostScreen = () => {
@@ -51,13 +42,13 @@ const EditPostScreen = () => {
         void Promise.all([
             apiRequest<ApiPost[]>(`${POSTS_ENDPOINT}?${firstPage}`, null, "GET", navigate),
             apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+                `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
             apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=true`,
+                `${apiEndpoints.editions}?${firstPage}&States=ACTIVE&States=INACTIVE`,
                 null,
                 "GET",
                 navigate

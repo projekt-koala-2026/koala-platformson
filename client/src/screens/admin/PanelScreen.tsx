@@ -86,7 +86,7 @@ const PanelScreen = () => {
         setCreating(true);
         const { status } = await apiRequestResult<null>(
             USERS_ENDPOINT,
-            { email: normalizedEmail, roles: newRoles },
+            { email: normalizedEmail, userRoles: newRoles },
             "POST",
             navigate
         );

@@ -9,7 +9,7 @@ import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiRequestResult } from "../../utils/apiFetcher";
 
 const POSTS_ENDPOINT = `${apiEndpoints.posts}?${firstPage}&ShowHidden=false`;
-const ACTIVE_EDITIONS_ENDPOINT = `${apiEndpoints.editions}?${firstPage}&ShowActive=true`;
+const ACTIVE_EDITION_ENDPOINT = apiEndpoints.activeEdition;
 
 const HomeScreen = () => {
     const navigate = useNavigate();
@@ -23,15 +23,18 @@ const HomeScreen = () => {
         let active = true;
         void Promise.all([
             apiRequestResult<ApiPost[]>(POSTS_ENDPOINT, null, "GET", navigate),
-            apiRequestResult<ApiEdition[]>(ACTIVE_EDITIONS_ENDPOINT, null, "GET", navigate),
+            apiRequestResult<ApiEdition>(ACTIVE_EDITION_ENDPOINT, null, "GET", navigate),
         ]).then(([postsResult, editionResult]) => {
             if (!active) return;
             const postData = postsResult.data ?? [];
-            const editionData = editionResult.data?.[0];
+            const editionData = editionResult.data;
             setPosts((postData ?? []).filter((post) => post.isVisible).map(adaptPost));
             setEditions(editionData ? [adaptEdition(editionData)] : []);
             setLoadedAt(Date.now());
-            setHasError(postsResult.status !== 200 || editionResult.status !== 200);
+            setHasError(
+                postsResult.status !== 200 ||
+                    (editionResult.status !== 200 && editionResult.status !== 404)
+            );
             setLoading(false);
         });
         return () => {
@@ -45,9 +48,7 @@ const HomeScreen = () => {
             .filter((post) => {
                 const edition = editionsById.get(post.editionId);
                 if (!edition) return false;
-                const start = new Date(edition.startDate).getTime();
-                const end = new Date(edition.endDate).getTime();
-                return loadedAt !== null && start <= loadedAt && loadedAt <= end;
+                return loadedAt !== null && edition.state === "ACTIVE";
             })
             .sort(
                 (first, second) =>

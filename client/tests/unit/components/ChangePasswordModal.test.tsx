@@ -34,7 +34,7 @@ describe("ChangePasswordModal", () => {
                     data: {
                         id: "user-1",
                         email: "kapitan@example.com",
-                        roles: ["TEAM_PLAYER"],
+                        roles: ["TEAM_CAPTAIN"],
                     },
                 })
             ),
@@ -62,12 +62,12 @@ describe("ChangePasswordModal", () => {
             http.get(userUrl, () => {
                 userRequestCount += 1;
                 return userRequestCount === 1
-                    ? HttpResponse.json({ data: { id: "user-1", roles: ["TEAM_PLAYER"] } })
+                    ? HttpResponse.json({ data: { id: "user-1", roles: ["TEAM_CAPTAIN"] } })
                     : HttpResponse.json({
                           data: {
                               id: "user-1",
                               email: "kapitan@example.com",
-                              roles: ["TEAM_PLAYER"],
+                              roles: ["TEAM_CAPTAIN"],
                           },
                       });
             }),
@@ -100,7 +100,7 @@ describe("ChangePasswordModal", () => {
                     data: {
                         id: "user-1",
                         email: "kapitan@example.com",
-                        roles: ["TEAM_PLAYER"],
+                        roles: ["TEAM_CAPTAIN"],
                     },
                 });
             }),

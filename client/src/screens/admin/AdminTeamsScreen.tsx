@@ -38,7 +38,7 @@ const AdminTeamsScreen = () => {
                 team.name,
                 team.schoolId,
                 team.editionId,
-                ...team.teamMembers.map((member) => member.id),
+                ...team.teamMembers.map((member) => member.teamMemberId),
             ]
                 .join(" ")
                 .toLocaleLowerCase("pl-PL")
