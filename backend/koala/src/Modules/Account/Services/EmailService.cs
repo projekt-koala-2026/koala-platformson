@@ -6,6 +6,9 @@ using koala.src.Shared.Core;
 using koala.src.Shared;
 using System.Security.Claims;
 using koala.src.Modules.Account.Dtos;
+using koala.src.Modules.Account.Data;
+using koala.src.Modules.Account.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Account.Services
 {
@@ -15,18 +18,22 @@ namespace koala.src.Modules.Account.Services
         public Task SendPasswordResetEmailAsync(string toEmail, string resetToken, string accountArea);
         public Task SendRegisterEmailAsync(string toEmail, string registerToken);
         public Task SendBulkEmailToSchoolsAsync(ClaimsPrincipal? claimsPrincipal, EmailSendRequestDto requestDto);
+        public Task SendBulkEmailToCaptainsAsync(ClaimsPrincipal? claimsPrincipal, EmailSendRequestDto requestDto);
+        public Task SendBulkEmailToGuardiansAsync(ClaimsPrincipal? claimsPrincipal, EmailSendRequestDto requestDto);
     }
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
         private readonly ICoreModule _coreModule;
         private readonly IBackgroundJobClient _backgroundJobClient;
+        private readonly AccountDbContext _db;
 
-        public EmailService(IConfiguration configuration, ICoreModule coreModule, IBackgroundJobClient backgroundJobClient)
+        public EmailService(IConfiguration configuration, ICoreModule coreModule, IBackgroundJobClient backgroundJobClient, AccountDbContext db)
         {
             _configuration = configuration;
             _coreModule = coreModule;
             _backgroundJobClient = backgroundJobClient;
+            _db = db;
         }
 
         public async Task SendEmailAsync(string toEmail, string subject, string htmlMessage, bool isHighPriority = false)
@@ -288,14 +295,94 @@ namespace koala.src.Modules.Account.Services
             }
         }
 
-        public async Task SendBulkEmailToTeamCaptainsAsync(string body)
+        public async Task SendBulkEmailToCaptainsAsync(ClaimsPrincipal? claimsPrincipal, EmailSendRequestDto requestDto)
         {
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
+            if (!isOrganizationAdmin)
+            {
+                throw new AccountException(AccountErrorCodes.Forbidden, "Only admin can send emails");
+            }
+
+            _backgroundJobClient.Enqueue<EmailService>(processor => processor.CaptainsEmailSendBulkJobAsync(80, 0, requestDto.MessageSubject, requestDto.MessageBody, false));
+            await Task.CompletedTask;
         }
 
-        public async Task SendBulkEmailToTeamGuardiansAsync(string body)
+        public async Task CaptainsEmailSendBulkJobAsync(int pageSize, int pageNumber, string subject, string htmlMessage, bool isHighPriority)
         {
+            var response = await _db.Users
+                .Where(u => u.Verified && u.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_TEAM_CAPTAIN))
+                .Skip(pageNumber * pageSize)
+                .Take(pageSize)
+                .Select(u => u.Email)
+                .ToListAsync();
 
+            if (response == null || response.Count == 0 || !response.Any())
+            {
+                return;
+            }
+
+            string queueName = isHighPriority ? "critical" : "default";
+
+            foreach (var userEmail in response)
+            {
+                _backgroundJobClient.Enqueue<IEmailService>(
+                    queueName,
+                    service => service.SendEmailAsync(userEmail, subject, htmlMessage, isHighPriority)
+                );
+            }
+
+            if (pageNumber * pageSize + response.Count < await _db.Users.CountAsync(u => u.Verified && u.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_TEAM_CAPTAIN)))
+            {
+                _backgroundJobClient.Enqueue<EmailService>(
+                    processor => processor.CaptainsEmailSendBulkJobAsync(pageSize, pageNumber + 1, subject, htmlMessage, isHighPriority)
+                );
+            }
+        }
+
+        public async Task SendBulkEmailToGuardiansAsync(ClaimsPrincipal? claimsPrincipal, EmailSendRequestDto requestDto)
+        {
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isOrganizationAdmin)
+            {
+                throw new AccountException(AccountErrorCodes.Forbidden, "Only admin can send emails");
+            }
+
+            _backgroundJobClient.Enqueue<EmailService>(processor => processor.GuardiansEmailSendBulkJobAsync(80, 0, requestDto.MessageSubject, requestDto.MessageBody, false));
+            await Task.CompletedTask;
+        }
+
+        public async Task GuardiansEmailSendBulkJobAsync(int pageSize, int pageNumber, string subject, string htmlMessage, bool isHighPriority)
+        {
+            var response = await _db.Users
+                .Where(u => u.Verified && u.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_TEAM_GUARDIAN))
+                .Skip(pageNumber * pageSize)
+                .Take(pageSize)
+                .Select(u => u.Email)
+                .ToListAsync();
+
+            if (response == null || response.Count == 0 || !response.Any())
+            {
+                return;
+            }
+
+            string queueName = isHighPriority ? "critical" : "default";
+
+            foreach (var userEmail in response)
+            {
+                _backgroundJobClient.Enqueue<IEmailService>(
+                    queueName,
+                    service => service.SendEmailAsync(userEmail, subject, htmlMessage, isHighPriority)
+                );
+            }
+
+            if (pageNumber * pageSize + response.Count < await _db.Users.CountAsync(u => u.Verified && u.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_TEAM_GUARDIAN)))
+            {
+                _backgroundJobClient.Enqueue<EmailService>(
+                    processor => processor.GuardiansEmailSendBulkJobAsync(pageSize, pageNumber + 1, subject, htmlMessage, isHighPriority)
+                );
+            }
         }
     }
 }
