@@ -12,7 +12,7 @@ using koala.src.Modules.Core.Data;
 namespace koala.src.Modules.Core.Data.Migrations
 {
     [DbContext(typeof(CoreDbContext))]
-    [Migration("20261103164822_FixCompetitionResourceMenagment")]
+    [Migration("20261103181205_FixCompetitionResourceMenagment")]
     partial class FixCompetitionResourceMenagment
     {
         /// <inheritdoc />
