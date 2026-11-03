@@ -1,8 +1,8 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record SubmitTaskSubmissionDto
+    public record TaskSubmissionUpsertDto
     (
-        string TeamAnswer,
+        string Submission,
         int Version
     );
 }

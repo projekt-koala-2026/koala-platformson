@@ -6,11 +6,10 @@ namespace koala.src.Modules.Core.Dtos
         Guid EditionId,
         string Name,
         DateTime AnswerOpen,
-        DateTime? AnswerClose,
+        DateTime AnswerClose,
         string State,
-        DateTime DateStart,
-        DateTime? DateEnd,
         DateTime CreatedAt,
-        DateTime? ExpiredAt
+        DateTime UpdatedAt,
+        int Version
     );
 }

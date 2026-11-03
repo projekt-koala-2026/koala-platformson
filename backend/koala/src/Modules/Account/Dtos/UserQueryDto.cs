@@ -1,4 +1,5 @@
 using FluentValidation;
+using koala.src.Modules.Account.Entities;
 
 namespace koala.src.Modules.Account.Dtos
 {
@@ -13,6 +14,14 @@ namespace koala.src.Modules.Account.Dtos
 
     public class UserQueryDtoValidator : AbstractValidator<UserQueryDto>
     {
+        private static readonly string[] AllowedRoles = new[]
+        {
+            RoleNames.NAME_ORGANIZATION_ADMIN,
+            RoleNames.NAME_ORGANIZATION_EDITOR,
+            RoleNames.NAME_ORGANIZATION_REVIEWER,
+            RoleNames.NAME_TEAM_CAPTAIN,
+            RoleNames.NAME_TEAM_GUARDIAN
+        };
         public UserQueryDtoValidator()
         {
             RuleFor(x => x.NameFirst)
@@ -33,6 +42,8 @@ namespace koala.src.Modules.Account.Dtos
             RuleForEach(x => x.UserRoles)
                 .NotEmpty().WithMessage("Role item cannot be empty!")
                 .MaximumLength(50).WithMessage("Role item name cannot exceed 50 characters!")
+                .Must(role => AllowedRoles.Contains(role))
+                .WithMessage("Invalid role specified!")
                 .When(x => x.UserRoles != null);
         }
     }

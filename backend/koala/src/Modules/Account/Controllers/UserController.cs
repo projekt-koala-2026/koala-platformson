@@ -39,6 +39,19 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<UserDto>(true, DateTime.UtcNow, null, null, data));
         }
         [Authorize]
+        [HttpGet("{id}/declaration")]
+        public async Task<IActionResult> GetUserDeclaration([FromRoute] Guid id)
+        {
+            var data = await _userService.GetUserDeclarationAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<UserDeclarationDto>(true, DateTime.UtcNow, null, null, data));
+        }
+        [HttpPut("{id}/declaration")]
+        public async Task<IActionResult> UpdateUserDeclaration([FromRoute] Guid id, [FromBody] UserDeclarationUpdateDto requestDto)
+        {
+            var data = await _userService.UpdateUserDeclarationAsync(User, id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<UserDeclarationDto>(true, DateTime.UtcNow, null, null, data));
+        }
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetUsers([FromQuery] PageQueryDto pageQueryDto, [FromQuery] UserQueryDto userQueryDto)
         {
@@ -46,24 +59,31 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<UserDto>>(true, DateTime.UtcNow, null, pagination, result));
         }
         [Authorize]
-        [HttpPut("{id}")]
+        [HttpPut("{id}/name")]
         public async Task<IActionResult> UpdateUserNames([FromRoute] Guid id, [FromBody] UserChangeNamesDto request)
         {
             var data = await _userService.UpdateUserNamesAsync(User, id, request);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<UserDto>(true, DateTime.UtcNow, null, null, data));
         }
         [Authorize]
-        [HttpPost("censor/{id}")]
-        public async Task<IActionResult> CensorUser([FromRoute] Guid id)
+        [HttpPut("{id}/roles")]
+        public async Task<IActionResult> UpdateUserRoles([FromRoute] Guid id, [FromBody] UserUpdateRolesDto request)
         {
-            await _userService.CensorUserAsync(User, id);
+            var data = await _userService.UpdateUserRolesAsync(User, id, request);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<UserDto>(true, DateTime.UtcNow, null, null, data));
+        }
+        [Authorize]
+        [HttpPost("{id}/censor")]
+        public async Task<IActionResult> CensorUser([FromRoute] Guid id, [FromBody] UserCensorRequestDto requestDto)
+        {
+            await _userService.CensorUserAsync(User, id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
-        [HttpPost("uncensor/{id}")]
-        public async Task<IActionResult> UnCensorUser([FromRoute] Guid id)
+        [HttpPost("{id}/uncensor")]
+        public async Task<IActionResult> UnCensorUser([FromRoute] Guid id, [FromBody] UserCensorRequestDto requestDto)
         {
-            await _userService.UnCensorUserAsync(User, id);
+            await _userService.UnCensorUserAsync(User, id, requestDto);
             return StatusCode(200, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 

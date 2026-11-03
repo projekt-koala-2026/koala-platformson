@@ -11,8 +11,10 @@ namespace koala.src.Modules.Core.Dtos
         string Building,
         string Rspo,
         string Type,
+        string Tier,
         string Email,
         DateTime CreatedAt,
-        DateTime UpdatedAt
+        DateTime UpdatedAt,
+        int Version
     );
 }

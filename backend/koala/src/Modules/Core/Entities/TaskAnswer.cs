@@ -13,7 +13,7 @@ namespace koala.src.Modules.Core.Entities
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         [Column("updated_at")]
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
         public int Version { get; set; }
         public TaskItem TaskItem { get; set; } = null!;
     }

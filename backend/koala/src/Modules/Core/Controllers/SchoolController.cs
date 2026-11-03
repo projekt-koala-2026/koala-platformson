@@ -20,7 +20,7 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateSchool([FromBody] CreateSchoolRequestDto createSchoolRequestDto)
+        public async Task<IActionResult> CreateSchool([FromBody] SchoolCreateRequestDto createSchoolRequestDto)
         {
             var response = await _schoolService.CreateSchoolAsync(User, createSchoolRequestDto);
             return StatusCode(200, new ApiResponseWrapper<SchoolDto>(true, DateTime.UtcNow, null, null, response));
@@ -28,7 +28,7 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSchool([FromRoute] Guid id, [FromBody] UpdateSchoolRequestDto updateSchoolRequestDto)
+        public async Task<IActionResult> UpdateSchool([FromRoute] Guid id, [FromBody] SchoolUpdateRequestDto updateSchoolRequestDto)
         {
             var response = await _schoolService.UpdateSchoolAsync(User, id, updateSchoolRequestDto);
             return StatusCode(200, new ApiResponseWrapper<SchoolDto>(true, DateTime.UtcNow, null, null, response));
@@ -76,7 +76,7 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost("import")]
-        public async Task<IActionResult> ImportSchools([FromForm] ImportSchoolRequestDto importSchoolRequestDto)
+        public async Task<IActionResult> ImportSchools([FromForm] SchoolImportRequestDto importSchoolRequestDto)
         {
             var response = await _schoolService.ImportSchoolsAsync(User, importSchoolRequestDto);
             return StatusCode(200, new ApiResponseWrapper<int>(true, DateTime.UtcNow, null, null, response));

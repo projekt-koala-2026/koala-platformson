@@ -18,7 +18,32 @@ namespace koala.src.Modules.Core.Services
             _db = db;
         }
 
-        public async Task<SchoolDto> CreateSchoolAsync(ClaimsPrincipal? claimsPrincipal, CreateSchoolRequestDto createSchoolRequestDto)
+        private static readonly Dictionary<string, string> TypeToTierMap = new(StringComparer.OrdinalIgnoreCase)
+        {
+            // TIER 1
+            { SchoolTypes.TYPE_1_TIER_1, SchoolTiers.TIER_1 },
+            { SchoolTypes.TYPE_2_TIER_1, SchoolTiers.TIER_1 },
+            { SchoolTypes.TYPE_3_TIER_1, SchoolTiers.TIER_1 },
+
+            // TIER 2
+            { SchoolTypes.TYPE_1_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_2_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_3_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_4_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_5_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_6_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_7_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_8_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_9_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_10_TIER_2, SchoolTiers.TIER_2 },
+        };
+
+        private static bool SchoolValidateTypeAndGetTier(string schoolType, out string tier)
+        {
+            return TypeToTierMap.TryGetValue(schoolType?.Trim() ?? string.Empty, out tier!);
+        }
+
+        public async Task<SchoolDto> CreateSchoolAsync(ClaimsPrincipal? claimsPrincipal, SchoolCreateRequestDto schoolCreateRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -34,7 +59,7 @@ namespace koala.src.Modules.Core.Services
             }
 
             //TODO check here if that all that is unique???
-            var school = await _db.Schools.FirstOrDefaultAsync(s => s.Rspo == createSchoolRequestDto.Rspo);
+            var school = await _db.Schools.FirstOrDefaultAsync(s => s.Rspo == schoolCreateRequestDto.Rspo);
 
             if (school != null)
             {
@@ -42,20 +67,28 @@ namespace koala.src.Modules.Core.Services
             }
 
             DateTime timeNow = DateTime.UtcNow;
+
+            if (SchoolValidateTypeAndGetTier(schoolCreateRequestDto.Type, out string tier))
+            {
+                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Invalid school type");
+            }
+
             school = new School
             {
                 Id = Guid.CreateVersion7(),
-                NameFull = createSchoolRequestDto.NameFull,
-                NameShort = createSchoolRequestDto.NameShort,
-                State = createSchoolRequestDto.State,
-                City = createSchoolRequestDto.City,
-                Road = createSchoolRequestDto.Road,
-                Building = createSchoolRequestDto.Building,
-                Rspo = createSchoolRequestDto.Rspo,
-                Type = createSchoolRequestDto.Type,
-                Email = createSchoolRequestDto.Email,
+                NameFull = schoolCreateRequestDto.NameFull,
+                NameShort = schoolCreateRequestDto.NameShort,
+                State = schoolCreateRequestDto.State,
+                City = schoolCreateRequestDto.City,
+                Road = schoolCreateRequestDto.Road,
+                Building = schoolCreateRequestDto.Building,
+                Rspo = schoolCreateRequestDto.Rspo,
+                Type = schoolCreateRequestDto.Type,
+                Tier = tier,
+                Email = schoolCreateRequestDto.Email,
                 CreatedAt = timeNow,
-                UpdatedAt = timeNow
+                UpdatedAt = timeNow,
+                Version = 1
             };
 
             await _db.Schools.AddAsync(school);
@@ -72,14 +105,16 @@ namespace koala.src.Modules.Core.Services
                 school.Building,
                 school.Rspo,
                 school.Type,
+                school.Tier,
                 school.Email,
                 school.CreatedAt,
-                school.UpdatedAt
+                school.UpdatedAt,
+                school.Version
             );
 
         }
 
-        public async Task<SchoolDto> UpdateSchoolAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateSchoolRequestDto updateSchoolRequestDto)
+        public async Task<SchoolDto> UpdateSchoolAsync(ClaimsPrincipal? claimsPrincipal, Guid id, SchoolUpdateRequestDto schoolUpdateRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -100,17 +135,30 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new CoreException(CoreErrorCodes.SchoolNotFound, "School with this id does not exist");
             }
+
+            if (school.Version != schoolUpdateRequestDto.Version)
+            {
+                throw new CoreException(CoreErrorCodes.Conflict, "Updated school version does not match make sure u have the freshest data");
+            }
+
+            if (SchoolValidateTypeAndGetTier(schoolUpdateRequestDto.Type, out string tier))
+            {
+                throw new CoreException(CoreErrorCodes.SchoolNotFound, "Invalid school type");
+            }
+
             DateTime timeNow = DateTime.UtcNow;
-            school.NameFull = updateSchoolRequestDto.NameFull;
-            school.NameShort = updateSchoolRequestDto.NameShort;
-            school.State = updateSchoolRequestDto.State;
-            school.City = updateSchoolRequestDto.City;
-            school.Road = updateSchoolRequestDto.Road;
-            school.Building = updateSchoolRequestDto.Building;
-            school.Rspo = updateSchoolRequestDto.Rspo;
-            school.Type = updateSchoolRequestDto.Type;
-            school.Email = updateSchoolRequestDto.Email;
+            school.NameFull = schoolUpdateRequestDto.NameFull;
+            school.NameShort = schoolUpdateRequestDto.NameShort;
+            school.State = schoolUpdateRequestDto.State;
+            school.City = schoolUpdateRequestDto.City;
+            school.Road = schoolUpdateRequestDto.Road;
+            school.Building = schoolUpdateRequestDto.Building;
+            school.Rspo = schoolUpdateRequestDto.Rspo;
+            school.Type = schoolUpdateRequestDto.Type;
+            school.Tier = tier;
+            school.Email = schoolUpdateRequestDto.Email;
             school.UpdatedAt = timeNow;
+            school.Version++;
 
             await _db.SaveChangesAsync();
 
@@ -125,9 +173,11 @@ namespace koala.src.Modules.Core.Services
                 school.Building,
                 school.Rspo,
                 school.Type,
+                school.Tier,
                 school.Email,
                 school.CreatedAt,
-                school.UpdatedAt
+                school.UpdatedAt,
+                school.Version
             );
         }
 
@@ -201,8 +251,7 @@ namespace koala.src.Modules.Core.Services
             await _db.Schools.ExecuteDeleteAsync();
         }
 
-
-        public async Task<int> ImportSchoolsAsync(ClaimsPrincipal? claimsPrincipal, ImportSchoolRequestDto importSchoolRequestDto)
+        public async Task<int> ImportSchoolsAsync(ClaimsPrincipal? claimsPrincipal, SchoolImportRequestDto schoolImportRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -217,7 +266,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            var file = importSchoolRequestDto.File;
+            var file = schoolImportRequestDto.File;
             if (file == null || file.Length == 0)
                 return 0;
 
@@ -249,6 +298,13 @@ namespace koala.src.Modules.Core.Services
 
             while (await csv.ReadAsync())
             {
+                var rawType = csv.GetField("Typ");
+
+                if (string.IsNullOrWhiteSpace(rawType) || !SchoolValidateTypeAndGetTier(rawType, out var tier))
+                {
+                    continue;
+                }
+
                 var school = new School
                 {
                     Id = Guid.NewGuid(),
@@ -259,7 +315,8 @@ namespace koala.src.Modules.Core.Services
                     City = csv.GetField("Miejscowość")!,         // Mapped to City
                     Road = csv.GetField("Ulica")!,               // Mapped to separate Road column
                     Building = csv.GetField("Numer budynku")!,   // Mapped to separate house column
-                    Type = csv.GetField("Typ")!,                 // Mapped to Type
+                    Type = rawType.Trim(),                       // Mapped to Type
+                    Tier = tier,                                 // Custom Tier mapping (TIER_1 / TIER_2)
                     Email = csv.GetField("E-mail")!,             // Mapped to Email         
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -297,9 +354,11 @@ namespace koala.src.Modules.Core.Services
                 queryResult.Building,
                 queryResult.Rspo,
                 queryResult.Type,
+                queryResult.Tier,
                 queryResult.Email,
                 queryResult.CreatedAt,
-                queryResult.UpdatedAt
+                queryResult.UpdatedAt,
+                queryResult.Version
             );
         }
 
@@ -321,9 +380,11 @@ namespace koala.src.Modules.Core.Services
                     s.Building,
                     s.Rspo,
                     s.Type,
+                    s.Tier,
                     s.Email,
                     s.CreatedAt,
-                    s.UpdatedAt
+                    s.UpdatedAt,
+                    s.Version
                 )).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize).ToList();
 

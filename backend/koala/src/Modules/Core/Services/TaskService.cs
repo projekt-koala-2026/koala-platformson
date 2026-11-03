@@ -21,7 +21,7 @@ namespace koala.src.Modules.Core.Services
             _accountModule = accountModule;
         }
 
-        public async Task<TaskAnswerDto> CreateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, CreateTaskAnswerDto createTaskAnswerDto)
+        public async Task<TaskAnswerDto> CreateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, TaskAnswerCreateDto createTaskAnswerDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -50,23 +50,32 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.TaskAnswerAlreadyExsits, "Task answer for this task with this answer already exists");
             }
 
+            DateTime timeNow = DateTime.UtcNow;
             newTaskAnswer = new TaskAnswer
             {
                 Id = Guid.CreateVersion7(),
-                Answer = createTaskAnswerDto.Answer
+                TaskItemId = task_item_id,
+                Answer = createTaskAnswerDto.Answer,
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
             };
 
             await _db.TaskAnswers.AddAsync(newTaskAnswer);
             await _db.SaveChangesAsync();
 
-            return new TaskAnswerDto(
+            return new TaskAnswerDto
+            (
                 newTaskAnswer.Id,
                 newTaskAnswer.TaskItemId,
-                newTaskAnswer.Answer
+                newTaskAnswer.Answer,
+                newTaskAnswer.CreatedAt,
+                newTaskAnswer.UpdatedAt,
+                newTaskAnswer.Version
             );
         }
 
-        public async Task<TaskAnswerDto> UpdateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_answer_id, UpdateTaskAnswerDto updateTaskAnswerDto)
+        public async Task<TaskAnswerDto> UpdateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_answer_id, TaskAnswerUpdateDto updateTaskAnswerDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -95,22 +104,32 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.TaskAnswerAlreadyExsits, "task answer for this task with this answer already exists thus canot change this task answer to be the same ! Duplication");
             }
 
-            var TaskAnswer = await _db.TaskAnswers.FirstOrDefaultAsync(tc => tc.Id == task_answer_id && tc.TaskItem.Id == task.Id);
+            var TaskAnswer = await _db.TaskAnswers.FirstOrDefaultAsync(tc => tc.Id == task_answer_id && tc.TaskItemId == task.Id);
 
             if (TaskAnswer == null)
             {
                 throw new CoreException(CoreErrorCodes.TaskAnswerNotFound, "Task answer of provided task_answer_id and task_id does not exist");
             }
 
-            TaskAnswer.TaskItemId = updateTaskAnswerDto.TaskItemId;
+            if (TaskAnswer.Version != updateTaskAnswerDto.Version)
+            {
+                throw new CoreException(CoreErrorCodes.Conflict, "TaskAnswer versions do not match make sure u have the freshest data");
+            }
+
             TaskAnswer.Answer = updateTaskAnswerDto.Answer;
+            TaskAnswer.UpdatedAt = DateTime.UtcNow;
+            TaskAnswer.Version++;
 
             await _db.SaveChangesAsync();
 
-            return new TaskAnswerDto(
+            return new TaskAnswerDto
+            (
                 TaskAnswer.Id,
-                TaskAnswer.TaskItem.Id,
-                TaskAnswer.Answer
+                TaskAnswer.TaskItemId,
+                TaskAnswer.Answer,
+                TaskAnswer.CreatedAt,
+                TaskAnswer.UpdatedAt,
+                TaskAnswer.Version
             );
         }
 
@@ -129,7 +148,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var TaskAnswer = await _db.TaskAnswers.FirstOrDefaultAsync(e => e.Id == task_answer_id && e.TaskItem.Id == task_id);
+            var TaskAnswer = await _db.TaskAnswers.FirstOrDefaultAsync(e => e.Id == task_answer_id && e.TaskItemId == task_id);
 
             if (TaskAnswer == null)
             {
@@ -158,17 +177,21 @@ namespace koala.src.Modules.Core.Services
             var TaskAnswer = await _db.TaskAnswers
                 .AsNoTracking()
                 .Include(tc => tc.TaskItem)
-                .FirstOrDefaultAsync(e => e.Id == task_answer_id && e.TaskItem.Id == task_id);
+                .FirstOrDefaultAsync(e => e.Id == task_answer_id && e.TaskItemId == task_id);
 
             if (TaskAnswer == null)
             {
                 throw new CoreException(CoreErrorCodes.TaskAnswerNotFound, "Task answer of provided id does not exist");
             }
 
-            return new TaskAnswerDto(
+            return new TaskAnswerDto
+            (
                 TaskAnswer.Id,
-                TaskAnswer.TaskItem.Id,
-                TaskAnswer.Answer
+                TaskAnswer.TaskItemId,
+                TaskAnswer.Answer,
+                TaskAnswer.CreatedAt,
+                TaskAnswer.UpdatedAt,
+                TaskAnswer.Version
             );
         }
 
@@ -195,21 +218,21 @@ namespace koala.src.Modules.Core.Services
                 .OrderBy(e => e.Id)
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
+                .Select(ta => new TaskAnswerDto
+                (
+                    ta.Id,
+                    ta.TaskItemId,
+                    ta.Answer,
+                    ta.CreatedAt,
+                    ta.UpdatedAt,
+                    ta.Version
+                ))
                 .ToListAsync();
 
-            var TaskAnswers = entities.Select(e =>
-            {
-                return new TaskAnswerDto(
-                    e.Id,
-                    e.TaskItem.Id,
-                    e.Answer
-                );
-            }).ToList();
-
-            return (TaskAnswers, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+            return (entities, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<TaskSubmissionDto> UpdateTaskSubmissionTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, SubmitTaskSubmissionDto submitTaskSubmissionDto)
+        public async Task<TaskSubmissionDto> UpdateTaskSubmissionTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, TaskSubmissionUpsertDto submitTaskSubmissionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -230,44 +253,56 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
             }
 
-            var task = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id);
+            var submission = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id);
 
-            if (task == null)
+            DateTime timeNow = DateTime.UtcNow;
+
+            if (submission == null)
             {
-                task = new TaskSubmission
+                submission = new TaskSubmission
                 {
                     TeamId = team_id,
                     TaskId = task_id,
-                    Version = submitTaskSubmissionDto.Version,
                     Review1Score = null,
                     Review2Score = null,
                     Reviewer1Id = null,
                     Reviewer2Id = null,
                     AutoReviewState = null,
-                    TeamAnswer = submitTaskSubmissionDto.TeamAnswer
+                    State = TaskSubmissionStates.STATE_UNCHECKED,
+                    Submission = submitTaskSubmissionDto.Submission,
+                    CreatedAt = timeNow,
+                    UpdatedAt = timeNow,
+                    Version = 0,
                 };
+
+                await _db.TaskSubmissions.AddAsync(submission);
             }
 
-            if (task.Version != submitTaskSubmissionDto.Version)
+            if (submission.Version != submitTaskSubmissionDto.Version && submission.Version != 0)
             {
                 throw new CoreException(CoreErrorCodes.Conflict, "U cant update when having stale data");
             }
 
-            task.TeamAnswer = submitTaskSubmissionDto.TeamAnswer;
-            task.Version++;
+            submission.Submission = submitTaskSubmissionDto.Submission;
+            submission.UpdatedAt = timeNow;
+            submission.Version++;
 
             await _db.SaveChangesAsync();
 
-            return new TaskSubmissionDto(
-                task.TeamId,
-                task.TaskId,
+            return new TaskSubmissionDto
+            (
+                submission.TeamId,
+                submission.TaskId,
                 null,
                 null,
                 null,
                 null,
                 null,
-                task.TeamAnswer,
-                task.Version
+                submission.Submission,
+                null,
+                submission.CreatedAt,
+                submission.UpdatedAt,
+                submission.Version
             );
         }
 
@@ -294,69 +329,30 @@ namespace koala.src.Modules.Core.Services
                 .OrderBy(e => e.TeamId)
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
-                .ToListAsync();
-
-            var TaskSubmissions = entities.Select(e =>
-            {
-                return new TaskSubmissionDto(
+                .Select(e => new TaskSubmissionDto
+                (
                     e.TeamId,
-                    e.TaskItem.Id,
+                    e.TaskId,
                     e.Reviewer1Id,
                     e.Reviewer2Id,
                     e.AutoReviewState,
                     e.Review1Score,
                     e.Review2Score,
-                    e.TeamAnswer,
+                    e.Submission,
+                    e.State,
+                    e.CreatedAt,
+                    e.UpdatedAt,
                     e.Version
-                );
-            }).ToList();
+                ))
+                .ToListAsync();
 
-            return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+            return (entities, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<TaskSubmissionDto> UpdateTaskReviewerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, UpdateTaskSubmissionAdminDto updateTaskSubmissionAdminDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var task = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == task_id);
-
-            if (task == null)
-            {
-                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
-            }
-
-
-            task.Reviewer1Id = updateTaskSubmissionAdminDto.Reviewer1Id;
-            task.Reviewer2Id = updateTaskSubmissionAdminDto.Reviewer2Id;
-            task.AutoReviewState = updateTaskSubmissionAdminDto.AutoReviewState;
-            task.Review1Score = updateTaskSubmissionAdminDto.Review1Score;
-            task.Review2Score = updateTaskSubmissionAdminDto.Review2Score;
-
-            await _db.SaveChangesAsync();
-
-            return new TaskSubmissionDto(
-            task.TeamId,
-            task.TaskId,
-            task.Reviewer1Id,
-            task.Reviewer2Id,
-            task.AutoReviewState,
-            task.Review1Score,
-            task.Review2Score,
-            task.TeamAnswer,
-            task.Version
-            );
-        }
+        // public async Task<TaskSubmissionDto> UpdateTaskReviewerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, AdminAssignReviewersDto updateTaskSubmissionAdminDto)
+        // {
+        //     bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+        //     bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
 
         public async Task<(List<TaskSubmissionDto>, ApiPagination)> GetTasksToReviewAsync(ClaimsPrincipal? claimsPrincipal, Guid reviewer_id, PageQueryDto pageQueryDto)
         {
@@ -394,7 +390,10 @@ namespace koala.src.Modules.Core.Services
                     e.AutoReviewState,
                     e.Review1Score,
                     e.Review2Score,
-                    e.TeamAnswer,
+                    e.Submission,
+                    e.State,
+                    e.CreatedAt,
+                    e.UpdatedAt,
                     e.Version
                 );
             }).ToList();
@@ -438,7 +437,10 @@ namespace koala.src.Modules.Core.Services
                     e.AutoReviewState,
                     e.Review1Score,
                     e.Review2Score,
-                    e.TeamAnswer,
+                    e.Submission,
+                    e.State,
+                    e.CreatedAt,
+                    e.UpdatedAt,
                     e.Version
                 );
             }).ToList();
@@ -446,8 +448,17 @@ namespace koala.src.Modules.Core.Services
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
+        //     if (!isAuthenticated)
+        //     {
+        //         throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+        //     }
 
+        //     if (!isOrganizationAdmin)
+        //     {
+        //         throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+        //     }
 
+        //     //FIXME: POPRAWIĆ WSZYSTKO TUTAJ CAŁY ENDPOINT BYŁ ŹLE
+        // }
     }
-
 }

@@ -43,7 +43,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
 
             var pageQueryDto = new PageQueryDto { PageNumber = 0, PageSize = 16 };
-            var (response, pagination) = await service.GetSessionsAsync(claimsPrincipal, pageQueryDto);
+            var (response, pagination) = await service.GetActiveSessionsAsync(claimsPrincipal, pageQueryDto);
 
             Assert.Equal(2, response.Count);
             Assert.Contains(response, s => s.SessionId == TestDataSeeder.ID_SESSION_1);
@@ -104,11 +104,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             await service.DeleteSessionsAsync(claimsPrincipal);
 
             var activeSessions = await _db.Sessions
-                .Where(s => s.UserId == TestDataSeeder.ID_USER_1 && s.Active == true)
+                .Where(s => s.UserId == TestDataSeeder.ID_USER_1)
                 .ToListAsync();
 
             Assert.Empty(activeSessions);
-            cacheMock.Verify(c => c.RemoveKeyAsync(It.IsAny<string>()), Times.Exactly(2));
+            cacheMock.Verify(c => c.RemoveKeyAsync(It.IsAny<string>()), Times.Exactly(3));
         }
 
         [Fact]

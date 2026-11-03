@@ -34,14 +34,31 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("state");
+
+                    b.Property<DateTime>("TeamRegisterClose")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("team_register_close");
+
+                    b.Property<DateTime>("TeamRegisterOpen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("team_register_open");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 
@@ -55,7 +72,7 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTime?>("AnswerClose")
+                    b.Property<DateTime>("AnswerClose")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("answer_close");
 
@@ -67,21 +84,9 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime?>("DateEnd")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_end");
-
-                    b.Property<DateTime>("DateStart")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_start");
-
                     b.Property<Guid>("EditionId")
                         .HasColumnType("uuid")
                         .HasColumnName("edition_id");
-
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -92,6 +97,14 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("state");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 
@@ -120,7 +133,7 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("task_item_id");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -159,17 +172,17 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("subedition_id");
 
-                    b.Property<string>("Type")
+                    b.Property<string>("Tier")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("type");
+                        .HasColumnName("tier");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<Guid>("Version")
-                        .HasColumnType("uuid")
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
                         .HasColumnName("version");
 
                     b.HasKey("Id");
@@ -193,6 +206,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("auto_review_state");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
                     b.Property<bool?>("Review1Score")
                         .HasColumnType("boolean")
                         .HasColumnName("review_1_state");
@@ -209,10 +226,19 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("reviewer_2_id");
 
-                    b.Property<string>("TeamAnswer")
+                    b.Property<string>("State")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("team_answer");
+                        .HasColumnName("state");
+
+                    b.Property<string>("Submission")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("submission");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
@@ -276,6 +302,11 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("state");
 
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tier");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text")
@@ -284,6 +315,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 

@@ -1,9 +1,9 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record CreateSubEditionDto
+    public record SubEditionCreateDto
     (
         string Name,
-        DateTime DateStart,
-        DateTime? DateEnd
+        DateTime AnswerOpen,
+        DateTime AnswerClose
     );
 }

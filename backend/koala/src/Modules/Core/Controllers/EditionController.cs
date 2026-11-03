@@ -21,26 +21,34 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateAndStartEdition([FromBody] CreateEditionDto createEditionDto)
+        public async Task<IActionResult> CreateAndStartEdition([FromBody] EditionCreateDto createEditionDto)
         {
             var response = await _editionService.CreateEditionAsync(User, createEditionDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/name")]
-        public async Task<IActionResult> UpdateEdition([FromRoute] Guid edition_id, [FromBody] UpdateEditionNameDto updateEditionNameDto)
+        [HttpPut("{edition_id}")]
+        public async Task<IActionResult> UpdateEdition([FromRoute] Guid edition_id, [FromBody] EditionUpdateDto editionUpdateDto)
         {
-            var response = await _editionService.UpdateEditionAsync(User, edition_id, updateEditionNameDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            var response = await _editionService.UpdateEditionAsync(User, edition_id, editionUpdateDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/end")]
-        public async Task<IActionResult> EndEdition([FromRoute] Guid edition_id)
+        [HttpPut("{edition_id}/activate")]
+        public async Task<IActionResult> EditionActivate([FromRoute] Guid edition_id)
         {
-            var response = await _editionService.ExpireEditionAsync(User, edition_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            var response = await _editionService.EditionActivateAsync(User, edition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpPut("{edition_id}/close")]
+        public async Task<IActionResult> EditionClose([FromRoute] Guid edition_id)
+        {
+            var response = await _editionService.EditionCloseAsync(User, edition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [AllowAnonymous]
@@ -62,7 +70,7 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost("{edition_id}/subeditions")]
-        public async Task<IActionResult> CreateSubEdition([FromRoute] Guid edition_id, [FromBody] CreateSubEditionDto createSubEditionDto)
+        public async Task<IActionResult> CreateSubEdition([FromRoute] Guid edition_id, [FromBody] SubEditionCreateDto createSubEditionDto)
         {
             var response = await _editionService.CreateSubEditionAsync(User, edition_id, createSubEditionDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
@@ -70,7 +78,7 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPut("{edition_id}/subeditions/{subedition_id}")]
-        public async Task<IActionResult> UpdateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] UpdateSubEditionDto updateSubEditionDto)
+        public async Task<IActionResult> UpdateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] SubEditionUpdateDto updateSubEditionDto)
         {
             var response = await _editionService.UpdateSubEditionAsync(User, edition_id, subedition_id, updateSubEditionDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
@@ -104,7 +112,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpPut("{edition_id}/deactivate_subedition/{subedition_id}")]
         public async Task<IActionResult> DeactivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
         {
-            var response = await _editionService.DeactivateSubEditionAsync(User, edition_id, subedition_id);
+            var response = await _editionService.CloseSubEditionAsync(User, edition_id, subedition_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
@@ -118,7 +126,7 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost("{edition_id}/subeditions/{subedition_id}/tasks")]
-        public async Task<IActionResult> CreateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] CreateTaskItemDto createTaskDto)
+        public async Task<IActionResult> CreateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] TaskItemCreateDto createTaskDto)
         {
             var response = await _editionService.CreateTaskItemAsync(User, edition_id, subedition_id, createTaskDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));

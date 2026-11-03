@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Http;
 namespace koala.src.Modules.Account.Dtos
 {
     public record RodoUpsertDto(
-        IFormFile File
+        IFormFile File,
+        int? Version
     );
 
     public class RodoUpsertDtoValidator : AbstractValidator<RodoUpsertDto>
@@ -37,6 +38,8 @@ namespace koala.src.Modules.Account.Dtos
                     var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                     return allowedExtensions.Contains(extension);
                 }).WithMessage("Invalid file extension. Allowed extensions are: .jpg, .jpeg, .png, .webp, .pdf");
+            RuleFor(x => x.Version)
+                .GreaterThan(0).WithMessage("Version field must be greater than 0");
         }
     }
 }

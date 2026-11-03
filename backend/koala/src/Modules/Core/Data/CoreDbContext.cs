@@ -77,13 +77,6 @@ namespace koala.src.Modules.Core.Data
                 .HasForeignKey(ts => ts.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<TaskSubmission>()
-                .Property(ts => ts.TeamId)
-                    .IsRequired();
-            modelBuilder.Entity<TaskSubmission>()
-                .Property(ts => ts.TeamAnswer)
-                    .IsRequired();
-
             // SCHOOLS CONFIG
             modelBuilder.Entity<School>()
                 .HasKey(s => s.Id);

@@ -85,24 +85,23 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes._EXTERNAL_ActiveEditionNotFound, "There is no active edition under which the team could be created");
             }
 
-            var schoolExist = await _coreService.Internal_ExistSchoolAsync(requestDto.SchoolId);
+            var school = await _coreService.Internal_GetSchoolAsync(requestDto.SchoolId);
 
-            if (schoolExist == false)
+            if (school == null)
             {
                 throw new AccountException(AccountErrorCodes._EXTERNAL_SchoolNotFound, "There is no school with provided id under which the team could be created");
             }
 
-            bool isCaptainAlready = await _db.UserTeams.AsNoTracking().AnyAsync(ut => ut.UserId == userId && ut.Position == "PLAYER");
-            if (isCaptainAlready)
-            {
-                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User already is part of a team, cannot be a part of more than one team");
-            }
-
-            var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && u.Verified == true);
-
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (user == null)
             {
                 throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptainAlready = user.CaptainTeam != null ? true : false;
+            if (isCaptainAlready)
+            {
+                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User already is part of a team, cannot be a part of more than one team");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -112,27 +111,29 @@ namespace koala.src.Modules.Account.Services
                 Id = Guid.CreateVersion7(),
                 SchoolId = requestDto.SchoolId,
                 EditionId = activeEdition.Id,
+                CaptainId = userId,
+                GuardianId = null,
                 Name = requestDto.Name,
                 NameAccepted = false,
-                CreatedAt = timeNow
-            };
-
-            UserTeam userTeam = new UserTeam
-            {
-                TeamId = team.Id,
-                UserId = userId,
-                Position = CAPTAIN
+                Tier = school.Tier,
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
             };
 
             TeamMember memberTeam = new TeamMember
             {
-                Id = Guid.CreateVersion7(),
+                Id = userId,
                 TeamId = team.Id,
-                MemberId = null
+                RodoState = TeamMemberRodoState.RODOSTATE_NONE,
+                NameFirst = null,
+                NameLast = null,
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
             };
 
             await _db.Teams.AddAsync(team);
-            await _db.UserTeams.AddAsync(userTeam);
             await _db.TeamMembers.AddAsync(memberTeam);
             await _db.SaveChangesAsync();
 
@@ -143,8 +144,11 @@ namespace koala.src.Modules.Account.Services
                 team.EditionId,
                 team.SchoolId,
                 team.Name,
+                team.Tier,
                 !team.NameAccepted,
                 team.CreatedAt,
+                team.UpdatedAt,
+                team.Version,
                 new UserDto
                 (
                     user.Id,
@@ -184,15 +188,26 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes._EXTERNAL_ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
-            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(ut => ut.UserId == userId && ut.TeamId == teamId && ut.Position == CAPTAIN);
-            if (teamCaptain == null)
+            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "User is not a captain of the team");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam.Id != teamId)
+            {
+                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
             var teamMembers = await _db.TeamMembers.Where(tm => tm.TeamId == teamId).ToListAsync();
 
-            _db.Teams.Remove(teamCaptain.Team);
+            _db.Teams.Remove(captain.CaptainTeam);
             _db.TeamMembers.RemoveRange(teamMembers);
 
             await _db.SaveChangesAsync();
@@ -223,39 +238,69 @@ namespace koala.src.Modules.Account.Services
                 throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
             }
 
-            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(ut => ut.UserId == userId && ut.TeamId == teamId && ut.Position == CAPTAIN);
-            if (teamCaptain == null)
+            DateTime timeNow = DateTime.UtcNow;
+
+            if (!(activeEdition.TeamRegisterOpen <= timeNow) && !(timeNow <= activeEdition.TeamRegisterClose))
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "User is not a captain of the team");
+                throw new AccountException(AccountErrorCodes.TeamChangesNoLongerPermited, "Time span for team changes no longer permited");
+            }
+
+            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
+            {
+                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam.Id != teamId)
+            {
+                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
             int membersCount = await _db.TeamMembers.Where(tm => tm.TeamId == teamId).CountAsync();
 
-            if (membersCount >= 3)
+            if (membersCount >= 4)
             {
                 throw new AccountException(AccountErrorCodes.TeamMemberCountMax, "Team is full");
             }
-
-            Member newMember = new Member
-            {
-                Id = Guid.CreateVersion7(),
-                NameFirst = requestDto.NameFirst,
-                NameLast = requestDto.NameLast
-            };
 
             TeamMember newTeamMember = new TeamMember
             {
                 Id = Guid.CreateVersion7(),
                 TeamId = teamId,
-                MemberId = newMember.Id
+                RodoId = null,
+                RodoState = TeamMemberRodoState.RODOSTATE_NONE,
+                NameFirst = requestDto.NameFirst,
+                NameLast = requestDto.NameLast,
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
             };
 
-            await _db.Members.AddAsync(newMember);
             await _db.TeamMembers.AddAsync(newTeamMember);
 
             await _db.SaveChangesAsync();
 
-            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId && tm.Id != userId)
+                .Select(tm => new TeamMemberDto
+                (
+                    tm.Id,
+                    tm.TeamId,
+                    tm.NameFirst!,
+                    tm.NameLast!,
+                    tm.RodoState,
+                    tm.Rodo == null ? null : tm.Rodo.Version,
+                    tm.Rodo == null ? null : tm.Rodo.CreatedAt,
+                    tm.Rodo == null ? null : tm.Rodo.UpdatedAt,
+                    tm.CreatedAt,
+                    tm.UpdatedAt,
+                    tm.Version
+                )).ToListAsync();
         }
         public async Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, TeamMemberUpsertRequestDto requestDto)
         {
@@ -281,31 +326,64 @@ namespace koala.src.Modules.Account.Services
                 throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
             }
 
-            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(ut => ut.UserId == userId && ut.TeamId == teamId && ut.Position == CAPTAIN);
-            if (teamCaptain == null)
+            DateTime timeNow = DateTime.UtcNow;
+
+            if (!(activeEdition.TeamRegisterOpen <= timeNow) && !(timeNow <= activeEdition.TeamRegisterClose))
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "User is not a captain of the team");
+                throw new AccountException(AccountErrorCodes.TeamChangesNoLongerPermited, "Time span for team changes no longer permited");
             }
 
-            var teamMemberToUpdate = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.MemberId == teamMemberId);
-            var memberToUpdate = await _db.Members.FirstOrDefaultAsync(m => m.Id == teamMemberId);
+            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
+            {
+                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam.Id != teamId)
+            {
+                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+            }
+
+            var teamMemberToUpdate = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.Id != userId);
 
             if (teamMemberToUpdate == null)
             {
                 throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
             }
 
-            if (memberToUpdate == null)
+            if (teamMemberToUpdate.Version != requestDto.Version)
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member");
+                throw new AccountException(AccountErrorCodes.Conflict, "Member field version does not match make sure u have the fresh data");
             }
 
-            memberToUpdate.NameFirst = requestDto.NameFirst;
-            memberToUpdate.NameLast = requestDto.NameLast;
+            teamMemberToUpdate.NameFirst = requestDto.NameFirst;
+            teamMemberToUpdate.NameLast = requestDto.NameLast;
+            teamMemberToUpdate.UpdatedAt = timeNow;
+            teamMemberToUpdate.Version++;
 
             await _db.SaveChangesAsync();
 
-            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+            return await _db.TeamMembers.Where(tm => tm.TeamId == teamId && tm.Id != userId)
+                .Select(tm => new TeamMemberDto
+                (
+                    tm.Id,
+                    tm.TeamId,
+                    tm.NameFirst!,
+                    tm.NameLast!,
+                    tm.RodoState,
+                    tm.Rodo == null ? null : tm.Rodo.Version,
+                    tm.Rodo == null ? null : tm.Rodo.CreatedAt,
+                    tm.Rodo == null ? null : tm.Rodo.UpdatedAt,
+                    tm.CreatedAt,
+                    tm.UpdatedAt,
+                    tm.Version
+                )).ToListAsync();
         }
         public async Task DeleteTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId)
         {
@@ -331,27 +409,38 @@ namespace koala.src.Modules.Account.Services
                 throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
             }
 
-            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(ut => ut.UserId == userId && ut.TeamId == teamId && ut.Position == CAPTAIN);
-            if (teamCaptain == null)
+            DateTime timeNow = DateTime.UtcNow;
+
+            if (!(activeEdition.TeamRegisterOpen <= timeNow) && !(timeNow <= activeEdition.TeamRegisterClose))
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "User is not a captain of the team");
+                throw new AccountException(AccountErrorCodes.TeamChangesNoLongerPermited, "Time span for team changes no longer permited");
             }
 
-            var teamMemberToDelete = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.MemberId == teamMemberId);
-            var memberToDelete = await _db.Members.FirstOrDefaultAsync(m => m.Id == teamMemberId);
+            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
+            {
+                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam.Id != teamId)
+            {
+                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+            }
+
+            var teamMemberToDelete = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.Id != userId);
 
             if (teamMemberToDelete == null)
             {
                 throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
             }
 
-            if (memberToDelete == null)
-            {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "Could not find the member");
-            }
-
             _db.TeamMembers.Remove(teamMemberToDelete);
-            _db.Members.Remove(memberToDelete);
 
             await _db.SaveChangesAsync();
 
@@ -382,56 +471,96 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes._EXTERNAL_ActiveEditionNotFound, "Cannot edit team name when no edition is currently active");
             }
 
-            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(tm => tm.UserId == userId && tm.TeamId == teamId && tm.Position == CAPTAIN);
-            if (teamCaptain == null)
+            DateTime timeNow = DateTime.UtcNow;
+
+            if (!(activeEdition.TeamRegisterOpen <= timeNow) && !(timeNow <= activeEdition.TeamRegisterClose))
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "User is not a captain of the team");
+                throw new AccountException(AccountErrorCodes.TeamChangesNoLongerPermited, "Time span for team changes no longer permited");
             }
 
-            teamCaptain.Team.Name = requestDto.Name;
-            teamCaptain.Team.NameAccepted = false;
+            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
+            {
+                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam.Id != teamId)
+            {
+                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
+            }
+
+            if (captain.CaptainTeam.Version != requestDto.Version)
+            {
+                throw new AccountException(AccountErrorCodes.Conflict, "team version field does not match make sure u have the fresh data");
+            }
+
+            captain.CaptainTeam.Name = requestDto.Name;
+            captain.CaptainTeam.NameAccepted = false;
+            captain.CaptainTeam.UpdatedAt = timeNow;
+            captain.CaptainTeam.Version++;
 
             await _db.SaveChangesAsync();
 
-            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId && tm.Id != captain.Id)
+                .Select(tm => new TeamMemberDto
+                (
+                    tm.Id,
+                    tm.TeamId,
+                    tm.NameFirst!,
+                    tm.NameLast!,
+                    tm.RodoState,
+                    tm.Rodo == null ? null : tm.Rodo.Version,
+                    tm.Rodo == null ? null : tm.Rodo.CreatedAt,
+                    tm.Rodo == null ? null : tm.Rodo.UpdatedAt,
+                    tm.CreatedAt,
+                    tm.UpdatedAt,
+                    tm.Version
+                )).ToListAsync();
             var teamJoinCode = await _db.TeamJoinCodes.AsNoTracking().FirstOrDefaultAsync(tjc => tjc.TeamId == teamId);
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null
                 ? null
-                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
-
-            var teamAdmin = await _db.UserTeams.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Position == ADMIN);
+                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
             UserDto? teamAdminDto = null;
             UserDto teamCaptainDto = new UserDto
             (
-                teamCaptain.User.Id,
-                teamCaptain.User.NameFirst!,
-                teamCaptain.User.NameLast!,
-                teamCaptain.User.Email,
-                teamCaptain.User.Censored,
-                teamCaptain.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                captain.Id,
+                captain.NameFirst!,
+                captain.NameLast!,
+                captain.Email,
+                captain.Censored,
+                captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
             );
-            if (teamAdmin != null)
+            if (captain.CaptainTeam.GuardianId != null)
             {
                 teamAdminDto = new UserDto
                 (
-                    teamAdmin.User.Id,
-                    teamAdmin.User.NameFirst!,
-                    teamAdmin.User.NameLast!,
-                    teamAdmin.User.Email,
-                    teamAdmin.User.Censored,
-                    teamAdmin.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                    captain.CaptainTeam.Guardian.Id,
+                    captain.CaptainTeam.Guardian.NameFirst!,
+                    captain.CaptainTeam.Guardian.NameLast!,
+                    captain.CaptainTeam.Guardian.Email,
+                    captain.CaptainTeam.Guardian.Censored,
+                    captain.CaptainTeam.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
                 );
             }
 
             return new TeamDto
             (
-                teamCaptain.Team.Id,
-                teamCaptain.Team.EditionId,
-                teamCaptain.Team.SchoolId,
-                teamCaptain.Team.Name,
-                teamCaptain.Team.NameAccepted,
-                teamCaptain.Team.CreatedAt,
+                captain.CaptainTeam.Id,
+                captain.CaptainTeam.EditionId,
+                captain.CaptainTeam.SchoolId,
+                captain.CaptainTeam.Name,
+                captain.CaptainTeam.Tier,
+                !captain.CaptainTeam.NameAccepted,
+                captain.CaptainTeam.CreatedAt,
+                captain.CaptainTeam.UpdatedAt,
+                captain.CaptainTeam.Version,
                 teamCaptainDto,
                 teamAdminDto,
                 teamMembers,
@@ -460,18 +589,29 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot create join codes for team when no edition is currently active");
+                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
             }
 
-            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(tm => tm.UserId == userId && tm.TeamId == teamId && tm.Position == CAPTAIN);
-            if (teamCaptain == null)
+            DateTime timeNow = DateTime.UtcNow;
+
+            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
             {
-                throw new AccountException(AccountErrorCodes.TeamMemberNotFound, "User is not a captain of the team");
+                throw new AccountException(AccountErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new AccountException(AccountErrorCodes.UserIsAPartOfTeamAlready, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam.Id != teamId)
+            {
+                throw new AccountException(AccountErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
             TeamJoinCode? teamJoinCode = await _db.TeamJoinCodes.FirstOrDefaultAsync(tjc => tjc.TeamId == teamId);
-
-            DateTime timeNow = DateTime.UtcNow;
 
             if (teamJoinCode == null)
             {
@@ -494,7 +634,7 @@ namespace koala.src.Modules.Account.Services
 
             await _db.SaveChangesAsync();
 
-            return new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
+            return new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
         }
 
         public async Task<TeamDto> JoinTeamWithCodeAsync(ClaimsPrincipal? claimsPrincipal, string JoinCode)
@@ -549,66 +689,65 @@ namespace koala.src.Modules.Account.Services
             }
 
             // MAKE SURE ONLY ONE TEAM ADMIN PER TEAM AND WELL TEAM PLAYER CANT JOIN SINCE A TEAM WITH NO CAPTAIN CAN EXIST AND ONLY ONE CAPTAIN PER TEAM IS ALLOWED
-            var teamHasAdmin = await _db.UserTeams.FirstOrDefaultAsync(ut => ut.TeamId == teamJoinCode.TeamId && ut.Position == ADMIN);
+            var team = await _db.Teams.FirstOrDefaultAsync(t => t.Id == teamJoinCode.TeamId);
+            if (team == null)
+            {
+                throw new AccountException(AccountErrorCodes.TeamNotFound, "team for this join code does not exist");
+            }
 
-            if (teamHasAdmin != null)
+            bool teamHasAdmin = team.GuardianId != null ? true : false;
+
+            if (teamHasAdmin)
             {
                 throw new AccountException(AccountErrorCodes.TeamMemberCountMax, "This team already has an admin");
             }
 
-            UserTeam newTeamAdmin = new UserTeam
-            {
-                UserId = userId,
-                TeamId = teamJoinCode.TeamId,
-                Position = ADMIN
-            };
+            team.GuardianId = userId;
 
-            await _db.UserTeams.AddAsync(newTeamAdmin);
             await _db.SaveChangesAsync();
-
-
-            var adminUser = await _db.Users
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                .FirstAsync(u => u.Id == userId);
 
             var teamMembers = await _db.TeamMembers
                 .AsNoTracking()
-                .Where(tm => tm.TeamId == teamJoinCode.TeamId && tm.MemberId != null)
-                .Select(tm => new TeamMemberDto(tm.MemberId, tm.Member.NameFirst, tm.Member.NameLast))
+                .Where(tm => tm.TeamId == teamJoinCode.TeamId && tm.Id != team.CaptainId)
+                .Select(tm => new TeamMemberDto
+                (
+                    tm.Id,
+                    tm.TeamId,
+                    tm.NameFirst!,
+                    tm.NameLast!,
+                    tm.RodoState,
+                    tm.Rodo == null ? null : tm.Rodo.Version,
+                    tm.Rodo == null ? null : tm.Rodo.CreatedAt,
+                    tm.Rodo == null ? null : tm.Rodo.UpdatedAt,
+                    tm.CreatedAt,
+                    tm.UpdatedAt,
+                    tm.Version
+                ))
                 .ToListAsync();
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null
                 ? null
-                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
-
-            var teamCaptain = await _db.UserTeams
-                .Include(tm => tm.User)
-                .ThenInclude(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(tm => tm.TeamId == teamJoinCode.TeamId && tm.Position == CAPTAIN);
+                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
 
             UserDto teamCaptainDto = new UserDto
             (
-                teamCaptain.User.Id,
-                teamCaptain.User.NameFirst!,
-                teamCaptain.User.NameLast!,
-                teamCaptain.User.Email,
-                teamCaptain.User.Censored,
-                teamCaptain.User.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>()
+                team.Captain.Id,
+                team.Captain.NameFirst!,
+                team.Captain.NameLast!,
+                team.Captain.Email,
+                team.Captain.Censored,
+                team.Captain.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>()
             );
 
-            UserDto teamAdminDto = new UserDto
+            UserDto teamGuardianDto = new UserDto
             (
-                adminUser.Id,
-                adminUser.NameFirst!,
-                adminUser.NameLast!,
-                adminUser.Email,
-                adminUser.Censored,
-                adminUser.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>()
+                team.Guardian.Id,
+                team.Guardian.NameFirst!,
+                team.Guardian.NameLast!,
+                team.Guardian.Email,
+                team.Guardian.Censored,
+                team.Guardian.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>()
             );
-
-            var team = teamJoinCode.Team;
 
             return new TeamDto
             (
@@ -616,10 +755,13 @@ namespace koala.src.Modules.Account.Services
                 team.EditionId,
                 team.SchoolId,
                 team.Name,
-                team.NameAccepted,
+                team.Tier,
+                !team.NameAccepted,
                 team.CreatedAt,
+                team.UpdatedAt,
+                team.Version,
                 teamCaptainDto,
-                teamAdminDto,
+                teamGuardianDto,
                 teamMembers,
                 teamJoinCodeDto
             );
@@ -650,7 +792,7 @@ namespace koala.src.Modules.Account.Services
 
             var query = _db.Teams
                 .AsNoTracking()
-                .Where(t => t.UserTeams.Any(tm => tm.UserId == userId));
+                .Where(t => t.CaptainId == userId || t.GuardianId == userId);
 
             if (teamQueryDto.EditionId != null)
             {
@@ -673,41 +815,52 @@ namespace koala.src.Modules.Account.Services
                     qr.EditionId,
                     qr.SchoolId,
                     qr.Name,
+                    qr.Tier,
                     !qr.NameAccepted,
                     qr.CreatedAt,
+                    qr.UpdatedAt,
+                    qr.Version,
 
-                    qr.UserTeams
-                        .Where(ut => ut.Position == CAPTAIN)
-                        .Select(ut => new UserDto(
-                            ut.User.Id,
-                            ut.User.NameFirst!,
-                            ut.User.NameLast!,
-                            ut.User.Email,
-                            ut.User.Censored,
-                            ut.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
-                        ))
-                        .FirstOrDefault()!,
-
-                    qr.UserTeams
-                        .Where(ut => ut.Position == ADMIN)
-                        .Select(ut => new UserDto(
-                            ut.User.Id,
-                            ut.User.NameFirst!,
-                            ut.User.NameLast!,
-                            ut.User.Email,
-                            ut.User.Censored,
-                            ut.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
-                        ))
-                        .FirstOrDefault(),
+                    new UserDto
+                    (
+                        qr.Captain.Id,
+                        qr.Captain.NameFirst!,
+                        qr.Captain.NameLast!,
+                        qr.Captain.Email,
+                        qr.Captain.Censored,
+                        qr.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                    ),
+                    new UserDto
+                    (
+                        qr.Guardian.Id,
+                        qr.Guardian.NameFirst!,
+                        qr.Guardian.NameLast!,
+                        qr.Guardian.Email,
+                        qr.Guardian.Censored,
+                        qr.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                    ),
 
                     qr.TeamMembers
-                        .Where(tm => tm.MemberId != null)
-                        .Select(tm => new TeamMemberDto(tm.Member.Id, tm.Member.NameFirst, tm.Member.NameLast))
+                        .Where(tm => tm.Id != qr.CaptainId)
+                        .Select(tm => new TeamMemberDto
+                        (
+                            tm.Id,
+                            tm.TeamId,
+                            tm.NameFirst!,
+                            tm.NameLast!,
+                            tm.RodoState,
+                            tm.Rodo == null ? null : tm.Rodo.Version,
+                            tm.Rodo == null ? null : tm.Rodo.CreatedAt,
+                            tm.Rodo == null ? null : tm.Rodo.UpdatedAt,
+                            tm.CreatedAt,
+                            tm.UpdatedAt,
+                            tm.Version
+                        ))
                         .ToList(),
 
                     qr.TeamJoinCode == null || qr.TeamJoinCode.ExpiresAt <= DateTime.UtcNow
                         ? null
-                        : new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.ExpiresAt)
+                        : new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.UpdatedAt, qr.TeamJoinCode.ExpiresAt)
                 ))
                 .ToListAsync();
 
@@ -735,7 +888,7 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.Forbidden, "Only team members and admin can view the team");
             }
 
-            bool isTeamMember = await _db.UserTeams.AnyAsync(tm => tm.TeamId == teamId && tm.UserId == userId);
+            bool isTeamMember = await _db.Teams.AnyAsync(tm => tm.Id == teamId && (tm.CaptainId == userId || tm.GuardianId == userId));
 
             if (!isTeamMember && !isOrganizationAdmin)
             {
@@ -749,43 +902,57 @@ namespace koala.src.Modules.Account.Services
                 throw new AccountException(AccountErrorCodes.TeamNotFound, "The provided id does not belong to any team");
             }
 
-            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId && tm.MemberId != null).Select(tm => new TeamMemberDto(tm.Member.Id, tm.Member.NameFirst, tm.Member.NameLast)).ToListAsync();
+            var teamMembers = await _db.TeamMembers.AsNoTracking().Where(tm => tm.TeamId == teamId && tm.Id != team.CaptainId)
+                .Select(tm => new TeamMemberDto
+                (
+                    tm.Id,
+                    tm.TeamId,
+                    tm.NameFirst!,
+                    tm.NameLast!,
+                    tm.RodoState,
+                    tm.Rodo == null ? null : tm.Rodo.Version,
+                    tm.Rodo == null ? null : tm.Rodo.CreatedAt,
+                    tm.Rodo == null ? null : tm.Rodo.UpdatedAt,
+                    tm.CreatedAt,
+                    tm.UpdatedAt,
+                    tm.Version
+                )).ToListAsync();
             var teamJoinCode = await _db.TeamJoinCodes.AsNoTracking().FirstOrDefaultAsync(tjc => tjc.TeamId == teamId);
 
             TeamJoinCodeDto? teamJoinCodeDto = teamJoinCode == null || teamJoinCode.ExpiresAt <= DateTime.UtcNow
                 ? null
-                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.ExpiresAt);
-
-            var teamCaptain = await _db.UserTeams.FirstOrDefaultAsync(tm => tm.TeamId == teamJoinCode.TeamId && tm.Position == CAPTAIN);
-            var teamAdmin = await _db.UserTeams.FirstOrDefaultAsync(tm => tm.TeamId == teamJoinCode.TeamId && tm.Position == ADMIN);
+                : new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
 
             UserDto teamCaptainDto = new UserDto
             (
-                teamCaptain.User.Id,
-                teamCaptain.User.NameFirst!,
-                teamCaptain.User.NameLast!,
-                teamCaptain.User.Email,
-                teamCaptain.User.Censored,
-                teamCaptain.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                team.Captain.Id,
+                team.Captain.NameFirst!,
+                team.Captain.NameLast!,
+                team.Captain.Email,
+                team.Captain.Censored,
+                team.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
             );
             UserDto teamAdminDto = new UserDto
             (
-                teamAdmin.User.Id,
-                teamAdmin.User.NameFirst!,
-                teamAdmin.User.NameLast!,
-                teamAdmin.User.Email,
-                teamAdmin.User.Censored,
-                teamAdmin.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                team.Guardian.Id,
+                team.Guardian.NameFirst!,
+                team.Guardian.NameLast!,
+                team.Guardian.Email,
+                team.Guardian.Censored,
+                team.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
             );
 
             return new TeamDto
             (
-                teamCaptain.Team.Id,
-                teamCaptain.Team.EditionId,
-                teamCaptain.Team.SchoolId,
-                teamCaptain.Team.Name,
-                teamCaptain.Team.NameAccepted,
-                teamCaptain.Team.CreatedAt,
+                team.Id,
+                team.EditionId,
+                team.SchoolId,
+                team.Name,
+                team.Tier,
+                !team.NameAccepted,
+                team.CreatedAt,
+                team.UpdatedAt,
+                team.Version,
                 teamCaptainDto,
                 teamAdminDto,
                 teamMembers,
@@ -821,12 +988,12 @@ namespace koala.src.Modules.Account.Services
 
             if (teamQueryDto.CaptainId != null)
             {
-                query = query.Where(t => t.UserTeams.Any(ut => ut.UserId == teamQueryDto.CaptainId && ut.Position == CAPTAIN));
+                query = query.Where(t => t.CaptainId == teamQueryDto.CaptainId);
             }
 
             if (teamQueryDto.AdminId != null)
             {
-                query = query.Where(t => t.UserTeams.Any(ut => ut.UserId == teamQueryDto.AdminId && ut.Position == ADMIN));
+                query = query.Where(t => t.GuardianId == teamQueryDto.AdminId);
             }
 
             if (teamQueryDto.SchoolId != null)
@@ -841,7 +1008,7 @@ namespace koala.src.Modules.Account.Services
 
             if (teamMemberQueryDto.MemberId != null)
             {
-                query = query.Where(t => t.TeamMembers.Any(tm => tm.MemberId == teamMemberQueryDto.MemberId));
+                query = query.Where(t => t.TeamMembers.Any(tm => tm.Id == teamMemberQueryDto.MemberId && tm.Id != tm.Team.CaptainId));
             }
 
             var queryResults = await query.ToListAsync();
@@ -854,41 +1021,52 @@ namespace koala.src.Modules.Account.Services
                     qr.EditionId,
                     qr.SchoolId,
                     qr.Name,
+                    qr.Tier,
                     !qr.NameAccepted,
                     qr.CreatedAt,
+                    qr.UpdatedAt,
+                    qr.Version,
 
-                    qr.UserTeams
-                        .Where(ut => ut.Position == CAPTAIN)
-                        .Select(ut => new UserDto(
-                            ut.User.Id,
-                            ut.User.NameFirst!,
-                            ut.User.NameLast!,
-                            ut.User.Email,
-                            ut.User.Censored,
-                            ut.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
-                        ))
-                        .FirstOrDefault()!,
-
-                    qr.UserTeams
-                        .Where(ut => ut.Position == ADMIN)
-                        .Select(ut => new UserDto(
-                            ut.User.Id,
-                            ut.User.NameFirst!,
-                            ut.User.NameLast!,
-                            ut.User.Email,
-                            ut.User.Censored,
-                            ut.User.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
-                        ))
-                        .FirstOrDefault(),
+                    new UserDto
+                    (
+                        qr.Captain.Id,
+                        qr.Captain.NameFirst!,
+                        qr.Captain.NameLast!,
+                        qr.Captain.Email,
+                        qr.Captain.Censored,
+                        qr.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                    ),
+                    new UserDto
+                    (
+                        qr.Guardian.Id,
+                        qr.Guardian.NameFirst!,
+                        qr.Guardian.NameLast!,
+                        qr.Guardian.Email,
+                        qr.Guardian.Censored,
+                        qr.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                    ),
 
                     qr.TeamMembers
-                        .Where(tm => tm.MemberId != null)
-                        .Select(tm => new TeamMemberDto(tm.Member.Id, tm.Member.NameFirst, tm.Member.NameLast))
+                        .Where(tm => tm.Id != qr.CaptainId)
+                        .Select(tm => new TeamMemberDto
+                        (
+                            tm.Id,
+                            tm.TeamId,
+                            tm.NameFirst!,
+                            tm.NameLast!,
+                            tm.RodoState,
+                            tm.Rodo == null ? null : tm.Rodo.Version,
+                            tm.Rodo == null ? null : tm.Rodo.CreatedAt,
+                            tm.Rodo == null ? null : tm.Rodo.UpdatedAt,
+                            tm.CreatedAt,
+                            tm.UpdatedAt,
+                            tm.Version
+                        ))
                         .ToList(),
 
                     qr.TeamJoinCode == null || qr.TeamJoinCode.ExpiresAt <= DateTime.UtcNow
                         ? null
-                        : new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.ExpiresAt)
+                        : new TeamJoinCodeDto(qr.TeamJoinCode.JoinCode, qr.TeamJoinCode.CreatedAt, qr.TeamJoinCode.UpdatedAt, qr.TeamJoinCode.ExpiresAt)
                 ))
                 .ToListAsync();
 

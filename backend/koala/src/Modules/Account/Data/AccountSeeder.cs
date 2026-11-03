@@ -28,7 +28,7 @@ namespace koala.src.Modules.Account.Data
                     ur => ur.RoleId,
                     r => r.Id,
                     (ur, r) => r.Name)
-                .AnyAsync(roleName => roleName == "ORGANIZATION_ADMIN", cancellationToken);
+                .AnyAsync(roleName => roleName == RoleNames.NAME_ORGANIZATION_ADMIN, cancellationToken);
 
             if (!hasAdmin)
             {

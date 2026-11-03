@@ -4,7 +4,9 @@ namespace koala.src.Modules.Account.Dtos
     (
         Guid Id,
         string Type,
+        string State,
         DateTime CreatedAt,
+        DateTime UpdatedAt,
         DateTime ExpiresAt
     );
 }

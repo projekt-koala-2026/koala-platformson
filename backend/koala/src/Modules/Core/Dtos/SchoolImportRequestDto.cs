@@ -1,6 +1,6 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record ImportSchoolRequestDto
+    public record SchoolImportRequestDto
     (
         IFormFile File
     );

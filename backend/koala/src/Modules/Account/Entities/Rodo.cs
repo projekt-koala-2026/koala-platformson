@@ -3,24 +3,24 @@ using Mono.TextTemplating;
 
 namespace koala.src.Modules.Account.Entities
 {
+    public static class RodoTypes
+    {
+        public static string TYPE_JPG = ".jpg";
+        public static string TYPE_PNG = ".png";
+        public static string TYPE_PDF = ".pdf";
+    }
     public class Rodo
     {
         [Column("id")]
         public Guid Id { get; set; }
-        [Column("team_id")]
-        public Guid TeamId { get; set; }
-        [Column("user_id")]
-        public Guid? MemberId { get; set; }
         [Column("type")]
         public string Type { get; set; }
-        [Column("state")]
-        public string State { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
+        public int Version { get; set; }
 
-        public Member? Member { get; set; } = null!;
-        public Team Team { get; set; } = null!;
+        public TeamMember TeamMember { get; set; } = null!;
     }
 }

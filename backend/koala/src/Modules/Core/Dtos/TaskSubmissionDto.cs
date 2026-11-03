@@ -9,7 +9,10 @@ namespace koala.src.Modules.Core.Dtos
         bool? AutoReviewState,
         bool? Review1Score,
         bool? Review2Score,
-        string TeamAnswer,
+        string Submission,
+        string? State,
+        DateTime CreatedAt,
+        DateTime UpdatedAt,
         int Version
     );
 }
