@@ -96,7 +96,7 @@ namespace koala.src.Modules.Core.Services
 
             edition.Name = editionUpdateDto.Name;
             edition.TeamRegisterOpen = editionUpdateDto.TeamRegisterOpen;
-            edition.TeamRegisterClose = editionUpdateDto.TeanRegisterClose;
+            edition.TeamRegisterClose = editionUpdateDto.TeamRegisterClose;
             edition.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
@@ -179,7 +179,7 @@ namespace koala.src.Modules.Core.Services
                 {
                     if (!string.IsNullOrWhiteSpace(state))
                     {
-                        if (state != EditionStates.STATE_ACTIVE || state != EditionStates.STATE_INACTIVE || state != EditionStates.STATE_CLOSED)
+                        if (state != EditionStates.STATE_ACTIVE && state != EditionStates.STATE_INACTIVE && state != EditionStates.STATE_CLOSED)
                         {
                             throw new KoalaException(KoalaErrorCodes.EditionInvalidStates, "The states are not valid states");
                         }
