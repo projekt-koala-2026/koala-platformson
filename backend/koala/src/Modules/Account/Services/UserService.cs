@@ -33,7 +33,7 @@ namespace koala.src.Modules.Account.Services
         public async Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, UserRegisterRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (isAuthenticated && !isOrganizationAdmin)
             {
@@ -138,7 +138,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             bool isSelf = userId == id;
 
             if (userId == Guid.Empty)
@@ -161,7 +161,7 @@ namespace koala.src.Modules.Account.Services
                 .Select(ur => ur.Role.Name)
                 .Distinct()
                 .ToListAsync();
-            return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames);
+            return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames, user.CreatedAt, user.UpdatedAt, user.Version);
 
         }
         public async Task<UserDeclarationDto> GetUserDeclarationAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
@@ -173,7 +173,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             bool isSelf = userId == id;
 
             if (userId == Guid.Empty)
@@ -192,6 +192,7 @@ namespace koala.src.Modules.Account.Services
             }
             return new UserDeclarationDto(user.Id, user.AcceptedRodo, user.AcceptedRules, user.DeclaredAtLeast13, user.DeclaredAtLeast18);
         }
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task<UserDeclarationDto> UpdateUserDeclarationAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserDeclarationUpdateDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -254,7 +255,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (userId == Guid.Empty)
             {
@@ -307,7 +308,10 @@ namespace koala.src.Modules.Account.Services
                     u.NameLast!,
                     u.Email,
                     u.Censored,
-                    u.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                    u.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                    u.CreatedAt,
+                    u.UpdatedAt,
+                    u.Version
                 ))
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
@@ -315,6 +319,7 @@ namespace koala.src.Modules.Account.Services
 
             return (users, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES TRANSACTION!!!
         public async Task<UserDto> UpdateUserRolesAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserUpdateRolesDto request)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -324,7 +329,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             bool isSelf = userId == id;
 
             if (userId == Guid.Empty)
@@ -409,8 +414,9 @@ namespace koala.src.Modules.Account.Services
                 .Distinct()
                 .ToListAsync();
 
-            return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames);
+            return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames, user.CreatedAt, user.UpdatedAt, user.Version);
         }
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task<UserDto> UpdateUserNamesAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserChangeNamesDto request)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -420,7 +426,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             bool isSelf = userId == id;
 
             if (userId == Guid.Empty)
@@ -456,7 +462,7 @@ namespace koala.src.Modules.Account.Services
                 .Select(ur => ur.Role.Name)
                 .Distinct()
                 .ToListAsync();
-            return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames);
+            return new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames, user.CreatedAt, user.UpdatedAt, user.Version);
         }
         public async Task DeleteUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
@@ -467,7 +473,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             bool isSelf = userId == id;
 
             if (userId == Guid.Empty)
@@ -490,6 +496,8 @@ namespace koala.src.Modules.Account.Services
             await _db.SaveChangesAsync();
             return;
         }
+
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task CensorUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserCensorRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -499,7 +507,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (userId == Guid.Empty)
             {
@@ -528,6 +536,8 @@ namespace koala.src.Modules.Account.Services
             await _db.SaveChangesAsync();
             return;
         }
+
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task UnCensorUserAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UserCensorRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -537,7 +547,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (userId == Guid.Empty)
             {

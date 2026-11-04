@@ -1,4 +1,5 @@
 using FluentValidation;
+using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Dtos
 {
@@ -13,10 +14,14 @@ namespace koala.src.Modules.Account.Dtos
         public EmailSendRequestDtoValidator()
         {
             RuleFor(x => x.MessageSubject)
-                .NotEmpty().WithMessage("MessageSubject field cannot be empty!");
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.EmailSubjectEmpty)
+                .WithMessage("MessageSubject field cannot be empty!");
 
             RuleFor(x => x.MessageBody)
-                .NotEmpty().WithMessage("MessageBody field cannot be empty!");
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.EmailBodyEmpty)
+                .WithMessage("MessageBody field cannot be empty!");
         }
     }
 }

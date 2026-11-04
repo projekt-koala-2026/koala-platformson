@@ -232,7 +232,7 @@ namespace koala.src.Modules.Account.Services
 
         public async Task SendBulkEmailToSchoolsAsync(ClaimsPrincipal? claimsPrincipal, EmailSendRequestDto requestDto)
         {
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isOrganizationAdmin)
             {
@@ -297,7 +297,7 @@ namespace koala.src.Modules.Account.Services
 
         public async Task SendBulkEmailToCaptainsAsync(ClaimsPrincipal? claimsPrincipal, EmailSendRequestDto requestDto)
         {
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isOrganizationAdmin)
             {
@@ -342,7 +342,7 @@ namespace koala.src.Modules.Account.Services
 
         public async Task SendBulkEmailToGuardiansAsync(ClaimsPrincipal? claimsPrincipal, EmailSendRequestDto requestDto)
         {
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isOrganizationAdmin)
             {

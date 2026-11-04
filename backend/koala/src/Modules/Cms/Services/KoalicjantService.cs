@@ -21,41 +21,44 @@ namespace koala.src.Modules.Cms.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
-            var koalicjant = await _db.Koalicjants.FirstOrDefaultAsync(k => k.Id == id);
-
-            bool isNull = koalicjant == null;
-
-            bool isSelf = false;
-
-            if (!isNull)
-            {
-                isSelf = koalicjant.UserId.Equals(ClaimsHelper.GetUserGuid(claimsPrincipal));
-            }
+            bool isSelf = await _db.Koalicjants.AnyAsync(k => k.Id == id && k.UserId == ClaimsHelper.GetUserGuid(claimsPrincipal));
 
             if (!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission.");
             }
 
-            if (isNull)
+            int affectedRows = await _db.Koalicjants
+                .Where(x => x.Id == id && x.Version == requestDto.Version)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.NameFirst, requestDto.NameFirst)
+                    .SetProperty(x => x.NameLast, requestDto.NameLast)
+                    .SetProperty(x => x.Email, requestDto.Email)
+                    .SetProperty(x => x.ContentJson, requestDto.ContentJson)
+                    .SetProperty(x => x.IsVisible, requestDto.IsVisible)
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
+                    .SetProperty(x => x.Version, x => x.Version + 1));
+
+            if (affectedRows == 0)
             {
-                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Could not find koalicjant with provided id");
+                bool isKoalicjant = await _db.Koalicjants.AnyAsync(s => s.Id == id);
+                if (!isKoalicjant)
+                {
+                    throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Specified post does not exist");
+                }
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
-            DateTime timeNow = DateTime.UtcNow;
 
-            koalicjant.NameFirst = requestDto.NameFirst;
-            koalicjant.NameLast = requestDto.NameLast;
-            koalicjant.Email = requestDto.Email;
-            koalicjant.ContentJson = requestDto.ContentJson;
-            koalicjant.IsVisible = requestDto.IsVisible;
-            koalicjant.UpdatedAt = timeNow;
-            koalicjant.Version = requestDto.Version;
+            var koalicjant = await _db.Koalicjants.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
 
-            await _db.SaveChangesAsync();
+            if (koalicjant == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Post does not exist");
+            }
 
             return new KoalicjantDto
             (
@@ -72,8 +75,8 @@ namespace koala.src.Modules.Cms.Services
         }
         public async Task<(List<KoalicjantDto>, ApiPagination)> GetKoalicjantsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
             var query = _db.Koalicjants.AsNoTracking().AsQueryable();
 
@@ -104,8 +107,8 @@ namespace koala.src.Modules.Cms.Services
 
         public async Task<KoalicjantDto> GetKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
             var query = _db.Koalicjants.AsNoTracking().AsQueryable();
 

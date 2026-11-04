@@ -110,16 +110,55 @@ namespace koala.src.Shared
 
     public static class KoalaValidationErrorCodes
     {
-        // General
-        public const string InvalidValue = "KOALA_INVALID_VALUE";
+        // ==========================================
+        // GENERAL
+        // ==========================================
+        public const string InvalidValue = "KOALA_VALIDATION_INVALID_VALUE";
+        public const string ResourceVersionInvalid = "KOALA_VALIDATION_RESOURCE_VERSION_INVALID";
 
-        // Edition
-        public const string EditionNameRequired = "KOALA_EDITION_NAME_REQUIRED";
-        public const string EditionNameTooLong = "KOALA_EDITION_NAME_TOO_LONG";
-
-        // Task
-        public const string TaskNameRequired = "KOALA_TASK_NAME_REQUIRED";
-        public const string TaskNameTooLong = "KOALA_TASK_NAME_TOO_LONG";
+        // ==========================================
+        // ACCOUNT MODULE
+        // ==========================================
+        public const string EmailBodyEmpty = "KOALA_VALIDATION_EMAIL_BODY_EMPTY";
+        public const string EmailSubjectEmpty = "KOALA_VALIDATION_EMAIL_SUBJECT_EMPTY";
+        public const string EmailEmpty = "KOALA_VALIDATION_EMAIL_EMPTY";
+        public const string EmailInvalid = "KOALA_VALIDATION_EMAIL_INVALID";
+        public const string EmailTooLong = "KOALA_VALIDATION_EMAIL_TOO_LONG";
+        public const string PasswordEmpty = "KOALA_VALIDATION_PASSWORD_EMPTY";
+        public const string PasswordTooLong = "KOALA_VALIDATION_PASSWORD_TOO_LONG";
+        public const string PasswordTooShort = "KOALA_VALIDATION_PASSWORD_TOO_SHORT";
+        public const string PasswordLacksCapitalCharacter = "KOALA_VALIDATION_PASSWORD_LACKS_CAPITAL_CHARACTER";
+        public const string PasswordLacksSmallCharacter = "KOALA_VALIDATION_PASSWORD_LACKS_SMALL_CHARACTER";
+        public const string PasswordLacksNumberCharacter = "KOALA_VALIDATION_PASSWORD_LACKS_NUMBER_CHARACTER";
+        public const string PasswordLacksSpecialCharacter = "KOALA_VALIDATION_PASSWORD_LACKS_SPECIAL_CHARACTER";
+        public const string RodoNotAccepted = "KOALA_VALIDATION_RODO_TERMS_NOT_ACCPETED";
+        public const string RulesNotAccepted = "KOALA_VALIDATION_RULE_TERMS_NOT_ACCEPTED";
+        public const string AgeDeclarationInvalid = "KOALA_VALIDATION_AGE_DECLARATION_INVALID";
+        public const string NameFirstEmpty = "KOALA_VALIDATION_NAME_FIRST_EMPTY";
+        public const string NameFirstInvalidCharacter = "KOALA_VALIDATION_NAME_FIRST_INVALID_CHARACTER";
+        public const string NameFirstTooLong = "KOALA_VALIDATION_NAME_FIRST_TOO_LONG";
+        public const string NameLastEmpty = "KOALA_VALIDATION_NAME_LAST_EMPTY";
+        public const string NameLastInvalidCharacter = "KOALA_VALIDATION_NAME_LAST_INVALID_CHARACTER";
+        public const string NameLastTooLong = "KOALA_VALIDATION_NAME_LAST_TOO_LONG";
+        public const string RodoStateEmpty = "KOALA_VALIDATION_RODO_STATE_EMPTY";
+        public const string RodoStateTooLong = "KOALA_VALIDATION_RODO_STATE_TOO_LONG";
+        public const string RodoStateInvalid = "KOALA_VALIDATION_RODO_STATE_INVALID";
+        public const string TeamNameEmpty = "KOALA_VALIDATION_TEAM_NAME_EMPTY";
+        public const string TeamNameTooLong = "KOALA_VALIDATION_TEAM_NAME_TOO_LONG";
+        public const string TeamSchoolIdEmpty = "KOALA_VALIDATION_TEAM_SCHOOL_ID_EMPTY";
+        public const string TeamSchoolIdInvalid = "KOALA_VALIDATION_TEAM_SCHOOL_ID_INVALID";
+        public const string TeamEditionIdEmpty = "KOALA_VALIDATION_TEAM_EDITION_ID_EMPTY";
+        public const string TeamEditionIdInvalid = "KOALA_VALIDATION_TEAM_EDITION_ID_INVALID";
+        public const string TeamCaptainIdEmpty = "KOALA_VALIDATION_TEAM_CAPTAIN_ID_EMPTY";
+        public const string TeamCaptainIdInvalid = "KOALA_VALIDATION_TEAM_CAPTAIN_ID_INVALID";
+        public const string TeamGuardianIdEmpty = "KOALA_VALIDATION_TEAM_GUARDIAN_ID_EMPTY";
+        public const string TeamGuardianIdInvalid = "KOALA_VALIDATION_TEAM_GUARDIAN_ID_INVALID";
+        public const string TeamMemberIdEmpty = "KOALA_VALIDATION_TEAM_MEMBER_ID_EMPTY";
+        public const string TeamMemberIdInvalid = "KOALA_VALIDATION_TEAM_MEMBER_ID_INVALID";
+        public const string UserRolesEmpty = "KOALA_VALIDATION_USER_ROLES_EMPTY";
+        public const string UserRoleEmpty = "KOALA_VALIDATION_USER_ROLE_EMPTY";
+        public const string UserRoleTooLong = "KOALA_VALIDATION_USER_ROLE_TOO_LONG";
+        public const string UserRoleInvalid = "KOALA_VALIDATION_USER_ROLE_INVALID";
     }
 
     public class KoalaProblems : ProblemDetails

@@ -21,12 +21,6 @@ namespace koala.src.Modules.Account.Services
         }
         public async Task<_SessionResponseDto?> Internal_ValidateSessionFromPrincipalAsync(ClaimsPrincipal? claimsPrincipal)
         {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User must be valid authenticated");
-            }
-
             Guid sessionToken = ClaimsHelper.GetSessionTokenGuid(claimsPrincipal);
 
             if (sessionToken == Guid.Empty)
@@ -91,7 +85,10 @@ namespace koala.src.Modules.Account.Services
                     session.User.NameLast!,
                     session.User.Email,
                     session.User.Censored,
-                    userRolesNames
+                    userRolesNames,
+                    session.User.CreatedAt,
+                    session.User.UpdatedAt,
+                    session.User.Version
                 )
             );
 

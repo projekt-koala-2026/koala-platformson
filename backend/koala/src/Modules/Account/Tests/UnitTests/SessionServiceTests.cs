@@ -65,7 +65,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             Assert.NotNull(response);
             Assert.Equal(TestDataSeeder.ID_USER_1, response.UserId);
-            Assert.Contains("ORGANIZATION_ADMIN", response.UserRoles);
+            Assert.Contains(TestDataSeeder.NAME_ROLE_1, response.UserRoles);
         }
 
         [Fact]
@@ -164,7 +164,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             Assert.NotNull(response);
             Assert.Equal(TestDataSeeder.ID_USER_3, response.UserId);
-            Assert.Contains("ORGANIZATION_EDITOR", response.UserRoles);
+            Assert.Contains(TestDataSeeder.NAME_ROLE_3, response.UserRoles);
         }
 
         [Fact]
@@ -201,7 +201,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             Assert.NotNull(response);
             Assert.Equal(TestDataSeeder.ID_USER_8, response.UserId);
-            Assert.Contains("TEAM_ADMIN", response.UserRoles);
+            Assert.Contains(TestDataSeeder.NAME_ROLE_4, response.UserRoles);
         }
 
         [Fact]

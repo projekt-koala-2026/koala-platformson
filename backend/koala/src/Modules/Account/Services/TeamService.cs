@@ -70,7 +70,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer)
@@ -156,7 +156,10 @@ namespace koala.src.Modules.Account.Services
                     user.NameLast!,
                     user.Email,
                     user.Censored,
-                    user.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                    user.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                    user.CreatedAt,
+                    user.UpdatedAt,
+                    user.Version
                 ),
                 null,
                 new List<TeamMemberDto>(),
@@ -173,7 +176,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer)
@@ -214,6 +217,7 @@ namespace koala.src.Modules.Account.Services
 
             return;
         }
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamMemberUpsertRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -223,7 +227,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer)
@@ -302,6 +306,7 @@ namespace koala.src.Modules.Account.Services
                     tm.Version
                 )).ToListAsync();
         }
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, TeamMemberUpsertRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -311,7 +316,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer)
@@ -394,7 +399,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer)
@@ -446,7 +451,7 @@ namespace koala.src.Modules.Account.Services
 
             return;
         }
-
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES TRANSACTION !!!
         public async Task<TeamDto> UpdateTeamNameAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamUpdateNameRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -456,7 +461,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer)
@@ -535,7 +540,10 @@ namespace koala.src.Modules.Account.Services
                 captain.NameLast!,
                 captain.Email,
                 captain.Censored,
-                captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                captain.CreatedAt,
+                captain.UpdatedAt,
+                captain.Version
             );
             if (captain.CaptainTeam.GuardianId != null)
             {
@@ -546,7 +554,10 @@ namespace koala.src.Modules.Account.Services
                     captain.CaptainTeam.Guardian.NameLast!,
                     captain.CaptainTeam.Guardian.Email,
                     captain.CaptainTeam.Guardian.Censored,
-                    captain.CaptainTeam.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                    captain.CaptainTeam.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                    captain.CaptainTeam.Guardian.CreatedAt,
+                    captain.CaptainTeam.Guardian.UpdatedAt,
+                    captain.CaptainTeam.Guardian.Version
                 );
             }
 
@@ -567,7 +578,7 @@ namespace koala.src.Modules.Account.Services
                 teamJoinCodeDto
             );
         }
-
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task<TeamJoinCodeDto> CreateJoinTeamCodeAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -577,7 +588,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer)
@@ -636,7 +647,7 @@ namespace koala.src.Modules.Account.Services
 
             return new TeamJoinCodeDto(teamJoinCode.JoinCode, teamJoinCode.CreatedAt, teamJoinCode.UpdatedAt, teamJoinCode.ExpiresAt);
         }
-
+        //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES TRANSACTION!!!
         public async Task<TeamDto> JoinTeamWithCodeAsync(ClaimsPrincipal? claimsPrincipal, string JoinCode)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -646,7 +657,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin)
@@ -733,7 +744,10 @@ namespace koala.src.Modules.Account.Services
                 team.Captain.NameLast!,
                 team.Captain.Email,
                 team.Captain.Censored,
-                team.Captain.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>()
+                team.Captain.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>(),
+                team.Captain.CreatedAt,
+                team.Captain.UpdatedAt,
+                team.Captain.Version
             );
 
             UserDto teamGuardianDto = new UserDto
@@ -743,7 +757,10 @@ namespace koala.src.Modules.Account.Services
                 team.Guardian.NameLast!,
                 team.Guardian.Email,
                 team.Guardian.Censored,
-                team.Guardian.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>()
+                team.Guardian.UserRoles?.Select(ur => ur.Role.Name).Distinct().ToList() ?? new List<string>(),
+                team.Guardian.CreatedAt,
+                team.Guardian.UpdatedAt,
+                team.Guardian.Version
             );
 
             return new TeamDto
@@ -773,8 +790,8 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer && !isTeamAdmin)
@@ -825,7 +842,10 @@ namespace koala.src.Modules.Account.Services
                         qr.Captain.NameLast!,
                         qr.Captain.Email,
                         qr.Captain.Censored,
-                        qr.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                        qr.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                        qr.Captain.CreatedAt,
+                        qr.Captain.UpdatedAt,
+                        qr.Captain.Version
                     ),
                     new UserDto
                     (
@@ -834,7 +854,10 @@ namespace koala.src.Modules.Account.Services
                         qr.Guardian.NameLast!,
                         qr.Guardian.Email,
                         qr.Guardian.Censored,
-                        qr.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                        qr.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                        qr.Guardian.CreatedAt,
+                        qr.Guardian.UpdatedAt,
+                        qr.Guardian.Version
                     ),
 
                     qr.TeamMembers
@@ -864,8 +887,6 @@ namespace koala.src.Modules.Account.Services
             return (teamDtos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
 
         }
-
-        //TODO fix this just go through this and make sure its corect this and the next one XDD
         public async Task<TeamDto> GetTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -875,9 +896,9 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamPlayer && !isTeamAdmin && !isOrganizationAdmin)
@@ -927,7 +948,10 @@ namespace koala.src.Modules.Account.Services
                 team.Captain.NameLast!,
                 team.Captain.Email,
                 team.Captain.Censored,
-                team.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                team.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                team.Captain.CreatedAt,
+                team.Captain.UpdatedAt,
+                team.Captain.Version
             );
             UserDto teamAdminDto = new UserDto
             (
@@ -936,7 +960,10 @@ namespace koala.src.Modules.Account.Services
                 team.Guardian.NameLast!,
                 team.Guardian.Email,
                 team.Guardian.Censored,
-                team.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                team.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                team.Guardian.CreatedAt,
+                team.Guardian.UpdatedAt,
+                team.Guardian.Version
             );
 
             return new TeamDto
@@ -964,7 +991,7 @@ namespace koala.src.Modules.Account.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isOrganizationAdmin)
@@ -988,9 +1015,9 @@ namespace koala.src.Modules.Account.Services
                 query = query.Where(t => t.CaptainId == teamQueryDto.CaptainId);
             }
 
-            if (teamQueryDto.AdminId != null)
+            if (teamQueryDto.GuardianId != null)
             {
-                query = query.Where(t => t.GuardianId == teamQueryDto.AdminId);
+                query = query.Where(t => t.GuardianId == teamQueryDto.GuardianId);
             }
 
             if (teamQueryDto.SchoolId != null)
@@ -1031,7 +1058,10 @@ namespace koala.src.Modules.Account.Services
                         qr.Captain.NameLast!,
                         qr.Captain.Email,
                         qr.Captain.Censored,
-                        qr.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                        qr.Captain.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                        qr.Captain.CreatedAt,
+                        qr.Captain.UpdatedAt,
+                        qr.Captain.Version
                     ),
                     new UserDto
                     (
@@ -1040,7 +1070,10 @@ namespace koala.src.Modules.Account.Services
                         qr.Guardian.NameLast!,
                         qr.Guardian.Email,
                         qr.Guardian.Censored,
-                        qr.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList()
+                        qr.Guardian.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList(),
+                        qr.Guardian.CreatedAt,
+                        qr.Guardian.UpdatedAt,
+                        qr.Guardian.Version
                     ),
 
                     qr.TeamMembers

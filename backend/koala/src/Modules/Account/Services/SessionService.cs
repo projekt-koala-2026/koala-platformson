@@ -69,7 +69,7 @@ namespace koala.src.Modules.Account.Services
                 .Distinct()
                 .ToListAsync();
 
-            var userData = new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames);
+            var userData = new UserDto(user.Id, user.NameFirst!, user.NameLast!, user.Email, user.Censored, userRolesNames, user.CreatedAt, user.UpdatedAt, user.Version);
             return new _SessionResponseDto(session.Id, session.Token, user.Id, session.CreatedAt, session.ExpiresAt, userRolesNames, userData);
         }
         public async Task DeleteSessionAsync(ClaimsPrincipal? claimsPrincipal, Guid session_id)

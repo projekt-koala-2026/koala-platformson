@@ -21,19 +21,12 @@ namespace koala.src.Modules.Cms.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
             if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to update static page");
-            }
-
-            var staticPage = await _db.StaticPages.FirstOrDefaultAsync(sp => sp.Id == id);
-
-            if (staticPage == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.StaticPageNotFound, "Specified static page does not exist");
             }
 
             try
@@ -45,13 +38,29 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.InvalidJson, "This is not a valid json");
             }
 
-            DateTime timeNow = DateTime.UtcNow;
+            int affectedRows = await _db.StaticPages
+                .Where(x => x.Id == id && x.Version == requestDto.Version)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.ContentJson, requestDto.ContentJson)
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
+                    .SetProperty(x => x.Version, x => x.Version + 1));
 
-            staticPage.ContentJson = requestDto.ContentJson;
-            staticPage.Version = requestDto.Version;
-            staticPage.UpdatedAt = timeNow;
+            if (affectedRows == 0)
+            {
+                bool isStaticPage = await _db.StaticPages.AnyAsync(sp => sp.Id == id);
+                if (!isStaticPage)
+                {
+                    throw new KoalaException(KoalaErrorCodes.StaticPageNotFound, "Specified static page does not exist");
+                }
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
+            }
 
-            await _db.SaveChangesAsync();
+            var staticPage = await _db.StaticPages.AsNoTracking().FirstOrDefaultAsync(sp => sp.Id == id);
+
+            if (staticPage == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.StaticPageNotFound, "Specified static page does not exist");
+            }
 
             return new StaticPageDto(staticPage.Id, staticPage.Name, staticPage.ContentJson, staticPage.UpdatedAt, staticPage.Version);
         }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using koala.src.Modules.Account.Entities;
+using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Dtos
 {
@@ -25,26 +26,53 @@ namespace koala.src.Modules.Account.Dtos
         public UserQueryDtoValidator()
         {
             RuleFor(x => x.NameFirst)
-                .MaximumLength(50).WithMessage("NameFirst field cannot be larger than 50 characters!")
-                .Matches(@"^[\p{L}\s-]+$").WithMessage("NameFirst field can only contain letters, spaces, or hyphens!")
-                .When(x => !string.IsNullOrEmpty(x.NameFirst));
+                .MaximumLength(50)
+                .When(x => !string.IsNullOrEmpty(x.NameFirst))
+                .WithErrorCode(KoalaValidationErrorCodes.NameFirstTooLong)
+                .WithMessage("NameFirst field cannot be larger than 50 characters!")
+
+                .Matches(@"^[\p{L}\s-]+$")
+                .When(x => !string.IsNullOrEmpty(x.NameFirst))
+                .WithErrorCode(KoalaValidationErrorCodes.NameFirstInvalidCharacter)
+                .WithMessage("NameFirst field can only contain letters, spaces, or hyphens!");
 
             RuleFor(x => x.NameLast)
-                .MaximumLength(50).WithMessage("NameLast field cannot be larger than 50 characters!")
-                .Matches(@"^[\p{L}\s-]+$").WithMessage("NameLast field can only contain letters, spaces, or hyphens!")
-                .When(x => !string.IsNullOrEmpty(x.NameLast));
+                .MaximumLength(50)
+                .When(x => !string.IsNullOrEmpty(x.NameLast))
+                .WithErrorCode(KoalaValidationErrorCodes.NameLastTooLong)
+                .WithMessage("NameLast field cannot be larger than 50 characters!")
+
+                .Matches(@"^[\p{L}\s-]+$")
+                .When(x => !string.IsNullOrEmpty(x.NameLast))
+                .WithErrorCode(KoalaValidationErrorCodes.NameLastInvalidCharacter)
+                .WithMessage("NameLast field can only contain letters, spaces, or hyphens!");
 
             RuleFor(x => x.Email)
-                .MaximumLength(320).WithMessage("Email field cannot be larger than 320 characters!")
-                .EmailAddress().WithMessage("Email field must be a valid email address!")
-                .When(x => !string.IsNullOrEmpty(x.Email));
+                .MaximumLength(320)
+                .When(x => !string.IsNullOrEmpty(x.Email))
+                .WithErrorCode(KoalaValidationErrorCodes.EmailTooLong)
+                .WithMessage("Email field cannot be larger than 320 characters!")
+
+                .EmailAddress()
+                .When(x => !string.IsNullOrEmpty(x.Email))
+                .WithErrorCode(KoalaValidationErrorCodes.EmailInvalid)
+                .WithMessage("Email field must be a valid email address!");
 
             RuleForEach(x => x.UserRoles)
-                .NotEmpty().WithMessage("Role item cannot be empty!")
-                .MaximumLength(50).WithMessage("Role item name cannot exceed 50 characters!")
+                .NotEmpty()
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleEmpty)
+                .WithMessage("Role item cannot be empty!")
+
+                .MaximumLength(50)
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleTooLong)
+                .WithMessage("Role item name cannot exceed 50 characters!")
+
                 .Must(role => AllowedRoles.Contains(role))
-                .WithMessage("Invalid role specified!")
-                .When(x => x.UserRoles != null);
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleInvalid)
+                .WithMessage("Invalid role specified!");
         }
     }
 }

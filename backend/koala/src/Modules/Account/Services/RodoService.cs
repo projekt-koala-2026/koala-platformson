@@ -38,7 +38,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin)
@@ -151,6 +151,8 @@ namespace koala.src.Modules.Account.Services
                     );
 
         }
+
+        //FIXME: ADD TRANSACTION HERE AND HANDLE FILE SAVINGS IN CONCURENCY USING TEMP FILES!!!
         public async Task<TeamMemberDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoUpsertDto rodoUpdateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -160,7 +162,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin)
@@ -265,7 +267,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin)
@@ -317,8 +319,8 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin && !isOrganizationAdmin)
@@ -368,8 +370,8 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin && !isOrganizationAdmin)
@@ -406,8 +408,8 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin && !isOrganizationAdmin)
@@ -455,21 +457,37 @@ namespace koala.src.Modules.Account.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isOrganizationAdmin)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
-            if (teamMember == null)
+            int affectedRows = await _db.TeamMembers
+                .Where(x => x.TeamId == teamId && x.Id == teamMemberId && x.Version == rodoStateUpdateDto.Version)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.RodoState, rodoStateUpdateDto.State)
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
+                    .SetProperty(x => x.Version, x => x.Version + 1));
+
+            if (affectedRows == 0)
             {
-                throw new KoalaException(KoalaErrorCodes.TeamMemberRodoNotFound, "can only chamge state for an existing team member that has a rodo");
+                bool isTeamMember = await _db.TeamMembers.AnyAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
+                if (!isTeamMember)
+                {
+                    throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "Specified TeamMember does not exist");
+                }
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
-            teamMember.RodoState = rodoStateUpdateDto.State;
-            await _db.SaveChangesAsync();
+
+            var teamMember = await _db.TeamMembers.AsNoTracking().FirstOrDefaultAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
+
+            if (teamMember == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "TeamMember does not exist");
+            }
 
             return new TeamMemberDto
                     (

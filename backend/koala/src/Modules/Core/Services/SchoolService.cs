@@ -46,7 +46,7 @@ namespace koala.src.Modules.Core.Services
         public async Task<SchoolDto> CreateSchoolAsync(ClaimsPrincipal? claimsPrincipal, SchoolCreateRequestDto schoolCreateRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
@@ -117,7 +117,7 @@ namespace koala.src.Modules.Core.Services
         public async Task<SchoolDto> UpdateSchoolAsync(ClaimsPrincipal? claimsPrincipal, Guid id, SchoolUpdateRequestDto schoolUpdateRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
@@ -184,7 +184,7 @@ namespace koala.src.Modules.Core.Services
         public async Task DeleteSchoolAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
@@ -210,7 +210,7 @@ namespace koala.src.Modules.Core.Services
         public async Task DeleteSchoolsAsync(ClaimsPrincipal? claimsPrincipal, List<Guid> ids)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
@@ -236,7 +236,7 @@ namespace koala.src.Modules.Core.Services
         public async Task DeleteAllSchoolsAsync(ClaimsPrincipal? claimsPrincipal)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
@@ -254,7 +254,7 @@ namespace koala.src.Modules.Core.Services
         public async Task<int> ImportSchoolsAsync(ClaimsPrincipal? claimsPrincipal, SchoolImportRequestDto schoolImportRequestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {

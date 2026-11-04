@@ -25,8 +25,8 @@ namespace koala.src.Modules.Cms.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
             if (!isOrganizationAdmin && !isOrganizationEditor)
             {
@@ -68,7 +68,7 @@ namespace koala.src.Modules.Cms.Services
                 publicFile.Type = extension;
                 publicFile.CreatedAt = timeNow;
                 publicFile.UpdatedAt = timeNow;
-                publicFile.Version = 0;
+                publicFile.Version = 1;
 
                 await _db.PublicFiles.AddAsync(publicFile);
                 await _db.SaveChangesAsync();
@@ -93,8 +93,8 @@ namespace koala.src.Modules.Cms.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
             if (!isOrganizationAdmin && !isOrganizationEditor)
             {
@@ -130,8 +130,8 @@ namespace koala.src.Modules.Cms.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
             if (!isOrganizationAdmin && !isOrganizationEditor)
             {
