@@ -30,31 +30,8 @@ public sealed class FluentValidationFilter : IAsyncActionFilter
                 validationContext,
                 context.HttpContext.RequestAborted);
 
-            foreach (var error in result.Errors)
-            {
-                if (!errors.TryGetValue(error.PropertyName, out var messages))
-                {
-                    messages = [];
-                    errors[error.PropertyName] = messages;
-                }
-
-                messages.Add(error.ErrorMessage);
-            }
-        }
-
-        if (errors.Count > 0)
-        {
-            var problem = new ValidationProblemDetails(
-                errors.ToDictionary(
-                    entry => entry.Key,
-                    entry => entry.Value.ToArray()))
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Validation failed"
-            };
-
-            context.Result = new BadRequestObjectResult(problem);
-            return;
+            if (!result.IsValid)
+                throw new ValidationException(result.Errors);
         }
 
         await next();

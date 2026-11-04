@@ -1,4 +1,5 @@
 using FluentValidation;
+using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Dtos
 {
@@ -12,7 +13,9 @@ namespace koala.src.Modules.Account.Dtos
         public UserCensorRequestDtoValidator()
         {
             RuleFor(x => x.Version)
-                .GreaterThan(0).WithMessage("Version field must be greater than 0");
+                .GreaterThan(0)
+                .WithErrorCode(KoalaValidationErrorCodes.ResourceVersionInvalid)
+                .WithMessage("Version field must be greater than 0");
         }
     }
 }

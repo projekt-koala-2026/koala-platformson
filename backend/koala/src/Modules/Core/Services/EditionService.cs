@@ -21,23 +21,23 @@ namespace koala.src.Modules.Core.Services
         public async Task<EditionDto> CreateEditionAsync(ClaimsPrincipal? claimsPrincipal, EditionCreateDto createEditionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Name == createEditionDto.Name);
 
             if (edition != null)
             {
-                throw new CoreException(CoreErrorCodes.EditionAlreadyExsits, "Edition with this name already exists");
+                throw new KoalaException(KoalaErrorCodes.EditionAlreadyExists, "Edition with this name already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -63,40 +63,40 @@ namespace koala.src.Modules.Core.Services
         public async Task<EditionDto> UpdateEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, EditionUpdateDto editionUpdateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             bool isEditionWithNewNameAlreadyInDb = await _db.Editions.AnyAsync(e => e.Name == editionUpdateDto.Name && e.Id != id);
 
             if (isEditionWithNewNameAlreadyInDb == true)
             {
-                throw new CoreException(CoreErrorCodes.EditionAlreadyExsits, "Edition with this name already exist thus canot update this edition name");
+                throw new KoalaException(KoalaErrorCodes.EditionAlreadyExists, "Edition with this name already exist thus canot update this edition name");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id);
 
             if (edition == null)
             {
-                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition of provided id does not exist");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition of provided id does not exist");
             }
 
             if (edition.Version != editionUpdateDto.Version)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "Editions versions do not match make sure u have the freshest data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Editions versions do not match make sure u have the freshest data");
             }
 
             edition.Name = editionUpdateDto.Name;
             edition.TeamRegisterOpen = editionUpdateDto.TeamRegisterOpen;
-            edition.TeamRegisterClose = editionUpdateDto.TeanRegisterClose;
+            edition.TeamRegisterClose = editionUpdateDto.TeamRegisterClose;
             edition.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
@@ -105,29 +105,29 @@ namespace koala.src.Modules.Core.Services
         public async Task<EditionDto> EditionActivateAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             bool isAnyEditionActive = await _db.Editions.AnyAsync(e => e.State == EditionStates.STATE_ACTIVE);
             if (isAnyEditionActive)
             {
-                throw new CoreException(CoreErrorCodes.ActiveEditionAlreadyExists, "There already exists another editions that is curently active canot have two editions active at once");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionAlreadyExists, "There already exists another editions that is curently active canot have two editions active at once");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id && e.State == EditionStates.STATE_INACTIVE);
 
             if (edition == null)
             {
-                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition of provided id does not exist or canot be activated becouse it was closed or is active already");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition of provided id does not exist or canot be activated becouse it was closed or is active already");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -141,23 +141,23 @@ namespace koala.src.Modules.Core.Services
         public async Task<EditionDto> EditionCloseAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id && e.State == EditionStates.STATE_ACTIVE);
 
             if (edition == null)
             {
-                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition of provided id does not exist or canot be closed becouse it is not active");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition of provided id does not exist or canot be closed becouse it is not active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -179,9 +179,9 @@ namespace koala.src.Modules.Core.Services
                 {
                     if (!string.IsNullOrWhiteSpace(state))
                     {
-                        if (state != EditionStates.STATE_ACTIVE || state != EditionStates.STATE_INACTIVE || state != EditionStates.STATE_CLOSED)
+                        if (state != EditionStates.STATE_ACTIVE && state != EditionStates.STATE_INACTIVE && state != EditionStates.STATE_CLOSED)
                         {
-                            throw new CoreException(CoreErrorCodes.BadRequest, "The states are not valid states");
+                            throw new KoalaException(KoalaErrorCodes.EditionInvalidStates, "The states are not valid states");
                         }
                     }
                 }
@@ -216,7 +216,7 @@ namespace koala.src.Modules.Core.Services
 
             if (edition == null)
             {
-                throw new CoreException(CoreErrorCodes.EditionNotFound, "There is no current active edition at the moment");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "There is no current active edition at the moment");
             }
 
             return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
@@ -226,30 +226,30 @@ namespace koala.src.Modules.Core.Services
         {
 
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id);
 
             if (edition.State != EditionStates.STATE_CLOSED)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "Subeditions can only be created for the active and inactive edition");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Subeditions can only be created for the active and inactive edition");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Name == createSubEditionDto.Name && e.EditionId == id);
 
             if (subedition != null)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionAlreadyExsits, "SubEdition with this name already exists canot create a new one");
+                throw new KoalaException(KoalaErrorCodes.SubEditionAlreadyExists, "SubEdition with this name already exists canot create a new one");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -287,42 +287,42 @@ namespace koala.src.Modules.Core.Services
         public async Task<SubEditionDto> UpdateSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, SubEditionUpdateDto updateSubEditionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id && e.State != EditionStates.STATE_CLOSED);
 
             if (edition == null)
             {
-                throw new CoreException(CoreErrorCodes.EditionNotFound, "Edition does not exist or is closed");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition does not exist or is closed");
             }
 
             bool isSubEditionWithNewNameAlreadyInDb = await _db.SubEditions.AnyAsync(e => e.Name == updateSubEditionDto.Name && e.Id != subedition_id && e.EditionId == edition_id);
 
             if (isSubEditionWithNewNameAlreadyInDb == true)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionAlreadyExsits, "SubEdition with this name already exist thus canot update this subedition name to it");
+                throw new KoalaException(KoalaErrorCodes.SubEditionAlreadyExists, "SubEdition with this name already exist thus canot update this subedition name to it");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.State != SubEditionStates.STATE_CLOSED);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is closed");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is closed");
             }
 
             if (subedition.Version != updateSubEditionDto.Version)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "SubEditions versions do not match make sure u have the freshest data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "SubEditions versions do not match make sure u have the freshest data");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -357,7 +357,7 @@ namespace koala.src.Modules.Core.Services
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition not found");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition not found");
             }
 
             return new SubEditionDto
@@ -404,23 +404,23 @@ namespace koala.src.Modules.Core.Services
         public async Task DeleteSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id && e.State == SubEditionStates.STATE_INACTIVE);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is active or closed can only delete the inactive subeditions");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is active or closed can only delete the inactive subeditions");
             }
 
             _db.SubEditions.Remove(subedition);
@@ -430,23 +430,23 @@ namespace koala.src.Modules.Core.Services
         public async Task<SubEditionDto> ActivateSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id && e.State != SubEditionStates.STATE_CLOSED);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is closed");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is closed");
             }
 
             subedition.State = SubEditionStates.STATE_ACTIVE;
@@ -469,23 +469,23 @@ namespace koala.src.Modules.Core.Services
         public async Task<SubEditionDto> CloseSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id && e.State == SubEditionStates.STATE_ACTIVE);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not active");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not active");
             }
 
             subedition.State = SubEditionStates.STATE_CLOSED;
@@ -508,30 +508,30 @@ namespace koala.src.Modules.Core.Services
         public async Task<TaskItemDto> CreateTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, TaskItemCreateDto createTaskDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
 
             if (subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not a part of the this edition");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not a part of the this edition");
             }
 
             var newTask = await _db.TaskItems.FirstOrDefaultAsync(t => t.Name == createTaskDto.Name && t.SubEditionId == subedition_id);
 
             if (newTask != null)
             {
-                throw new CoreException(CoreErrorCodes.TaskAlreadyExsits, "Task with this name already exists");
+                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "Task with this name already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -568,23 +568,23 @@ namespace koala.src.Modules.Core.Services
         public async Task DeleteTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid task_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var task = await _db.TaskItems.FirstOrDefaultAsync(e => e.Id == task_id && e.SubEditionId == subedition_id && e.SubEdition.EditionId == edition_id);
 
             if (task == null)
             {
-                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task of provided id does not exist");
             }
 
             _db.TaskItems.Remove(task);
@@ -601,7 +601,7 @@ namespace koala.src.Modules.Core.Services
 
             if (task == null)
             {
-                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task of provided id does not exist");
             }
 
             return new TaskItemDto

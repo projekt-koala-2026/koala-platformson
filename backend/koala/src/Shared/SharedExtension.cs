@@ -87,7 +87,6 @@ namespace koala.src.Shared
             services.AddScoped<FluentValidationFilter, FluentValidationFilter>();
 
             // 5. Adding a queue for background tasks
-            // 3. Hangfire
             services.AddHangfire(config => config
                 .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
@@ -105,6 +104,10 @@ namespace koala.src.Shared
                     options.Queues = new[] { "critical", "default" };
                     options.WorkerCount = 8;
                 });
+
+            // 6. Exception Handler
+            services.AddExceptionHandler<KoalaExceptionHandler>();
+            services.AddProblemDetails();
 
             return services;
         }

@@ -35,15 +35,15 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
 
@@ -51,13 +51,13 @@ namespace koala.src.Modules.Account.Services
 
             if (!isUserTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId == null);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId == null);
             if (teamMember == null)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "can only add a rodo for a existing team member that does not have a rodo");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberRodoAlreadyExists, "can only add a rodo for a existing team member that does not have a rodo");
             }
 
             try
@@ -66,7 +66,7 @@ namespace koala.src.Modules.Account.Services
             }
             catch
             {
-                throw new AccountException(AccountErrorCodes.FolderCreationError, "Error when creating a folder holding private files");
+                throw new KoalaException(KoalaErrorCodes.FolderCreationFailure, "Error when creating a folder holding private files");
             }
 
             var id = Guid.CreateVersion7();
@@ -83,7 +83,7 @@ namespace koala.src.Modules.Account.Services
             }
             catch
             {
-                throw new AccountException(AccountErrorCodes.FileCreationError, "Error creating a private file");
+                throw new KoalaException(KoalaErrorCodes.FileCreationFailure, "Error creating a private file");
             }
 
             Rodo rodo = new Rodo();
@@ -109,7 +109,7 @@ namespace koala.src.Modules.Account.Services
                     File.Delete(physicalPath);
                 }
 
-                throw new AccountException(AccountErrorCodes.DatabaseError, "Error saving public file record to database");
+                throw new KoalaException(KoalaErrorCodes.DatabaseError, "Error saving public file record to database");
             }
 
             IFormFile savedFile;
@@ -132,7 +132,7 @@ namespace koala.src.Modules.Account.Services
             }
             catch (Exception)
             {
-                throw new AccountException(AccountErrorCodes.FileNotFound, "Error reading the saved file from disk");
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "Error reading the saved file from disk");
             }
 
             return new TeamMemberDto
@@ -151,34 +151,36 @@ namespace koala.src.Modules.Account.Services
                     );
 
         }
+
+        //FIXME: ADD TRANSACTION HERE AND HANDLE FILE SAVINGS IN CONCURENCY USING TEMP FILES!!!
         public async Task<TeamMemberDto> UpdateRodoAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, RodoUpsertDto rodoUpdateDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
             if (!isUserTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
             if (teamMember == null)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "can only update a rodo for a existing team member that has a rodo");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberRodoNotFound, "can only update a rodo for a existing team member that has a rodo");
             }
 
             try
@@ -187,22 +189,22 @@ namespace koala.src.Modules.Account.Services
             }
             catch
             {
-                throw new AccountException(AccountErrorCodes.FolderCreationError, "Error when creating a folder holding private files");
+                throw new KoalaException(KoalaErrorCodes.FolderCreationFailure, "Error when creating a folder holding private files");
             }
 
             if (teamMember.Rodo == null)
             {
-                throw new AccountException(AccountErrorCodes.RodoNotFound, "Error could not found rodo");
+                throw new KoalaException(KoalaErrorCodes.RodoNotFound, "Error could not found rodo");
             }
 
             if (rodoUpdateDto.Version == null)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "Error request lack version");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Error request lack version");
             }
 
             if (teamMember.Rodo.Version != rodoUpdateDto.Version)
             {
-                throw new AccountException(AccountErrorCodes.Conflict, "Error make sure u have fresh data versions does not match");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Error make sure u have fresh data versions does not match");
             }
 
             var id = teamMember.RodoId;
@@ -219,7 +221,7 @@ namespace koala.src.Modules.Account.Services
             }
             catch
             {
-                throw new AccountException(AccountErrorCodes.FileCreationError, "Error creating a private file");
+                throw new KoalaException(KoalaErrorCodes.FileCreationFailure, "Error creating a private file");
             }
 
             try
@@ -238,7 +240,7 @@ namespace koala.src.Modules.Account.Services
                     File.Delete(physicalPath);
                 }
 
-                throw new AccountException(AccountErrorCodes.DatabaseError, "Error saving public file record to database");
+                throw new KoalaException(KoalaErrorCodes.DatabaseError, "Error saving public file record to database");
             }
 
             return new TeamMemberDto
@@ -262,33 +264,33 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
             if (!isUserTeamAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
             if (teamMember == null)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "can only delete a rodo for a existing team member that has a rodo");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberRodoNotFound, "can only delete a rodo for a existing team member that has a rodo");
             }
 
             if (teamMember.Rodo == null)
             {
-                throw new AccountException(AccountErrorCodes.RodoNotFound, "Error could not found rodo");
+                throw new KoalaException(KoalaErrorCodes.RodoNotFound, "Error could not found rodo");
             }
 
             var physicalPath = Path.Combine(_privateFilesPath, $"{teamMember.RodoId}{teamMember.Rodo.Type}");
@@ -302,7 +304,7 @@ namespace koala.src.Modules.Account.Services
             }
             catch
             {
-                throw new AccountException(AccountErrorCodes.FileNotFound, "Error deleting the physical file from disk");
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "Error deleting the physical file from disk");
             }
 
             _db.Rodos.Remove(teamMember.Rodo);
@@ -314,34 +316,34 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
             if (!isUserTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
             if (teamMember == null)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "can only delete a rodo for a existing team member that has a rodo");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberRodoNotFound, "Team member not found");
             }
 
             if (teamMember.Rodo == null)
             {
-                throw new AccountException(AccountErrorCodes.RodoNotFound, "Error could not found rodo");
+                throw new KoalaException(KoalaErrorCodes.RodoNotFound, "Error could not found rodo");
             }
 
             return new TeamMemberDto
@@ -365,34 +367,34 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
             if (!isUserTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
             if (teamMember == null)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "can only delete a rodo for a existing team member that has a rodo");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberRodoNotFound, "can only delete a rodo for a existing team member that has a rodo");
             }
 
             if (teamMember.Rodo == null)
             {
-                throw new AccountException(AccountErrorCodes.RodoNotFound, "Error could not found rodo");
+                throw new KoalaException(KoalaErrorCodes.RodoNotFound, "Error could not found rodo");
             }
 
             return Path.Combine(_privateFilesPath, $"{teamMember.RodoId}{teamMember.Rodo.Type}");
@@ -403,26 +405,26 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
 
-            bool isTeamAdmin = ClaimsHelper.IsTeamAdmin(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
             if (!isUserTeamAdmin && !isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var query = _db.TeamMembers.AsNoTracking().AsQueryable();
+            var query = _db.TeamMembers.Include(tm => tm.Rodo).AsNoTracking().AsQueryable();
 
             query = query.Where(tm => tm.TeamId == teamId);
 
@@ -453,23 +455,39 @@ namespace koala.src.Modules.Account.Services
 
             if (!isAuthenticated)
             {
-                throw new AccountException(AccountErrorCodes.Unauthenticated, "User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isOrganizationAdmin)
             {
-                throw new AccountException(AccountErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
+            int affectedRows = await _db.TeamMembers
+                .Where(x => x.TeamId == teamId && x.Id == teamMemberId && x.Version == rodoStateUpdateDto.Version)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.RodoState, rodoStateUpdateDto.State)
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
+                    .SetProperty(x => x.Version, x => x.Version + 1));
+
+            if (affectedRows == 0)
+            {
+                bool isTeamMember = await _db.TeamMembers.AnyAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
+                if (!isTeamMember)
+                {
+                    throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "Specified TeamMember does not exist");
+                }
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
+            }
+
+
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).AsNoTracking().FirstOrDefaultAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
+
             if (teamMember == null)
             {
-                throw new AccountException(AccountErrorCodes.BadRequest, "can only delete a rodo for a existing team member that has a rodo");
+                throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "TeamMember does not exist");
             }
-
-            teamMember.RodoState = rodoStateUpdateDto.State;
-            await _db.SaveChangesAsync();
 
             return new TeamMemberDto
                     (

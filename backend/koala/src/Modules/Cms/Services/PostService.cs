@@ -19,16 +19,16 @@ namespace koala.src.Modules.Cms.Services
         public async Task<PostDto> CreatePostAsync(ClaimsPrincipal? claimsPrincipal, CreatePostRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             //TODO: CHECK IF ACTIVE / REAL EDITION
@@ -44,73 +44,83 @@ namespace koala.src.Modules.Cms.Services
                 CreatedAt = timeNow,
                 UpdatedAt = timeNow,
                 IsVisible = requestDto.IsVisible,
-                Version = requestDto.Version
+                Version = 1
             };
 
             await _db.Posts.AddAsync(post);
             await _db.SaveChangesAsync();
 
-            return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisible,post.Version);
+            return new PostDto(post.Id, post.EditionId, post.Name, post.ContentJson, post.CreatedAt, post.UpdatedAt, post.IsVisible, post.Version);
         }
 
         public async Task<PostDto> UpdatePostAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdatePostRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
-            }
-
-            var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id ==id);
-
-            if(post == null)
-            {
-                throw new CmsException(CmsErrorCodes.PostNotFound, "Could not find post with provided id");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            //TODO: CHECK IF ACTIVE / REAL EDITION
+            //FIXME: CHECK IF ACTIVE / REAL EDITION
 
-            DateTime timeNow = DateTime.UtcNow;
+            int affectedRows = await _db.Posts
+                .Where(x => x.Id == id && x.Version == requestDto.Version)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.EditionId, requestDto.EditionId)
+                    .SetProperty(x => x.Name, requestDto.Name)
+                    .SetProperty(x => x.ContentJson, requestDto.ContentJson)
+                    .SetProperty(x => x.IsVisible, requestDto.IsVisible)
+                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
+                    .SetProperty(x => x.Version, x => x.Version + 1));
 
-            post.EditionId = requestDto.EditionId;
-            post.Name = requestDto.Name;
-            post.ContentJson = requestDto.ContentJson;
-            post.UpdatedAt = timeNow;
-            post.IsVisible = requestDto.IsVisible;
-            post.Version = requestDto.Version;
+            if (affectedRows == 0)
+            {
+                bool isPost = await _db.Posts.AnyAsync(s => s.Id == id);
+                if (!isPost)
+                {
+                    throw new KoalaException(KoalaErrorCodes.PostNotFound, "Specified post does not exist");
+                }
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
+            }
 
-            await _db.SaveChangesAsync();
 
-            return new PostDto(post.Id,post.EditionId,post.Name,post.ContentJson,post.CreatedAt,post.UpdatedAt,post.IsVisible,post.Version);
+            var post = await _db.Posts.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+
+            if (post == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.PostNotFound, "Post does not exist");
+            }
+
+            return new PostDto(post.Id, post.EditionId, post.Name, post.ContentJson, post.CreatedAt, post.UpdatedAt, post.IsVisible, post.Version);
         }
 
         public async Task DeletePostAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id ==id);
+            var post = await _db.Posts.FirstOrDefaultAsync(p => p.Id == id);
 
-            if(post == null)
+            if (post == null)
             {
-                throw new CmsException(CmsErrorCodes.PostNotFound, "Could not find post with provided id");
+                throw new KoalaException(KoalaErrorCodes.PostNotFound, "Could not find post with provided id");
             }
 
             _db.Posts.Remove(post);
@@ -119,27 +129,27 @@ namespace koala.src.Modules.Cms.Services
 
         public async Task<(List<PostDto>, ApiPagination)> GetPostsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, PostQueryDto postQueryDto)
         {
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHidden == true))
+            if (!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHidden == true))
             {
-                throw new CmsException(CmsErrorCodes.Forbidden,"User does not have permission to perform this operation.");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
             var query = _db.Posts.AsNoTracking().AsQueryable();
 
-            if(postQueryDto.EditionId != null)
+            if (postQueryDto.EditionId != null)
             {
                 query = query.Where(p => p.EditionId == postQueryDto.EditionId);
             }
 
-            if(!string.IsNullOrEmpty(postQueryDto.Name))
+            if (!string.IsNullOrEmpty(postQueryDto.Name))
             {
                 query = query.Where(p => p.Name == postQueryDto.Name);
             }
 
-            if(postQueryDto.ShowHidden != null)
+            if (postQueryDto.ShowHidden != null)
             {
                 query = query.Where(p => p.IsVisible == !postQueryDto.ShowHidden);
             }
@@ -161,26 +171,26 @@ namespace koala.src.Modules.Cms.Services
                     )
                 ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
 
-            return (posts , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,queryResults.Count));
+            return (posts, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
 
         public async Task<PostDto> GetPostAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
             var query = _db.Posts.AsNoTracking().AsQueryable();
 
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 query = query.Where(p => p.IsVisible == true);
             }
 
             var queryResults = await query.FirstOrDefaultAsync(p => p.Id == id);
 
-            if(queryResults == null)
+            if (queryResults == null)
             {
-                throw new CmsException(CmsErrorCodes.PostNotFound, "Post with this id does not exist");
+                throw new KoalaException(KoalaErrorCodes.PostNotFound, "Post with this id does not exist");
             }
 
             PostDto post = new PostDto
