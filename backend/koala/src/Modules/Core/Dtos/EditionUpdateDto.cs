@@ -4,7 +4,7 @@ namespace koala.src.Modules.Core.Dtos
     (
         string Name,
         DateTime TeamRegisterOpen,
-        DateTime TeanRegisterClose,
+        DateTime TeamRegisterClose,
         int Version
     );
 }
