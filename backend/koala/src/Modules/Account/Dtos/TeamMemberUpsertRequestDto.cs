@@ -1,4 +1,5 @@
 using FluentValidation;
+using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Dtos
 {
@@ -6,7 +7,7 @@ namespace koala.src.Modules.Account.Dtos
     (
         string NameFirst,
         string NameLast,
-        int Version
+        int? Version
     );
 
     public class TeamMemberUpsertRequestDtoValidator : AbstractValidator<TeamMemberUpsertRequestDto>
@@ -14,16 +15,37 @@ namespace koala.src.Modules.Account.Dtos
         public TeamMemberUpsertRequestDtoValidator()
         {
             RuleFor(x => x.NameFirst)
-                .NotEmpty().WithMessage("NameFirst field cannot be empty!")
-                .MaximumLength(50).WithMessage("NameFirst field cannot be larger than 50 characters!")
-                .Matches(@"^[\p{L}\s-]+$").WithMessage("NameFirst field can only contain letters, spaces, or hyphens!");
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.NameFirstEmpty)
+                .WithMessage("NameFirst field cannot be empty!")
+
+                .MaximumLength(50)
+                .WithErrorCode(KoalaValidationErrorCodes.NameFirstTooLong)
+                .WithMessage("NameFirst field cannot be larger than 50 characters!")
+
+                .Matches(@"^[\p{L}\s-]+$")
+                .WithErrorCode(KoalaValidationErrorCodes.NameFirstInvalidCharacter)
+                .WithMessage("NameFirst field can only contain letters, spaces, or hyphens!");
 
             RuleFor(x => x.NameLast)
-                .NotEmpty().WithMessage("NameLast field cannot be empty!")
-                .MaximumLength(50).WithMessage("NameLast field cannot be larger than 50 characters!")
-                .Matches(@"^[\p{L}\s-]+$").WithMessage("NameLast field can only contain letters, spaces, or hyphens!");
+
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.NameLastEmpty)
+                .WithMessage("NameLast field cannot be empty!")
+
+                .MaximumLength(50)
+                .WithErrorCode(KoalaValidationErrorCodes.NameLastTooLong)
+                .WithMessage("NameLast field cannot be larger than 50 characters!")
+
+                .Matches(@"^[\p{L}\s-]+$")
+                .WithErrorCode(KoalaValidationErrorCodes.NameLastInvalidCharacter)
+                .WithMessage("NameLast field can only contain letters, spaces, or hyphens!");
+
             RuleFor(x => x.Version)
-                .GreaterThan(0).WithMessage("Version field must be greater than 0");
+                .GreaterThan(0)
+                .When(x => x.Version.HasValue)
+                .WithErrorCode(KoalaValidationErrorCodes.ResourceVersionInvalid)
+                .WithMessage("Version field must be greater than 0");
         }
     }
 }

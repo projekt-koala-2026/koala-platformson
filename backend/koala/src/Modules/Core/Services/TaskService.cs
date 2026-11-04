@@ -24,30 +24,30 @@ namespace koala.src.Modules.Core.Services
         public async Task<TaskAnswerDto> CreateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, TaskAnswerCreateDto createTaskAnswerDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var task = await _db.TaskItems.FirstOrDefaultAsync(e => e.Id == task_item_id);
 
             if (task == null)
             {
-                throw new CoreException(CoreErrorCodes.TaskAnswerNotFound, "Task item of provided id does not exist");
+                throw new KoalaException(KoalaErrorCodes.TaskAnswerNotFound, "Task item of provided id does not exist");
             }
 
             var newTaskAnswer = await _db.TaskAnswers.FirstOrDefaultAsync(tc => tc.Answer == createTaskAnswerDto.Answer && tc.TaskItem.Id == task_item_id);
 
             if (newTaskAnswer != null)
             {
-                throw new CoreException(CoreErrorCodes.TaskAnswerAlreadyExsits, "Task answer for this task with this answer already exists");
+                throw new KoalaException(KoalaErrorCodes.TaskAnswerAlreadyExists, "Task answer for this task with this answer already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -78,42 +78,42 @@ namespace koala.src.Modules.Core.Services
         public async Task<TaskAnswerDto> UpdateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_answer_id, TaskAnswerUpdateDto updateTaskAnswerDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var task = await _db.TaskItems.FirstOrDefaultAsync(e => e.Id == task_id);
 
             if (task == null)
             {
-                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task of provided id does not exist");
+                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task of provided id does not exist");
             }
 
             var TaskAnswerWithThisNameExists = await _db.TaskAnswers.FirstOrDefaultAsync(tc => tc.Answer == updateTaskAnswerDto.Answer && tc.TaskItem.Id == task_id && tc.Id != task_answer_id);
 
             if (TaskAnswerWithThisNameExists != null)
             {
-                throw new CoreException(CoreErrorCodes.TaskAnswerAlreadyExsits, "task answer for this task with this answer already exists thus canot change this task answer to be the same ! Duplication");
+                throw new KoalaException(KoalaErrorCodes.TaskAnswerAlreadyExists, "task answer for this task with this answer already exists thus canot change this task answer to be the same ! Duplication");
             }
 
             var TaskAnswer = await _db.TaskAnswers.FirstOrDefaultAsync(tc => tc.Id == task_answer_id && tc.TaskItemId == task.Id);
 
             if (TaskAnswer == null)
             {
-                throw new CoreException(CoreErrorCodes.TaskAnswerNotFound, "Task answer of provided task_answer_id and task_id does not exist");
+                throw new KoalaException(KoalaErrorCodes.TaskAnswerNotFound, "Task answer of provided task_answer_id and task_id does not exist");
             }
 
             if (TaskAnswer.Version != updateTaskAnswerDto.Version)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "TaskAnswer versions do not match make sure u have the freshest data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "TaskAnswer versions do not match make sure u have the freshest data");
             }
 
             TaskAnswer.Answer = updateTaskAnswerDto.Answer;
@@ -136,23 +136,23 @@ namespace koala.src.Modules.Core.Services
         public async Task DeleteTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_answer_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var TaskAnswer = await _db.TaskAnswers.FirstOrDefaultAsync(e => e.Id == task_answer_id && e.TaskItemId == task_id);
 
             if (TaskAnswer == null)
             {
-                throw new CoreException(CoreErrorCodes.TaskAnswerNotFound, "Task answer of provided id does not exist");
+                throw new KoalaException(KoalaErrorCodes.TaskAnswerNotFound, "Task answer of provided id does not exist");
             }
 
             _db.TaskAnswers.Remove(TaskAnswer);
@@ -162,16 +162,16 @@ namespace koala.src.Modules.Core.Services
         public async Task<TaskAnswerDto> GetTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_answer_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var TaskAnswer = await _db.TaskAnswers
@@ -181,7 +181,7 @@ namespace koala.src.Modules.Core.Services
 
             if (TaskAnswer == null)
             {
-                throw new CoreException(CoreErrorCodes.TaskAnswerNotFound, "Task answer of provided id does not exist");
+                throw new KoalaException(KoalaErrorCodes.TaskAnswerNotFound, "Task answer of provided id does not exist");
             }
 
             return new TaskAnswerDto
@@ -198,16 +198,16 @@ namespace koala.src.Modules.Core.Services
         public async Task<(List<TaskAnswerDto> Data, ApiPagination Pagination)> GetTaskAnswersAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, PageQueryDto pageQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var query = _db.TaskAnswers.Include(tc => tc.TaskItem).Where(tc => tc.TaskItem.Id == task_id).AsNoTracking();
@@ -238,19 +238,19 @@ namespace koala.src.Modules.Core.Services
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             if (!isTeamPlayer)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
             }
 
             var teamInfo = await _accountModule.Internal_GetTeamInfo(team_id);
             if (teamInfo.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
             }
 
             var submission = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id);
@@ -280,7 +280,7 @@ namespace koala.src.Modules.Core.Services
 
             if (submission.Version != submitTaskSubmissionDto.Version && submission.Version != 0)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "U cant update when having stale data");
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "U cant update when having stale data");
             }
 
             submission.Submission = submitTaskSubmissionDto.Submission;
@@ -309,16 +309,16 @@ namespace koala.src.Modules.Core.Services
         public async Task<(List<TaskSubmissionDto>, ApiPagination)> GetTaskSubmissionsAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, PageQueryDto pageQueryDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var query = _db.TaskSubmissions.Include(t => t.TaskItem).Where(t => t.TaskItem.Id == task_id).AsNoTracking();
@@ -356,12 +356,12 @@ namespace koala.src.Modules.Core.Services
 
         //     if (!isAuthenticated)
         //     {
-        //         throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+        //         throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
         //     }
 
         //     if (!isOrganizationAdmin)
         //     {
-        //         throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+        //         throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
         //     }
 
         //     //FIXME: POPRAWIĆ WSZYSTKO TUTAJ CAŁY ENDPOINT BYŁ ŹLE

@@ -40,7 +40,7 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
-        [HttpGet("/active")]
+        [HttpGet("active")]
         public async Task<IActionResult> GetActiveUserLinks([FromQuery] PageQueryDto pageQueryDto)
         {
             (var response, var pagination) = await _linkService.GetActiveUserLinksAsync(User, pageQueryDto);

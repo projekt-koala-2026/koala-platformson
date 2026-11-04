@@ -1,5 +1,6 @@
 using FluentValidation;
 using koala.src.Modules.Account.Entities;
+using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Dtos
 {
@@ -22,17 +23,38 @@ namespace koala.src.Modules.Account.Dtos
         public UserRegisterRequestDtoValidator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty().WithMessage("Email field cannot be empty!")
-                .MaximumLength(320).WithMessage("Email field cannot be larger than 50 characters!")
-                .EmailAddress().WithMessage("Email field must be a valid email address!");
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.EmailEmpty)
+                .WithMessage("Email field cannot be empty!")
+
+                .MaximumLength(320)
+                .WithErrorCode(KoalaValidationErrorCodes.EmailTooLong)
+                .WithMessage("Email field cannot be larger than 320 characters!")
+
+                .EmailAddress()
+                .WithErrorCode(KoalaValidationErrorCodes.EmailInvalid)
+                .WithMessage("Email field must be a valid email address!");
+
             RuleFor(x => x.UserRoles)
-                .NotEmpty().WithMessage("Roles field cannot be empty!");
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.UserRolesEmpty)
+                .WithMessage("Roles field cannot be empty!");
+
             RuleForEach(x => x.UserRoles)
-                .NotEmpty().WithMessage("Role item cannot be empty!")
-                .MaximumLength(50).WithMessage("Role item name cannot exceed 50 characters!")
+                .NotEmpty()
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleEmpty)
+                .WithMessage("Role item cannot be empty!")
+
+                .MaximumLength(50)
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleTooLong)
+                .WithMessage("Role item name cannot exceed 50 characters!")
+
                 .Must(role => AllowedRoles.Contains(role))
-                .WithMessage("Invalid role specified!")
-                .When(x => x.UserRoles != null);
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleInvalid)
+                .WithMessage("Invalid role specified!");
         }
     }
 }
