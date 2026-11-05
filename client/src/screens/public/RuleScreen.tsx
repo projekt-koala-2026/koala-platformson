@@ -6,7 +6,7 @@ import PublicHeader from "../../components/PublicHeader";
 import type { ApiStaticPage } from "../../types/models";
 import { staticPageMarkdown } from "../../utils/apiAdapters";
 import { apiEndpoints } from "../../utils/apiEndpoints";
-import { apiRequest } from "../../utils/apiFetcher";
+import { apiListRequest } from "../../utils/apiFetcher";
 
 const RuleScreen = () => {
     const navigate = useNavigate();
@@ -16,7 +16,7 @@ const RuleScreen = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate).then(
+        void apiListRequest<ApiStaticPage>(apiEndpoints.staticPages, null, "GET", navigate).then(
             (data) => {
                 if (!active) return;
                 const page = data?.find((item) => item.name === "RULES_PAGE");

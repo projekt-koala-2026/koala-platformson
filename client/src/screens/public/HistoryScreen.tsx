@@ -6,7 +6,7 @@ import PublicHeader from "../../components/PublicHeader";
 import type { ApiEdition, ApiPost, ApiStaticPage, Edition, Post } from "../../types/models";
 import { adaptEdition, adaptPost, staticPageMarkdown } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequest } from "../../utils/apiFetcher";
+import { apiListRequest } from "../../utils/apiFetcher";
 
 const HistoryScreen = () => {
     const navigate = useNavigate();
@@ -20,14 +20,14 @@ const HistoryScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
-            apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+            apiListRequest<ApiStaticPage>(apiEndpoints.staticPages, null, "GET", navigate),
+            apiListRequest<ApiEdition>(
+                `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
-            apiRequest<ApiPost[]>(
+            apiListRequest<ApiPost>(
                 `${apiEndpoints.posts}?${firstPage}&ShowHidden=false`,
                 null,
                 "GET",
@@ -36,10 +36,9 @@ const HistoryScreen = () => {
         ]).then(([staticPages, editionData, postData]) => {
             if (!active) return;
             const historyPage = staticPages?.find((item) => item.name === "HISTORY_PAGE");
-            const now = Date.now();
             const pastEditions = (editionData ?? [])
                 .map(adaptEdition)
-                .filter((edition) => new Date(edition.endDate).getTime() < now)
+                .filter((edition) => edition.state === "CLOSED")
                 .sort(
                     (first, second) =>
                         new Date(second.endDate).getTime() - new Date(first.endDate).getTime()

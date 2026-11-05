@@ -5,7 +5,7 @@ import PublicHeader from "../../components/PublicHeader";
 import type { ApiKoalicjant, Koalicjant } from "../../types/models";
 import { adaptKoalicjant } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequest, resolveApiAssetUrl } from "../../utils/apiFetcher";
+import { apiListRequest, resolveApiAssetUrl } from "../../utils/apiFetcher";
 
 const KoalicjaScreen = () => {
     const navigate = useNavigate();
@@ -15,7 +15,7 @@ const KoalicjaScreen = () => {
     useEffect(() => {
         let active = true;
         const load = async () => {
-            const data = await apiRequest<ApiKoalicjant[]>(
+            const data = await apiListRequest<ApiKoalicjant>(
                 `${apiEndpoints.koalicjants}?${firstPage}`,
                 null,
                 "GET",

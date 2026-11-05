@@ -8,7 +8,7 @@ import MarkdownRenderer from "../../components/MarkdownRenderer";
 import type { ApiEdition, ApiPost, Edition, Post } from "../../types/models";
 import { adaptEdition, adaptPost } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequest, apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequest, apiRequestResult } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
 
 const POSTS_ENDPOINT = apiEndpoints.posts;
@@ -19,16 +19,7 @@ type SidePanel = "preview" | "posts";
 const emptyForm = { title: "", markdownBody: "", editionId: "", isVisible: true };
 
 const pickDefaultEdition = (editions: Edition[]) => {
-    const now = Date.now();
-    return (
-        editions.find((edition) => {
-            const start = new Date(edition.startDate).getTime();
-            const end = new Date(edition.endDate).getTime();
-            return start <= now && now <= end;
-        })?.id ??
-        editions[0]?.id ??
-        ""
-    );
+    return editions.find((edition) => edition.state === "ACTIVE")?.id ?? editions[0]?.id ?? "";
 };
 
 const EditPostScreen = () => {
@@ -49,15 +40,15 @@ const EditPostScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<ApiPost[]>(`${POSTS_ENDPOINT}?${firstPage}`, null, "GET", navigate),
-            apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+            apiListRequest<ApiPost>(`${POSTS_ENDPOINT}?${firstPage}`, null, "GET", navigate),
+            apiListRequest<ApiEdition>(
+                `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
-            apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=true`,
+            apiListRequest<ApiEdition>(
+                `${apiEndpoints.editions}?${firstPage}&States=ACTIVE&States=INACTIVE`,
                 null,
                 "GET",
                 navigate
@@ -162,13 +153,13 @@ const EditPostScreen = () => {
         if (!window.confirm(`Czy na pewno chcesz usunąć wpis „${post.title}”?`)) return;
         setDeletingId(post.id);
         setFeedback(null);
-        const { data } = await apiRequestResult(
+        const { status } = await apiRequestResult(
             `${POSTS_ENDPOINT}/${post.id}`,
             null,
             "DELETE",
             navigate
         );
-        if (data === null) {
+        if (status !== 200 && status !== 204) {
             setFeedback({ tone: "error", message: "Nie udało się usunąć wpisu." });
         } else {
             setPosts((current) => current.filter((item) => item.id !== post.id));

@@ -8,7 +8,7 @@ import Modal from "../../components/Modal";
 import type { ApiSponsor, Sponsor } from "../../types/models";
 import { adaptSponsor } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 
 interface SponsorForm {
     name: string;
@@ -50,7 +50,7 @@ const EditSponsorInfo = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiSponsor[]>(
+        void apiListRequestResult<ApiSponsor>(
             `${apiEndpoints.sponsors}?${firstPage}`,
             null,
             "GET",

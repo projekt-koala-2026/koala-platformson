@@ -1,46 +1,46 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaCheck, FaEye, FaRedo, FaTimes, FaUndo } from "react-icons/fa";
+import { FaCheck, FaEye, FaRedo, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import SelectListbox from "../../components/SelectListbox";
-import type { ApiRodo, ApiTeamDetails, RodoState } from "../../types/models";
+import type { ApiTeamDetails, ApiTeamMember, RodoState } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult, apiUrl } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult, apiUrl } from "../../utils/apiFetcher";
 
-type StatusFilter = "ALL" | "UNVERIFIED" | "ACCEPTED" | "REJECTED";
+type StatusFilter = "ALL" | "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED";
 type Feedback = { tone: "success" | "warning" | "error"; message: string } | null;
 
 const statusFilterOptions = [
     { value: "ALL", label: "Wszystkie" },
-    { value: "UNVERIFIED", label: "Do weryfikacji" },
-    { value: "ACCEPTED", label: "Zatwierdzone" },
-    { value: "REJECTED", label: "Odrzucone" },
+    { value: "RODO_UNVERIFIED", label: "Do weryfikacji" },
+    { value: "RODO_ACCEPTED", label: "Zatwierdzone" },
+    { value: "RODO_REJECTED", label: "Odrzucone" },
 ] as const;
 
 interface RodoApplication {
     key: string;
-    rodo: ApiRodo;
+    rodo: ApiTeamMember;
     team: ApiTeamDetails;
     personName: string;
     personEmail: string | null;
-    personRole: "Kapitan" | "Uczestnik";
+    personRole: "Uczestnik";
 }
 
 const statusMeta: Record<
-    "UNVERIFIED" | "ACCEPTED" | "REJECTED" | "UNKNOWN",
+    "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED" | "UNKNOWN",
     { label: string; className: string }
 > = {
-    UNVERIFIED: {
+    RODO_UNVERIFIED: {
         label: "Do weryfikacji",
         className: "app-status-warning",
     },
-    ACCEPTED: {
+    RODO_ACCEPTED: {
         label: "Zatwierdzona",
         className: "app-status-success",
     },
-    REJECTED: {
+    RODO_REJECTED: {
         label: "Odrzucona",
         className: "app-status-danger",
     },
@@ -56,23 +56,9 @@ const statusFor = (state: string) =>
         label: state || statusMeta.UNKNOWN.label,
     };
 
-const personFor = (team: ApiTeamDetails, memberId: string | null) => {
-    if (memberId === null) {
-        const captain = team.teamCaptain;
-        return {
-            name: captain
-                ? `${captain.nameFirst} ${captain.nameLast}`.trim() || "Kapitan drużyny"
-                : "Kapitan drużyny",
-            email: captain?.email ?? null,
-            role: "Kapitan" as const,
-        };
-    }
-
-    const member = team.teamMembers?.find((item) => item.id === memberId);
+const personFor = (member: ApiTeamMember) => {
     return {
-        name: member
-            ? `${member.nameFist} ${member.nameLast}`.trim() || "Uczestnik"
-            : "Nieznany uczestnik",
+        name: `${member.nameFist} ${member.nameLast}`.trim() || "Uczestnik",
         email: null,
         role: "Uczestnik" as const,
     };
@@ -81,7 +67,7 @@ const personFor = (team: ApiTeamDetails, memberId: string | null) => {
 const AdminRodoScreen = () => {
     const navigate = useNavigate();
     const [teams, setTeams] = useState<ApiTeamDetails[]>([]);
-    const [rodosByTeam, setRodosByTeam] = useState<Record<string, ApiRodo[]>>({});
+    const [rodosByTeam, setRodosByTeam] = useState<Record<string, ApiTeamMember[]>>({});
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
@@ -94,7 +80,7 @@ const AdminRodoScreen = () => {
         let active = true;
 
         void (async () => {
-            const teamsResult = await apiRequestResult<ApiTeamDetails[]>(
+            const teamsResult = await apiListRequestResult<ApiTeamDetails>(
                 `${apiEndpoints.teams}?${firstPage}`,
                 null,
                 "GET",
@@ -111,36 +97,15 @@ const AdminRodoScreen = () => {
             }
 
             const loadedTeams = teamsResult.data;
-            const results = await Promise.all(
-                loadedTeams.map(async (team) => ({
-                    teamId: team.id,
-                    result: await apiRequestResult<ApiRodo[]>(
-                        `${apiEndpoints.teamRodos(team.id)}?${firstPage}`,
-                        null,
-                        "GET",
-                        navigate
-                    ),
-                }))
-            );
-            if (!active) return;
-
-            const nextRodos: Record<string, ApiRodo[]> = {};
-            let failedTeams = 0;
-            results.forEach(({ teamId, result }) => {
-                nextRodos[teamId] = result.data ?? [];
-                if (!result.data) failedTeams += 1;
-            });
+            const nextRodos = Object.fromEntries(
+                loadedTeams.map((team) => [
+                    team.id,
+                    team.teamMembers.filter((member) => member.rodoState !== "RODO_NONE"),
+                ])
+            ) satisfies Record<string, ApiTeamMember[]>;
 
             setTeams(loadedTeams);
             setRodosByTeam(nextRodos);
-            if (failedTeams > 0) {
-                setFeedback({
-                    tone: "warning",
-                    message: `Nie udało się pobrać zgód dla ${failedTeams} ${
-                        failedTeams === 1 ? "drużyny" : "drużyn"
-                    }. Lista może być niepełna.`,
-                });
-            }
             setLoading(false);
         })();
 
@@ -152,10 +117,10 @@ const AdminRodoScreen = () => {
     const applications = useMemo<RodoApplication[]>(
         () =>
             teams.flatMap((team) =>
-                (rodosByTeam[team.id] ?? []).map((rodo, index) => {
-                    const person = personFor(team, rodo.memberId);
+                (rodosByTeam[team.id] ?? []).map((rodo) => {
+                    const person = personFor(rodo);
                     return {
-                        key: `${team.id}:${rodo.memberId ?? "captain"}:${index}`,
+                        key: `${team.id}:${rodo.teamMemberId}`,
                         rodo,
                         team,
                         personName: person.name,
@@ -170,9 +135,10 @@ const AdminRodoScreen = () => {
     const counts = useMemo(
         () => ({
             all: applications.length,
-            unverified: applications.filter((item) => item.rodo.state === "UNVERIFIED").length,
-            accepted: applications.filter((item) => item.rodo.state === "ACCEPTED").length,
-            rejected: applications.filter((item) => item.rodo.state === "REJECTED").length,
+            unverified: applications.filter((item) => item.rodo.rodoState === "RODO_UNVERIFIED")
+                .length,
+            accepted: applications.filter((item) => item.rodo.rodoState === "RODO_ACCEPTED").length,
+            rejected: applications.filter((item) => item.rodo.rodoState === "RODO_REJECTED").length,
         }),
         [applications]
     );
@@ -180,14 +146,14 @@ const AdminRodoScreen = () => {
     const visibleApplications = useMemo(() => {
         const normalized = query.trim().toLocaleLowerCase("pl-PL");
         return applications.filter((application) => {
-            if (statusFilter !== "ALL" && application.rodo.state !== statusFilter) return false;
+            if (statusFilter !== "ALL" && application.rodo.rodoState !== statusFilter) return false;
             if (!normalized) return true;
             return [
                 application.personName,
                 application.personEmail,
                 application.personRole,
                 application.team.name,
-                application.rodo.memberId,
+                application.rodo.teamMemberId,
             ]
                 .filter(Boolean)
                 .join(" ")
@@ -208,10 +174,10 @@ const AdminRodoScreen = () => {
     const setRodoState = async (application: RodoApplication, state: RodoState) => {
         setSavingKey(application.key);
         setFeedback(null);
-        const memberPath = application.rodo.memberId ?? "null";
-        const { data } = await apiRequestResult<ApiRodo>(
+        const memberPath = application.rodo.teamMemberId;
+        const { data } = await apiRequestResult<ApiTeamMember>(
             `${apiEndpoints.teamRodos(application.team.id)}/${memberPath}/state`,
-            { state },
+            { state, version: application.rodo.version },
             "PUT",
             navigate
         );
@@ -225,20 +191,20 @@ const AdminRodoScreen = () => {
         setRodosByTeam((current) => ({
             ...current,
             [application.team.id]: (current[application.team.id] ?? []).map((rodo) =>
-                rodo.memberId === data.memberId ? data : rodo
+                rodo.teamMemberId === data.teamMemberId ? data : rodo
             ),
         }));
         setFeedback({
             tone: "success",
             message: `Status zgody dla ${application.personName} został zmieniony na „${
-                statusFor(data.state).label
+                statusFor(data.rodoState).label
             }”.`,
         });
         setSavingKey(null);
     };
 
     const fileUrlFor = (application: RodoApplication) => {
-        const memberPath = application.rodo.memberId ?? "null";
+        const memberPath = application.rodo.teamMemberId;
         return `${apiUrl}${apiEndpoints.teamRodos(application.team.id)}/${memberPath}/file`;
     };
 
@@ -371,7 +337,7 @@ const AdminRodoScreen = () => {
                                     </thead>
                                     <tbody className="divide-y divide-line-subtle">
                                         {visibleApplications.map((application) => {
-                                            const status = statusFor(application.rodo.state);
+                                            const status = statusFor(application.rodo.rodoState);
                                             return (
                                                 <tr
                                                     key={application.key}
@@ -397,7 +363,8 @@ const AdminRodoScreen = () => {
                                                     </td>
                                                     <td className="px-4 py-4 text-ink-muted">
                                                         {new Date(
-                                                            application.rodo.updatedAt
+                                                            application.rodo.rodoUpdatedAt ??
+                                                                application.rodo.updatedAt
                                                         ).toLocaleString("pl-PL")}
                                                     </td>
                                                     <td className="px-4 py-4 text-right">
@@ -458,9 +425,10 @@ const AdminRodoScreen = () => {
                                     Przesłano
                                 </dt>
                                 <dd className="mt-1 text-sm text-ink-secondary">
-                                    {new Date(selectedApplication.rodo.createdAt).toLocaleString(
-                                        "pl-PL"
-                                    )}
+                                    {new Date(
+                                        selectedApplication.rodo.rodoCreatedAt ??
+                                            selectedApplication.rodo.createdAt
+                                    ).toLocaleString("pl-PL")}
                                 </dd>
                             </div>
                             <div>
@@ -470,10 +438,10 @@ const AdminRodoScreen = () => {
                                 <dd className="mt-1">
                                     <span
                                         className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                                            statusFor(selectedApplication.rodo.state).className
+                                            statusFor(selectedApplication.rodo.rodoState).className
                                         }`}
                                     >
-                                        {statusFor(selectedApplication.rodo.state).label}
+                                        {statusFor(selectedApplication.rodo.rodoState).label}
                                     </span>
                                 </dd>
                             </div>
@@ -490,22 +458,7 @@ const AdminRodoScreen = () => {
                         </a>
 
                         <div className="flex flex-col gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:flex-wrap sm:justify-end">
-                            {selectedApplication.rodo.state !== "UNVERIFIED" && (
-                                <Button
-                                    text={
-                                        <>
-                                            <FaUndo aria-hidden="true" />
-                                            Cofnij do weryfikacji
-                                        </>
-                                    }
-                                    onClick={() =>
-                                        void setRodoState(selectedApplication, "UNVERIFIED")
-                                    }
-                                    disabled={savingKey === selectedApplication.key}
-                                    className="bg-surface-subtle text-ink-strong hover:bg-surface-disabled active:bg-surface-active"
-                                />
-                            )}
-                            {selectedApplication.rodo.state !== "REJECTED" && (
+                            {selectedApplication.rodo.rodoState !== "RODO_REJECTED" && (
                                 <Button
                                     text={
                                         <>
@@ -514,13 +467,13 @@ const AdminRodoScreen = () => {
                                         </>
                                     }
                                     onClick={() =>
-                                        void setRodoState(selectedApplication, "REJECTED")
+                                        void setRodoState(selectedApplication, "RODO_REJECTED")
                                     }
                                     disabled={savingKey === selectedApplication.key}
                                     className="bg-danger hover:bg-danger-hover active:bg-danger-active focus:ring-danger-focus"
                                 />
                             )}
-                            {selectedApplication.rodo.state !== "ACCEPTED" && (
+                            {selectedApplication.rodo.rodoState !== "RODO_ACCEPTED" && (
                                 <Button
                                     text={
                                         <>
@@ -529,7 +482,7 @@ const AdminRodoScreen = () => {
                                         </>
                                     }
                                     onClick={() =>
-                                        void setRodoState(selectedApplication, "ACCEPTED")
+                                        void setRodoState(selectedApplication, "RODO_ACCEPTED")
                                     }
                                     disabled={savingKey === selectedApplication.key}
                                 />

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import type { ApiTeam } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequestResult } from "../../utils/apiFetcher";
 
 const AdminTeamsScreen = () => {
     const navigate = useNavigate();
@@ -14,7 +14,7 @@ const AdminTeamsScreen = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiTeam[]>(
+        void apiListRequestResult<ApiTeam>(
             `${apiEndpoints.teams}?${firstPage}`,
             null,
             "GET",
@@ -38,7 +38,7 @@ const AdminTeamsScreen = () => {
                 team.name,
                 team.schoolId,
                 team.editionId,
-                ...team.teamMembers.map((member) => member.id),
+                ...team.teamMembers.map((member) => member.teamMemberId),
             ]
                 .join(" ")
                 .toLocaleLowerCase("pl-PL")

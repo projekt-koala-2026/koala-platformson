@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { ApiSponsor, Sponsor } from "../types/models";
 import { adaptSponsor } from "../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../utils/apiEndpoints";
-import { apiRequest, resolveApiAssetUrl } from "../utils/apiFetcher";
+import { apiListRequest, resolveApiAssetUrl } from "../utils/apiFetcher";
 
 const PublicFooter = () => {
     const navigate = useNavigate();
@@ -11,7 +11,7 @@ const PublicFooter = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequest<ApiSponsor[]>(
+        void apiListRequest<ApiSponsor>(
             `${apiEndpoints.sponsors}?${firstPage}`,
             null,
             "GET",

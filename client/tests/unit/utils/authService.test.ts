@@ -33,24 +33,16 @@ describe("authService", () => {
         expect(getUserRoles()).toEqual({ ...noRoles, isCaptain: true });
     });
 
-    it("maps current and legacy API roles to the same frontend flags", () => {
+    it("maps API roles to frontend authorization flags", () => {
         expect(
             rolesToFlags([
                 "ORGANIZATION_ADMIN",
                 "ORGANIZATION_EDITOR",
                 "ORGANIZATION_REVIEWER",
-                "TEAM_ADMIN",
-                "TEAM_PLAYER",
+                "TEAM_GUARDIAN",
+                "TEAM_CAPTAIN",
             ])
         ).toEqual({
-            isAdmin: true,
-            isEditor: true,
-            isReviewer: true,
-            isGuardian: true,
-            isCaptain: true,
-        });
-
-        expect(rolesToFlags(["ADMIN", "EDITOR", "REVIEWER", "GUARDIAN", "CAPTAIN"])).toEqual({
             isAdmin: true,
             isEditor: true,
             isReviewer: true,
@@ -60,7 +52,13 @@ describe("authService", () => {
     });
 
     it("stores and clears the authenticated user session", () => {
-        storeSession({ id: "user-1", roles: ["TEAM_PLAYER"] });
+        storeSession({
+            id: "user-1",
+            roles: ["TEAM_CAPTAIN"],
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z",
+            version: 1,
+        });
 
         expect(getStoredUserId()).toBe("user-1");
         expect(getUserRoles()).toEqual({ ...noRoles, isCaptain: true });
@@ -92,7 +90,7 @@ describe("authService", () => {
         );
 
         expect(hasAnyRole(["ORGANIZATION_REVIEWER"])).toBe(true);
-        expect(hasAnyRole(["TEAM_ADMIN"])).toBe(true);
-        expect(hasAnyRole(["ORGANIZATION_ADMIN", "TEAM_PLAYER"])).toBe(false);
+        expect(hasAnyRole(["TEAM_GUARDIAN"])).toBe(true);
+        expect(hasAnyRole(["ORGANIZATION_ADMIN", "TEAM_CAPTAIN"])).toBe(false);
     });
 });

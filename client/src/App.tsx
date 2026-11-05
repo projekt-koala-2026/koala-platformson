@@ -33,7 +33,7 @@ const RuleScreen = lazy(() => import("./screens/public/RuleScreen"));
 
 const adminOnly: Role[] = ["ORGANIZATION_ADMIN"];
 const contentEditors: Role[] = ["ORGANIZATION_ADMIN", "ORGANIZATION_EDITOR"];
-const teamMembers: Role[] = ["TEAM_PLAYER", "TEAM_ADMIN"];
+const teamMembers: Role[] = ["TEAM_CAPTAIN", "TEAM_GUARDIAN"];
 
 const RouteFallback = () => (
     <main className="flex min-h-[40vh] items-center justify-center px-4" role="status">

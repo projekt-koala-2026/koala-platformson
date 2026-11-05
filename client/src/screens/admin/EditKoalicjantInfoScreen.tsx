@@ -9,7 +9,7 @@ import Modal from "../../components/Modal";
 import type { ApiKoalicjant, Koalicjant, ManagedFile } from "../../types/models";
 import { adaptKoalicjant } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult, resolveApiAssetUrl } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult, resolveApiAssetUrl } from "../../utils/apiFetcher";
 
 interface KoalicjantForm {
     nameFirst: string;
@@ -45,7 +45,7 @@ const EditKoalicjantInfo = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiKoalicjant[]>(
+        void apiListRequestResult<ApiKoalicjant>(
             `${apiEndpoints.koalicjants}?${firstPage}`,
             null,
             "GET",

@@ -1,14 +1,9 @@
 export type Role =
-    | "ADMIN"
-    | "EDITOR"
-    | "REVIEWER"
-    | "GUARDIAN"
-    | "CAPTAIN"
     | "ORGANIZATION_ADMIN"
     | "ORGANIZATION_EDITOR"
     | "ORGANIZATION_REVIEWER"
-    | "TEAM_ADMIN"
-    | "TEAM_PLAYER";
+    | "TEAM_CAPTAIN"
+    | "TEAM_GUARDIAN";
 
 export interface User {
     id: string;
@@ -17,6 +12,9 @@ export interface User {
     nameFirst?: string | null;
     nameLast?: string | null;
     censored?: boolean;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 export interface SessionUser {
     id: string;
@@ -25,13 +23,20 @@ export interface SessionUser {
     email?: string;
     censored?: boolean;
     roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiEdition {
     id: string;
     name: string;
+    state: "ACTIVE" | "INACTIVE" | "CLOSED" | string;
+    teamRegisterOpen: string;
+    teamRegisterClose: string;
     createdAt: string;
-    expiredAt: string | null;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiPost {
@@ -72,15 +77,23 @@ export interface ApiStaticPage {
 }
 
 export interface ApiTeamMember {
-    id: string;
+    teamMemberId: string;
+    teamId: string;
     nameFist: string;
     nameLast: string;
-    position: "CAPTAIN" | "ADMIN" | "PLAYER" | string;
+    rodoState: RodoState;
+    rodoVersion: number | null;
+    rodoCreatedAt: string | null;
+    rodoUpdatedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiTeamJoinCode {
     joinCode: string;
     createdAt: string;
+    updatedAt: string;
     expiresAt: string;
 }
 
@@ -90,7 +103,10 @@ export type ApiTeamCaptain = {
     nameLast: string;
     email: string;
     censored: boolean;
-    roles: string[];
+    roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 };
 
 export type ApiTeam = {
@@ -98,10 +114,13 @@ export type ApiTeam = {
     editionId: string;
     schoolId: string;
     name: string;
+    tier: string;
     isCensored: boolean;
     createdAt: string;
+    updatedAt: string;
+    version: number;
     teamCaptain: ApiTeamCaptain | null;
-    teamAdmin: ApiTeamCaptain | null;
+    teamGuardian: ApiTeamCaptain | null;
     teamMembers: ApiTeamMember[];
     joinCode: ApiTeamJoinCode | null;
 };
@@ -113,13 +132,24 @@ export interface ApiTeamUser {
     email: string;
     censored: boolean;
     roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiNamedTeamMember {
-    id: string;
+    teamMemberId: string;
+    teamId: string;
     // Backend currently exposes the property with this typo.
     nameFist: string;
     nameLast: string;
+    rodoState: RodoState;
+    rodoVersion: number | null;
+    rodoCreatedAt: string | null;
+    rodoUpdatedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiTeamDetails {
@@ -127,23 +157,18 @@ export interface ApiTeamDetails {
     editionId: string;
     schoolId: string;
     name: string;
+    tier: string;
     isCensored: boolean;
     createdAt: string;
+    updatedAt: string;
+    version: number;
     teamCaptain: ApiTeamUser | null;
-    teamAdmin: ApiTeamUser | null;
+    teamGuardian: ApiTeamUser | null;
     teamMembers: ApiNamedTeamMember[];
     joinCode: ApiTeamJoinCode | null;
 }
 
-export type RodoState = "UNVERIFIED" | "ACCEPTED" | "REJECTED" | string;
-
-export interface ApiRodo {
-    teamId: string;
-    memberId: string | null;
-    state: RodoState;
-    createdAt: string;
-    updatedAt: string;
-}
+export type RodoState = "RODO_NONE" | "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED";
 
 export interface Team {
     id: string;
@@ -173,9 +198,11 @@ export interface ApiSchool {
     building: string;
     rspo: string;
     type: string;
+    tier: string;
     email: string;
     createdAt: string;
     updatedAt: string;
+    version: number;
 }
 export interface School {
     id?: string;
@@ -192,6 +219,8 @@ export interface Edition {
     title: string;
     startDate: string;
     endDate: string;
+    state: ApiEdition["state"];
+    version: number;
 }
 export interface Post {
     id: string;
