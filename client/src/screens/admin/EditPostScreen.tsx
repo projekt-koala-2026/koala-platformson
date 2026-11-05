@@ -212,13 +212,27 @@ const EditPostScreen = () => {
                                         Pola oznaczone gwiazdką są wymagane.
                                     </p>
                                 </div>
-                                {editingPostId && (
+                                <div className="flex flex-wrap gap-2">
+                                    {editingPostId && (
+                                        <Button
+                                            text="Anuluj edycję"
+                                            onClick={resetForm}
+                                            disabled={saving}
+                                            className="bg-ink-secondary hover:bg-ink"
+                                        />
+                                    )}
                                     <Button
-                                        text="Anuluj edycję"
-                                        onClick={resetForm}
-                                        className="bg-ink-secondary hover:bg-ink"
+                                        text={
+                                            saving
+                                                ? "Zapisywanie…"
+                                                : editingPostId
+                                                  ? "Zapisz zmiany"
+                                                  : "Utwórz wpis"
+                                        }
+                                        onClick={() => void savePost(form.markdownBody)}
+                                        disabled={saving}
                                     />
-                                )}
+                                </div>
                             </div>
 
                             <div className="space-y-5">
@@ -289,15 +303,7 @@ const EditPostScreen = () => {
                                         onChange={(markdownBody) =>
                                             setForm((current) => ({ ...current, markdownBody }))
                                         }
-                                        onSave={savePost}
                                         disabled={saving}
-                                        label={
-                                            saving
-                                                ? "Zapisywanie…"
-                                                : editingPostId
-                                                  ? "Zapisz zmiany"
-                                                  : "Utwórz wpis"
-                                        }
                                     />
                                 </div>
                             </div>

@@ -215,7 +215,7 @@
         @apply my-5 border-l-4 border-brand-border-strong bg-brand-soft px-4 py-2 italic;
     }
     .markdown-body pre {
-        @apply my-5 max-w-full overflow-x-auto rounded-xl bg-ink-heading p-4 text-sm text-ink-inverse-muted;
+        @apply my-5 max-w-full overflow-x-auto rounded-xl bg-surface-muted p-4 text-sm text-ink-heading;
     }
     .markdown-body code {
         @apply rounded bg-surface-muted px-1.5 py-0.5 text-sm text-ink-heading;
@@ -232,24 +232,69 @@
     .markdown-body td {
         @apply border border-line-strong px-3 py-2;
     }
-    .EasyMDEContainer .editor-toolbar {
-        @apply flex flex-wrap gap-0.5 rounded-t-xl border-line-strong bg-canvas px-2 py-1;
-    }
-    .EasyMDEContainer .editor-toolbar button {
-        @apply rounded-md text-ink transition;
-    }
-    .EasyMDEContainer .editor-toolbar button:hover,
-    .EasyMDEContainer .editor-toolbar button.active {
-        @apply border-line-strong bg-surface text-brand-text-strong;
-    }
-    .EasyMDEContainer .CodeMirror {
-        @apply min-h-64 rounded-b-xl border-line-strong bg-surface text-ink-heading shadow-sm;
-    }
-    .EasyMDEContainer .CodeMirror-focused {
-        @apply border-brand-focus ring-2 ring-brand-muted;
-    }
-    .EasyMDEContainer .editor-preview,
-    .EasyMDEContainer .editor-preview-side {
-        @apply bg-surface text-ink;
-    }
+}
+
+/* EasyMDE ships unlayered CSS; keep these overrides unlayered and more specific. */
+:root .EasyMDEContainer .editor-toolbar {
+    @apply flex flex-wrap gap-0.5 rounded-t-xl border-line-strong bg-canvas px-2 py-1;
+}
+:root .EasyMDEContainer .editor-toolbar button {
+    @apply rounded-md text-ink transition;
+}
+:root .EasyMDEContainer .editor-toolbar button:hover,
+:root .EasyMDEContainer .editor-toolbar button.active {
+    @apply border-line-strong bg-surface text-brand-text-strong;
+}
+:root .EasyMDEContainer .editor-toolbar i.separator {
+    @apply border-l-line-strong border-r-transparent;
+}
+:root .EasyMDEContainer .CodeMirror {
+    @apply min-h-64 rounded-b-xl border-line-strong bg-surface text-ink-heading shadow-sm;
+}
+:root .EasyMDEContainer .CodeMirror-focused {
+    @apply border-brand-focus ring-2 ring-brand-muted;
+}
+:root .EasyMDEContainer .CodeMirror-cursor {
+    border-left-color: rgb(var(--color-ink-heading));
+}
+:root .EasyMDEContainer .CodeMirror-selected,
+:root .EasyMDEContainer .CodeMirror-focused .CodeMirror-selected {
+    background: rgb(var(--color-surface-subtle));
+}
+:root .EasyMDEContainer .CodeMirror-placeholder,
+:root .EasyMDEContainer .editor-statusbar {
+    @apply text-ink-muted;
+}
+:root .EasyMDEContainer .cm-s-easymde .cm-header,
+:root .EasyMDEContainer .cm-s-easymde .cm-link,
+:root .EasyMDEContainer .cm-s-easymde .cm-url,
+:root .EasyMDEContainer .cm-s-easymde .cm-tag,
+:root .EasyMDEContainer .cm-s-easymde .cm-string {
+    @apply text-brand-text;
+}
+:root .EasyMDEContainer .cm-s-easymde .cm-quote,
+:root .EasyMDEContainer .cm-s-easymde .cm-formatting,
+:root .EasyMDEContainer .cm-s-easymde .cm-attribute {
+    @apply text-ink-secondary;
+}
+:root .EasyMDEContainer .cm-s-easymde .cm-comment {
+    @apply bg-surface-muted text-ink;
+}
+:root .EasyMDEContainer .editor-preview,
+:root .EasyMDEContainer .editor-preview-side {
+    @apply border-line bg-surface text-ink;
+}
+:root .EasyMDEContainer .editor-preview a,
+:root .EasyMDEContainer .editor-preview-side a {
+    @apply text-brand-text underline;
+}
+:root .EasyMDEContainer .editor-preview pre,
+:root .EasyMDEContainer .editor-preview-side pre {
+    @apply overflow-x-auto rounded-lg bg-surface-muted p-3 text-ink;
+}
+:root .EasyMDEContainer .editor-preview td,
+:root .EasyMDEContainer .editor-preview th,
+:root .EasyMDEContainer .editor-preview-side td,
+:root .EasyMDEContainer .editor-preview-side th {
+    @apply border-line-strong;
 }
