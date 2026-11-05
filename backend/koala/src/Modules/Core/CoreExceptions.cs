@@ -20,6 +20,7 @@ namespace koala.src.Modules.Core
         public const int SubEditionAlreadyExsits = 611;
         public const int TaskAlreadyExsits = 612;
         public const int TaskAnswerAlreadyExsits = 613;
+        public const int TaskSubmissionNotFound = 614;
     }
     public class CoreException : Exception
     {

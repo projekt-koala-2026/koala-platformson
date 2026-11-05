@@ -76,14 +76,21 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
-        //FIXME: POPRAWIĆ CAŁY TEN ENDPOINT JEST ŹLE!!!
-        // [Authorize]
-        // [HttpPut("/{task_id}/admin/{team_id}")]
-        // public async Task<IActionResult> UpdateTaskReviewer([FromRoute] Guid task_id, [FromBody] UpdateTaskSubmissionAdminDto updateTaskSubmissionAdminDto)
-        // {
-        //     var response = await _taskService.UpdateTaskReviewerAsync(User, task_id, updateTaskSubmissionAdminDto);
-        //     return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
-        // }
+        [Authorize]
+        [HttpPost("/to-review/me/{reviewer_id}/submission/{task_id}")]
+        public async Task<IActionResult> AddReview([FromRoute] Guid reviewer_id, [FromRoute] Guid task_id, [FromBody] AddReviewDto addReviewDto)
+        {
+            var response = await _taskService.AddReviewAsync(User, reviewer_id, task_id, addReviewDto);
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpPut("/to-review/me/{reviewer_id}/submission/{task_id}")]
+        public async Task<IActionResult> UpdateReview([FromRoute] Guid reviewer_id, [FromRoute] Guid task_id, [FromBody] UpdateReviewDto updateReviewDto)
+        {
+            var response = await _taskService.UpdateReviewAsync(User, reviewer_id, task_id, updateReviewDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
+        }
 
         [Authorize]
         [HttpGet("/to-review/me/{reviewer_id}")]

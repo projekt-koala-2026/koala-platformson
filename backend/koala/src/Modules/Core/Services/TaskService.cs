@@ -349,10 +349,135 @@ namespace koala.src.Modules.Core.Services
             return (entities, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        // public async Task<TaskSubmissionDto> UpdateTaskReviewerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, AdminAssignReviewersDto updateTaskSubmissionAdminDto)
-        // {
-        //     bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-        //     bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+        public async Task<TaskSubmissionDto> AddReviewAsync(ClaimsPrincipal claimsPrincipal, Guid reviewer_id, Guid task_id, AddReviewDto addReviewDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationReviewer = ClaimsHelper.IsOrganizationReviewer(claimsPrincipal);
+            
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationReviewer)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have reviewer role");
+            }
+
+
+            var submission = await _db.TaskSubmissions
+                .FirstOrDefaultAsync(e => e.TaskId == task_id);
+
+            if (submission == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskSubmissionNotFound, "Task submission does not exist");
+            }
+
+            if (submission.Reviewer1Id == reviewer_id)
+            {
+                submission.Review1Score = addReviewDto.Score;
+                if (submission.Review1Score == submission.Review2Score && submission.Review2Score != null)
+                {
+                    submission.AutoReviewState = submission.Review1Score;
+                }
+
+            }
+            else if (submission.Reviewer2Id == reviewer_id)
+            {
+                submission.Review2Score = addReviewDto.Score;
+                if (submission.Review1Score == submission.Review2Score && submission.Review1Score != null)
+                {
+                    submission.AutoReviewState = submission.Review2Score;
+                }
+            }
+            else
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Reviewer is not assigned to this submission");
+            }
+
+            submission.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return new TaskSubmissionDto
+            (
+                submission.TeamId,
+                submission.TaskId,
+                submission.Reviewer1Id,
+                submission.Reviewer2Id,
+                submission.AutoReviewState,
+                submission.Review1Score,
+                submission.Review2Score,
+                submission.Submission,
+                submission.State,
+                submission.CreatedAt,
+                submission.UpdatedAt,
+                submission.Version
+            );
+
+}
+        public async Task<TaskSubmissionDto> UpdateReviewAsync(ClaimsPrincipal? claimsPrincipal, Guid reviewer_id, Guid submission_id, UpdateReviewDto updateReviewDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationReviewer = ClaimsHelper.IsOrganizationReviewer(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationReviewer)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var submission = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == submission_id);
+
+            if (submission == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskSubmissionNotFound, "Task submission of provided submission_id does not exist");
+            }
+
+            if (submission.Reviewer1Id == reviewer_id)
+            {
+                submission.Review1Score = updateReviewDto.Score;
+                if (submission.Review1Score == submission.Review2Score && submission.Review2Score != null)
+                {
+                    submission.AutoReviewState = submission.Review1Score;
+                }
+            }
+            else if (submission.Reviewer2Id == reviewer_id)
+            {
+                submission.Review2Score = updateReviewDto.Score;
+                if (submission.Review1Score == submission.Review2Score && submission.Review1Score != null)
+                {
+                    submission.AutoReviewState = submission.Review2Score;
+                }
+            }
+            else
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Reviewer is not assigned to this submission");
+            }
+
+            submission.UpdatedAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            return new TaskSubmissionDto
+            (
+                submission.TeamId,
+                submission.TaskId,
+                submission.Reviewer1Id,
+                submission.Reviewer2Id,
+                submission.AutoReviewState,
+                submission.Review1Score,
+                submission.Review2Score,
+                submission.Submission,
+                submission.State,
+                submission.CreatedAt,
+                submission.UpdatedAt,
+                submission.Version
+            );
+        }
 
         public async Task<(List<TaskSubmissionDto>, ApiPagination)> GetTasksToReviewAsync(ClaimsPrincipal? claimsPrincipal, Guid reviewer_id, PageQueryDto pageQueryDto)
         {
@@ -448,17 +573,5 @@ namespace koala.src.Modules.Core.Services
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        //     if (!isAuthenticated)
-        //     {
-        //         throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
-        //     }
-
-        //     if (!isOrganizationAdmin)
-        //     {
-        //         throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-        //     }
-
-        //     //FIXME: POPRAWIĆ WSZYSTKO TUTAJ CAŁY ENDPOINT BYŁ ŹLE
-        // }
     }
 }
