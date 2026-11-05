@@ -514,7 +514,7 @@ const CaptainHomeScreen = () => {
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+            <main className="app-public-page flex-1">
                 <header className="mb-8">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Panel drużyn

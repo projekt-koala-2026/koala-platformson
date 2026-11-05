@@ -37,7 +37,7 @@ const KoalicjaScreen = () => {
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
+            <main className="app-public-page">
                 <div className="mb-8">
                     <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
                         Ludzie KOALA

@@ -468,12 +468,12 @@ const AdminSchoolsScreen = () => {
     return (
         <>
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page space-y-8">
                 <header className="border-b border-line-subtle pb-6">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Administracja
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Rejestr szkół</h1>
+                    <h1 className="mt-1 text-3xl font-bold tracking-tight">Rejestr szkół</h1>
                     <p className="mt-3 max-w-3xl text-ink-secondary">
                         Importuj dane z kuratorium, dodawaj placówki i aktualizuj ich dane.
                     </p>

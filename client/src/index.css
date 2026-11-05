@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@media (min-width: 1280px) {
+    body.navigation-panel-open #root {
+        margin-left: 16rem;
+    }
+}
+
 :root {
     color-scheme: light;
 
@@ -164,6 +170,12 @@
 }
 
 @layer components {
+    .app-public-page {
+        @apply mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10;
+    }
+    .app-admin-page {
+        @apply mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8;
+    }
     .app-select {
         @apply appearance-none bg-no-repeat pr-10;
         background-image:

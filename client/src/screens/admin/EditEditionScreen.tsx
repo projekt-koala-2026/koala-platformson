@@ -254,7 +254,7 @@ const EditEditionScreen = () => {
     return (
         <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">

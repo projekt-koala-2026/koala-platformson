@@ -49,12 +49,12 @@ const AdminTeamsScreen = () => {
     return (
         <div className="min-h-screen bg-canvas">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <header className="border-b border-line-subtle pb-6">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Administracja
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">
+                    <h1 className="mt-1 text-3xl font-bold tracking-tight">
                         Zarejestrowane drużyny
                     </h1>
                     <p className="mt-3 text-ink-secondary">
