@@ -94,11 +94,11 @@ namespace koala.src.Modules.Cms.Data
             modelBuilder.Entity<StaticPage>()
                 .HasData
                 (
-                    new StaticPage{Id = home_page_id, Name = "HOME_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
-                    new StaticPage{Id = tasks_page_id, Name = "TASKS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
-                    new StaticPage{Id = history_page_id, Name = "HISTORY_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
-                    new StaticPage{Id = rules_page_id, Name = "RULES_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
-                    new StaticPage{Id = koalicjants_page_id, Name = "KOALICJANTS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0}
+                    new StaticPage{Id = home_page_id, Name = "HOME_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1},
+                    new StaticPage{Id = tasks_page_id, Name = "TASKS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1},
+                    new StaticPage{Id = history_page_id, Name = "HISTORY_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1},
+                    new StaticPage{Id = rules_page_id, Name = "RULES_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1},
+                    new StaticPage{Id = koalicjants_page_id, Name = "KOALICJANTS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1}
                 );
 
             // KOALICJANT CONFIG

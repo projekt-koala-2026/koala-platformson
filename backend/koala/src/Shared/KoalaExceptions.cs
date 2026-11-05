@@ -115,6 +115,14 @@ namespace koala.src.Shared
         // ==========================================
         public const string InvalidValue = "KOALA_VALIDATION_INVALID_VALUE";
         public const string ResourceVersionInvalid = "KOALA_VALIDATION_RESOURCE_VERSION_INVALID";
+        public const string ContentJsonEmpty = "KOALA_VALIDATION_CONTENT_JSON_EMPTY";
+        public const string ContentJsonInvalid = "KOALA_VALIDATION_CONTENT_JSON_INVALID";
+        public const string ContentJsonVersionFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_VERSION_FIELD_INVALID";
+        public const string ContentJsonBodyPLFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_BODY_PL_FIELD_INVALID";
+        public const string ContentJsonTitlePLFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_TITLE_PL_FIELD_INVALID";
+        public const string ContentJsonSponsorLogoImageUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_SPONSOR_LOGO_IMAGE_URL_FIELD_INVALID";
+        public const string ContentJsonSponsorWebUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_SPONSOR_WEB_URL_FIELD_INVALID";
+        public const string ContentJsonKoalicjantProfileImageUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_KOALICJANT_PROFILE_IMAGE_URL_FIELD_INVALID";
 
         // ==========================================
         // ACCOUNT MODULE
@@ -159,6 +167,16 @@ namespace koala.src.Shared
         public const string UserRoleEmpty = "KOALA_VALIDATION_USER_ROLE_EMPTY";
         public const string UserRoleTooLong = "KOALA_VALIDATION_USER_ROLE_TOO_LONG";
         public const string UserRoleInvalid = "KOALA_VALIDATION_USER_ROLE_INVALID";
+
+        // ==========================================
+        // CMS MODULE
+        // ==========================================
+        public const string PostNameEmpty = "KOALA_VALIDATION_POST_NAME_EMPTY";
+        public const string PostNameTooLong = "KOALA_VALIDATION_POST_NAME_TOO_LONG";
+        public const string PostNameInvalidCharacter = "KOALA_VALIDATION_POST_NAME_INVALID_CHARACTER";
+        public const string SponsorNameEmpty = "KOALA_VALIDATION_SPONSOR_NAME_EMPTY";
+        public const string SponsorNameTooLong = "KOALA_VALIDATION_SPONSOR_NAME_TOO_LONG";
+        public const string SponsorNameInvalidCharacter = "KOALA_VALIDATION_SPONSOR_NAME_INVALID_CHARACTER";
     }
 
     public class KoalaProblems : ProblemDetails
