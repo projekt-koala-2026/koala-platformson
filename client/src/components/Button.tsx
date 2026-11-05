@@ -7,6 +7,7 @@ interface ButtonProps {
     disabled?: boolean;
     className?: string;
     title?: string;
+    form?: string;
 }
 const Button = ({
     text,
@@ -15,9 +16,11 @@ const Button = ({
     disabled = false,
     className = "",
     title,
+    form,
 }: ButtonProps) => (
     <button
         type={type}
+        form={form}
         disabled={disabled}
         onClick={onClick}
         title={title}

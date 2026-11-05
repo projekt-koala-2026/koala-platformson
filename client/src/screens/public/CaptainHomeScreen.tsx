@@ -1,5 +1,5 @@
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { FaDownload, FaExchangeAlt, FaUpload } from "react-icons/fa";
 import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +27,7 @@ type Feedback = { tone: "success" | "error"; message: string } | null;
 
 const CaptainHomeScreen = () => {
     const navigate = useNavigate();
+    const createTeamFormId = useId();
     const currentUserId = useMemo(() => getStoredUserId(), []);
     const roles = useMemo(() => getUserRoles(), []);
     const [teams, setTeams] = useState<ApiTeam[]>([]);
@@ -898,8 +899,26 @@ const CaptainHomeScreen = () => {
                 onClose={closeCreateTeam}
                 title="Utwórz drużynę"
                 maxWidth="xl"
+                footer={
+                    <div className="flex flex-wrap justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={closeCreateTeam}
+                            disabled={saving}
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
+                        >
+                            Anuluj
+                        </button>
+                        <Button
+                            type="submit"
+                            form={createTeamFormId}
+                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
+                            disabled={saving}
+                        />
+                    </div>
+                }
             >
-                <form onSubmit={submitTeam} className="space-y-6">
+                <form id={createTeamFormId} onSubmit={submitTeam} className="space-y-4">
                     <label className="block text-sm font-medium text-ink">
                         Nazwa drużyny
                         <input
@@ -930,6 +949,7 @@ const CaptainHomeScreen = () => {
                             )}
                         </div>
                         <SchoolsTable
+                            compact
                             schools={schools}
                             selectedRspo={selectedSchool?.rspo ?? null}
                             onRowClick={(school) => {
@@ -944,22 +964,6 @@ const CaptainHomeScreen = () => {
                             {createError}
                         </p>
                     )}
-
-                    <div className="flex flex-col-reverse gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:justify-end">
-                        <button
-                            type="button"
-                            onClick={closeCreateTeam}
-                            disabled={saving}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
-                        >
-                            Anuluj
-                        </button>
-                        <Button
-                            type="submit"
-                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
-                            disabled={saving}
-                        />
-                    </div>
                 </form>
             </Modal>
             <Modal

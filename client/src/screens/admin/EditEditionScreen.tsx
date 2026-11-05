@@ -126,7 +126,7 @@ const EditEditionScreen = () => {
             registerClose <= registerOpen
         ) {
             setModalError(
-                "Podaj prawidĹ‚owy okres rejestracji; data zakoĹ„czenia musi byÄ‡ pĂłĹşniejsza od daty otwarcia."
+                "Podaj prawidłowy okres rejestracji; data zakończenia musi być późniejsza od daty otwarcia."
             );
             return;
         }
@@ -232,13 +232,13 @@ const EditEditionScreen = () => {
             navigate
         );
         if (!data) {
-            setFeedback({ tone: "error", message: "Nie udaĹ‚o siÄ™ aktywowaÄ‡ edycji." });
+            setFeedback({ tone: "error", message: "Nie udało się aktywować edycji." });
         } else {
             const activated = adaptEdition(data);
             setEditions((current) =>
                 sortEditions(current.map((item) => (item.id === edition.id ? activated : item)))
             );
-            setFeedback({ tone: "success", message: `Aktywowano edycjÄ™ â€ž${edition.title}â€ť.` });
+            setFeedback({ tone: "success", message: `Aktywowano edycję „${edition.title}”.` });
         }
         setActionId(null);
     };
@@ -411,7 +411,7 @@ const EditEditionScreen = () => {
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
-                        Otwarcie rejestracji druĹĽyn
+                        Otwarcie rejestracji drużyn
                         <input
                             type="datetime-local"
                             value={form.teamRegisterOpen}
@@ -427,7 +427,7 @@ const EditEditionScreen = () => {
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
-                        ZamkniÄ™cie rejestracji druĹĽyn
+                        Zamknięcie rejestracji drużyn
                         <input
                             type="datetime-local"
                             value={form.teamRegisterClose}

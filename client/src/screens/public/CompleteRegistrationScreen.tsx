@@ -49,7 +49,7 @@ const CompleteRegistrationScreen = () => {
             return;
         }
         if (!ageDeclaration) {
-            setError("Wybierz przedziaĹ‚ wiekowy wymagany do utworzenia konta.");
+            setError("Wybierz przedział wiekowy wymagany do utworzenia konta.");
             return;
         }
 
@@ -322,7 +322,7 @@ const CompleteRegistrationScreen = () => {
                                             disabled={submitting}
                                             required
                                         />
-                                        Mam co najmniej 13 lat, ale nie ukoĹ„czyĹ‚em/-am 18 lat.
+                                        Mam co najmniej 13 lat, ale nie ukończyłem/-am 18 lat.
                                     </label>
                                     <label className="flex items-start gap-3 rounded-xl border border-line px-3 py-3 text-sm text-ink">
                                         <input
