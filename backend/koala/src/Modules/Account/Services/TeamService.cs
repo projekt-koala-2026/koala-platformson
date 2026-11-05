@@ -99,7 +99,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "There is no school with provided id under which the team could be created");
             }
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            var user = await _db.Users.Include(u => u.CaptainTeam).Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (user == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
@@ -196,7 +196,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
-            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            var captain = await _db.Users.Include(u => u.CaptainTeam).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
@@ -254,7 +254,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
 
-            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            var captain = await _db.Users.Include(u => u.CaptainTeam).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
@@ -343,7 +343,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
 
-            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            var captain = await _db.Users.Include(u => u.CaptainTeam).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
@@ -426,7 +426,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
 
-            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            var captain = await _db.Users.Include(u => u.CaptainTeam).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
@@ -488,7 +488,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
 
-            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            var captain = await _db.Users.Include(u => u.CaptainTeam).ThenInclude(t => t.Guardian).ThenInclude(g => g.UserRoles).ThenInclude(ur => ur.Role).Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
@@ -610,7 +610,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            var captain = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            var captain = await _db.Users.Include(u => u.CaptainTeam).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
             if (captain == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
@@ -702,7 +702,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             // MAKE SURE ONLY ONE TEAM ADMIN PER TEAM AND WELL TEAM PLAYER CANT JOIN SINCE A TEAM WITH NO CAPTAIN CAN EXIST AND ONLY ONE CAPTAIN PER TEAM IS ALLOWED
-            var team = await _db.Teams.FirstOrDefaultAsync(t => t.Id == teamJoinCode.TeamId);
+            var team = await _db.Teams.Include(t => t.Captain).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(t => t.Guardian).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(t => t.Id == teamJoinCode.TeamId);
             if (team == null)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamNotFound, "team for this join code does not exist");
@@ -718,6 +718,7 @@ namespace koala.src.Modules.Account.Services
             team.GuardianId = userId;
 
             await _db.SaveChangesAsync();
+            await _db.Entry(team).Reference(t => t.Guardian).LoadAsync();
 
             var teamMembers = await _db.TeamMembers
                 .AsNoTracking()
@@ -852,7 +853,7 @@ namespace koala.src.Modules.Account.Services
                         qr.Captain.UpdatedAt,
                         qr.Captain.Version
                     ),
-                    new UserDto
+                    qr.Guardian == null ? null : new UserDto
                     (
                         qr.Guardian.Id,
                         qr.Guardian.NameFirst!,
@@ -918,7 +919,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team members and admin can view the team");
             }
 
-            var team = await _db.Teams.AsNoTracking().FirstOrDefaultAsync(t => t.Id == teamId);
+            var team = await _db.Teams.AsNoTracking().Include(t => t.Captain).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(t => t.Guardian).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(t => t.Id == teamId);
 
             if (team == null)
             {
@@ -958,7 +959,7 @@ namespace koala.src.Modules.Account.Services
                 team.Captain.UpdatedAt,
                 team.Captain.Version
             );
-            UserDto teamAdminDto = new UserDto
+            UserDto? teamAdminDto = team.Guardian == null ? null : new UserDto
             (
                 team.Guardian.Id,
                 team.Guardian.NameFirst!,
@@ -1068,7 +1069,7 @@ namespace koala.src.Modules.Account.Services
                         qr.Captain.UpdatedAt,
                         qr.Captain.Version
                     ),
-                    new UserDto
+                    qr.Guardian == null ? null : new UserDto
                     (
                         qr.Guardian.Id,
                         qr.Guardian.NameFirst!,

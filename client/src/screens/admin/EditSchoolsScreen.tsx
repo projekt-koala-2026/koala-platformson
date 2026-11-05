@@ -13,6 +13,22 @@ import { apiFormRequest, apiRequestResult } from "../../utils/apiFetcher";
 const SCHOOLS_PAGE_SIZE = 500;
 const MAX_SCHOOL_PAGES = 200;
 
+const SCHOOL_TYPES = [
+    "Ogólnokształcąca szkoła muzyczna I stopnia",
+    "Poznańska szkoła chóralna",
+    "Szkoła podstawowa",
+    "Bednarska Szkoła Realna",
+    "Branżowa szkoła I stopnia",
+    "Branżowa szkoła II stopnia",
+    "Liceum ogólnokształcące",
+    "Liceum ogólnokształcące uzupełniające dla absolwentów zasadniczych szkół zawodowych",
+    "Liceum profilowane",
+    "Szkoła policealna",
+    "Szkoła specjalna przysposabiająca do pracy",
+    "Technikum",
+    "Technikum uzupełniające dla absolwentów zasadniczych szkół zawodowych",
+] as const;
+
 interface SchoolForm {
     rspo: string;
     name: string;
@@ -106,13 +122,22 @@ const SchoolFields = ({ value, disabled, onChange }: SchoolFieldsProps) => (
         </label>
         <label className="text-sm font-medium text-ink sm:col-span-2">
             Typ placówki *
-            <input
+            <select
                 value={value.type}
                 onChange={(event) => onChange("type", event.target.value)}
-                className={inputClass}
+                className={`app-select ${inputClass}`}
                 disabled={disabled}
                 required
-            />
+            >
+                <option value="" disabled>
+                    Wybierz typ placówki
+                </option>
+                {SCHOOL_TYPES.map((schoolType) => (
+                    <option key={schoolType} value={schoolType}>
+                        {schoolType}
+                    </option>
+                ))}
+            </select>
         </label>
         <label className="text-sm font-medium text-ink">
             Ulica *

@@ -7,7 +7,7 @@ import Modal from "../../components/Modal";
 import SelectListbox from "../../components/SelectListbox";
 import type { ApiTeamDetails, ApiTeamMember, RodoState } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult, apiUrl } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult, apiUrl } from "../../utils/apiFetcher";
 
 type StatusFilter = "ALL" | "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED";
 type Feedback = { tone: "success" | "warning" | "error"; message: string } | null;
@@ -80,7 +80,7 @@ const AdminRodoScreen = () => {
         let active = true;
 
         void (async () => {
-            const teamsResult = await apiRequestResult<ApiTeamDetails[]>(
+            const teamsResult = await apiListRequestResult<ApiTeamDetails>(
                 `${apiEndpoints.teams}?${firstPage}`,
                 null,
                 "GET",
@@ -97,38 +97,15 @@ const AdminRodoScreen = () => {
             }
 
             const loadedTeams = teamsResult.data;
-            const results = await Promise.all(
-                loadedTeams.map(async (team) => ({
-                    teamId: team.id,
-                    result: await apiRequestResult<ApiTeamMember[]>(
-                        `${apiEndpoints.teamRodos(team.id)}?${firstPage}`,
-                        null,
-                        "GET",
-                        navigate
-                    ),
-                }))
-            );
-            if (!active) return;
-
-            const nextRodos: Record<string, ApiTeamMember[]> = {};
-            let failedTeams = 0;
-            results.forEach(({ teamId, result }) => {
-                nextRodos[teamId] = (result.data ?? []).filter(
-                    (member) => member.rodoState !== "RODO_NONE"
-                );
-                if (!result.data) failedTeams += 1;
-            });
+            const nextRodos = Object.fromEntries(
+                loadedTeams.map((team) => [
+                    team.id,
+                    team.teamMembers.filter((member) => member.rodoState !== "RODO_NONE"),
+                ])
+            ) satisfies Record<string, ApiTeamMember[]>;
 
             setTeams(loadedTeams);
             setRodosByTeam(nextRodos);
-            if (failedTeams > 0) {
-                setFeedback({
-                    tone: "warning",
-                    message: `Nie udało się pobrać zgód dla ${failedTeams} ${
-                        failedTeams === 1 ? "drużyny" : "drużyn"
-                    }. Lista może być niepełna.`,
-                });
-            }
             setLoading(false);
         })();
 
@@ -200,7 +177,7 @@ const AdminRodoScreen = () => {
         const memberPath = application.rodo.teamMemberId;
         const { data } = await apiRequestResult<ApiTeamMember>(
             `${apiEndpoints.teamRodos(application.team.id)}/${memberPath}/state`,
-            { state, version: application.rodo.rodoVersion },
+            { state, version: application.rodo.version },
             "PUT",
             navigate
         );

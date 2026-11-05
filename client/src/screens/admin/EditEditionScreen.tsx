@@ -7,7 +7,7 @@ import Modal from "../../components/Modal";
 import type { ApiEdition, Edition } from "../../types/models";
 import { adaptEdition } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 
 const EDITIONS_ENDPOINT = apiEndpoints.editions;
 
@@ -51,13 +51,13 @@ const EditEditionScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequestResult<ApiEdition[]>(
+            apiListRequestResult<ApiEdition>(
                 `${EDITIONS_ENDPOINT}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
-            apiRequestResult<ApiEdition[]>(
+            apiListRequestResult<ApiEdition>(
                 `${EDITIONS_ENDPOINT}?${firstPage}&States=ACTIVE&States=INACTIVE`,
                 null,
                 "GET",
@@ -69,7 +69,7 @@ const EditEditionScreen = () => {
                 adaptEdition
             );
             setEditions(sortEditions(data));
-            if (!pastResult.data && pastResult.status !== 200)
+            if (!pastResult.data || !activeResult.data)
                 setFeedback({ tone: "error", message: "Nie udało się pobrać edycji." });
             setLoading(false);
         });
@@ -171,8 +171,7 @@ const EditEditionScreen = () => {
             {
                 name: title,
                 teamRegisterOpen: datesPayload.teamRegisterOpen,
-                // The backend DTO currently exposes this misspelled JSON property.
-                teanRegisterClose: datesPayload.teamRegisterClose,
+                teamRegisterClose: datesPayload.teamRegisterClose,
                 version: editingEdition.version,
             },
             "PUT",

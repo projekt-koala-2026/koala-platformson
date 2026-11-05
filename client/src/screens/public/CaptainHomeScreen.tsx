@@ -17,7 +17,7 @@ import type {
 } from "../../types/models";
 import { adaptSchool } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult, apiUrl } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult, apiUrl } from "../../utils/apiFetcher";
 import { getStoredUserId, getUserRoles } from "../../utils/authService";
 
 const inputClass =
@@ -55,13 +55,13 @@ const CaptainHomeScreen = () => {
 
         if (loading) {
             void Promise.all([
-                apiRequestResult<ApiTeam[]>(
+                apiListRequestResult<ApiTeam>(
                     `${apiEndpoints.teams}/me?${firstPage}`,
                     null,
                     "GET",
                     navigate
                 ),
-                apiRequestResult<ApiSchool[]>(
+                apiListRequestResult<ApiSchool>(
                     `${apiEndpoints.schools}?${firstPage}`,
                     null,
                     "GET",
@@ -203,8 +203,16 @@ const CaptainHomeScreen = () => {
                 tone: "success",
                 message: team ? "Nazwa drużyny została zapisana." : "Drużyna została utworzona.",
             });
-        } else if (team) setFeedback({ tone: "error", message: "Nie udało się zapisać drużyny." });
-        else setCreateError("Nie udało się utworzyć drużyny. Sprawdź dane i spróbuj ponownie.");
+        } else if (team)
+            setFeedback({
+                tone: "error",
+                message: result.error?.message ?? "Nie udało się zapisać drużyny.",
+            });
+        else
+            setCreateError(
+                result.error?.message ??
+                    "Nie udało się utworzyć drużyny. Sprawdź dane i spróbuj ponownie."
+            );
         setSaving(false);
     };
 
@@ -238,7 +246,7 @@ const CaptainHomeScreen = () => {
         if (!normalizedCode) return;
         setSaving(true);
         setFeedback(null);
-        const { data } = await apiRequestResult<ApiTeam>(
+        const { data, error } = await apiRequestResult<ApiTeam>(
             `${apiEndpoints.teams}/join/${encodeURIComponent(normalizedCode)}`,
             null,
             "POST",
@@ -247,12 +255,12 @@ const CaptainHomeScreen = () => {
         if (!data) {
             setFeedback({
                 tone: "error",
-                message: "Nie udało się dołączyć do drużyny. Sprawdź kod.",
+                message: error?.message ?? "Nie udało się dołączyć do drużyny. Sprawdź kod.",
             });
             setSaving(false);
             return;
         }
-        const refreshed = await apiRequestResult<ApiTeam[]>(
+        const refreshed = await apiListRequestResult<ApiTeam>(
             `${apiEndpoints.teams}/me?${firstPage}`,
             null,
             "GET",
@@ -349,8 +357,7 @@ const CaptainHomeScreen = () => {
             .map((member) => ({
                 nameFirst: member.nameFirst.trim(),
                 nameLast: member.nameLast.trim(),
-                // The create endpoint currently validates the update-only Version field.
-                version: 1,
+                version: null,
             }))
             .filter((member) => member.nameFirst || member.nameLast);
 
@@ -380,7 +387,7 @@ const CaptainHomeScreen = () => {
         }
 
         if (addedCount > 0) {
-            const refreshed = await apiRequestResult<ApiTeam[]>(
+            const refreshed = await apiListRequestResult<ApiTeam>(
                 `${apiEndpoints.teams}/me?${firstPage}`,
                 null,
                 "GET",
@@ -472,42 +479,11 @@ const CaptainHomeScreen = () => {
                 );
             }
             setFeedback({ tone: "success", message: "Dokument RODO został zapisany." });
-        } else setFeedback({ tone: "error", message: "Nie udało się zapisać dokumentu RODO." });
-        setSaving(false);
-    };
-
-    const removeRodo = async (memberId: string) => {
-        if (!team) return;
-        setSaving(true);
-        const result = await apiRequestResult<unknown>(
-            `${apiEndpoints.teams}/${team.id}/rodos/${memberId}`,
-            null,
-            "DELETE",
-            navigate
-        );
-        if (result.status === 200 || result.status === 204) {
-            setRodoByMember((current) => ({ ...current, [memberId]: false }));
-            setRodoStateByMember((current) => ({ ...current, [memberId]: "RODO_NONE" }));
-            const updatedTeam = {
-                ...team,
-                teamMembers: team.teamMembers.map((item) =>
-                    item.teamMemberId === memberId
-                        ? {
-                              ...item,
-                              rodoState: "RODO_NONE" as const,
-                              rodoVersion: null,
-                              rodoCreatedAt: null,
-                              rodoUpdatedAt: null,
-                          }
-                        : item
-                ),
-            };
-            setTeam(updatedTeam);
-            setTeams((items) =>
-                items.map((item) => (item.id === updatedTeam.id ? updatedTeam : item))
-            );
-            setFeedback({ tone: "success", message: "Zgoda RODO została usunięta." });
-        } else setFeedback({ tone: "error", message: "Nie udało się usunąć zgody RODO." });
+        } else
+            setFeedback({
+                tone: "error",
+                message: result.error?.message ?? "Nie udało się zapisać dokumentu RODO.",
+            });
         setSaving(false);
     };
 
@@ -705,6 +681,12 @@ const CaptainHomeScreen = () => {
                             <h2 className="text-lg font-semibold text-ink-heading">
                                 Członkowie drużyny
                             </h2>
+                            {roles.isGuardian && (
+                                <p className="mt-2 text-sm text-ink-muted">
+                                    Usuwanie zgód jest chwilowo niedostępne. Dokument możesz
+                                    zastąpić nowym plikiem.
+                                </p>
+                            )}
                             <ul className="mt-4 divide-y divide-slate-100">
                                 <li className="relative flex flex-wrap items-center justify-between gap-3 py-3">
                                     <div>
@@ -791,10 +773,8 @@ const CaptainHomeScreen = () => {
 
                                                     <button
                                                         type="button"
-                                                        disabled={saving}
-                                                        onClick={() =>
-                                                            void removeRodo(member.teamMemberId)
-                                                        }
+                                                        disabled
+                                                        title="Usuwanie zgód jest chwilowo niedostępne. Możesz zastąpić dokument."
                                                         className="rounded-lg bg-danger-soft px-2 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
                                                         aria-label={`Usuń zgodę RODO ${member.nameFist} ${member.nameLast}`}
                                                     >

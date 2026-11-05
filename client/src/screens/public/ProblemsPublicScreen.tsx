@@ -6,7 +6,7 @@ import PublicHeader from "../../components/PublicHeader";
 import type { ApiEdition, ApiStaticPage, Edition, ProblemsByEdition } from "../../types/models";
 import { adaptEdition, staticPageProblems } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequest, resolveApiAssetUrl } from "../../utils/apiFetcher";
+import { apiListRequest, resolveApiAssetUrl } from "../../utils/apiFetcher";
 
 const ProblemsPublicScreen = () => {
     const navigate = useNavigate();
@@ -19,13 +19,13 @@ const ProblemsPublicScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<ApiEdition[]>(
+            apiListRequest<ApiEdition>(
                 `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
-            apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
+            apiListRequest<ApiStaticPage>(apiEndpoints.staticPages, null, "GET", navigate),
         ]).then(([editionData, staticPages]) => {
             if (!active) return;
             const taskPage = staticPages?.find((page) => page.name === "TASKS_PAGE");

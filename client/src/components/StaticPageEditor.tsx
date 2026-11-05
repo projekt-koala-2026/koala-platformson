@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { ApiStaticPage } from "../types/models";
 import { staticPageMarkdown } from "../utils/apiAdapters";
 import { apiEndpoints } from "../utils/apiEndpoints";
-import { apiRequestResult } from "../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult } from "../utils/apiFetcher";
 import AdminHeader from "./AdminHeader";
 import MarkdownEditor from "./MarkdownEditor";
 import MarkdownRenderer from "./MarkdownRenderer";
@@ -26,7 +26,7 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiStaticPage[]>(
+        void apiListRequestResult<ApiStaticPage>(
             apiEndpoints.staticPages,
             null,
             "GET",

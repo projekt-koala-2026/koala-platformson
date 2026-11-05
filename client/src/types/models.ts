@@ -12,6 +12,9 @@ export interface User {
     nameFirst?: string | null;
     nameLast?: string | null;
     censored?: boolean;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 export interface SessionUser {
     id: string;
@@ -20,6 +23,9 @@ export interface SessionUser {
     email?: string;
     censored?: boolean;
     roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiEdition {
@@ -97,7 +103,10 @@ export type ApiTeamCaptain = {
     nameLast: string;
     email: string;
     censored: boolean;
-    roles: string[];
+    roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 };
 
 export type ApiTeam = {
@@ -123,6 +132,9 @@ export interface ApiTeamUser {
     email: string;
     censored: boolean;
     roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiNamedTeamMember {

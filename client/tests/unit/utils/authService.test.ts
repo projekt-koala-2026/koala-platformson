@@ -52,7 +52,13 @@ describe("authService", () => {
     });
 
     it("stores and clears the authenticated user session", () => {
-        storeSession({ id: "user-1", roles: ["TEAM_CAPTAIN"] });
+        storeSession({
+            id: "user-1",
+            roles: ["TEAM_CAPTAIN"],
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z",
+            version: 1,
+        });
 
         expect(getStoredUserId()).toBe("user-1");
         expect(getUserRoles()).toEqual({ ...noRoles, isCaptain: true });

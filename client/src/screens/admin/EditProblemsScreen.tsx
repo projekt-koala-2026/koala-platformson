@@ -15,7 +15,7 @@ import type {
 import { adaptEdition, staticPageProblems } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import {
-    apiRequest,
+    apiListRequest,
     apiRequestResult,
     resolveApiAssetUrl,
     uploadFile,
@@ -58,13 +58,13 @@ const EditProblemsScreen = () => {
 
         let active = true;
         void Promise.all([
-            apiRequest<ApiEdition[]>(
+            apiListRequest<ApiEdition>(
                 `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
-            apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
+            apiListRequest<ApiStaticPage>(apiEndpoints.staticPages, null, "GET", navigate),
         ]).then(([editionsData, staticPages]) => {
             if (!active) return;
             const loadedEditions = (editionsData ?? []).map(adaptEdition);

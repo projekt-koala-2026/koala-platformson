@@ -6,7 +6,7 @@ import PublicHeader from "../../components/PublicHeader";
 import type { ApiEdition, ApiPost, Edition, Post } from "../../types/models";
 import { adaptEdition, adaptPost } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 
 const POSTS_ENDPOINT = `${apiEndpoints.posts}?${firstPage}&ShowHidden=false`;
 const ACTIVE_EDITION_ENDPOINT = apiEndpoints.activeEdition;
@@ -22,7 +22,7 @@ const HomeScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequestResult<ApiPost[]>(POSTS_ENDPOINT, null, "GET", navigate),
+            apiListRequestResult<ApiPost>(POSTS_ENDPOINT, null, "GET", navigate),
             apiRequestResult<ApiEdition>(ACTIVE_EDITION_ENDPOINT, null, "GET", navigate),
         ]).then(([postsResult, editionResult]) => {
             if (!active) return;

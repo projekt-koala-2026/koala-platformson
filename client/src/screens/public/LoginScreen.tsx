@@ -72,7 +72,7 @@ const LoginScreen = () => {
             }
 
             storeSession(data);
-            navigate(roles.isCaptain ? "/captain" : "/");
+            navigate("/captain");
         } finally {
             setSubmitting(false);
             stopLoading();
