@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import koalaImage from "../../assets/mascots/koala_mis2a.png";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
@@ -34,14 +36,17 @@ const RuleScreen = () => {
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="app-public-page">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
-                        Dokumentacja konkursu
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Regulamin</h1>
-                    <p className="mt-3 max-w-2xl text-ink-secondary">
-                        Zasady uczestnictwa, przebieg konkursu i sposób oceniania drużyn.
-                    </p>
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
+                            Dokumentacja konkursu
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Regulamin</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Zasady uczestnictwa, przebieg konkursu i sposób oceniania drużyn.
+                        </p>
+                    </div>
+                    <KoalaIllustration src={koalaImage} />
                 </header>
                 <article className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-8">
                     <div>

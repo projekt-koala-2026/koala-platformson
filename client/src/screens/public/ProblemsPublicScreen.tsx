@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaFilePdf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import koalaImage from "../../assets/mascots/koala_mysli.webp";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import type { ApiEdition, ApiStaticPage, Edition, ProblemsByEdition } from "../../types/models";
@@ -56,14 +58,17 @@ const ProblemsPublicScreen = () => {
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="app-public-page">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
-                        Materiały konkursowe
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Archiwum zadań</h1>
-                    <p className="mt-3 max-w-2xl text-ink-secondary">
-                        Wybierz edycję i pobierz oficjalne zestawy zadań oraz dokumentację.
-                    </p>
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
+                            Materiały konkursowe
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Archiwum zadań</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Wybierz edycję i pobierz oficjalne zestawy zadań oraz dokumentację.
+                        </p>
+                    </div>
+                    <KoalaIllustration src={koalaImage} />
                 </header>
 
                 {hasError && (

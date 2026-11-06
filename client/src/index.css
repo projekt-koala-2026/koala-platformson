@@ -141,6 +141,10 @@
     --color-shadow: 0 0 0;
 }
 
+:root[data-theme="dark"] .koala-illustration {
+    filter: invert(1);
+}
+
 @layer base {
     html {
         @apply bg-canvas;

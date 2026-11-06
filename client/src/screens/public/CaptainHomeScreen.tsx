@@ -3,7 +3,9 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { FaDownload, FaExchangeAlt, FaUpload } from "react-icons/fa";
 import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
+import koalaImage from "../../assets/mascots/koala_mis2b.png";
 import Button from "../../components/Button";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
@@ -515,14 +517,17 @@ const CaptainHomeScreen = () => {
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="app-public-page flex-1">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
-                        Panel drużyn
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
-                    <p className="mt-3 max-w-2xl text-ink-secondary">
-                        Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
-                    </p>
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                            Panel drużyn
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
+                        </p>
+                    </div>
+                    <KoalaIllustration src={koalaImage} />
                 </header>
                 {teams.length > 1 && (
                     <label className="mb-6 block max-w-xl text-sm font-medium text-ink">
