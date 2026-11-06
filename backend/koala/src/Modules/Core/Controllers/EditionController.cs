@@ -109,7 +109,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/deactivate_subedition/{subedition_id}")]
+        [HttpPut("{edition_id}/close_subedition/{subedition_id}")]
         public async Task<IActionResult> DeactivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
         {
             var response = await _editionService.CloseSubEditionAsync(User, edition_id, subedition_id);
@@ -155,5 +155,14 @@ namespace koala.src.Modules.Core.Controllers
             (var responseData, var responsePagination) = await _editionService.GetTaskItemsAsync(User, edition_id, subedition_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
+
+        [AllowAnonymous]
+        [HttpGet("{edition_id}/subeditions/{subedition_id}/active")]
+        public async Task<IActionResult> GetTasksActive([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var responseData, var responsePagination) = await _editionService.GetTasksActiveAsync(User, edition_id, subedition_id, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        }
+
     }
 }
