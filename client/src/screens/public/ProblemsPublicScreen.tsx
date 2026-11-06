@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaFilePdf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import koalaImage from "../../assets/mascots/koala_mysli.webp";
 import KoalaIllustration from "../../components/KoalaIllustration";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
@@ -68,7 +67,7 @@ const ProblemsPublicScreen = () => {
                             Wybierz edycję i pobierz oficjalne zestawy zadań oraz dokumentację.
                         </p>
                     </div>
-                    <KoalaIllustration src={koalaImage} />
+                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mysli.webp`} />
                 </header>
 
                 {hasError && (

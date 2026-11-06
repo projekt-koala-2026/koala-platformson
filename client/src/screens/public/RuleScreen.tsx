@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import koalaImage from "../../assets/mascots/koala_mis2a.png";
 import KoalaIllustration from "../../components/KoalaIllustration";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
@@ -46,7 +45,7 @@ const RuleScreen = () => {
                             Zasady uczestnictwa, przebieg konkursu i sposób oceniania drużyn.
                         </p>
                     </div>
-                    <KoalaIllustration src={koalaImage} />
+                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis2a.png`} />
                 </header>
                 <article className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-8">
                     <div>

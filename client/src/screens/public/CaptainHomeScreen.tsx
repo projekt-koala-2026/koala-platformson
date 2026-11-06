@@ -3,7 +3,6 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { FaDownload, FaExchangeAlt, FaUpload } from "react-icons/fa";
 import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
-import koalaImage from "../../assets/mascots/koala_mis2b.png";
 import Button from "../../components/Button";
 import KoalaIllustration from "../../components/KoalaIllustration";
 import Modal from "../../components/Modal";
@@ -527,7 +526,7 @@ const CaptainHomeScreen = () => {
                             Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
                         </p>
                     </div>
-                    <KoalaIllustration src={koalaImage} />
+                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis2b.png`} />
                 </header>
                 {teams.length > 1 && (
                     <label className="mb-6 block max-w-xl text-sm font-medium text-ink">

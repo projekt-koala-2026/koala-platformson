@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import koalaImage from "../../assets/mascots/koala_mis.webp";
 import KoalaIllustration from "../../components/KoalaIllustration";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
@@ -78,7 +77,7 @@ const HomeScreen = () => {
                             edycji.
                         </p>
                     </div>
-                    <KoalaIllustration src={koalaImage} />
+                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis.webp`} />
                 </header>
 
                 {hasError && (

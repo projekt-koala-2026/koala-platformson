@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import koalaImage from "../../assets/mascots/koala_mis2c.png";
 import KoalaIllustration from "../../components/KoalaIllustration";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
@@ -50,7 +49,7 @@ const KoalicjaScreen = () => {
                             Poznaj osoby współtworzące konkurs KOALA.
                         </p>
                     </div>
-                    <KoalaIllustration src={koalaImage} />
+                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis2c.png`} />
                 </header>
                 {hasError && (
                     <p
