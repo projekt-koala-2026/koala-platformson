@@ -573,5 +573,49 @@ namespace koala.src.Modules.Core.Services
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
+        public async Task<(List<RankingDto>, ApiPagination)> GetRankingAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var groupedQuery = _db.TaskSubmissions
+            .AsNoTracking()
+            .GroupBy(e => e.TeamId)
+            .Select(g => new
+            {
+                TeamId = g.Key,
+                TotalScore = g.Sum(e => e.AutoReviewState.HasValue ? (e.AutoReviewState.Value ? 1 : 0) : 0),
+                TotalSubmissions = g.Count(),
+                LatestUpdatedAt = g.Max(e => e.UpdatedAt)
+            });
+
+            var totalCount = await groupedQuery.CountAsync();
+
+            var skipCount = pageQueryDto.PageSize * pageQueryDto.PageNumber;
+
+            var rankingDtos = await groupedQuery
+                .OrderByDescending(r => r.TotalScore)
+                .Skip(skipCount)
+                .Take(pageQueryDto.PageSize)
+                .Select(r => new RankingDto(
+                    r.TeamId,
+                    r.TotalScore,
+                    r.LatestUpdatedAt
+                ))
+                .ToListAsync();
+
+            return (rankingDtos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+        }
+
     }
 }

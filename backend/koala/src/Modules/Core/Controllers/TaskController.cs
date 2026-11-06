@@ -108,5 +108,13 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
+        [Authorize]
+        [HttpGet("/ranking")]
+        public async Task<IActionResult> GetRanking([FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var responseData, var responsePagination) = await _taskService.GetRankingAsync(User, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<RankingDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        }
+
     }
 }
