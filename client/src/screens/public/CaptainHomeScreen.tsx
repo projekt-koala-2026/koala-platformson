@@ -1,6 +1,14 @@
 import type { FormEvent } from "react";
 import { useEffect, useId, useMemo, useState } from "react";
-import { FaDownload, FaEdit, FaExchangeAlt, FaPlus, FaSyncAlt, FaTrash, FaUpload } from "react-icons/fa";
+import {
+    FaDownload,
+    FaEdit,
+    FaExchangeAlt,
+    FaPlus,
+    FaSyncAlt,
+    FaTrash,
+    FaUpload,
+} from "react-icons/fa";
 import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";

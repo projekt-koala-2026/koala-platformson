@@ -82,7 +82,9 @@ const HistoryScreen = () => {
                             edycji.
                         </p>
                     </div>
-                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis2d.png`} />
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2d.png`}
+                    />
                 </header>
 
                 {hasError && (

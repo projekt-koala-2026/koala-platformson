@@ -45,7 +45,9 @@ const RuleScreen = () => {
                             Zasady uczestnictwa, przebieg konkursu i sposób oceniania drużyn.
                         </p>
                     </div>
-                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis2a.png`} />
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2a.png`}
+                    />
                 </header>
                 <article className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-8">
                     <div>

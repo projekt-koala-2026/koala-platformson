@@ -67,7 +67,9 @@ const ProblemsPublicScreen = () => {
                             Wybierz edycję i pobierz oficjalne zestawy zadań oraz dokumentację.
                         </p>
                     </div>
-                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mysli.webp`} />
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mysli.webp`}
+                    />
                 </header>
 
                 {hasError && (

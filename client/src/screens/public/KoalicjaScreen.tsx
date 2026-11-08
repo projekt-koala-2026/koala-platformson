@@ -49,7 +49,9 @@ const KoalicjaScreen = () => {
                             Poznaj osoby współtworzące konkurs KOALA.
                         </p>
                     </div>
-                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis2c.png`} />
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2c.png`}
+                    />
                 </header>
                 {hasError && (
                     <p

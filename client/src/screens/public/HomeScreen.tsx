@@ -77,7 +77,9 @@ const HomeScreen = () => {
                             edycji.
                         </p>
                     </div>
-                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis.webp`} />
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis.webp`}
+                    />
                 </header>
 
                 {hasError && (
