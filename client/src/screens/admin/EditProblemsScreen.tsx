@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { FaFilePdf, FaTrash } from "react-icons/fa";
+import { FaFilePdf, FaPlus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -246,7 +246,7 @@ const EditProblemsScreen = () => {
     return (
         <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <div className="mb-8">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Materiały konkursowe
@@ -306,6 +306,7 @@ const EditProblemsScreen = () => {
                                 </p>
                                 <Button
                                     text="Dodaj dokument"
+                                    icon={<FaPlus />}
                                     disabled={editions.length === 0 || !selectedEditionId}
                                     onClick={openAddModal}
                                 />
@@ -451,6 +452,7 @@ const EditProblemsScreen = () => {
                         <Button
                             type="submit"
                             text={uploading ? "Zapisywanie…" : "Dodaj dokument"}
+                            icon={<FaPlus />}
                             disabled={uploading || !selectedEditionId}
                         />
                     </div>

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import type { ApiStaticPage } from "../types/models";
 import { staticPageMarkdown } from "../utils/apiAdapters";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../utils/apiFetcher";
 import AdminHeader from "./AdminHeader";
+import Button from "./Button";
 import MarkdownEditor from "./MarkdownEditor";
 import MarkdownRenderer from "./MarkdownRenderer";
 
@@ -83,7 +85,7 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
     return (
         <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <div className="mb-8">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Strona statyczna
@@ -110,16 +112,22 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
                 ) : (
                     <div className="grid gap-8 xl:grid-cols-2">
                         <section className="min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
-                            <h2 className="text-xl font-semibold">Edytor</h2>
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <h2 className="text-xl font-semibold">Edytor</h2>
+                                <Button
+                                    text={saving ? "Zapisywanie…" : "Zapisz zmiany"}
+                                    icon={<FaSave />}
+                                    disabled={saving || !page}
+                                    onClick={() => void save(markdownBody)}
+                                />
+                            </div>
                             <p className="mb-5 mt-1 text-sm text-ink-muted">
                                 Zmiany są widoczne w podglądzie po prawej stronie.
                             </p>
                             <MarkdownEditor
                                 initialValue={markdownBody}
                                 onChange={setMarkdownBody}
-                                onSave={save}
                                 disabled={saving}
-                                label={saving ? "Zapisywanie…" : "Zapisz zmiany"}
                             />
                         </section>
 

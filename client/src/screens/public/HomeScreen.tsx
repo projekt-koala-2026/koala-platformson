@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
@@ -64,15 +65,21 @@ const HomeScreen = () => {
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
-                        Konkurs KOALA
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Aktualności</h1>
-                    <p className="mt-3 max-w-2xl text-ink-secondary">
-                        Najważniejsze informacje, terminy i komunikaty dotyczące bieżącej edycji.
-                    </p>
+            <main className="app-public-page">
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
+                            Konkurs KOALA
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Aktualności</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Najważniejsze informacje, terminy i komunikaty dotyczące bieżącej
+                            edycji.
+                        </p>
+                    </div>
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis.webp`}
+                    />
                 </header>
 
                 {hasError && (

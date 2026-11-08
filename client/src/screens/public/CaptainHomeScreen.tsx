@@ -1,9 +1,18 @@
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { FaDownload, FaExchangeAlt, FaUpload } from "react-icons/fa";
+import { useEffect, useId, useMemo, useState } from "react";
+import {
+    FaDownload,
+    FaEdit,
+    FaExchangeAlt,
+    FaPlus,
+    FaSyncAlt,
+    FaTrash,
+    FaUpload,
+} from "react-icons/fa";
 import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
@@ -27,6 +36,7 @@ type Feedback = { tone: "success" | "error"; message: string } | null;
 
 const CaptainHomeScreen = () => {
     const navigate = useNavigate();
+    const createTeamFormId = useId();
     const currentUserId = useMemo(() => getStoredUserId(), []);
     const roles = useMemo(() => getUserRoles(), []);
     const [teams, setTeams] = useState<ApiTeam[]>([]);
@@ -513,15 +523,20 @@ const CaptainHomeScreen = () => {
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
-                        Panel drużyn
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
-                    <p className="mt-3 max-w-2xl text-ink-secondary">
-                        Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
-                    </p>
+            <main className="app-public-page flex-1">
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                            Panel drużyn
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
+                        </p>
+                    </div>
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2b.png`}
+                    />
                 </header>
                 {teams.length > 1 && (
                     <label className="mb-6 block max-w-xl text-sm font-medium text-ink">
@@ -635,11 +650,13 @@ const CaptainHomeScreen = () => {
                                         <div className="flex items-center gap-2">
                                             <Button
                                                 text="Edytuj nazwę"
+                                                icon={<FaEdit />}
                                                 onClick={() => setEditingName(true)}
                                                 className="mt-5"
                                             />
                                             <Button
                                                 text="Dodaj członka"
+                                                icon={<FaPlus />}
                                                 onClick={() => setAddingMember(true)}
                                                 disabled={
                                                     saving || (team.teamMembers?.length ?? 0) >= 2
@@ -671,6 +688,7 @@ const CaptainHomeScreen = () => {
                             {isCaptain && (
                                 <Button
                                     text={team.joinCode ? "Wygeneruj nowy kod" : "Wygeneruj kod"}
+                                    icon={<FaSyncAlt />}
                                     onClick={() => void generateJoinCode()}
                                     disabled={saving}
                                     className="mt-4"
@@ -728,9 +746,9 @@ const CaptainHomeScreen = () => {
                                                 onClick={() =>
                                                     void removeMember(member.teamMemberId)
                                                 }
-                                                className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
                                             >
-                                                Usuń z drużyny
+                                                <FaTrash aria-hidden="true" /> Usuń z drużyny
                                             </button>
                                         )}
                                         {roles.isGuardian &&
@@ -839,9 +857,9 @@ const CaptainHomeScreen = () => {
                                                             team.teamGuardian?.id ?? ""
                                                         )
                                                     }
-                                                    className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                    className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
                                                 >
-                                                    Usuń z drużyny
+                                                    <FaTrash aria-hidden="true" /> Usuń z drużyny
                                                 </button>
                                             )}
                                         </li>
@@ -850,6 +868,7 @@ const CaptainHomeScreen = () => {
                             {isCaptain && (
                                 <Button
                                     text={saving ? "Usuwanie…" : "Usuń drużynę"}
+                                    icon={<FaTrash />}
                                     onClick={() => void deleteTeam()}
                                     disabled={saving}
                                     className="mt-6 bg-danger hover:bg-danger-hover focus:ring-danger-emphasis"
@@ -888,7 +907,11 @@ const CaptainHomeScreen = () => {
                             </form>
                         )}
                         {roles.isCaptain && (
-                            <Button text="Utwórz nową drużynę" onClick={openCreateTeam} />
+                            <Button
+                                text="Utwórz nową drużynę"
+                                icon={<FaPlus />}
+                                onClick={openCreateTeam}
+                            />
                         )}
                     </div>
                 )}
@@ -898,8 +921,27 @@ const CaptainHomeScreen = () => {
                 onClose={closeCreateTeam}
                 title="Utwórz drużynę"
                 maxWidth="xl"
+                footer={
+                    <div className="flex flex-wrap justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={closeCreateTeam}
+                            disabled={saving}
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
+                        >
+                            Anuluj
+                        </button>
+                        <Button
+                            type="submit"
+                            form={createTeamFormId}
+                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
+                            icon={<FaPlus />}
+                            disabled={saving}
+                        />
+                    </div>
+                }
             >
-                <form onSubmit={submitTeam} className="space-y-6">
+                <form id={createTeamFormId} onSubmit={submitTeam} className="space-y-4">
                     <label className="block text-sm font-medium text-ink">
                         Nazwa drużyny
                         <input
@@ -930,6 +972,7 @@ const CaptainHomeScreen = () => {
                             )}
                         </div>
                         <SchoolsTable
+                            compact
                             schools={schools}
                             selectedRspo={selectedSchool?.rspo ?? null}
                             onRowClick={(school) => {
@@ -944,22 +987,6 @@ const CaptainHomeScreen = () => {
                             {createError}
                         </p>
                     )}
-
-                    <div className="flex flex-col-reverse gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:justify-end">
-                        <button
-                            type="button"
-                            onClick={closeCreateTeam}
-                            disabled={saving}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
-                        >
-                            Anuluj
-                        </button>
-                        <Button
-                            type="submit"
-                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
-                            disabled={saving}
-                        />
-                    </div>
                 </form>
             </Modal>
             <Modal
@@ -1034,6 +1061,7 @@ const CaptainHomeScreen = () => {
                         <Button
                             type="submit"
                             text={saving ? "Dodawanie…" : "Dodaj osoby"}
+                            icon={<FaPlus />}
                             disabled={saving}
                         />
                     </div>

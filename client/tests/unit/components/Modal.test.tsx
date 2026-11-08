@@ -33,6 +33,35 @@ const ModalHarness = ({ initiallyOpen = true, onClose = () => undefined }: Harne
 };
 
 describe("Modal", () => {
+    it("keeps footer actions associated with their form outside the scrolling content", async () => {
+        const user = userEvent.setup();
+        const submit = vi.fn((event: React.FormEvent<HTMLFormElement>) => event.preventDefault());
+        const { container } = render(
+            <Modal
+                isOpen
+                title="Formularz z przyciskami"
+                onClose={() => undefined}
+                footer={
+                    <button type="submit" form="modal-form">
+                        Zapisz
+                    </button>
+                }
+            >
+                <form id="modal-form" onSubmit={submit}>
+                    <label>
+                        Nazwa
+                        <input name="name" defaultValue="Drużyna" required />
+                    </label>
+                </form>
+            </Modal>
+        );
+        const dialog = screen.getByRole("dialog");
+        expect(container).not.toContainElement(dialog);
+        expect(document.body).toContainElement(dialog);
+        await user.click(screen.getByRole("button", { name: "Zapisz" }));
+        expect(submit).toHaveBeenCalledOnce();
+    });
+
     it("renders an accessible dialog and locks page scrolling while open", async () => {
         render(<ModalHarness />);
 

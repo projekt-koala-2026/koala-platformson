@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -175,7 +175,7 @@ const EditPostScreen = () => {
     return (
         <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <div className="mb-8">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Treści
@@ -212,13 +212,28 @@ const EditPostScreen = () => {
                                         Pola oznaczone gwiazdką są wymagane.
                                     </p>
                                 </div>
-                                {editingPostId && (
+                                <div className="flex flex-wrap gap-2">
+                                    {editingPostId && (
+                                        <Button
+                                            text="Anuluj edycję"
+                                            onClick={resetForm}
+                                            disabled={saving}
+                                            className="bg-ink-secondary hover:bg-ink"
+                                        />
+                                    )}
                                     <Button
-                                        text="Anuluj edycję"
-                                        onClick={resetForm}
-                                        className="bg-ink-secondary hover:bg-ink"
+                                        text={
+                                            saving
+                                                ? "Zapisywanie…"
+                                                : editingPostId
+                                                  ? "Zapisz zmiany"
+                                                  : "Utwórz wpis"
+                                        }
+                                        icon={editingPostId ? undefined : <FaPlus />}
+                                        onClick={() => void savePost(form.markdownBody)}
+                                        disabled={saving}
                                     />
-                                )}
+                                </div>
                             </div>
 
                             <div className="space-y-5">
@@ -289,15 +304,7 @@ const EditPostScreen = () => {
                                         onChange={(markdownBody) =>
                                             setForm((current) => ({ ...current, markdownBody }))
                                         }
-                                        onSave={savePost}
                                         disabled={saving}
-                                        label={
-                                            saving
-                                                ? "Zapisywanie…"
-                                                : editingPostId
-                                                  ? "Zapisz zmiany"
-                                                  : "Utwórz wpis"
-                                        }
                                     />
                                 </div>
                             </div>

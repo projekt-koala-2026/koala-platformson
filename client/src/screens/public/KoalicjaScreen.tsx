@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import type { ApiKoalicjant, Koalicjant } from "../../types/models";
@@ -37,16 +38,21 @@ const KoalicjaScreen = () => {
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-                <div className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
-                        Ludzie KOALA
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">KOALicjA</h1>
-                    <p className="mt-3 text-ink-secondary">
-                        Poznaj osoby współtworzące konkurs KOALA.
-                    </p>
-                </div>
+            <main className="app-public-page">
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
+                            Ludzie KOALA
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">KOALicjA</h1>
+                        <p className="mt-3 text-ink-secondary">
+                            Poznaj osoby współtworzące konkurs KOALA.
+                        </p>
+                    </div>
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2c.png`}
+                    />
+                </header>
                 {hasError && (
                     <p
                         role="status"
@@ -69,7 +75,7 @@ const KoalicjaScreen = () => {
                     {koalicjants.map((person) => (
                         <article
                             key={person.id}
-                            className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm sm:flex-row sm:gap-5 sm:p-6"
+                            className="flex flex-col items-start gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm sm:flex-row sm:gap-5 sm:p-6"
                         >
                             <img
                                 src={resolveApiAssetUrl(person.profilePicture)}
@@ -81,11 +87,11 @@ const KoalicjaScreen = () => {
                                 <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
                                     Organizator KOALA
                                 </p>
-                                <h2 className="mt-1 text-xl font-semibold text-ink-strong">
+                                <h2 className="mt-1 text-xl font-semibold text-ink-strong [overflow-wrap:anywhere]">
                                     {person.name}
                                 </h2>
-                                <p className="mt-3 text-sm leading-6 text-ink-secondary">
-                                    {person.description}
+                                <p className="mt-3 whitespace-pre-line text-sm leading-6 text-ink-secondary [overflow-wrap:anywhere]">
+                                    {person.description?.trim()}
                                 </p>
                             </div>
                         </article>

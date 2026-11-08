@@ -3,25 +3,16 @@ import "easymde/dist/easymde.min.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import SimpleMDE from "react-simplemde-editor";
 import type { ManagedFile } from "../types/models";
-import Button from "./Button";
 import ImagePicker from "./ImagePicker";
 import Modal from "./Modal";
 
 interface MarkdownEditorProps {
     initialValue?: string;
-    label?: string;
     disabled?: boolean;
     onChange?: ((value: string) => void) | null;
-    onSave: (value: string) => void | Promise<void>;
 }
 
-const MarkdownEditor = ({
-    initialValue = "",
-    label = "Zapisz zmiany",
-    disabled = false,
-    onChange,
-    onSave,
-}: MarkdownEditorProps) => {
+const MarkdownEditor = ({ initialValue = "", disabled = false, onChange }: MarkdownEditorProps) => {
     const [content, setContent] = useState(initialValue);
     const [showPicker, setShowPicker] = useState(false);
     const mdeInstance = useRef<EasyMDE | null>(null);
@@ -93,7 +84,6 @@ const MarkdownEditor = ({
                     );
                 }}
             />
-            <Button text={label} disabled={disabled} onClick={() => void onSave(content)} />
             <Modal
                 isOpen={showPicker}
                 onClose={() => setShowPicker(false)}
