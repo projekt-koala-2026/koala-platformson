@@ -232,7 +232,7 @@ namespace koala.src.Modules.Core.Services
             return (entities, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<TaskSubmissionDto> UpdateTaskSubmissionTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, TaskSubmissionUpsertDto submitTaskSubmissionDto)
+        public async Task<TaskSubmissionDto> UpdateTaskSubmissionTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid team_id, UpsertTaskSubmissionDto submitTaskSubmissionDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
 
@@ -349,7 +349,7 @@ namespace koala.src.Modules.Core.Services
             return (entities, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<TaskSubmissionDto> AddReviewAsync(ClaimsPrincipal claimsPrincipal, Guid reviewer_id, Guid task_id, AddReviewDto addReviewDto)
+        public async Task<TaskSubmissionDto> AddScoreByReviewerAsync(ClaimsPrincipal claimsPrincipal, Guid reviewer_id, Guid task_id, Guid team_id, AddReviewDto addReviewDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationReviewer = ClaimsHelper.IsOrganizationReviewer(claimsPrincipal);
@@ -366,7 +366,7 @@ namespace koala.src.Modules.Core.Services
 
 
             var submission = await _db.TaskSubmissions
-                .FirstOrDefaultAsync(e => e.TaskId == task_id);
+                .FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id);
 
             if (submission == null)
             {
@@ -415,7 +415,7 @@ namespace koala.src.Modules.Core.Services
             );
 
 }
-        public async Task<TaskSubmissionDto> UpdateReviewAsync(ClaimsPrincipal? claimsPrincipal, Guid reviewer_id, Guid submission_id, UpdateReviewDto updateReviewDto)
+        public async Task<TaskSubmissionDto> UpsertScoreByReviewerAsync(ClaimsPrincipal? claimsPrincipal, Guid reviewer_id, Guid task_id, Guid team_id, UpsertReviewDto upsertReviewDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationReviewer = ClaimsHelper.IsOrganizationReviewer(claimsPrincipal);
@@ -430,7 +430,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var submission = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == submission_id);
+            var submission = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id);
 
             if (submission == null)
             {
@@ -439,7 +439,7 @@ namespace koala.src.Modules.Core.Services
 
             if (submission.Reviewer1Id == reviewer_id)
             {
-                submission.Review1Score = updateReviewDto.Score;
+                submission.Review1Score = upsertReviewDto.Score;
                 if (submission.Review1Score == submission.Review2Score && submission.Review2Score != null)
                 {
                     submission.AutoReviewState = submission.Review1Score;
@@ -447,7 +447,7 @@ namespace koala.src.Modules.Core.Services
             }
             else if (submission.Reviewer2Id == reviewer_id)
             {
-                submission.Review2Score = updateReviewDto.Score;
+                submission.Review2Score = upsertReviewDto.Score;
                 if (submission.Review1Score == submission.Review2Score && submission.Review1Score != null)
                 {
                     submission.AutoReviewState = submission.Review2Score;
@@ -573,7 +573,7 @@ namespace koala.src.Modules.Core.Services
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<(List<RankingDto>, ApiPagination)> GetRankingAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
+        public async Task<List<TaskSubmissionDto>> AssignReviewersAsync(ClaimsPrincipal? claimsPrincipal, Guid subEditionId, Dictionary<Guid, List<ReviewerPairDto>> taskReviewerPairs)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
@@ -588,34 +588,73 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var groupedQuery = _db.TaskSubmissions
-            .AsNoTracking()
-            .GroupBy(e => e.TeamId)
-            .Select(g => new
+            if (taskReviewerPairs == null || !taskReviewerPairs.Any())
             {
-                TeamId = g.Key,
-                TotalScore = g.Sum(e => e.AutoReviewState.HasValue ? (e.AutoReviewState.Value ? 1 : 0) : 0),
-                TotalSubmissions = g.Count(),
-                LatestUpdatedAt = g.Max(e => e.UpdatedAt)
-            });
+                throw new CoreException(CoreErrorCodes.BadRequest, "No reviewer pairs provided");
+            }
 
-            var totalCount = await groupedQuery.CountAsync();
+            var mappedPairs = taskReviewerPairs.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value?
+                    .Where(pair => pair.Reviewer1Id != pair.Reviewer2Id)
+                    .Select(pair => (pair.Reviewer1Id, pair.Reviewer2Id))
+                    .Distinct()
+                    .ToList() ?? new List<(Guid Reviewer1Id, Guid Reviewer2Id)>()
+            );
 
-            var skipCount = pageQueryDto.PageSize * pageQueryDto.PageNumber;
-
-            var rankingDtos = await groupedQuery
-                .OrderByDescending(r => r.TotalScore)
-                .Skip(skipCount)
-                .Take(pageQueryDto.PageSize)
-                .Select(r => new RankingDto(
-                    r.TeamId,
-                    r.TotalScore,
-                    r.LatestUpdatedAt
-                ))
+            var submissions = await _db.TaskSubmissions
+                .Include(s => s.TaskItem)
+                .Where(s => s.TaskItem.SubEditionId == subEditionId)
+                .OrderBy(s => s.TaskId)
+                .ThenBy(s => s.TeamId)
                 .ToListAsync();
 
-            return (rankingDtos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
-        }
+            if (!submissions.Any())
+            {
+                return new List<TaskSubmissionDto>();
+            }
 
+            var now = DateTime.UtcNow;
+            var submissionsByTask = submissions.GroupBy(s => s.TaskId);
+
+            foreach (var group in submissionsByTask)
+            {
+                if (!mappedPairs.TryGetValue(group.Key, out var pairs) || !pairs.Any())
+                {
+                    continue;
+                }
+
+                var taskSubmissions = group.ToList();
+                int pairsCount = pairs.Count;
+
+                for (int i = 0; i < taskSubmissions.Count; i++)
+                {
+                    var pair = pairs[i % pairsCount];
+                    var submission = taskSubmissions[i];
+
+                    submission.Reviewer1Id = pair.Reviewer1Id;
+                    submission.Reviewer2Id = pair.Reviewer2Id;
+                    submission.UpdatedAt = now;
+                    submission.Version++;
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            return submissions.Select(s => new TaskSubmissionDto(
+                s.TeamId,
+                s.TaskId,
+                s.Reviewer1Id,
+                s.Reviewer2Id,
+                s.AutoReviewState,
+                s.Review1Score,
+                s.Review2Score,
+                s.Submission,
+                s.State,
+                s.CreatedAt,
+                s.UpdatedAt,
+                s.Version
+            )).ToList();
+        }
     }
 }

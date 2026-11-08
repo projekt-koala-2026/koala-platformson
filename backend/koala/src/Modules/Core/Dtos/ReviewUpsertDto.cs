@@ -1,7 +1,7 @@
 namespace koala.src.Modules.Core.Dtos
 {
-    public record UpdateReviewDto
+    public record UpsertReviewDto
     (
-        bool? Score
+        bool Score
     );
 }

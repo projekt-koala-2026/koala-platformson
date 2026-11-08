@@ -157,7 +157,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("{edition_id}/subeditions/{subedition_id}/active")]
+        [HttpGet("{edition_id}/subeditions/{subedition_id}/task/active")]
         public async Task<IActionResult> GetTasksActive([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _editionService.GetTasksActiveAsync(User, edition_id, subedition_id, pageQueryDto);

@@ -647,31 +647,31 @@ namespace koala.src.Modules.Core.Services
 
         public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTasksActiveAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, PageQueryDto pageQueryDto)
         {
-            var query = _db.TaskItems.AsNoTracking();
+            var query = _db.TaskItems.AsNoTracking()
+                .Where(e => e.SubEditionId == subedition_id
+                        && e.SubEdition.State == "ACTIVE"
+                        && e.SubEdition.EditionId == edition_id
+                        && e.SubEdition.Edition.State == "ACTIVE");
 
             var totalCount = await query.CountAsync();
-
-            var entities = await query
-                .Include(e => e.SubEdition)
-                .ThenInclude(e => e.Edition)
-                .OrderBy(e => e.Id)
+            
+            var taskItems = await query
+                .OrderBy(e => e.CreatedAt)
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
+                .Select(e => new TaskItemDto(
+                    e.Id,
+                    e.SubEditionId,
+                    e.Name,
+                    e.Tier,
+                    e.ContentJson,
+                    e.CreatedAt,
+                    e.UpdatedAt,
+                    e.Version
+                ))
                 .ToListAsync();
-            
-            var TaskItems = entities.Where(e => e.SubEdition.Id == subedition_id && e.SubEdition.State == "ACTIVE" && e.SubEdition.Edition.Id == edition_id && e.SubEdition.Edition.State == "ACTIVE").Select(e => new TaskItemDto
-            (
-                e.Id,
-                e.SubEditionId,
-                e.Name,
-                e.Tier,
-                e.ContentJson,
-                e.CreatedAt,
-                e.UpdatedAt,
-                e.Version
-            )).ToList();
 
-            return (TaskItems, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+            return (taskItems, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
     }
 }
