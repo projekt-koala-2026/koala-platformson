@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { FaPlus } from "react-icons/fa";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Button from "../../components/Button";
 import PublicHeader from "../../components/PublicHeader";
@@ -361,6 +362,7 @@ const CompleteRegistrationScreen = () => {
                             <Button
                                 type="submit"
                                 text={submitting ? "Zapisywanie…" : "Utwórz konto"}
+                                icon={<FaPlus />}
                                 disabled={submitting}
                                 className="w-full"
                             />

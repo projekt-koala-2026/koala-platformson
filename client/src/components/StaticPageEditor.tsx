@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import type { ApiStaticPage } from "../types/models";
 import { staticPageMarkdown } from "../utils/apiAdapters";
@@ -115,6 +116,7 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
                                 <h2 className="text-xl font-semibold">Edytor</h2>
                                 <Button
                                     text={saving ? "Zapisywanie…" : "Zapisz zmiany"}
+                                    icon={<FaSave />}
                                     disabled={saving || !page}
                                     onClick={() => void save(markdownBody)}
                                 />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -229,6 +229,7 @@ const EditPostScreen = () => {
                                                   ? "Zapisz zmiany"
                                                   : "Utwórz wpis"
                                         }
+                                        icon={editingPostId ? undefined : <FaPlus />}
                                         onClick={() => void savePost(form.markdownBody)}
                                         disabled={saving}
                                     />

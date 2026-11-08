@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { FaFilePdf, FaTrash } from "react-icons/fa";
+import { FaFilePdf, FaPlus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -306,6 +306,7 @@ const EditProblemsScreen = () => {
                                 </p>
                                 <Button
                                     text="Dodaj dokument"
+                                    icon={<FaPlus />}
                                     disabled={editions.length === 0 || !selectedEditionId}
                                     onClick={openAddModal}
                                 />
@@ -451,6 +452,7 @@ const EditProblemsScreen = () => {
                         <Button
                             type="submit"
                             text={uploading ? "Zapisywanie…" : "Dodaj dokument"}
+                            icon={<FaPlus />}
                             disabled={uploading || !selectedEditionId}
                         />
                     </div>

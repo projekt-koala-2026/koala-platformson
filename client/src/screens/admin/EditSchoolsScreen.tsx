@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { FaFileImport, FaPlus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -496,14 +497,19 @@ const AdminSchoolsScreen = () => {
                         </p>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-3 sm:mt-0 sm:shrink-0">
-                        <Button text="Dodaj szkołę" onClick={openCreateModal} disabled={isBusy} />
+                        <Button
+                            text="Dodaj szkołę"
+                            icon={<FaPlus />}
+                            onClick={openCreateModal}
+                            disabled={isBusy}
+                        />
                         <button
                             type="button"
                             onClick={openImportModal}
                             disabled={isBusy}
-                            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-border bg-brand-soft px-4 py-2.5 text-sm font-medium text-brand-text-strong transition hover:border-brand-border-strong hover:bg-brand-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-4 py-2.5 text-sm font-medium text-brand-text-strong transition hover:border-brand-border-strong hover:bg-brand-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            Importuj CSV
+                            <FaFileImport aria-hidden="true" /> Importuj CSV
                         </button>
                     </div>
                 </section>
@@ -542,6 +548,7 @@ const AdminSchoolsScreen = () => {
                         </div>
                         <Button
                             text={action === "delete-all" ? "Usuwanie…" : "Wyczyść całą bazę"}
+                            icon={<FaTrash />}
                             onClick={() => void handleDeleteAll()}
                             disabled={isBusy || schools.length === 0}
                             className="mt-4 bg-danger hover:bg-danger-hover active:bg-danger-active focus-visible:ring-danger-focus sm:mt-0 sm:shrink-0"
@@ -571,6 +578,7 @@ const AdminSchoolsScreen = () => {
                         <Button
                             type="submit"
                             text={action === "create" ? "Dodawanie…" : "Dodaj szkołę"}
+                            icon={<FaPlus />}
                             disabled={isBusy}
                         />
                     </div>
@@ -608,6 +616,7 @@ const AdminSchoolsScreen = () => {
                         <Button
                             type="submit"
                             text={action === "import" ? "Importowanie…" : "Importuj"}
+                            icon={<FaFileImport />}
                             disabled={isBusy || !csvFile}
                         />
                     </div>
@@ -631,6 +640,7 @@ const AdminSchoolsScreen = () => {
                         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                             <Button
                                 text={action === "delete-one" ? "Usuwanie…" : "Usuń szkołę"}
+                                icon={<FaTrash />}
                                 onClick={() => void handleDeleteSingle()}
                                 disabled={isBusy}
                                 className="bg-danger hover:bg-danger-hover active:bg-danger-active focus-visible:ring-danger-focus"

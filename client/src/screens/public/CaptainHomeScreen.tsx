@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { useEffect, useId, useMemo, useState } from "react";
-import { FaDownload, FaExchangeAlt, FaUpload } from "react-icons/fa";
+import { FaDownload, FaEdit, FaExchangeAlt, FaPlus, FaSyncAlt, FaTrash, FaUpload } from "react-icons/fa";
 import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
@@ -526,7 +526,9 @@ const CaptainHomeScreen = () => {
                             Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
                         </p>
                     </div>
-                    <KoalaIllustration src={`${import.meta.env.BASE_URL}images/koala/koala_mis2b.png`} />
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2b.png`}
+                    />
                 </header>
                 {teams.length > 1 && (
                     <label className="mb-6 block max-w-xl text-sm font-medium text-ink">
@@ -640,11 +642,13 @@ const CaptainHomeScreen = () => {
                                         <div className="flex items-center gap-2">
                                             <Button
                                                 text="Edytuj nazwę"
+                                                icon={<FaEdit />}
                                                 onClick={() => setEditingName(true)}
                                                 className="mt-5"
                                             />
                                             <Button
                                                 text="Dodaj członka"
+                                                icon={<FaPlus />}
                                                 onClick={() => setAddingMember(true)}
                                                 disabled={
                                                     saving || (team.teamMembers?.length ?? 0) >= 2
@@ -676,6 +680,7 @@ const CaptainHomeScreen = () => {
                             {isCaptain && (
                                 <Button
                                     text={team.joinCode ? "Wygeneruj nowy kod" : "Wygeneruj kod"}
+                                    icon={<FaSyncAlt />}
                                     onClick={() => void generateJoinCode()}
                                     disabled={saving}
                                     className="mt-4"
@@ -733,9 +738,9 @@ const CaptainHomeScreen = () => {
                                                 onClick={() =>
                                                     void removeMember(member.teamMemberId)
                                                 }
-                                                className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
                                             >
-                                                Usuń z drużyny
+                                                <FaTrash aria-hidden="true" /> Usuń z drużyny
                                             </button>
                                         )}
                                         {roles.isGuardian &&
@@ -844,9 +849,9 @@ const CaptainHomeScreen = () => {
                                                             team.teamGuardian?.id ?? ""
                                                         )
                                                     }
-                                                    className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                    className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
                                                 >
-                                                    Usuń z drużyny
+                                                    <FaTrash aria-hidden="true" /> Usuń z drużyny
                                                 </button>
                                             )}
                                         </li>
@@ -855,6 +860,7 @@ const CaptainHomeScreen = () => {
                             {isCaptain && (
                                 <Button
                                     text={saving ? "Usuwanie…" : "Usuń drużynę"}
+                                    icon={<FaTrash />}
                                     onClick={() => void deleteTeam()}
                                     disabled={saving}
                                     className="mt-6 bg-danger hover:bg-danger-hover focus:ring-danger-emphasis"
@@ -893,7 +899,11 @@ const CaptainHomeScreen = () => {
                             </form>
                         )}
                         {roles.isCaptain && (
-                            <Button text="Utwórz nową drużynę" onClick={openCreateTeam} />
+                            <Button
+                                text="Utwórz nową drużynę"
+                                icon={<FaPlus />}
+                                onClick={openCreateTeam}
+                            />
                         )}
                     </div>
                 )}
@@ -917,6 +927,7 @@ const CaptainHomeScreen = () => {
                             type="submit"
                             form={createTeamFormId}
                             text={saving ? "Tworzenie…" : "Utwórz drużynę"}
+                            icon={<FaPlus />}
                             disabled={saving}
                         />
                     </div>
@@ -1042,6 +1053,7 @@ const CaptainHomeScreen = () => {
                         <Button
                             type="submit"
                             text={saving ? "Dodawanie…" : "Dodaj osoby"}
+                            icon={<FaPlus />}
                             disabled={saving}
                         />
                     </div>
