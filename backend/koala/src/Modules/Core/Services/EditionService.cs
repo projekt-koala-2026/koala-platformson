@@ -3,6 +3,7 @@ using koala.src.Modules.Core.Data;
 using koala.src.Modules.Core.Dtos;
 using koala.src.Modules.Core.Entities;
 using koala.src.Shared;
+using koala.src.Shared.Account;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.CodeAnalysis.Differencing;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,12 @@ namespace koala.src.Modules.Core.Services
     public class EditionService
     {
         private readonly CoreDbContext _db;
+        private readonly IAccountModule _accountModule;
 
-        public EditionService(CoreDbContext db)
+        public EditionService(CoreDbContext db, IAccountModule accountModule)
         {
             _db = db;
+            _accountModule = accountModule;
         }
 
         public async Task<EditionDto> CreateEditionAsync(ClaimsPrincipal? claimsPrincipal, EditionCreateDto createEditionDto)
@@ -593,6 +596,30 @@ namespace koala.src.Modules.Core.Services
 
         public async Task<TaskItemDto> GetTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid task_id)
         {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRevier = ClaimsHelper.IsOrganizationReviewer(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin && !isOrganizationRevier)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
             var task = await _db.TaskItems
                 .AsNoTracking()
                 .Include(e => e.SubEdition)
@@ -619,6 +646,20 @@ namespace koala.src.Modules.Core.Services
 
         public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTaskItemsAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, PageQueryDto pageQueryDto)
         {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRevier = ClaimsHelper.IsOrganizationReviewer(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin && !isOrganizationRevier)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
             var query = _db.TaskItems.AsNoTracking();
 
             var totalCount = await query.CountAsync();
@@ -645,13 +686,53 @@ namespace koala.src.Modules.Core.Services
             return (TaskItems, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTasksActiveAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, PageQueryDto pageQueryDto)
+        public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTasksActiveAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid team_id, PageQueryDto pageQueryDto)
         {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isCaptain = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isCaptain)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var teamInfo = await _accountModule.Internal_GetTeamInfo(team_id);
+            if (teamInfo.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id);
+            if(subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+            if(subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose)
+            {
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Teams cant in this time answer/view tasks");
+            }
+            
             var query = _db.TaskItems.AsNoTracking()
                 .Where(e => e.SubEditionId == subedition_id
                         && e.SubEdition.State == "ACTIVE"
                         && e.SubEdition.EditionId == edition_id
                         && e.SubEdition.Edition.State == "ACTIVE");
+
+            if(teamInfo.Tier == TaskItemTiers.TIER_1)
+            {
+                query = query.Where(e => e.Tier == TaskItemTiers.TIER_1);
+            }
+            if(teamInfo.Tier == TaskItemTiers.TIER_2)
+            {
+                query = query.Where(e => e.Tier == TaskItemTiers.TIER_1 || e.Tier == TaskItemTiers.TIER_2);
+            }
 
             var totalCount = await query.CountAsync();
             

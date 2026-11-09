@@ -30,5 +30,6 @@ namespace koala.src.Modules.Core.Entities
         public int Version { get; set; }
         public Edition Edition { get; set; } = null!;
         public ICollection<TaskItem> TaskItems { get; set; } = new List<TaskItem>();
+        public ICollection<Ranking> Rankings { get; set; } = new List<Ranking>();
     }
 }

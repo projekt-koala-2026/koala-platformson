@@ -109,7 +109,8 @@ namespace koala.src.Modules.Account.Services
                     team.Id,
                     team.CaptainId,
                     team.GuardianId,
-                    team.Tier
+                    team.Tier,
+                    team.Name
                 );
         }
     }

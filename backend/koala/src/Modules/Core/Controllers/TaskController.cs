@@ -60,16 +60,24 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{task_id}/team/{team_id}")]
-        public async Task<IActionResult> UpsertTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromBody] UpsertTaskSubmissionDto submitTaskSubmissionDto)
+        [HttpPut("{task_id}/team/{team_id}/subedition{subedition_id}")]
+        public async Task<IActionResult> UpsertTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertTaskSubmissionDto submitTaskSubmissionDto)
         {
-            var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, task_id, team_id, submitTaskSubmissionDto);
+            var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, task_id, team_id, subedition_id, submitTaskSubmissionDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
+        //TODO: ENDPOINT DLA ADMINA do generowania automatycznej odpowiedzi po zakonczeniu odpowiedzi na zadania dla druzyn
+        [Authorize]
+        [HttpPut("subedition/{subedition_id}/autocheck")]
+        public async Task<IActionResult> AutoCheckSubmissions([FromRoute] Guid subedition_id)
+        {
+            await _taskService.AutoCheckSubmissionsAsync(User, subedition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
 
         [Authorize]
-        [HttpGet("{task_id}")]
+        [HttpGet("submissions/{task_id}")]
         public async Task<IActionResult> GetTaskSubmissions([FromRoute] Guid task_id, [FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _taskService.GetTaskSubmissionsAsync(User, task_id, pageQueryDto);
@@ -77,23 +85,15 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("to-review/me/{reviewer_id}/submission/{task_id}")]
-        public async Task<IActionResult> AddScoreByReviewer([FromRoute] Guid reviewer_id, [FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromBody] AddReviewDto addReviewDto)
+        [HttpPut("review/me/submission/{task_id}/subedition/{subedition_id}")]
+        public async Task<IActionResult> UpsertScoreByReviewer([FromRoute] Guid reviewer_id, [FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertReviewDto upsertReviewDto)
         {
-            var response = await _taskService.AddScoreByReviewerAsync(User, reviewer_id, task_id, team_id, addReviewDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
-        }
-
-        [Authorize]
-        [HttpPut("to-review/me/{reviewer_id}/submission/{task_id}")]
-        public async Task<IActionResult> UpsertScoreByReviewer([FromRoute] Guid reviewer_id, [FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromBody] UpsertReviewDto upsertReviewDto)
-        {
-            var response = await _taskService.UpsertScoreByReviewerAsync(User, reviewer_id, task_id, team_id, upsertReviewDto);
+            var response = await _taskService.UpsertScoreByReviewerAsync(User, reviewer_id, task_id, team_id, subedition_id, upsertReviewDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpGet("to-review/me/{reviewer_id}")]
+        [HttpGet("review/me")]
         public async Task<IActionResult> GetTasksToReview([FromRoute] Guid reviewer_id, [FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _taskService.GetTasksToReviewAsync(User, reviewer_id, pageQueryDto);
@@ -101,7 +101,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpGet("conflicts/me/{reviewer_id}")]
+        [HttpGet("review-conflicts/me/")]
         public async Task<IActionResult> GetTasksWithConflicts([FromRoute] Guid reviewer_id, [FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _taskService.GetTasksWithConflictsAsync(User, reviewer_id, pageQueryDto);
@@ -110,10 +110,11 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost("{subedition_id}/assign-reviewers")]
-        public async Task<ActionResult<ApiResponseWrapper<List<TaskSubmissionDto>>>> AssignReviewers([FromRoute] Guid subedition_id, [FromBody] AssignSubEditionReviewersRequestDto requestDto)
+        public async Task<ActionResult<ApiResponseWrapper<List<TaskSubmissionDto>>>> AssignReviewers([FromRoute] Guid subedition_id, [FromBody] AssignReviewersDto requestDto)
         {
-            var response = await _taskService.AssignReviewersAsync(User, subedition_id, requestDto.TaskReviewerPairs);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, null, response));
+            await _taskService.AssignReviewersAsync(User, subedition_id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
+
     }
 }

@@ -21,6 +21,95 @@ namespace koala.src.Modules.Core.Services
             _accountModule = accountModule;
         }        
 
+        public async Task GenereteRankingFromSubEdtionAsync(ClaimsPrincipal claimsPrincipal, Guid subEditionId)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subEditionId);
+            if(subedition == null)
+            {
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+            if(subedition.AnswerOpen <= timeNow && timeNow <= subedition.AnswerClose)
+            {
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Teams have still time to answer tasks");
+            }
+
+            if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subEditionId && ((ts.Review1Score != ts.Review2Score) || ts.Review1Score == null || ts.Review2Score == null)))
+            {
+                throw new CoreException(CoreErrorCodes.TaskSubmissionNotFound, "Not all task submissions are yet scored");
+            }
+            var tasks = await _db.TaskItems
+                .Where(t => t.SubEditionId == subEditionId)
+                .ToListAsync();
+        
+            int tier1TaskCount = tasks.Count(t => t.Tier == TaskItemTiers.TIER_1);
+            int tier2TaskCount = tasks.Count(t => t.Tier == TaskItemTiers.TIER_2);
+        
+            // 2. Pobierz zgłoszenia wraz z powiązanymi zadaniami
+            var submissions = await _db.TaskSubmissions
+                .Include(ts => ts.TaskItem)
+                .Where(ts => ts.TaskItem.SubEditionId == subEditionId)
+                .ToListAsync();
+        
+            // 3. Grupowanie po drużynach i sumowanie punktów
+            var teamRankingsData = submissions
+                .GroupBy(ts => ts.TeamId)
+                .Select(group => new
+                {
+                    TeamId = group.Key,
+                    TotalScore = group.Sum(ts => ts.Review1Score == true ? 1 : 0)
+                })
+                .OrderByDescending(x => x.TotalScore)
+                .ToList();
+        
+            List<Ranking> newRankings = new List<Ranking>();
+        
+            foreach (var data in teamRankingsData)
+            {
+                var teamInfo = await _accountModule.Internal_GetTeamInfo(data.TeamId);
+        
+                var ranking = new Ranking
+                {
+                    Id = Guid.CreateVersion7(),
+                    SubeditionId = subEditionId,
+                    TeamName = teamInfo.Name, 
+                    Tier = teamInfo.Tier,
+                    Points = data.TotalScore,
+                    PointsMax = teamInfo.Tier == TaskItemTiers.TIER_2 ? tier1TaskCount + tier2TaskCount : tier1TaskCount
+                };
+        
+                newRankings.Add(ranking);
+            }
+
+            _db.Rankings.AddRange(newRankings);
+            await _db.SaveChangesAsync();
+        }
+
+        //TODO: FINISH THEM LATER
+        // public async Task CreateRankingForSubEdtionAsync(ClaimsPrincipal claimsPrincipal, Guid subEditionId)
+        // {
+            
+        // }
+
+        // public async Task UpdateRankingForSubEdtionAsync(ClaimsPrincipal claimsPrincipal, Guid subEditionId)
+        // {
+            
+        // }
+
         public async Task<(List<RankingDto>, ApiPagination)> GetRankingAsync(string? tier, PageQueryDto pageQueryDto)
         {
             var validTiers = new[] { TaskItemTiers.TIER_1, TaskItemTiers.TIER_2 };

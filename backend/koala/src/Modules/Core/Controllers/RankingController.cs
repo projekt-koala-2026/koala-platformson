@@ -18,6 +18,29 @@ namespace koala.src.Modules.Core.Controllers
         {
             _rankingService = rankingService;
         }
+        
+        //TODO: dodac endpoint dal admina z generowaniem rankingu atomatycznego
+        [Authorize]
+        [HttpPost("generete/subedtion/{subedition_id}")]
+        public async Task<IActionResult> GenereteRankingFromSubEdtion([FromRoute] Guid subedition_id)
+        {
+            await _rankingService.GenereteRankingFromSubEdtionAsync(User, subedition_id);
+            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true , DateTime.UtcNow, null, null, null));
+        }
+
+        // [Authorize]
+        // [HttpPut("subedtion/{subedition_id}")]
+        // public async Task<IActionResult> UpdateRankingForSubEdtion([FromRoute] Guid subedition_id)
+        // {
+            
+        // }
+
+        // [Authorize]
+        // [HttpPost("subedtion/{subedition_id}")]
+        // public async Task<IActionResult> CreateRankingForSubEdtion([FromRoute] Guid subedition_id)
+        // {
+            
+        // } 
 
         [Authorize]
         [HttpGet]
