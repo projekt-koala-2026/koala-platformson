@@ -11,6 +11,7 @@ const AdminRodoScreen = lazy(() => import("./screens/admin/AdminRodoScreen"));
 const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));
 const EditionsScreen = lazy(() => import("./screens/admin/EditEditionScreen"));
 const SubeditionsScreen = lazy(() => import("./screens/admin/SubeditionsScreen"));
+const CompetitionTasksScreen = lazy(() => import("./screens/admin/CompetitionTasksScreen"));
 const EditHistory = lazy(() => import("./screens/admin/EditHistoryScreen"));
 const EditKoalicjantInfo = lazy(() => import("./screens/admin/EditKoalicjantInfoScreen"));
 const EditPost = lazy(() => import("./screens/admin/EditPostScreen"));
@@ -151,6 +152,7 @@ export default function App() {
                             }
                         />
                         <Route path="/admin/subeditions" element={<ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login"><SubeditionsScreen /></ProtectedRoute>} />
+                        <Route path="/admin/competition-tasks" element={<ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login"><CompetitionTasksScreen /></ProtectedRoute>} />
                         <Route
                             path="/admin/problems"
                             element={

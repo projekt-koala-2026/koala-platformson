@@ -1,0 +1,99 @@
+import { useEffect, useState, type FormEvent } from "react";
+import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import AdminHeader from "../../components/AdminHeader";
+import Button from "../../components/Button";
+import Modal from "../../components/Modal";
+import SelectListbox from "../../components/SelectListbox";
+import type { ApiCompetitionTask, ApiEdition, ApiSubedition } from "../../types/models";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
+import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
+
+const inputClass = "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading focus:border-brand-focus focus:outline-none focus:ring-2 focus:ring-brand-muted";
+type TaskForm = { name: string; tier: "TIER_1" | "TIER_2"; contentJson: string };
+const emptyForm: TaskForm = { name: "", tier: "TIER_1", contentJson: '{\n  "version": 1,\n  "body_pl": ""\n}' };
+
+export default function CompetitionTasksScreen() {
+    const navigate = useNavigate();
+    const [params] = useSearchParams();
+    const [editions, setEditions] = useState<ApiEdition[]>([]);
+    const [editionId, setEditionId] = useState("");
+    const [subeditions, setSubeditions] = useState<ApiSubedition[]>([]);
+    const [subeditionId, setSubeditionId] = useState("");
+    const [tasks, setTasks] = useState<ApiCompetitionTask[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [loadingTasks, setLoadingTasks] = useState(false);
+    const [error, setError] = useState("");
+    const [feedback, setFeedback] = useState("");
+    const [editing, setEditing] = useState<ApiCompetitionTask | null>(null);
+    const [modal, setModal] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [form, setForm] = useState<TaskForm>(emptyForm);
+    const selectedEdition = editions.find((e) => e.id === editionId);
+    const selectedSubedition = subeditions.find((s) => s.id === subeditionId);
+
+    useEffect(() => {
+        let active = true;
+        void apiListRequestResult<ApiEdition>(`${apiEndpoints.editions}?${firstPage}&States=ACTIVE&States=INACTIVE&States=CLOSED`, null, "GET", navigate).then(({ data }) => {
+            if (!active) return;
+            if (data) { setEditions(data); setEditionId(data.find((e) => e.id === params.get("edition"))?.id ?? data.find((e) => e.state === "ACTIVE")?.id ?? data[0]?.id ?? ""); }
+            else setError("Nie udało się pobrać edycji.");
+            setLoading(false);
+        });
+        return () => { active = false; };
+    }, [navigate, params]);
+    useEffect(() => {
+        if (!editionId) return;
+        let active = true; setSubeditions([]); setSubeditionId(""); setTasks([]); setLoadingTasks(true);
+        void apiListRequestResult<ApiSubedition>(`${apiEndpoints.subeditions(editionId)}?${firstPage}`, null, "GET", navigate).then(({ data }) => {
+            if (!active) return;
+            if (data) { setSubeditions(data); setSubeditionId(data.find((s) => s.id === params.get("subedition"))?.id ?? data[0]?.id ?? ""); }
+            else setError("Nie udało się pobrać podedycji.");
+            setLoadingTasks(false);
+        });
+        return () => { active = false; };
+    }, [editionId, navigate, params]);
+    useEffect(() => {
+        if (!editionId || !subeditionId) return;
+        let active = true; setTasks([]); setLoadingTasks(true);
+        void apiListRequestResult<ApiCompetitionTask>(`${apiEndpoints.competitionTasks(editionId, subeditionId)}?${firstPage}`, null, "GET", navigate).then(({ data }) => {
+            if (!active) return;
+            if (data) setTasks(data); else setError("Nie udało się pobrać zadań.");
+            setLoadingTasks(false);
+        });
+        return () => { active = false; };
+    }, [editionId, subeditionId, navigate]);
+    const openForm = (task?: ApiCompetitionTask) => {
+        setEditing(task ?? null); setForm(task ? { name: task.name, tier: task.tier, contentJson: task.contentJson } : emptyForm); setError(""); setModal(true);
+    };
+    const save = async (event: FormEvent) => {
+        event.preventDefault();
+        try { const content: unknown = JSON.parse(form.contentJson); if (!content || typeof content !== "object" || Array.isArray(content)) throw new Error(); }
+        catch { setError("Treść musi być poprawnym obiektem JSON."); return; }
+        if (!form.name.trim()) { setError("Podaj nazwę zadania."); return; }
+        setBusy(true); setError("");
+        const url = apiEndpoints.competitionTasks(editionId, subeditionId);
+        const result = await apiRequestResult<ApiCompetitionTask>(editing ? `${url}/${editing.id}` : url, { name: form.name.trim(), tier: form.tier, contentJson: form.contentJson, ...(editing ? { version: editing.version } : {}) }, editing ? "PUT" : "POST", navigate);
+        if (result.data) { setTasks((previous) => editing ? previous.map((t) => t.id === editing.id ? result.data! : t) : [...previous, result.data!]); setModal(false); setFeedback(editing ? "Zapisano zadanie." : "Dodano zadanie."); }
+        else setError(result.status === 409 ? "Zadanie zostało zmienione, jest zamknięte lub ma już odpowiedzi. Odśwież dane." : "Nie udało się zapisać zadania. Sprawdź dane i spróbuj ponownie.");
+        setBusy(false);
+    };
+    const remove = async (task: ApiCompetitionTask) => {
+        if (!window.confirm(`Czy na pewno usunąć zadanie „${task.name}” wraz z poprawnymi odpowiedziami?`)) return;
+        setBusy(true); setError("");
+        const result = await apiRequestResult(`${apiEndpoints.competitionTasks(editionId, subeditionId)}/${task.id}`, null, "DELETE", navigate);
+        if (result.status && result.status >= 200 && result.status < 300) { setTasks((previous) => previous.filter((t) => t.id !== task.id)); setFeedback("Usunięto zadanie."); }
+        else setError("Nie udało się usunąć zadania. Zadanie z odpowiedziami nie może zostać usunięte.");
+        setBusy(false);
+    };
+    const locked = selectedEdition?.state === "CLOSED" || selectedSubedition?.state === "CLOSED";
+    return <div className="min-h-screen bg-page"><AdminHeader navigate={navigate} /><main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">Konkurs</p><h1 className="mt-2 text-3xl font-bold text-ink-heading">Zadania konkursowe</h1><p className="mt-3 text-ink-secondary">Zarządzaj zadaniami w podedycjach konkursu.</p>
+        {feedback && <p role="status" className="app-status-success mt-6 rounded-xl border p-3">{feedback}</p>}{error && !modal && <p role="alert" className="app-status-danger mt-6 rounded-xl border p-3">{error}</p>}
+        {loading ? <p className="mt-8 text-ink-secondary">Ładowanie edycji…</p> : editions.length === 0 ? <p className="mt-8 text-ink-secondary">Brak edycji konkursu.</p> : <>
+            <div className="mt-8 grid gap-4 rounded-2xl border border-line bg-surface p-5 sm:grid-cols-2"><div><span id="task-edition" className="mb-2 block text-sm font-medium text-ink">Edycja konkursu</span><SelectListbox ariaLabelledBy="task-edition" value={editionId} options={editions.map((e) => ({ value: e.id, label: e.name }))} onChange={(id) => { setEditionId(id); setError(""); setFeedback(""); }} /></div><div><span id="task-subedition" className="mb-2 block text-sm font-medium text-ink">Podedycja</span>{subeditions.length ? <SelectListbox ariaLabelledBy="task-subedition" value={subeditionId} options={subeditions.map((s) => ({ value: s.id, label: s.name }))} onChange={(id) => { setSubeditionId(id); setError(""); setFeedback(""); }} /> : <p className="py-2 text-sm text-ink-secondary">Brak podedycji</p>}</div></div>
+            {subeditionId && <><div className="mt-8 flex flex-wrap items-center justify-between gap-4"><h2 className="text-xl font-semibold text-ink-heading">Zadania: {selectedSubedition?.name}</h2><Button text="Dodaj zadanie" icon={<FaPlus />} disabled={busy || locked} onClick={() => openForm()} /></div>{locked && <p className="mt-2 text-sm text-ink-secondary">Zakończona edycja lub podedycja nie przyjmuje nowych zadań.</p>}</>}
+            {loadingTasks ? <p className="mt-5 text-ink-secondary">Ładowanie zadań…</p> : subeditionId && (tasks.length === 0 ? <p className="mt-5 text-ink-secondary">Brak zadań w tej podedycji.</p> : <div className="mt-5 space-y-3">{tasks.map((task) => <article key={task.id} className="rounded-2xl border border-line bg-surface p-5"><div className="flex flex-wrap items-center justify-between gap-4"><div className="min-w-0"><h3 className="break-words text-lg font-semibold text-ink-heading">{task.name}</h3><p className="mt-1 text-sm text-ink-secondary">{task.tier === "TIER_1" ? "Kategoria I" : "Kategoria II"}</p></div><div className="flex flex-wrap gap-2"><Button text="Edytuj" icon={<FaEdit />} disabled={busy || locked} onClick={() => openForm(task)} /><Button text="Usuń" icon={<FaTrash />} disabled={busy || locked} className="bg-danger hover:bg-danger-hover" onClick={() => void remove(task)} /></div></div></article>)}</div>)}
+        </>}
+    </main><Modal isOpen={modal} onClose={() => { if (!busy) { setModal(false); setError(""); } }} title={editing ? "Edytuj zadanie" : "Dodaj zadanie"} maxWidth="lg"><form onSubmit={(event) => void save(event)} className="space-y-4">{error && <p role="alert" className="app-status-danger rounded-xl border p-3">{error}</p>}<label className="block text-sm text-ink">Nazwa zadania<input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label><div><span id="task-tier" className="mb-2 block text-sm text-ink">Kategoria</span><SelectListbox ariaLabelledBy="task-tier" value={form.tier} options={[{ value: "TIER_1", label: "Kategoria I" }, { value: "TIER_2", label: "Kategoria II" }]} onChange={(tier) => setForm({ ...form, tier })} /></div><label className="block text-sm text-ink">Treść zadania (JSON)<textarea className={`${inputClass} min-h-48 font-mono`} value={form.contentJson} onChange={(e) => setForm({ ...form, contentJson: e.target.value })} spellCheck={false} required /></label><p className="text-sm text-ink-secondary">Treść jest zapisywana jako JSON. Format pytań wymaga uzgodnienia z panelem uczestnika.</p><div className="flex justify-end gap-2"><Button text="Anuluj" disabled={busy} onClick={() => setModal(false)} className="bg-surface-subtle text-ink hover:bg-surface-disabled" /><Button type="submit" text={busy ? "Zapisywanie…" : "Zapisz"} disabled={busy} /></div></form></Modal></div>;
+}

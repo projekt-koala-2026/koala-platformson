@@ -27,6 +27,7 @@ const administratorLinks = [
     { label: "Start", path: "/admin" },
     { label: "Edycje", path: "/admin/editions" },
     { label: "Podedycje", path: "/admin/subeditions" },
+    { label: "Zadania konkursowe", path: "/admin/competition-tasks" },
     ...editorLinks,
     { label: "Szkoły", path: "/admin/schools" },
     { label: "Drużyny", path: "/admin/teams" },
