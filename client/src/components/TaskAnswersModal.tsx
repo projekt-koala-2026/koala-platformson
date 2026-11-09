@@ -7,48 +7,178 @@ import { apiListRequestResult, apiRequestResult } from "../utils/apiFetcher";
 import Button from "./Button";
 import Modal from "./Modal";
 
-export default function TaskAnswersModal({ task, onClose }: { task: ApiCompetitionTask | null; onClose: () => void }) {
+export default function TaskAnswersModal({
+    task,
+    onClose,
+}: {
+    task: ApiCompetitionTask | null;
+    onClose: () => void;
+}) {
     const navigate = useNavigate();
     const [answers, setAnswers] = useState<ApiTaskAnswer[]>([]);
     const [value, setValue] = useState("");
     const [editing, setEditing] = useState<ApiTaskAnswer | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     useEffect(() => {
         if (!task) return;
         let active = true;
-        setAnswers([]); setValue(""); setEditing(null); setError(""); setLoading(true);
-        void apiListRequestResult<ApiTaskAnswer>(`${apiEndpoints.taskAnswers(task.id)}?${firstPage}`, null, "GET", navigate).then(({ data }) => {
+        void apiListRequestResult<ApiTaskAnswer>(
+            `${apiEndpoints.taskAnswers(task.id)}?${firstPage}`,
+            null,
+            "GET",
+            navigate
+        ).then(({ data }) => {
             if (!active) return;
-            if (data) setAnswers(data); else setError("Nie udało się pobrać poprawnych odpowiedzi.");
+            if (data) setAnswers(data);
+            else setError("Nie udało się pobrać poprawnych odpowiedzi.");
             setLoading(false);
         });
-        return () => { active = false; };
+        return () => {
+            active = false;
+        };
     }, [task, navigate]);
     const save = async (event: FormEvent) => {
         event.preventDefault();
-        if (!task || !value.trim()) { setError("Podaj poprawną odpowiedź."); return; }
-        setBusy(true); setError("");
+        if (!task || !value.trim()) {
+            setError("Podaj poprawną odpowiedź.");
+            return;
+        }
+        setBusy(true);
+        setError("");
         const base = apiEndpoints.taskAnswers(task.id);
-        const result = await apiRequestResult<ApiTaskAnswer>(editing ? `${base}/${editing.id}` : base, { answer: value.trim(), ...(editing ? { version: editing.version } : {}) }, editing ? "PUT" : "POST", navigate);
-        if (result.data) { setAnswers((current) => editing ? current.map((a) => a.id === editing.id ? result.data! : a) : [...current, result.data!]); setValue(""); setEditing(null); }
-        else setError(result.status === 409 ? "Odpowiedź została zmieniona. Zamknij okno i odśwież dane." : "Nie udało się zapisać odpowiedzi. Sprawdź, czy nie jest już na liście.");
+        const result = await apiRequestResult<ApiTaskAnswer>(
+            editing ? `${base}/${editing.id}` : base,
+            { answer: value.trim(), ...(editing ? { version: editing.version } : {}) },
+            editing ? "PUT" : "POST",
+            navigate
+        );
+        if (result.data) {
+            setAnswers((current) =>
+                editing
+                    ? current.map((a) => (a.id === editing.id ? result.data! : a))
+                    : [...current, result.data!]
+            );
+            setValue("");
+            setEditing(null);
+        } else
+            setError(
+                result.status === 409
+                    ? "Odpowiedź została zmieniona. Zamknij okno i odśwież dane."
+                    : "Nie udało się zapisać odpowiedzi. Sprawdź, czy nie jest już na liście."
+            );
         setBusy(false);
     };
     const remove = async (answer: ApiTaskAnswer) => {
         if (!task || !window.confirm(`Czy na pewno usunąć odpowiedź „${answer.answer}”?`)) return;
-        setBusy(true); setError("");
-        const result = await apiRequestResult(`${apiEndpoints.taskAnswers(task.id)}/${answer.id}`, null, "DELETE", navigate);
-        if (result.status && result.status >= 200 && result.status < 300) { setAnswers((current) => current.filter((a) => a.id !== answer.id)); if (editing?.id === answer.id) { setEditing(null); setValue(""); } }
-        else setError("Nie udało się usunąć odpowiedzi.");
+        setBusy(true);
+        setError("");
+        const result = await apiRequestResult(
+            `${apiEndpoints.taskAnswers(task.id)}/${answer.id}`,
+            null,
+            "DELETE",
+            navigate
+        );
+        if (result.status && result.status >= 200 && result.status < 300) {
+            setAnswers((current) => current.filter((a) => a.id !== answer.id));
+            if (editing?.id === answer.id) {
+                setEditing(null);
+                setValue("");
+            }
+        } else setError("Nie udało się usunąć odpowiedzi.");
         setBusy(false);
     };
-    return <Modal isOpen={task !== null} onClose={() => { if (!busy) onClose(); }} title="Poprawne odpowiedzi" maxWidth="lg">
-        <p className="text-sm text-ink-secondary">Zadanie: <strong className="text-ink-heading">{task?.name}</strong>. Wystarczy jedna z podanych odpowiedzi.</p>
-        <p className="mt-2 text-sm text-ink-secondary">Zmiana odpowiedzi wycofuje ranking i wymaga ponownego automatycznego sprawdzenia odpowiedzi bez ocen recenzentów.</p>
-        {error && <p role="alert" className="app-status-danger mt-4 rounded-xl border p-3">{error}</p>}
-        {loading ? <p className="mt-4 text-ink-secondary">Ładowanie odpowiedzi…</p> : answers.length === 0 ? <p className="mt-4 text-ink-secondary">Brak poprawnych odpowiedzi.</p> : <ul className="mt-4 space-y-2">{answers.map((answer) => <li key={answer.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-3"><span className="min-w-0 break-all text-ink-heading">{answer.answer}</span><div className="flex gap-2"><Button text="Edytuj" icon={<FaEdit />} disabled={busy} onClick={() => { setEditing(answer); setValue(answer.answer); setError(""); }} /><Button text="Usuń" icon={<FaTrash />} className="bg-danger hover:bg-danger-hover" disabled={busy} onClick={() => void remove(answer)} /></div></li>)}</ul>}
-        <form onSubmit={(event) => void save(event)} className="mt-5 space-y-3"><label className="block text-sm font-medium text-ink">{editing ? "Edytuj odpowiedź" : "Nowa poprawna odpowiedź"}<input className="mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading focus:border-brand-focus focus:outline-none focus:ring-2 focus:ring-brand-muted" value={value} onChange={(event) => setValue(event.target.value)} disabled={busy || loading} required /></label><div className="flex flex-wrap justify-end gap-2">{editing && <Button text="Anuluj edycję" disabled={busy} className="bg-surface-subtle text-ink hover:bg-surface-disabled" onClick={() => { setEditing(null); setValue(""); }} />}<Button type="submit" text={editing ? "Zapisz odpowiedź" : "Dodaj odpowiedź"} icon={editing ? <FaEdit /> : <FaPlus />} disabled={busy || loading} /></div></form>
-    </Modal>;
+    return (
+        <Modal
+            isOpen={task !== null}
+            onClose={() => {
+                if (!busy) onClose();
+            }}
+            title="Poprawne odpowiedzi"
+            maxWidth="lg"
+        >
+            <p className="text-sm text-ink-secondary">
+                Zadanie: <strong className="text-ink-heading">{task?.name}</strong>. Wystarczy jedna
+                z podanych odpowiedzi.
+            </p>
+            <p className="mt-2 text-sm text-ink-secondary">
+                Zmiana odpowiedzi wycofuje ranking i wymaga ponownego automatycznego sprawdzenia
+                odpowiedzi bez ocen recenzentów.
+            </p>
+            {error && (
+                <p role="alert" className="app-status-danger mt-4 rounded-xl border p-3">
+                    {error}
+                </p>
+            )}
+            {loading ? (
+                <p className="mt-4 text-ink-secondary">Ładowanie odpowiedzi…</p>
+            ) : answers.length === 0 ? (
+                <p className="mt-4 text-ink-secondary">Brak poprawnych odpowiedzi.</p>
+            ) : (
+                <ul className="mt-4 space-y-2">
+                    {answers.map((answer) => (
+                        <li
+                            key={answer.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-3"
+                        >
+                            <span className="min-w-0 break-all text-ink-heading">
+                                {answer.answer}
+                            </span>
+                            <div className="flex gap-2">
+                                <Button
+                                    text="Edytuj"
+                                    icon={<FaEdit />}
+                                    disabled={busy}
+                                    onClick={() => {
+                                        setEditing(answer);
+                                        setValue(answer.answer);
+                                        setError("");
+                                    }}
+                                />
+                                <Button
+                                    text="Usuń"
+                                    icon={<FaTrash />}
+                                    className="bg-danger hover:bg-danger-hover"
+                                    disabled={busy}
+                                    onClick={() => void remove(answer)}
+                                />
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
+            <form onSubmit={(event) => void save(event)} className="mt-5 space-y-3">
+                <label className="block text-sm font-medium text-ink">
+                    {editing ? "Edytuj odpowiedź" : "Nowa poprawna odpowiedź"}
+                    <input
+                        className="mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading focus:border-brand-focus focus:outline-none focus:ring-2 focus:ring-brand-muted"
+                        value={value}
+                        onChange={(event) => setValue(event.target.value)}
+                        disabled={busy || loading}
+                        required
+                    />
+                </label>
+                <div className="flex flex-wrap justify-end gap-2">
+                    {editing && (
+                        <Button
+                            text="Anuluj edycję"
+                            disabled={busy}
+                            className="bg-surface-subtle text-ink hover:bg-surface-disabled"
+                            onClick={() => {
+                                setEditing(null);
+                                setValue("");
+                            }}
+                        />
+                    )}
+                    <Button
+                        type="submit"
+                        text={editing ? "Zapisz odpowiedź" : "Dodaj odpowiedź"}
+                        icon={editing ? <FaEdit /> : <FaPlus />}
+                        disabled={busy || loading}
+                    />
+                </div>
+            </form>
+        </Modal>
+    );
 }

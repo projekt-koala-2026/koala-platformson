@@ -151,8 +151,22 @@ export default function App() {
                                 </ProtectedRoute>
                             }
                         />
-                        <Route path="/admin/subeditions" element={<ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login"><SubeditionsScreen /></ProtectedRoute>} />
-                        <Route path="/admin/competition-tasks" element={<ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login"><CompetitionTasksScreen /></ProtectedRoute>} />
+                        <Route
+                            path="/admin/subeditions"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <SubeditionsScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/competition-tasks"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <CompetitionTasksScreen />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route
                             path="/admin/problems"
                             element={

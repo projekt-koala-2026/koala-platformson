@@ -9,9 +9,12 @@ export const apiEndpoints = {
     editions: `${API_ROOT}/core/editions`,
     activeEdition: `${API_ROOT}/core/editions/active-edition`,
     subeditions: (editionId: string) => `${API_ROOT}/core/editions/${editionId}/subeditions`,
-    subedition: (editionId: string, id: string) => `${API_ROOT}/core/editions/${editionId}/subeditions/${id}`,
-    subeditionAction: (editionId: string, id: string, action: "activate" | "close") => `${API_ROOT}/core/editions/${editionId}/${action}_subedition/${id}`,
-    competitionTasks: (editionId: string, subeditionId: string) => `${API_ROOT}/core/editions/${editionId}/subeditions/${subeditionId}/tasks`,
+    subedition: (editionId: string, id: string) =>
+        `${API_ROOT}/core/editions/${editionId}/subeditions/${id}`,
+    subeditionAction: (editionId: string, id: string, action: "activate" | "close") =>
+        `${API_ROOT}/core/editions/${editionId}/${action}_subedition/${id}`,
+    competitionTasks: (editionId: string, subeditionId: string) =>
+        `${API_ROOT}/core/editions/${editionId}/subeditions/${subeditionId}/tasks`,
     taskAnswers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/corr`,
     schools: `${API_ROOT}/core/schools`,
     posts: `${API_ROOT}/cms/posts`,
