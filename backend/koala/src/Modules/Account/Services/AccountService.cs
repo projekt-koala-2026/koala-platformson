@@ -101,17 +101,26 @@ namespace koala.src.Modules.Account.Services
 
             return sessionDto;
         }
-        public async Task<_TeamResponseDto> Internal_GetTeamInfo(Guid team_id)
+        public async Task<_TeamResponseDto?> Internal_GetTeamInfo(Guid team_id)
         {
-            var team = _db.Teams.AsNoTracking().FirstOrDefault(t => t.Id == team_id);
-            return new _TeamResponseDto
-                (
-                    team.Id,
-                    team.CaptainId,
-                    team.GuardianId,
-                    team.Tier,
-                    team.Name
-                );
+            return await _db.Teams.AsNoTracking()
+                .Where(team => team.Id == team_id)
+                .Select(team => new _TeamResponseDto(team.Id, team.EditionId, team.CaptainId, team.GuardianId, team.Tier, team.Name))
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<_TeamResponseDto>> Internal_GetTeamsForEditionAsync(Guid editionId)
+        {
+            return await _db.Teams.AsNoTracking().Where(team => team.EditionId == editionId)
+                .Select(team => new _TeamResponseDto(team.Id, team.EditionId, team.CaptainId, team.GuardianId, team.Tier, team.Name))
+                .ToListAsync();
+        }
+
+        public async Task<List<Guid>> Internal_GetReviewerIdsAsync(List<Guid> userIds)
+        {
+            return await _db.UserRoles.AsNoTracking()
+                .Where(role => userIds.Contains(role.UserId) && role.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER && role.User.Verified)
+                .Select(role => role.UserId).Distinct().ToListAsync();
         }
     }
 }

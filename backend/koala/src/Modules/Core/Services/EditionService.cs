@@ -752,9 +752,14 @@ namespace koala.src.Modules.Core.Services
             }
 
             var teamInfo = await _accountModule.Internal_GetTeamInfo(team_id);
-            if (teamInfo.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
+            if (teamInfo == null || teamInfo.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
             {
                 throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
+            }
+
+            if (teamInfo.EditionId != edition_id)
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "The team does not belong to this edition");
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id);

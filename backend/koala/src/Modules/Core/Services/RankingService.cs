@@ -36,16 +36,16 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subEditionId);
+            var subedition = await _db.SubEditions.Include(se => se.Edition).FirstOrDefaultAsync(se => se.Id == subEditionId);
             if(subedition == null)
             {
                 throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(timeNow <= subedition.AnswerClose)
+            if(subedition.Edition.State != EditionStates.STATE_CLOSED || timeNow <= subedition.AnswerClose)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "Cannot generate rankings before the answer period ends");
+                throw new CoreException(CoreErrorCodes.Conflict, "Rankings can only be generated for a closed edition after the answer period ends");
             }
 
             if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subEditionId &&
@@ -68,36 +68,31 @@ namespace koala.src.Modules.Core.Services
                 .Where(ts => ts.TaskItem.SubEditionId == subEditionId)
                 .ToListAsync();
 
-            if (submissions.Count == 0)
+            var teams = await _accountModule.Internal_GetTeamsForEditionAsync(subedition.EditionId);
+            if (teams.Count == 0)
             {
-                throw new CoreException(CoreErrorCodes.TaskSubmissionNotFound, "No submissions exist for this subedition");
+                throw new CoreException(CoreErrorCodes.Conflict, "No teams are registered for this edition");
             }
         
             // 3. Grupowanie po drużynach i sumowanie punktów
-            var teamRankingsData = submissions
-                .GroupBy(ts => ts.TeamId)
-                .Select(group => new
-                {
-                    TeamId = group.Key,
-                    TotalScore = group.Sum(ts => ts.AutoReviewState == true ? 1 : 0)
-                })
-                .OrderByDescending(x => x.TotalScore)
-                .ToList();
+            var teamRankingsData = submissions.ToLookup(ts => ts.TeamId);
         
             List<Ranking> newRankings = new List<Ranking>();
         
-            foreach (var data in teamRankingsData)
+            foreach (var teamInfo in teams)
             {
-                var teamInfo = await _accountModule.Internal_GetTeamInfo(data.TeamId);
+                if (teamInfo.Tier != TaskItemTiers.TIER_1 && teamInfo.Tier != TaskItemTiers.TIER_2)
+                    throw new CoreException(CoreErrorCodes.Conflict, "A team has an invalid tier");
         
                 var ranking = new Ranking
                 {
                     Id = Guid.CreateVersion7(),
                     SubeditionId = subEditionId,
-                    TeamId = data.TeamId,
+                    TeamId = teamInfo.TeamId,
                     TeamName = teamInfo.Name, 
                     Tier = teamInfo.Tier,
-                    Points = data.TotalScore,
+                    Points = teamRankingsData[teamInfo.TeamId].Count(ts => ts.AutoReviewState == true &&
+                        (ts.TaskItem.Tier == TaskItemTiers.TIER_1 || (teamInfo.Tier == TaskItemTiers.TIER_2 && ts.TaskItem.Tier == TaskItemTiers.TIER_2))),
                     PointsMax = teamInfo.Tier == TaskItemTiers.TIER_2 ? tier1TaskCount + tier2TaskCount : tier1TaskCount,
                     CreatedAt = timeNow,
                     UpdatedAt = timeNow,
