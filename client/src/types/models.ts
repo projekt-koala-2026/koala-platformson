@@ -39,6 +39,32 @@ export interface ApiEdition {
     version: number;
 }
 
+export interface ApiSubedition {
+    id: string;
+    editionId: string;
+    name: string;
+    answerOpen: string;
+    answerClose: string;
+    state: "ACTIVE" | "INACTIVE" | "CLOSED";
+    version: number;
+}
+
+export interface ApiCompetitionTask {
+    id: string;
+    subEditionId: string;
+    name: string;
+    tier: "TIER_1" | "TIER_2";
+    contentJson: string;
+    version: number;
+}
+
+export interface ApiTaskAnswer {
+    id: string;
+    taskItemId: string;
+    answer: string;
+    version: number;
+}
+
 export interface ApiPost {
     id: string;
     editionId: string;
