@@ -109,7 +109,7 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/deactivate_subedition/{subedition_id}")]
+        [HttpPut("{edition_id}/close_subedition/{subedition_id}")]
         public async Task<IActionResult> DeactivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
         {
             var response = await _editionService.CloseSubEditionAsync(User, edition_id, subedition_id);
@@ -130,6 +130,14 @@ namespace koala.src.Modules.Core.Controllers
         {
             var response = await _editionService.CreateTaskItemAsync(User, edition_id, subedition_id, createTaskDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpPut("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
+        public async Task<IActionResult> UpdateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] TaskItemUpdateDto updateTaskDto)
+        {
+            var response = await _editionService.UpdateTaskItemAsync(User, edition_id, subedition_id, task_id, updateTaskDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskItemDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
@@ -155,5 +163,14 @@ namespace koala.src.Modules.Core.Controllers
             (var responseData, var responsePagination) = await _editionService.GetTaskItemsAsync(User, edition_id, subedition_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
+
+        [AllowAnonymous]
+        [HttpGet("{edition_id}/subeditions/{subedition_id}/task/active/{team_id}")]
+        public async Task<IActionResult> GetTasksActive([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid team_id, [FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var responseData, var responsePagination) = await _editionService.GetTasksActiveAsync(User, edition_id, subedition_id, team_id, pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        }
+
     }
 }

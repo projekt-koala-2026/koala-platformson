@@ -17,7 +17,7 @@ namespace koala.src.Modules.Core.Data
         public DbSet<TaskAnswer> TaskAnswers => Set<TaskAnswer>();
         public DbSet<TaskSubmission> TaskSubmissions => Set<TaskSubmission>();
         public DbSet<School> Schools => Set<School>();
-
+        public DbSet<Ranking> Rankings => Set<Ranking>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("core");
@@ -28,6 +28,7 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<TaskAnswer>().ToTable("task_answers");
             modelBuilder.Entity<TaskSubmission>().ToTable("task_submissions");
             modelBuilder.Entity<School>().ToTable("schools");
+            modelBuilder.Entity<Ranking>().ToTable("rankings");
 
             // EDITIONS CONFIG
             modelBuilder.Entity<Edition>()
@@ -36,14 +37,11 @@ namespace koala.src.Modules.Core.Data
             // SUBEDITIONS CONFIG
             modelBuilder.Entity<SubEdition>()
                 .HasKey(s => s.Id);
-
-            // EDITION-SUBEDITION CONFIG
             modelBuilder.Entity<SubEdition>()
                 .HasOne(s => s.Edition)
                 .WithMany(e => e.SubEditions)
                 .HasForeignKey(s => s.EditionId)
                 .OnDelete(DeleteBehavior.Cascade);
-
 
             //TASKS CONFIG
             modelBuilder.Entity<TaskItem>()
@@ -72,6 +70,10 @@ namespace koala.src.Modules.Core.Data
                 .HasKey(ts => new { ts.TeamId, ts.TaskId });
 
             modelBuilder.Entity<TaskSubmission>()
+                .Property(ts => ts.Version)
+                .IsConcurrencyToken();
+
+            modelBuilder.Entity<TaskSubmission>()
                 .HasOne(ts => ts.TaskItem)
                 .WithMany(t => t.TaskSubmissions)
                 .HasForeignKey(ts => ts.TaskId)
@@ -80,6 +82,15 @@ namespace koala.src.Modules.Core.Data
             // SCHOOLS CONFIG
             modelBuilder.Entity<School>()
                 .HasKey(s => s.Id);
+
+            // RANKING CONFIG
+            modelBuilder.Entity<Ranking>()
+                .HasKey(r => r.Id);
+            modelBuilder.Entity<Ranking>()
+                .HasOne(r => r.SubEdition)
+                .WithMany(se => se.Rankings)
+                .HasForeignKey(r => r.SubeditionId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     };
 }

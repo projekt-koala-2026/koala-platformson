@@ -60,30 +60,70 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("/{task_id}/team/{team_id}")]
-        public async Task<IActionResult> UpsertTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromBody] TaskSubmissionUpsertDto submitTaskSubmissionDto)
+        [HttpPut("{task_id}/team/{team_id}/subedition/{subedition_id}")]
+        [HttpPut("{task_id}/team/{team_id}/subedition{subedition_id}")]
+        public async Task<IActionResult> UpsertTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertTaskSubmissionDto submitTaskSubmissionDto)
         {
-            var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, task_id, team_id, submitTaskSubmissionDto);
+            var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, subedition_id, task_id, team_id, submitTaskSubmissionDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
+        [Authorize]
+        [HttpGet("{task_id}/team/{team_id}/subedition/{subedition_id}")]
+        public async Task<IActionResult> GetTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id)
+        {
+            var response = await _taskService.GetTaskSubmissionTeamAsync(User, subedition_id, task_id, team_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        //TODO: ENDPOINT DLA ADMINA do generowania automatycznej odpowiedzi po zakonczeniu odpowiedzi na zadania dla druzyn
+        [Authorize]
+        [HttpPut("subedition/{subedition_id}/autocheck")]
+        public async Task<IActionResult> AutoCheckSubmissions([FromRoute] Guid subedition_id)
+        {
+            await _taskService.AutoCheckSubmissionsAsync(User, subedition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
 
         [Authorize]
-        [HttpGet("/{task_id}")]
+        [HttpGet("submissions/{task_id}")]
         public async Task<IActionResult> GetTaskSubmissions([FromRoute] Guid task_id, [FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _taskService.GetTaskSubmissionsAsync(User, task_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
-        //FIXME: POPRAWIĆ CAŁY TEN ENDPOINT JEST ŹLE!!!
-        // [Authorize]
-        // [HttpPut("/{task_id}/admin/{team_id}")]
-        // public async Task<IActionResult> UpdateTaskReviewer([FromRoute] Guid task_id, [FromBody] UpdateTaskSubmissionAdminDto updateTaskSubmissionAdminDto)
-        // {
-        //     var response = await _taskService.UpdateTaskReviewerAsync(User, task_id, updateTaskSubmissionAdminDto);
-        //     return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
-        // }
+        [Authorize]
+        [HttpPut("review/me/submission/{task_id}/team/{team_id}/subedition/{subedition_id}")]
+        public async Task<IActionResult> UpsertScoreByReviewer([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertReviewDto upsertReviewDto)
+        {
+            var response = await _taskService.UpsertScoreByReviewerAsync(User, ClaimsHelper.GetUserGuid(User), task_id, team_id, subedition_id, upsertReviewDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpGet("review/me")]
+        public async Task<IActionResult> GetTasksToReview([FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var responseData, var responsePagination) = await _taskService.GetTasksToReviewAsync(User, ClaimsHelper.GetUserGuid(User), pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        }
+
+        [Authorize]
+        [HttpGet("review-conflicts/me/")]
+        public async Task<IActionResult> GetTasksWithConflicts([FromQuery] PageQueryDto pageQueryDto)
+        {
+            (var responseData, var responsePagination) = await _taskService.GetTasksWithConflictsAsync(User, ClaimsHelper.GetUserGuid(User), pageQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
+        }
+
+        [Authorize]
+        [HttpPost("{subedition_id}/assign-reviewers")]
+        public async Task<ActionResult<ApiResponseWrapper<List<TaskSubmissionDto>>>> AssignReviewers([FromRoute] Guid subedition_id, [FromBody] AssignReviewersDto requestDto)
+        {
+            await _taskService.AssignReviewersAsync(User, subedition_id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
 
     }
 }

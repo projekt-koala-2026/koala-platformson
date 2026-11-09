@@ -141,6 +141,11 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Updated school version does not match make sure u have the freshest data");
             }
 
+            if (await _db.Schools.AnyAsync(s => s.Id != id && s.Rspo == schoolUpdateRequestDto.Rspo))
+            {
+                throw new KoalaException(KoalaErrorCodes.SchoolAlreadyExists, "School with this RSPO already exists");
+            }
+
             if (!SchoolValidateTypeAndGetTier(schoolUpdateRequestDto.Type, out string tier))
             {
                 throw new KoalaException(KoalaErrorCodes.SchoolNotFound, "Invalid school type");
@@ -274,6 +279,8 @@ namespace koala.src.Modules.Core.Services
             using var reader = new StreamReader(stream);
 
             var schools = new List<School>();
+            var existingRspo = (await _db.Schools.AsNoTracking().Select(s => s.Rspo).ToListAsync())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -305,21 +312,34 @@ namespace koala.src.Modules.Core.Services
                     continue;
                 }
 
+                var rspo = csv.GetField("Numer RSPO")?.Trim();
+                if (string.IsNullOrEmpty(rspo) || !existingRspo.Add(rspo))
+                {
+                    continue;
+                }
+
+                var building = csv.GetField("Numer budynku") ?? string.Empty;
+                if (building.StartsWith("=\"") && building.EndsWith('"'))
+                {
+                    building = building[2..^1];
+                }
+
                 var school = new School
                 {
                     Id = Guid.NewGuid(),
-                    Rspo = csv.GetField("Numer RSPO")!,          // Mapped to string Rspo
+                    Rspo = rspo,
                     NameFull = csv.GetField("Nazwa")!,           // Mapped to NameFull
                     NameShort = "",                             // null by default
                     State = csv.GetField("Województwo")!,        // Mapped to State
                     City = csv.GetField("Miejscowość")!,         // Mapped to City
                     Road = csv.GetField("Ulica")!,               // Mapped to separate Road column
-                    Building = csv.GetField("Numer budynku")!,   // Mapped to separate house column
+                    Building = building,
                     Type = rawType.Trim(),                       // Mapped to Type
                     Tier = tier,                                 // Custom Tier mapping (TIER_1 / TIER_2)
                     Email = csv.GetField("E-mail")!,             // Mapped to Email         
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    Version = 1
                 };
 
                 schools.Add(school);
