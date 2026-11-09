@@ -37,11 +37,7 @@ namespace koala.src.Modules.Account
                 return new RodoService(db, privateFilesPath);
             });
 
-            // 4. EXCEPTION HANDLERS
-            services.AddExceptionHandler<AccountExceptionHandler>();
-            services.AddProblemDetails();
-
-            // 5. FLUID VALIDATORS
+            // 4. FLUID VALIDATORS
             services.AddValidatorsFromAssemblyContaining<Program>();
 
             return services;

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import { FaTimes } from "react-icons/fa";
 import type { ModalProps } from "../types/ui";
 
@@ -6,7 +7,7 @@ const widths = { md: "max-w-md", lg: "max-w-2xl", xl: "max-w-5xl" };
 const focusableSelector =
     'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg" }: ModalProps) => {
+const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg", footer }: ModalProps) => {
     const dialogRef = useRef<HTMLElement>(null);
     const closeRef = useRef(onClose);
     const titleId = useId();
@@ -20,7 +21,9 @@ const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg" }: ModalProps
         const previouslyFocused = document.activeElement as HTMLElement | null;
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
-        const focusFrame = window.requestAnimationFrame(() => dialogRef.current?.focus());
+        const focusFrame = window.requestAnimationFrame(() =>
+            dialogRef.current?.focus({ preventScroll: true })
+        );
 
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
@@ -59,9 +62,9 @@ const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg" }: ModalProps
 
     if (!isOpen) return null;
 
-    return (
+    return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-backdrop/45 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex h-dvh items-center justify-center overflow-hidden bg-backdrop/45 p-3 backdrop-blur-sm sm:p-4"
             onMouseDown={(event) => {
                 if (event.target === event.currentTarget) onClose();
             }}
@@ -72,10 +75,13 @@ const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg" }: ModalProps
                 aria-modal="true"
                 aria-labelledby={titleId}
                 tabIndex={-1}
-                className={`flex max-h-[calc(100dvh-2rem)] w-full ${widths[maxWidth]} animate-[fadeIn_.18s_ease-out] flex-col overflow-hidden rounded-2xl border border-line-subtle bg-surface shadow-2xl outline-none`}
+                className={`flex min-h-0 max-h-full w-full min-w-0 ${widths[maxWidth]} animate-[fadeIn_.18s_ease-out] flex-col overflow-hidden rounded-2xl border border-line-subtle bg-surface shadow-2xl outline-none`}
             >
                 <header className="flex shrink-0 items-center justify-between gap-4 border-b border-line-subtle px-5 py-4 sm:px-6">
-                    <h2 id={titleId} className="text-lg font-semibold text-ink-heading">
+                    <h2
+                        id={titleId}
+                        className="min-w-0 break-words text-lg font-semibold text-ink-heading"
+                    >
                         {title}
                     </h2>
                     <button
@@ -87,11 +93,17 @@ const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg" }: ModalProps
                         <FaTimes aria-hidden="true" />
                     </button>
                 </header>
-                <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6">
+                <div className="min-h-0 min-w-0 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6">
                     {children}
                 </div>
+                {footer && (
+                    <footer className="shrink-0 border-t border-line-subtle bg-surface px-5 py-4 sm:px-6">
+                        {footer}
+                    </footer>
+                )}
             </section>
-        </div>
+        </div>,
+        document.body
     );
 };
 

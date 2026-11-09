@@ -20,10 +20,24 @@ namespace koala.src.Modules.Account.Controllers
             _emailService = emailService;
         }
 
-        [HttpPost("/schools")]
+        [HttpPost("schools")]
         public async Task<IActionResult> SendBulkEmailToSchoolsAsync([FromBody] EmailSendRequestDto requestDto)
         {
             await _emailService.SendBulkEmailToSchoolsAsync(User, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+
+        [HttpPost("captains")]
+        public async Task<IActionResult> SendBulkEmailToCaptainsAsync([FromBody] EmailSendRequestDto requestDto)
+        {
+            await _emailService.SendBulkEmailToCaptainsAsync(User, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+
+        [HttpPost("guardians")]
+        public async Task<IActionResult> SendBulkEmailToGuardiansAsync([FromBody] EmailSendRequestDto requestDto)
+        {
+            await _emailService.SendBulkEmailToGuardiansAsync(User, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
     }

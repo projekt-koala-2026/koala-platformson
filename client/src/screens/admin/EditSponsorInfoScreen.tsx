@@ -8,7 +8,7 @@ import Modal from "../../components/Modal";
 import type { ApiSponsor, Sponsor } from "../../types/models";
 import { adaptSponsor } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 
 interface SponsorForm {
     name: string;
@@ -50,7 +50,7 @@ const EditSponsorInfo = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiSponsor[]>(
+        void apiListRequestResult<ApiSponsor>(
             `${apiEndpoints.sponsors}?${firstPage}`,
             null,
             "GET",
@@ -198,13 +198,13 @@ const EditSponsorInfo = () => {
     return (
         <>
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl space-y-7 px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page space-y-7">
                 <header className="flex flex-col gap-5 border-b border-line-subtle pb-6 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                             Administracja
                         </p>
-                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Sponsorzy</h1>
+                        <h1 className="mt-1 text-3xl font-bold tracking-tight">Sponsorzy</h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
                             Zarządzaj logotypami i odnośnikami wyświetlanymi w stopce strony.
                         </p>

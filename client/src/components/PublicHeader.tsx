@@ -35,6 +35,7 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
         : baseLinks;
     const navigationOptions = links.map((link) => ({
         label: link.label,
+        active: location.pathname === link.path,
         onClick: () => navigate(link.path),
     }));
 
@@ -51,19 +52,36 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
         <>
             <header className="sticky top-0 z-40 border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md sm:px-6">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-                    <button
-                        type="button"
-                        onClick={() => navigate("/")}
-                        aria-label="Przejdź na stronę główną"
-                        className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus"
-                    >
-                        <span className="block text-xl font-bold tracking-tight text-ink-heading">
-                            KOALA
-                        </span>
-                        <span className="hidden text-xs font-semibold text-brand-text sm:block">
-                            Kombinatoryka · Algorytmika · Logika
-                        </span>
-                    </button>
+                    <div className="flex min-w-0 items-center gap-3">
+                        <div>
+                            <Hamburger
+                                options={[
+                                    ...navigationOptions,
+                                    ...(!isLoggedIn
+                                        ? [
+                                              {
+                                                  label: "Zaloguj",
+                                                  onClick: () => navigate("/login"),
+                                              },
+                                          ]
+                                        : []),
+                                ]}
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            aria-label="Przejdź na stronę główną"
+                            className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus"
+                        >
+                            <span className="block text-xl font-bold tracking-tight text-ink-heading">
+                                KOALA
+                            </span>
+                            <span className="hidden text-xs font-semibold text-brand-text sm:block">
+                                Kombinatoryka · Algorytmika · Logika
+                            </span>
+                        </button>
+                    </div>
 
                     <nav
                         aria-label="Główna nawigacja"
@@ -134,21 +152,6 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                 Zaloguj
                             </button>
                         )}
-                        <div className="lg:hidden">
-                            <Hamburger
-                                options={[
-                                    ...navigationOptions,
-                                    ...(!isLoggedIn
-                                        ? [
-                                              {
-                                                  label: "Zaloguj",
-                                                  onClick: () => navigate("/login"),
-                                              },
-                                          ]
-                                        : []),
-                                ]}
-                            />
-                        </div>
                     </div>
                 </div>
             </header>

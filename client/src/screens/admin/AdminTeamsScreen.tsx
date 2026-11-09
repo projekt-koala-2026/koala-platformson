@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import type { ApiTeam } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequestResult } from "../../utils/apiFetcher";
 
 const AdminTeamsScreen = () => {
     const navigate = useNavigate();
@@ -14,7 +14,7 @@ const AdminTeamsScreen = () => {
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<ApiTeam[]>(
+        void apiListRequestResult<ApiTeam>(
             `${apiEndpoints.teams}?${firstPage}`,
             null,
             "GET",
@@ -38,7 +38,7 @@ const AdminTeamsScreen = () => {
                 team.name,
                 team.schoolId,
                 team.editionId,
-                ...team.teamMembers.map((member) => member.id),
+                ...team.teamMembers.map((member) => member.teamMemberId),
             ]
                 .join(" ")
                 .toLocaleLowerCase("pl-PL")
@@ -49,12 +49,12 @@ const AdminTeamsScreen = () => {
     return (
         <div className="min-h-screen bg-canvas">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <header className="border-b border-line-subtle pb-6">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Administracja
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">
+                    <h1 className="mt-1 text-3xl font-bold tracking-tight">
                         Zarejestrowane drużyny
                     </h1>
                     <p className="mt-3 text-ink-secondary">

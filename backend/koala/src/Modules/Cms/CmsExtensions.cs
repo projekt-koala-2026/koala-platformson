@@ -3,6 +3,7 @@ using koala.src.Modules.Cms.Data;
 using koala.src.Modules.Cms.Services;
 using Microsoft.Extensions.FileProviders;
 using koala.src.Modules.Cms.Entities;
+using koala.src.Shared;
 
 
 namespace koala.src.Modules.Cms
@@ -36,11 +37,7 @@ namespace koala.src.Modules.Cms
             services.AddScoped<SponsorService, SponsorService>();
             services.AddScoped<StaticPageService, StaticPageService>();
 
-            // 4. EXCEPTION HANDLERS
-            services.AddExceptionHandler<CmsExceptionHandler>();
-            services.AddProblemDetails();
-
-            // 5. FLUID VALIDATORS
+            // 4. FLUID VALIDATORS
 
             return services;
         }
@@ -53,7 +50,7 @@ namespace koala.src.Modules.Cms
             }
             catch
             {
-                throw new CmsException(CmsErrorCodes.FolderCreationError, "Error when creating a folder holding public files");
+                throw new KoalaException(KoalaErrorCodes.FolderCreationFailure, "Error when creating a folder holding public files");
             }
             app.UseStaticFiles(new StaticFileOptions
             {

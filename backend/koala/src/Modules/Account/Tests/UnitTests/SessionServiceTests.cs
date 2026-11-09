@@ -65,7 +65,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             Assert.NotNull(response);
             Assert.Equal(TestDataSeeder.ID_USER_1, response.UserId);
-            Assert.Contains("ORGANIZATION_ADMIN", response.UserRoles);
+            Assert.Contains(TestDataSeeder.NAME_ROLE_1, response.UserRoles);
         }
 
         [Fact]
@@ -164,7 +164,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             Assert.NotNull(response);
             Assert.Equal(TestDataSeeder.ID_USER_3, response.UserId);
-            Assert.Contains("ORGANIZATION_EDITOR", response.UserRoles);
+            Assert.Contains(TestDataSeeder.NAME_ROLE_3, response.UserRoles);
         }
 
         [Fact]
@@ -201,7 +201,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             Assert.NotNull(response);
             Assert.Equal(TestDataSeeder.ID_USER_8, response.UserId);
-            Assert.Contains("TEAM_ADMIN", response.UserRoles);
+            Assert.Contains(TestDataSeeder.NAME_ROLE_4, response.UserRoles);
         }
 
         [Fact]
@@ -216,8 +216,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 TestDataSeeder.PASSWORD_USER_13
             );
 
-            var exception = await Assert.ThrowsAsync<AccountException>(() => service.CreateSessionAsync(requestDto));
-            Assert.Equal(AccountErrorCodes.UserNotFound, exception.ErrorCode);
+            var exception = await Assert.ThrowsAsync<KoalaException>(() => service.CreateSessionAsync(requestDto));
+            Assert.Equal(KoalaErrorCodes.InvalidCredentials, exception.ErrorCode);
         }
 
         [Fact]
@@ -227,8 +227,8 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             ClaimsPrincipal? unauthenticatedPrincipal = null;
 
-            var exception = await Assert.ThrowsAsync<AccountException>(() => service.DeleteSessionAsync(unauthenticatedPrincipal, TestDataSeeder.ID_SESSION_1));
-            Assert.Equal(AccountErrorCodes.Unauthenticated, exception.ErrorCode);
+            var exception = await Assert.ThrowsAsync<KoalaException>(() => service.DeleteSessionAsync(unauthenticatedPrincipal, TestDataSeeder.ID_SESSION_1));
+            Assert.Equal(KoalaErrorCodes.Unauthenticated, exception.ErrorCode);
         }
     }
 }

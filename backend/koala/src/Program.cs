@@ -4,6 +4,9 @@ using koala.src.Modules.Account;
 using koala.src.Modules.Cms;
 using koala.src.Modules.Core;
 using koala.src.Shared.Validation;
+using Microsoft.OpenApi;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.AspNetCore.Mvc;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,12 +57,6 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
-
-    //using (var scope = app.Services.CreateScope())
-    //{
-    //    var dbContext = scope.ServiceProvider.GetRequiredService<AccountDbContext>();
-    //    await dbContext.Database.EnsureCreatedAsync();
-    //}
 }
 
 app.UseAuthentication();
@@ -70,9 +67,5 @@ CmsModuleExtensions.AddCmsModule(app, app.Configuration);
 SharedExtension.AddSharedModule(app, app.Configuration);
 
 app.MapControllers();
-
-// app.MapGet("/health", () => Results.Ok("Healthy"));
-// app.Urls.Add("http://0.0.0.0:8080");
-
 
 app.Run();

@@ -1,4 +1,5 @@
 using FluentValidation;
+using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Dtos
 {
@@ -15,9 +16,13 @@ namespace koala.src.Modules.Account.Dtos
         {
             RuleFor(x => x)
                 .Must(x => x.DeclaredAtLeast13 != x.DeclaredAtLeast18)
-                .WithMessage("You must confirm your age by checking at least one age requirement box!");
+                .WithErrorCode(KoalaValidationErrorCodes.AgeDeclarationInvalid)
+                .WithMessage("You must confirm your age by checking only one age requirement box!");
+
             RuleFor(x => x.Version)
-                .GreaterThan(0).WithMessage("Version field must be greater than 0");
+                .GreaterThan(0)
+                .WithErrorCode(KoalaValidationErrorCodes.ResourceVersionInvalid)
+                .WithMessage("Version field must be greater than 0");
         }
     }
 }

@@ -55,8 +55,8 @@ namespace koala.src.Modules.Core.Controllers
         [HttpGet("subedition/{subedition_id}/draft")]
         public async Task<IActionResult> GetDraftRanking([FromRoute] Guid subedition_id, [FromQuery] string? tier, [FromQuery] PageQueryDto pageQueryDto)
         {
-            if (!ClaimsHelper.IsOrganizationAdmin(User))
-                throw new CoreException(CoreErrorCodes.Forbidden, "Only an administrator can view unpublished rankings");
+            if (!ClaimsHelper.IsRoleOrganizationAdmin(User))
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only an administrator can view unpublished rankings");
             (var responseData, var responsePagination) = await _rankingService.GetRankingAsync(subedition_id, tier, pageQueryDto, true);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<RankingDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
@@ -66,7 +66,7 @@ namespace koala.src.Modules.Core.Controllers
         public async Task<IActionResult> GetRanking([FromQuery] Guid subeditionId, [FromQuery] string? tier, [FromQuery] PageQueryDto pageQueryDto)
         {
             if (subeditionId == Guid.Empty)
-                throw new CoreException(CoreErrorCodes.BadRequest, "A subedition id is required");
+                throw new KoalaException(KoalaErrorCodes.BadRequest, "A subedition id is required");
             (var responseData, var responsePagination) = await _rankingService.GetRankingAsync(subeditionId, tier, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<RankingDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }

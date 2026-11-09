@@ -1,5 +1,6 @@
 using FluentValidation;
 using koala.src.Modules.Account.Entities;
+using koala.src.Shared;
 
 namespace koala.src.Modules.Account.Dtos
 {
@@ -22,16 +23,30 @@ namespace koala.src.Modules.Account.Dtos
         public UserUpdateRolesDtoValidator()
         {
             RuleFor(x => x.UserRoles)
-                .NotEmpty().WithMessage("Roles field cannot be empty!");
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.UserRolesEmpty)
+                .WithMessage("Roles field cannot be empty!");
+
             RuleForEach(x => x.UserRoles)
-                .NotEmpty().WithMessage("Role item cannot be empty!")
-                .MaximumLength(50).WithMessage("Role item name cannot exceed 50 characters!")
+                .NotEmpty()
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleEmpty)
+                .WithMessage("Role item cannot be empty!")
+
+                .MaximumLength(50)
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleTooLong)
+                .WithMessage("Role item name cannot exceed 50 characters!")
+
                 .Must(role => AllowedRoles.Contains(role))
-                .WithMessage("Invalid role specified!")
-                .When(x => x.UserRoles != null);
+                .When(x => x.UserRoles != null)
+                .WithErrorCode(KoalaValidationErrorCodes.UserRoleInvalid)
+                .WithMessage("Invalid role specified!");
 
             RuleFor(x => x.Version)
-                .GreaterThan(0).WithMessage("Version field must be greater than 0");
+                .GreaterThan(0)
+                .WithErrorCode(KoalaValidationErrorCodes.ResourceVersionInvalid)
+                .WithMessage("Version field must be greater than 0");
         }
     }
 }

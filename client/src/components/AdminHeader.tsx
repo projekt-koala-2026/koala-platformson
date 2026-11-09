@@ -64,19 +64,28 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
         <>
             <header className="sticky top-0 z-40 border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md sm:px-6">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-                    <button
-                        type="button"
-                        onClick={() => navigate(homePath)}
-                        aria-label="Przejdź na stronę główną panelu"
-                        className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus"
-                    >
-                        <span className="block text-xl font-bold tracking-tight text-ink-heading">
-                            KOALA
-                        </span>
-                        <span className="block text-xs font-semibold text-brand-text">
-                            Panel administracyjny
-                        </span>
-                    </button>
+                    <div className="flex min-w-0 items-center gap-3">
+                        <Hamburger
+                            options={links.map((link) => ({
+                                label: link.label,
+                                active: location.pathname === link.path,
+                                onClick: () => navigate(link.path),
+                            }))}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => navigate(homePath)}
+                            aria-label="Przejdź na stronę główną panelu"
+                            className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus"
+                        >
+                            <span className="block text-xl font-bold tracking-tight text-ink-heading">
+                                KOALA
+                            </span>
+                            <span className="block text-xs font-semibold text-brand-text">
+                                Panel administracyjny
+                            </span>
+                        </button>
+                    </div>
 
                     <nav
                         aria-label="Nawigacja panelu"
@@ -116,12 +125,6 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                                     disabled: loggingOut,
                                 },
                             ]}
-                        />
-                        <Hamburger
-                            options={links.map((link) => ({
-                                label: link.label,
-                                onClick: () => navigate(link.path),
-                            }))}
                         />
                     </div>
                 </div>

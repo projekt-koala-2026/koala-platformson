@@ -97,11 +97,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         public static string PASSWORD_USER_13 = "user13@";
         public static string PASSWORD_USER_14 = "user14@";
         public static string PASSWORD_USER_15 = "user15@";
-        public static string NAME_ROLE_1 = "ORGANIZATION_ADMIN";
-        public static string NAME_ROLE_2 = "ORGANIZATION_EDITOR";
-        public static string NAME_ROLE_3 = "ORGANIZATION_REVIEWER";
-        public static string NAME_ROLE_4 = "TEAM_ADMIN";
-        public static string NAME_ROLE_5 = "TEAM_PLAYER";
+        public static string NAME_ROLE_1 = RoleNames.NAME_ORGANIZATION_ADMIN;
+        public static string NAME_ROLE_2 = RoleNames.NAME_ORGANIZATION_EDITOR;
+        public static string NAME_ROLE_3 = RoleNames.NAME_ORGANIZATION_REVIEWER;
+        public static string NAME_ROLE_4 = RoleNames.NAME_TEAM_GUARDIAN;
+        public static string NAME_ROLE_5 = RoleNames.NAME_TEAM_CAPTAIN;
         public static string NAME_TEAM_1 = "TEAM_1";
         public static string NAME_TEAM_2 = "TEAM_2";
         public static string NAME_FIRST_USER_1 = "Alicja";
@@ -140,8 +140,6 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         public static string NAME_LAST_MEMBER_1 = "Kucharek";
         public static string NAME_LAST_MEMBER_2 = "Lewandowska";
         public static string NAME_LAST_MEMBER_3 = "Zielińska";
-        public static string POSITION_USER_TEAM_1 = "ADMIN";
-        public static string POSITION_USER_TEAM_2 = "CAPTAIN";
         public static DateTime TIME_CREATED = DateTime.UtcNow;
         public static DateTime TIME_EXPIRES_SESSION = TIME_CREATED.AddHours(12);
         public static DateTime TIME_EXPIRES_LINK = TIME_CREATED.AddDays(1);

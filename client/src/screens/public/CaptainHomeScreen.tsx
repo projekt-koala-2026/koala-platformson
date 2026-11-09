@@ -1,15 +1,23 @@
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { FaDownload, FaExchangeAlt, FaUpload } from "react-icons/fa";
+import { useEffect, useId, useMemo, useState } from "react";
+import {
+    FaDownload,
+    FaEdit,
+    FaExchangeAlt,
+    FaPlus,
+    FaSyncAlt,
+    FaTrash,
+    FaUpload,
+} from "react-icons/fa";
 import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import SchoolsTable from "../../components/SchoolsTable";
 import type {
-    ApiRodo,
     ApiSchool,
     ApiTeam,
     ApiTeamJoinCode,
@@ -18,7 +26,7 @@ import type {
 } from "../../types/models";
 import { adaptSchool } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult, apiUrl } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult, apiUrl } from "../../utils/apiFetcher";
 import { getStoredUserId, getUserRoles } from "../../utils/authService";
 
 const inputClass =
@@ -28,6 +36,7 @@ type Feedback = { tone: "success" | "error"; message: string } | null;
 
 const CaptainHomeScreen = () => {
     const navigate = useNavigate();
+    const createTeamFormId = useId();
     const currentUserId = useMemo(() => getStoredUserId(), []);
     const roles = useMemo(() => getUserRoles(), []);
     const [teams, setTeams] = useState<ApiTeam[]>([]);
@@ -56,13 +65,13 @@ const CaptainHomeScreen = () => {
 
         if (loading) {
             void Promise.all([
-                apiRequestResult<ApiTeam[]>(
+                apiListRequestResult<ApiTeam>(
                     `${apiEndpoints.teams}/me?${firstPage}`,
                     null,
                     "GET",
                     navigate
                 ),
-                apiRequestResult<ApiSchool[]>(
+                apiListRequestResult<ApiSchool>(
                     `${apiEndpoints.schools}?${firstPage}`,
                     null,
                     "GET",
@@ -103,40 +112,19 @@ const CaptainHomeScreen = () => {
             };
         }
 
-        const memberIds: (string | null)[] = [
-            null,
-            ...(team.teamMembers ?? []).map((member) => member.id),
-        ];
-
-        setRodoByMember(Object.fromEntries(memberIds.map((id) => [id ?? "captain", false])));
-        setRodoStateByMember(Object.fromEntries(memberIds.map((id) => [id ?? "captain", null])));
-
-        void Promise.all(
-            memberIds.map(async (memberId) => {
-                const result = await apiRequestResult<ApiRodo>(
-                    `${apiEndpoints.teams}/${team.id}/rodos/${memberId ?? "null"}`,
-                    null,
-                    "GET",
-                    navigate
-                );
-
-                const hasRodo = result.status === 200;
-
-                return [
-                    memberId ?? "captain",
-                    { hasRodo, state: result.data?.state ?? null },
-                ] as const;
-            })
-        ).then((statuses) => {
-            if (active) {
-                setRodoByMember(
-                    Object.fromEntries(statuses.map(([key, value]) => [key, value.hasRodo]))
-                );
-                setRodoStateByMember(
-                    Object.fromEntries(statuses.map(([key, value]) => [key, value.state]))
-                );
-            }
-        });
+        setRodoByMember(
+            Object.fromEntries(
+                team.teamMembers.map((member) => [
+                    member.teamMemberId,
+                    member.rodoState !== "RODO_NONE",
+                ])
+            )
+        );
+        setRodoStateByMember(
+            Object.fromEntries(
+                team.teamMembers.map((member) => [member.teamMemberId, member.rodoState])
+            )
+        );
 
         return () => {
             active = false;
@@ -144,18 +132,18 @@ const CaptainHomeScreen = () => {
     }, [loading, navigate, team]);
 
     const statusMeta: Record<
-        "UNVERIFIED" | "ACCEPTED" | "REJECTED",
+        "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED",
         { label: string; className: string }
     > = {
-        UNVERIFIED: {
+        RODO_UNVERIFIED: {
             label: "Do weryfikacji",
             className: "app-status-warning",
         },
-        ACCEPTED: {
+        RODO_ACCEPTED: {
             label: "Zatwierdzona",
             className: "app-status-success",
         },
-        REJECTED: {
+        RODO_REJECTED: {
             label: "Odrzucona",
             className: "app-status-danger",
         },
@@ -198,7 +186,7 @@ const CaptainHomeScreen = () => {
         const result = team
             ? await apiRequestResult<ApiTeam>(
                   `${apiEndpoints.teams}/${team.id}/name`,
-                  { name: normalizedName },
+                  { name: normalizedName, version: team.version },
                   "PUT",
                   navigate
               )
@@ -225,8 +213,16 @@ const CaptainHomeScreen = () => {
                 tone: "success",
                 message: team ? "Nazwa drużyny została zapisana." : "Drużyna została utworzona.",
             });
-        } else if (team) setFeedback({ tone: "error", message: "Nie udało się zapisać drużyny." });
-        else setCreateError("Nie udało się utworzyć drużyny. Sprawdź dane i spróbuj ponownie.");
+        } else if (team)
+            setFeedback({
+                tone: "error",
+                message: result.error?.message ?? "Nie udało się zapisać drużyny.",
+            });
+        else
+            setCreateError(
+                result.error?.message ??
+                    "Nie udało się utworzyć drużyny. Sprawdź dane i spróbuj ponownie."
+            );
         setSaving(false);
     };
 
@@ -260,7 +256,7 @@ const CaptainHomeScreen = () => {
         if (!normalizedCode) return;
         setSaving(true);
         setFeedback(null);
-        const { data } = await apiRequestResult<ApiTeamMember[]>(
+        const { data, error } = await apiRequestResult<ApiTeam>(
             `${apiEndpoints.teams}/join/${encodeURIComponent(normalizedCode)}`,
             null,
             "POST",
@@ -269,12 +265,12 @@ const CaptainHomeScreen = () => {
         if (!data) {
             setFeedback({
                 tone: "error",
-                message: "Nie udało się dołączyć do drużyny. Sprawdź kod.",
+                message: error?.message ?? "Nie udało się dołączyć do drużyny. Sprawdź kod.",
             });
             setSaving(false);
             return;
         }
-        const refreshed = await apiRequestResult<ApiTeam[]>(
+        const refreshed = await apiListRequestResult<ApiTeam>(
             `${apiEndpoints.teams}/me?${firstPage}`,
             null,
             "GET",
@@ -331,7 +327,7 @@ const CaptainHomeScreen = () => {
         if (status === 200 || status === 204) {
             const updated = {
                 ...team,
-                teamMembers: team.teamMembers.filter((item) => item.id !== memberId),
+                teamMembers: team.teamMembers.filter((item) => item.teamMemberId !== memberId),
             };
             setTeam(updated);
             setTeams((items) => items.map((item) => (item.id === updated.id ? updated : item)));
@@ -369,17 +365,18 @@ const CaptainHomeScreen = () => {
 
         const membersToAdd = newMembers
             .map((member) => ({
-                NameFirst: member.nameFirst.trim(),
-                NameLast: member.nameLast.trim(),
+                nameFirst: member.nameFirst.trim(),
+                nameLast: member.nameLast.trim(),
+                version: null,
             }))
-            .filter((member) => member.NameFirst || member.NameLast);
+            .filter((member) => member.nameFirst || member.nameLast);
 
         if (membersToAdd.length === 0) {
             setMemberError("Wpisz imię i nazwisko przynajmniej jednej osoby.");
             return;
         }
 
-        if (membersToAdd.some((member) => !member.NameFirst || !member.NameLast)) {
+        if (membersToAdd.some((member) => !member.nameFirst || !member.nameLast)) {
             setMemberError("Uzupełnij imię i nazwisko każdej rozpoczętej osoby.");
             return;
         }
@@ -400,7 +397,7 @@ const CaptainHomeScreen = () => {
         }
 
         if (addedCount > 0) {
-            const refreshed = await apiRequestResult<ApiTeam[]>(
+            const refreshed = await apiListRequestResult<ApiTeam>(
                 `${apiEndpoints.teams}/me?${firstPage}`,
                 null,
                 "GET",
@@ -444,66 +441,75 @@ const CaptainHomeScreen = () => {
         ]);
     };
 
-    const addRodo = async (memberId: string | null, file?: File) => {
+    const addRodo = async (memberId: string, file?: File) => {
         if (!team || !file) return;
-        if (file.type !== "application/pdf") {
-            setFeedback({ tone: "error", message: "Wybierz plik PDF." });
+        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+        if (!allowedTypes.includes(file.type) || file.size > 2 * 1024 * 1024) {
+            setFeedback({
+                tone: "error",
+                message: "Wybierz plik PDF, JPG, PNG lub WebP o rozmiarze do 2 MB.",
+            });
             return;
         }
 
+        const member = team.teamMembers.find((item) => item.teamMemberId === memberId);
+        if (!member) return;
         const formData = new FormData();
         formData.append("File", file);
         setSaving(true);
         setFeedback(null);
 
-        const memberKey = memberId ?? "captain";
-        const hasRodo = rodoByMember[memberKey] === true;
-        const result = await apiRequestResult<unknown>(
-            `${apiEndpoints.teams}/${team.id}/rodos/${memberId ?? "null"}${hasRodo ? "/file" : ""}`,
+        const hasRodo = rodoByMember[memberId] === true;
+        if (hasRodo && member.rodoVersion) {
+            formData.append("Version", String(member.rodoVersion));
+        }
+        const result = await apiRequestResult<ApiTeamMember>(
+            `${apiEndpoints.teams}/${team.id}/rodos/${memberId}${hasRodo ? "/file" : ""}`,
             formData,
             hasRodo ? "PUT" : "POST",
             navigate
         );
 
         if (result.status === 200 || result.status === 204) {
-            setRodoByMember((current) => ({ ...current, [memberKey]: true }));
-            setRodoStateByMember((current) => ({ ...current, [memberKey]: "UNVERIFIED" }));
-            setFeedback({ tone: "success", message: "Plik PDF został zapisany." });
-        } else setFeedback({ tone: "error", message: "Nie udało się zapisać pliku PDF." });
+            setRodoByMember((current) => ({ ...current, [memberId]: true }));
+            setRodoStateByMember((current) => ({
+                ...current,
+                [memberId]: result.data?.rodoState ?? "RODO_UNVERIFIED",
+            }));
+            if (result.data) {
+                const updatedTeam = {
+                    ...team,
+                    teamMembers: team.teamMembers.map((item) =>
+                        item.teamMemberId === memberId ? result.data! : item
+                    ),
+                };
+                setTeam(updatedTeam);
+                setTeams((items) =>
+                    items.map((item) => (item.id === updatedTeam.id ? updatedTeam : item))
+                );
+            }
+            setFeedback({ tone: "success", message: "Dokument RODO został zapisany." });
+        } else
+            setFeedback({
+                tone: "error",
+                message: result.error?.message ?? "Nie udało się zapisać dokumentu RODO.",
+            });
         setSaving(false);
     };
 
-    const removeRodo = async (memberId: string | null) => {
-        if (!team) return;
-        const memberKey = memberId ?? "captain";
-        setSaving(true);
-        const result = await apiRequestResult<unknown>(
-            `${apiEndpoints.teams}/${team.id}/rodos/${memberId ?? "null"}`,
-            null,
-            "DELETE",
-            navigate
-        );
-        if (result.status === 200 || result.status === 204) {
-            setRodoByMember((current) => ({ ...current, [memberKey]: false }));
-            setRodoStateByMember((current) => ({ ...current, [memberKey]: null }));
-            setFeedback({ tone: "success", message: "Zgoda RODO została usunięta." });
-        } else setFeedback({ tone: "error", message: "Nie udało się usunąć zgody RODO." });
-        setSaving(false);
-    };
-
-    const downloadRodo = async (memberId: string | null) => {
+    const downloadRodo = async (memberId: string) => {
         if (!team) return;
         setSaving(true);
         try {
             const response = await fetch(
-                `${apiUrl}${apiEndpoints.teams}/${team.id}/rodos/${memberId ?? "null"}/file`,
+                `${apiUrl}${apiEndpoints.teams}/${team.id}/rodos/${memberId}/file`,
                 { credentials: "include" }
             );
             if (!response.ok) throw new Error("RODO download failed");
             const objectUrl = URL.createObjectURL(await response.blob());
             const link = document.createElement("a");
             link.href = objectUrl;
-            link.download = `rodo-${memberId ?? "captain"}.pdf`;
+            link.download = `rodo-${memberId}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -517,15 +523,20 @@ const CaptainHomeScreen = () => {
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
-                        Panel drużyn
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
-                    <p className="mt-3 max-w-2xl text-ink-secondary">
-                        Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
-                    </p>
+            <main className="app-public-page flex-1">
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                            Panel drużyn
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
+                        </p>
+                    </div>
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2b.png`}
+                    />
                 </header>
                 {teams.length > 1 && (
                     <label className="mb-6 block max-w-xl text-sm font-medium text-ink">
@@ -639,11 +650,13 @@ const CaptainHomeScreen = () => {
                                         <div className="flex items-center gap-2">
                                             <Button
                                                 text="Edytuj nazwę"
+                                                icon={<FaEdit />}
                                                 onClick={() => setEditingName(true)}
                                                 className="mt-5"
                                             />
                                             <Button
                                                 text="Dodaj członka"
+                                                icon={<FaPlus />}
                                                 onClick={() => setAddingMember(true)}
                                                 disabled={
                                                     saving || (team.teamMembers?.length ?? 0) >= 2
@@ -675,6 +688,7 @@ const CaptainHomeScreen = () => {
                             {isCaptain && (
                                 <Button
                                     text={team.joinCode ? "Wygeneruj nowy kod" : "Wygeneruj kod"}
+                                    icon={<FaSyncAlt />}
                                     onClick={() => void generateJoinCode()}
                                     disabled={saving}
                                     className="mt-4"
@@ -685,6 +699,12 @@ const CaptainHomeScreen = () => {
                             <h2 className="text-lg font-semibold text-ink-heading">
                                 Członkowie drużyny
                             </h2>
+                            {roles.isGuardian && (
+                                <p className="mt-2 text-sm text-ink-muted">
+                                    Usuwanie zgód jest chwilowo niedostępne. Dokument możesz
+                                    zastąpić nowym plikiem.
+                                </p>
+                            )}
                             <ul className="mt-4 divide-y divide-slate-100">
                                 <li className="relative flex flex-wrap items-center justify-between gap-3 py-3">
                                     <div>
@@ -697,214 +717,158 @@ const CaptainHomeScreen = () => {
                                             Kapitan drużyny
                                         </p>
                                     </div>
-                                    <div className="absolute left-1/2 -translate-x-1/2 text-center">
-                                        {roles.isGuardian && rodoStatusFor("captain") && (
-                                            <span
-                                                className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor("captain")!.className}`}
-                                            >
-                                                {rodoStatusFor("captain")!.label}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {roles.isGuardian && rodoByMember.captain === false && (
-                                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
-                                            <FaUpload />
-                                            <span>Zgoda RODO</span>
-                                            <input
-                                                type="file"
-                                                accept=".pdf,application/pdf"
-                                                className="sr-only"
-                                                disabled={saving}
-                                                onChange={(event) => {
-                                                    const file = event.currentTarget.files?.[0];
-                                                    if (file) void addRodo(null, file);
-                                                    event.currentTarget.value = "";
-                                                }}
-                                            />
-                                        </label>
-                                    )}
-                                    {roles.isGuardian && rodoByMember.captain === true && (
-                                        <div className="flex items-center gap-1">
-                                            <button
-                                                type="button"
-                                                disabled={saving}
-                                                onClick={() => void downloadRodo(null)}
-                                                className="inline-flex items-center gap-2 rounded-lg bg-success-soft px-4 py-2 text-xs font-semibold text-success-text hover:brightness-95 disabled:opacity-50"
-                                            >
-                                                <FaDownload />
-                                                <span>Zgoda RODO</span>
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                disabled={saving}
-                                                onClick={() => void removeRodo(null)}
-                                                className="rounded-lg bg-danger-soft px-2 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
-                                                aria-label="Usuń zgodę RODO kapitana"
-                                            >
-                                                <FaTrashCan />
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                disabled={saving}
-                                                onClick={() =>
-                                                    document
-                                                        .getElementById("captain-rodo-replace")
-                                                        ?.click()
-                                                }
-                                                aria-label="Zastąp zgodę RODO kapitana"
-                                                className="rounded-lg bg-brand-soft px-2 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted disabled:opacity-50"
-                                            >
-                                                <FaExchangeAlt />
-                                            </button>
-                                            <input
-                                                id="captain-rodo-replace"
-                                                type="file"
-                                                accept=".pdf,application/pdf"
-                                                className="sr-only"
-                                                disabled={saving}
-                                                onChange={(event) => {
-                                                    const file = event.currentTarget.files?.[0];
-                                                    if (file) void addRodo(null, file);
-                                                    event.currentTarget.value = "";
-                                                }}
-                                            />
-                                        </div>
-                                    )}
                                 </li>
                                 {team.teamMembers?.map((member) => (
                                     <li
-                                        key={member.id}
+                                        key={member.teamMemberId}
                                         className="relative flex flex-wrap items-center justify-between gap-3 py-3"
                                     >
                                         <div>
                                             <p className="font-mono text-sm text-ink">
                                                 {member.nameFist} {member.nameLast}
                                             </p>
-                                            <p className="text-xs text-ink-muted">
-                                                {member.position}
-                                            </p>
+                                            <p className="text-xs text-ink-muted">Uczestnik</p>
                                         </div>
                                         <div className="absolute left-1/2 -translate-x-1/2 text-center">
-                                            {roles.isGuardian && rodoStatusFor(member.id) && (
-                                                <span
-                                                    className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor(member.id)!.className}`}
-                                                >
-                                                    {rodoStatusFor(member.id)!.label}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {isCaptain && member.position !== "CAPTAIN" && (
-                                            <button
-                                                type="button"
-                                                disabled={saving}
-                                                onClick={() => void removeMember(member.id)}
-                                                className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
-                                            >
-                                                Usuń z drużyny
-                                            </button>
-                                        )}
-                                        {roles.isGuardian && rodoByMember[member.id] === false && (
-                                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
-                                                <FaUpload />
-                                                <span>Zgoda RODO</span>
-                                                <input
-                                                    type="file"
-                                                    accept=".pdf,application/pdf"
-                                                    className="sr-only"
-                                                    disabled={saving}
-                                                    onChange={(event) => {
-                                                        const file = event.currentTarget.files?.[0];
-                                                        if (file) void addRodo(member.id, file);
-                                                        event.currentTarget.value = "";
-                                                    }}
-                                                />
-                                            </label>
-                                        )}
-                                        {roles.isGuardian && rodoByMember[member.id] === true && (
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    type="button"
-                                                    disabled={saving}
-                                                    onClick={() => void downloadRodo(member.id)}
-                                                    className="inline-flex items-center gap-2 rounded-lg bg-success-soft px-4 py-2 text-xs font-semibold text-success-text hover:brightness-95 disabled:opacity-50"
-                                                >
-                                                    <FaDownload />
-                                                    <span>Zgoda RODO</span>
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    disabled={saving}
-                                                    onClick={() => void removeRodo(member.id)}
-                                                    className="rounded-lg bg-danger-soft px-2 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
-                                                    aria-label={`Usuń zgodę RODO ${member.nameFist} ${member.nameLast}`}
-                                                >
-                                                    <FaTrashCan />
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    disabled={saving}
-                                                    onClick={() =>
-                                                        document
-                                                            .getElementById(
-                                                                `rodo-replace-${member.id}`
-                                                            )
-                                                            ?.click()
-                                                    }
-                                                    aria-label={`Zastąp zgodę RODO ${member.nameFist} ${member.nameLast}`}
-                                                    className="rounded-lg bg-brand-soft px-2 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted disabled:opacity-50"
-                                                >
-                                                    <FaExchangeAlt />
-                                                </button>
-                                                <input
-                                                    id={`rodo-replace-${member.id}`}
-                                                    type="file"
-                                                    accept=".pdf,application/pdf"
-                                                    className="sr-only"
-                                                    disabled={saving}
-                                                    onChange={(event) => {
-                                                        const file = event.currentTarget.files?.[0];
-                                                        if (file) void addRodo(member.id, file);
-                                                        event.currentTarget.value = "";
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-                                    </li>
-                                ))}
-                                {team.teamAdmin && team.teamAdmin.id !== team.teamCaptain?.id && (
-                                    <li className="flex flex-wrap items-center justify-between gap-3 py-3">
-                                        <div>
-                                            <p className="font-mono text-sm text-ink">
-                                                {team.teamAdmin?.nameFirst}{" "}
-                                                {team.teamAdmin?.nameLast}
-                                            </p>
-                                            <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
-                                                Opiekun drużyny
-                                            </p>
+                                            {roles.isGuardian &&
+                                                rodoStatusFor(member.teamMemberId) && (
+                                                    <span
+                                                        className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor(member.teamMemberId)!.className}`}
+                                                    >
+                                                        {rodoStatusFor(member.teamMemberId)!.label}
+                                                    </span>
+                                                )}
                                         </div>
                                         {isCaptain && (
                                             <button
                                                 type="button"
-                                                // Brakuje endpointu do usuwania opiekuna drużyny, więc przycisk jest disabled
-                                                disabled
+                                                disabled={saving}
                                                 onClick={() =>
-                                                    void removeMember(team.teamAdmin?.id ?? "")
+                                                    void removeMember(member.teamMemberId)
                                                 }
-                                                className="rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
                                             >
-                                                Usuń z drużyny
+                                                <FaTrash aria-hidden="true" /> Usuń z drużyny
                                             </button>
                                         )}
+                                        {roles.isGuardian &&
+                                            rodoByMember[member.teamMemberId] === false && (
+                                                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
+                                                    <FaUpload />
+                                                    <span>Zgoda RODO</span>
+                                                    <input
+                                                        type="file"
+                                                        accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                                        className="sr-only"
+                                                        disabled={saving}
+                                                        onChange={(event) => {
+                                                            const file =
+                                                                event.currentTarget.files?.[0];
+                                                            if (file)
+                                                                void addRodo(
+                                                                    member.teamMemberId,
+                                                                    file
+                                                                );
+                                                            event.currentTarget.value = "";
+                                                        }}
+                                                    />
+                                                </label>
+                                            )}
+                                        {roles.isGuardian &&
+                                            rodoByMember[member.teamMemberId] === true && (
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving}
+                                                        onClick={() =>
+                                                            void downloadRodo(member.teamMemberId)
+                                                        }
+                                                        className="inline-flex items-center gap-2 rounded-lg bg-success-soft px-4 py-2 text-xs font-semibold text-success-text hover:brightness-95 disabled:opacity-50"
+                                                    >
+                                                        <FaDownload />
+                                                        <span>Zgoda RODO</span>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled
+                                                        title="Usuwanie zgód jest chwilowo niedostępne. Możesz zastąpić dokument."
+                                                        className="rounded-lg bg-danger-soft px-2 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                        aria-label={`Usuń zgodę RODO ${member.nameFist} ${member.nameLast}`}
+                                                    >
+                                                        <FaTrashCan />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving}
+                                                        onClick={() =>
+                                                            document
+                                                                .getElementById(
+                                                                    `rodo-replace-${member.teamMemberId}`
+                                                                )
+                                                                ?.click()
+                                                        }
+                                                        aria-label={`Zastąp zgodę RODO ${member.nameFist} ${member.nameLast}`}
+                                                        className="rounded-lg bg-brand-soft px-2 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted disabled:opacity-50"
+                                                    >
+                                                        <FaExchangeAlt />
+                                                    </button>
+                                                    <input
+                                                        id={`rodo-replace-${member.teamMemberId}`}
+                                                        type="file"
+                                                        accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                                        className="sr-only"
+                                                        disabled={saving}
+                                                        onChange={(event) => {
+                                                            const file =
+                                                                event.currentTarget.files?.[0];
+                                                            if (file)
+                                                                void addRodo(
+                                                                    member.teamMemberId,
+                                                                    file
+                                                                );
+                                                            event.currentTarget.value = "";
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
                                     </li>
-                                )}
+                                ))}
+                                {team.teamGuardian &&
+                                    team.teamGuardian.id !== team.teamCaptain?.id && (
+                                        <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                            <div>
+                                                <p className="font-mono text-sm text-ink">
+                                                    {team.teamGuardian?.nameFirst}{" "}
+                                                    {team.teamGuardian?.nameLast}
+                                                </p>
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                                    Opiekun drużyny
+                                                </p>
+                                            </div>
+                                            {isCaptain && (
+                                                <button
+                                                    type="button"
+                                                    // Brakuje endpointu do usuwania opiekuna drużyny, więc przycisk jest disabled
+                                                    disabled
+                                                    onClick={() =>
+                                                        void removeMember(
+                                                            team.teamGuardian?.id ?? ""
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                >
+                                                    <FaTrash aria-hidden="true" /> Usuń z drużyny
+                                                </button>
+                                            )}
+                                        </li>
+                                    )}
                             </ul>
                             {isCaptain && (
                                 <Button
                                     text={saving ? "Usuwanie…" : "Usuń drużynę"}
+                                    icon={<FaTrash />}
                                     onClick={() => void deleteTeam()}
                                     disabled={saving}
                                     className="mt-6 bg-danger hover:bg-danger-hover focus:ring-danger-emphasis"
@@ -943,7 +907,11 @@ const CaptainHomeScreen = () => {
                             </form>
                         )}
                         {roles.isCaptain && (
-                            <Button text="Utwórz nową drużynę" onClick={openCreateTeam} />
+                            <Button
+                                text="Utwórz nową drużynę"
+                                icon={<FaPlus />}
+                                onClick={openCreateTeam}
+                            />
                         )}
                     </div>
                 )}
@@ -953,8 +921,27 @@ const CaptainHomeScreen = () => {
                 onClose={closeCreateTeam}
                 title="Utwórz drużynę"
                 maxWidth="xl"
+                footer={
+                    <div className="flex flex-wrap justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={closeCreateTeam}
+                            disabled={saving}
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
+                        >
+                            Anuluj
+                        </button>
+                        <Button
+                            type="submit"
+                            form={createTeamFormId}
+                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
+                            icon={<FaPlus />}
+                            disabled={saving}
+                        />
+                    </div>
+                }
             >
-                <form onSubmit={submitTeam} className="space-y-6">
+                <form id={createTeamFormId} onSubmit={submitTeam} className="space-y-4">
                     <label className="block text-sm font-medium text-ink">
                         Nazwa drużyny
                         <input
@@ -985,6 +972,7 @@ const CaptainHomeScreen = () => {
                             )}
                         </div>
                         <SchoolsTable
+                            compact
                             schools={schools}
                             selectedRspo={selectedSchool?.rspo ?? null}
                             onRowClick={(school) => {
@@ -999,22 +987,6 @@ const CaptainHomeScreen = () => {
                             {createError}
                         </p>
                     )}
-
-                    <div className="flex flex-col-reverse gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:justify-end">
-                        <button
-                            type="button"
-                            onClick={closeCreateTeam}
-                            disabled={saving}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
-                        >
-                            Anuluj
-                        </button>
-                        <Button
-                            type="submit"
-                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
-                            disabled={saving}
-                        />
-                    </div>
                 </form>
             </Modal>
             <Modal
@@ -1089,6 +1061,7 @@ const CaptainHomeScreen = () => {
                         <Button
                             type="submit"
                             text={saving ? "Dodawanie…" : "Dodaj osoby"}
+                            icon={<FaPlus />}
                             disabled={saving}
                         />
                     </div>

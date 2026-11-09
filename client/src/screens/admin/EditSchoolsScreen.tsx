@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { FaFileImport, FaPlus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -12,6 +13,22 @@ import { apiFormRequest, apiRequestResult } from "../../utils/apiFetcher";
 
 const SCHOOLS_PAGE_SIZE = 500;
 const MAX_SCHOOL_PAGES = 200;
+
+const SCHOOL_TYPES = [
+    "Ogólnokształcąca szkoła muzyczna I stopnia",
+    "Poznańska szkoła chóralna",
+    "Szkoła podstawowa",
+    "Bednarska Szkoła Realna",
+    "Branżowa szkoła I stopnia",
+    "Branżowa szkoła II stopnia",
+    "Liceum ogólnokształcące",
+    "Liceum ogólnokształcące uzupełniające dla absolwentów zasadniczych szkół zawodowych",
+    "Liceum profilowane",
+    "Szkoła policealna",
+    "Szkoła specjalna przysposabiająca do pracy",
+    "Technikum",
+    "Technikum uzupełniające dla absolwentów zasadniczych szkół zawodowych",
+] as const;
 
 interface SchoolForm {
     rspo: string;
@@ -106,13 +123,22 @@ const SchoolFields = ({ value, disabled, onChange }: SchoolFieldsProps) => (
         </label>
         <label className="text-sm font-medium text-ink sm:col-span-2">
             Typ placówki *
-            <input
+            <select
                 value={value.type}
                 onChange={(event) => onChange("type", event.target.value)}
-                className={inputClass}
+                className={`app-select ${inputClass}`}
                 disabled={disabled}
                 required
-            />
+            >
+                <option value="" disabled>
+                    Wybierz typ placówki
+                </option>
+                {SCHOOL_TYPES.map((schoolType) => (
+                    <option key={schoolType} value={schoolType}>
+                        {schoolType}
+                    </option>
+                ))}
+            </select>
         </label>
         <label className="text-sm font-medium text-ink">
             Ulica *
@@ -373,7 +399,7 @@ const AdminSchoolsScreen = () => {
         setFeedback(null);
         const { data: updated } = await apiRequestResult<ApiSchool>(
             `${apiEndpoints.schools}/${source.id}`,
-            payload,
+            { ...payload, version: source.version },
             "PUT",
             navigate
         );
@@ -443,12 +469,12 @@ const AdminSchoolsScreen = () => {
     return (
         <>
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page space-y-8">
                 <header className="border-b border-line-subtle pb-6">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Administracja
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Rejestr szkół</h1>
+                    <h1 className="mt-1 text-3xl font-bold tracking-tight">Rejestr szkół</h1>
                     <p className="mt-3 max-w-3xl text-ink-secondary">
                         Importuj dane z kuratorium, dodawaj placówki i aktualizuj ich dane.
                     </p>
@@ -471,14 +497,19 @@ const AdminSchoolsScreen = () => {
                         </p>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-3 sm:mt-0 sm:shrink-0">
-                        <Button text="Dodaj szkołę" onClick={openCreateModal} disabled={isBusy} />
+                        <Button
+                            text="Dodaj szkołę"
+                            icon={<FaPlus />}
+                            onClick={openCreateModal}
+                            disabled={isBusy}
+                        />
                         <button
                             type="button"
                             onClick={openImportModal}
                             disabled={isBusy}
-                            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-border bg-brand-soft px-4 py-2.5 text-sm font-medium text-brand-text-strong transition hover:border-brand-border-strong hover:bg-brand-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-4 py-2.5 text-sm font-medium text-brand-text-strong transition hover:border-brand-border-strong hover:bg-brand-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            Importuj CSV
+                            <FaFileImport aria-hidden="true" /> Importuj CSV
                         </button>
                     </div>
                 </section>
@@ -517,6 +548,7 @@ const AdminSchoolsScreen = () => {
                         </div>
                         <Button
                             text={action === "delete-all" ? "Usuwanie…" : "Wyczyść całą bazę"}
+                            icon={<FaTrash />}
                             onClick={() => void handleDeleteAll()}
                             disabled={isBusy || schools.length === 0}
                             className="mt-4 bg-danger hover:bg-danger-hover active:bg-danger-active focus-visible:ring-danger-focus sm:mt-0 sm:shrink-0"
@@ -546,6 +578,7 @@ const AdminSchoolsScreen = () => {
                         <Button
                             type="submit"
                             text={action === "create" ? "Dodawanie…" : "Dodaj szkołę"}
+                            icon={<FaPlus />}
                             disabled={isBusy}
                         />
                     </div>
@@ -583,6 +616,7 @@ const AdminSchoolsScreen = () => {
                         <Button
                             type="submit"
                             text={action === "import" ? "Importowanie…" : "Importuj"}
+                            icon={<FaFileImport />}
                             disabled={isBusy || !csvFile}
                         />
                     </div>
@@ -606,6 +640,7 @@ const AdminSchoolsScreen = () => {
                         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                             <Button
                                 text={action === "delete-one" ? "Usuwanie…" : "Usuń szkołę"}
+                                icon={<FaTrash />}
                                 onClick={() => void handleDeleteSingle()}
                                 disabled={isBusy}
                                 className="bg-danger hover:bg-danger-hover active:bg-danger-active focus-visible:ring-danger-focus"

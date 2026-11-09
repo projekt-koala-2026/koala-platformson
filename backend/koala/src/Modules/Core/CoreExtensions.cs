@@ -29,11 +29,7 @@ namespace koala.src.Modules.Core
             services.AddScoped<TaskService, TaskService>();
             services.AddScoped<RankingService, RankingService>();
 
-            // 4. EXCEPTION HANDLERS
-            services.AddExceptionHandler<CoreExceptionHandler>();
-            services.AddProblemDetails();
-
-            // 5. FLUID VALIDATORS
+            // 4. FLUID VALIDATORS
 
             return services;
         }

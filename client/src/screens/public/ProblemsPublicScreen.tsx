@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaFilePdf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import type { ApiEdition, ApiStaticPage, Edition, ProblemsByEdition } from "../../types/models";
 import { adaptEdition, staticPageProblems } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequest, resolveApiAssetUrl } from "../../utils/apiFetcher";
+import { apiListRequest, resolveApiAssetUrl } from "../../utils/apiFetcher";
 
 const ProblemsPublicScreen = () => {
     const navigate = useNavigate();
@@ -19,13 +20,13 @@ const ProblemsPublicScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+            apiListRequest<ApiEdition>(
+                `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
-            apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
+            apiListRequest<ApiStaticPage>(apiEndpoints.staticPages, null, "GET", navigate),
         ]).then(([editionData, staticPages]) => {
             if (!active) return;
             const taskPage = staticPages?.find((page) => page.name === "TASKS_PAGE");
@@ -55,15 +56,20 @@ const ProblemsPublicScreen = () => {
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
-                        Materiały konkursowe
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Archiwum zadań</h1>
-                    <p className="mt-3 max-w-2xl text-ink-secondary">
-                        Wybierz edycję i pobierz oficjalne zestawy zadań oraz dokumentację.
-                    </p>
+            <main className="app-public-page">
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
+                            Materiały konkursowe
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Archiwum zadań</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Wybierz edycję i pobierz oficjalne zestawy zadań oraz dokumentację.
+                        </p>
+                    </div>
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mysli.webp`}
+                    />
                 </header>
 
                 {hasError && (

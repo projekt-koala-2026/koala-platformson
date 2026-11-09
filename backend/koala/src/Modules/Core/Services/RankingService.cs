@@ -24,28 +24,28 @@ namespace koala.src.Modules.Core.Services
         public async Task GenereteRankingFromSubEdtionAsync(ClaimsPrincipal claimsPrincipal, Guid subEditionId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
             if (!isAuthenticated)
             {
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
             if (!isOrganizationAdmin)
             {
-                throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
             var subedition = await _db.SubEditions.Include(se => se.Edition).FirstOrDefaultAsync(se => se.Id == subEditionId);
             if(subedition == null)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             }
 
             DateTime timeNow = DateTime.UtcNow;
             if(subedition.Edition.State != EditionStates.STATE_CLOSED || timeNow <= subedition.AnswerClose)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "Rankings can only be generated for a closed edition after the answer period ends");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Rankings can only be generated for a closed edition after the answer period ends");
             }
 
             if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subEditionId &&
@@ -53,7 +53,7 @@ namespace koala.src.Modules.Core.Services
                 ((ts.Reviewer1Id != null || ts.Reviewer2Id != null) && (ts.Review1Score == null || ts.Review2Score == null)) ||
                 (ts.Review1Score != null && ts.Review2Score != null && ts.Review1Score != ts.Review2Score))))
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "Not all task submissions have a final score");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Not all task submissions have a final score");
             }
             var tasks = await _db.TaskItems
                 .Where(t => t.SubEditionId == subEditionId)
@@ -71,7 +71,7 @@ namespace koala.src.Modules.Core.Services
             var teams = await _accountModule.Internal_GetTeamsForEditionAsync(subedition.EditionId);
             if (teams.Count == 0)
             {
-                throw new CoreException(CoreErrorCodes.Conflict, "No teams are registered for this edition");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "No teams are registered for this edition");
             }
         
             // 3. Grupowanie po drużynach i sumowanie punktów
@@ -82,7 +82,7 @@ namespace koala.src.Modules.Core.Services
             foreach (var teamInfo in teams)
             {
                 if (teamInfo.Tier != TaskItemTiers.TIER_1 && teamInfo.Tier != TaskItemTiers.TIER_2)
-                    throw new CoreException(CoreErrorCodes.Conflict, "A team has an invalid tier");
+                    throw new KoalaException(KoalaErrorCodes.Conflict, "A team has an invalid tier");
         
                 var ranking = new Ranking
                 {
@@ -122,14 +122,14 @@ namespace koala.src.Modules.Core.Services
         public async Task PublishRankingAsync(ClaimsPrincipal claimsPrincipal, Guid subeditionId)
         {
             if (!ClaimsHelper.IsAuthenticated(claimsPrincipal))
-                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
-            if (!ClaimsHelper.IsOrganizationAdmin(claimsPrincipal))
-                throw new CoreException(CoreErrorCodes.Forbidden, "Only an administrator can publish rankings");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            if (!ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal))
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only an administrator can publish rankings");
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(s => s.Id == subeditionId);
             if (subedition == null)
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             if (!await _db.Rankings.AnyAsync(r => r.SubeditionId == subeditionId))
-                throw new CoreException(CoreErrorCodes.Conflict, "Generate the ranking before publishing it");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Generate the ranking before publishing it");
             subedition.RankingPublished = true;
             await _db.SaveChangesAsync();
         }
@@ -137,7 +137,7 @@ namespace koala.src.Modules.Core.Services
         public async Task<(List<RankingDto>, ApiPagination)> GetRankingAsync(Guid subeditionId, string? tier, PageQueryDto pageQueryDto, bool includeUnpublished = false)
         {
             if (!string.IsNullOrWhiteSpace(tier) && tier != TaskItemTiers.TIER_1 && tier != TaskItemTiers.TIER_2)
-                throw new CoreException(CoreErrorCodes.BadRequest, "Unknown ranking tier");
+                throw new KoalaException(KoalaErrorCodes.BadRequest, "Unknown ranking tier");
             var query = _db.Rankings.AsNoTracking().Where(r => r.SubeditionId == subeditionId && (includeUnpublished || r.SubEdition.RankingPublished));
             if (!string.IsNullOrWhiteSpace(tier)) query = query.Where(r => r.Tier == tier);
             var totalCount = await query.CountAsync();

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
 import type { ApiEdition, ApiPost, ApiStaticPage, Edition, Post } from "../../types/models";
 import { adaptEdition, adaptPost, staticPageMarkdown } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequest } from "../../utils/apiFetcher";
+import { apiListRequest } from "../../utils/apiFetcher";
 
 const HistoryScreen = () => {
     const navigate = useNavigate();
@@ -20,14 +21,14 @@ const HistoryScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequest<ApiStaticPage[]>(apiEndpoints.staticPages, null, "GET", navigate),
-            apiRequest<ApiEdition[]>(
-                `${apiEndpoints.editions}?${firstPage}&ShowActive=false`,
+            apiListRequest<ApiStaticPage>(apiEndpoints.staticPages, null, "GET", navigate),
+            apiListRequest<ApiEdition>(
+                `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
-            apiRequest<ApiPost[]>(
+            apiListRequest<ApiPost>(
                 `${apiEndpoints.posts}?${firstPage}&ShowHidden=false`,
                 null,
                 "GET",
@@ -36,10 +37,9 @@ const HistoryScreen = () => {
         ]).then(([staticPages, editionData, postData]) => {
             if (!active) return;
             const historyPage = staticPages?.find((item) => item.name === "HISTORY_PAGE");
-            const now = Date.now();
             const pastEditions = (editionData ?? [])
                 .map(adaptEdition)
-                .filter((edition) => new Date(edition.endDate).getTime() < now)
+                .filter((edition) => edition.state === "CLOSED")
                 .sort(
                     (first, second) =>
                         new Date(second.endDate).getTime() - new Date(first.endDate).getTime()
@@ -70,15 +70,21 @@ const HistoryScreen = () => {
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
-                        O konkursie
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-ink-heading">Historia</h1>
-                    <p className="mt-3 max-w-2xl text-ink-secondary">
-                        Poznaj początki konkursu i najważniejsze wydarzenia z poprzednich edycji.
-                    </p>
+            <main className="app-public-page">
+                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
+                            O konkursie
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Historia</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Poznaj początki konkursu i najważniejsze wydarzenia z poprzednich
+                            edycji.
+                        </p>
+                    </div>
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2d.png`}
+                    />
                 </header>
 
                 {hasError && (
