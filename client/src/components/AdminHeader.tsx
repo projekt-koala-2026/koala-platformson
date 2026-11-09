@@ -26,6 +26,8 @@ const editorLinks = [
 const administratorLinks = [
     { label: "Start", path: "/admin" },
     { label: "Edycje", path: "/admin/editions" },
+    { label: "Podedycje", path: "/admin/subeditions" },
+    { label: "Zadania konkursowe", path: "/admin/competition-tasks" },
     ...editorLinks,
     { label: "Szkoły", path: "/admin/schools" },
     { label: "Drużyny", path: "/admin/teams" },
@@ -63,7 +65,7 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
     return (
         <>
             <header className="sticky top-0 z-40 border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md sm:px-6">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+                <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
                     <div className="flex min-w-0 items-center gap-3">
                         <Hamburger
                             options={links.map((link) => ({
@@ -111,7 +113,7 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                         })}
                     </nav>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex shrink-0 items-center justify-self-end gap-3">
                         <ThemeToggle />
                         <ProfileButton
                             options={[
