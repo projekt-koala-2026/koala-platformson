@@ -50,6 +50,11 @@ namespace koala.src.Modules.Core
                     CoreErrorCodes.ActiveEditionAlreadyExists => StatusCodes.Status409Conflict,
                     CoreErrorCodes.SubEditionNotFound => StatusCodes.Status404NotFound,
                     CoreErrorCodes.TaskNotFound => StatusCodes.Status404NotFound,
+                    CoreErrorCodes.TaskAnswerNotFound => StatusCodes.Status404NotFound,
+                    CoreErrorCodes.TaskSubmissionNotFound => StatusCodes.Status404NotFound,
+                    CoreErrorCodes.Unauthenticated => StatusCodes.Status401Unauthorized,
+                    CoreErrorCodes.Forbidden => StatusCodes.Status403Forbidden,
+                    CoreErrorCodes.Conflict => StatusCodes.Status409Conflict,
                     _ => StatusCodes.Status400BadRequest
                 };
 

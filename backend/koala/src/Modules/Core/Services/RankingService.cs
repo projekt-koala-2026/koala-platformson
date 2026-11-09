@@ -43,14 +43,17 @@ namespace koala.src.Modules.Core.Services
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(subedition.AnswerOpen <= timeNow && timeNow <= subedition.AnswerClose)
+            if(timeNow <= subedition.AnswerClose)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Teams have still time to answer tasks");
+                throw new CoreException(CoreErrorCodes.Conflict, "Cannot generate rankings before the answer period ends");
             }
 
-            if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subEditionId && ((ts.Review1Score != ts.Review2Score) || ts.Review1Score == null || ts.Review2Score == null)))
+            if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subEditionId &&
+                (ts.AutoReviewState == null || (ts.Review1Score == null) != (ts.Review2Score == null) ||
+                ((ts.Reviewer1Id != null || ts.Reviewer2Id != null) && (ts.Review1Score == null || ts.Review2Score == null)) ||
+                (ts.Review1Score != null && ts.Review2Score != null && ts.Review1Score != ts.Review2Score))))
             {
-                throw new CoreException(CoreErrorCodes.TaskSubmissionNotFound, "Not all task submissions are yet scored");
+                throw new CoreException(CoreErrorCodes.Conflict, "Not all task submissions have a final score");
             }
             var tasks = await _db.TaskItems
                 .Where(t => t.SubEditionId == subEditionId)
@@ -64,6 +67,11 @@ namespace koala.src.Modules.Core.Services
                 .Include(ts => ts.TaskItem)
                 .Where(ts => ts.TaskItem.SubEditionId == subEditionId)
                 .ToListAsync();
+
+            if (submissions.Count == 0)
+            {
+                throw new CoreException(CoreErrorCodes.TaskSubmissionNotFound, "No submissions exist for this subedition");
+            }
         
             // 3. Grupowanie po drużynach i sumowanie punktów
             var teamRankingsData = submissions
@@ -71,7 +79,7 @@ namespace koala.src.Modules.Core.Services
                 .Select(group => new
                 {
                     TeamId = group.Key,
-                    TotalScore = group.Sum(ts => ts.Review1Score == true ? 1 : 0)
+                    TotalScore = group.Sum(ts => ts.AutoReviewState == true ? 1 : 0)
                 })
                 .OrderByDescending(x => x.TotalScore)
                 .ToList();
@@ -86,15 +94,21 @@ namespace koala.src.Modules.Core.Services
                 {
                     Id = Guid.CreateVersion7(),
                     SubeditionId = subEditionId,
+                    TeamId = data.TeamId,
                     TeamName = teamInfo.Name, 
                     Tier = teamInfo.Tier,
                     Points = data.TotalScore,
-                    PointsMax = teamInfo.Tier == TaskItemTiers.TIER_2 ? tier1TaskCount + tier2TaskCount : tier1TaskCount
+                    PointsMax = teamInfo.Tier == TaskItemTiers.TIER_2 ? tier1TaskCount + tier2TaskCount : tier1TaskCount,
+                    CreatedAt = timeNow,
+                    UpdatedAt = timeNow,
+                    Version = 1
                 };
         
                 newRankings.Add(ranking);
             }
 
+            _db.Rankings.RemoveRange(await _db.Rankings.Where(r => r.SubeditionId == subEditionId).ToListAsync());
+            subedition.RankingPublished = false;
             _db.Rankings.AddRange(newRankings);
             await _db.SaveChangesAsync();
         }
@@ -110,53 +124,32 @@ namespace koala.src.Modules.Core.Services
             
         // }
 
-        public async Task<(List<RankingDto>, ApiPagination)> GetRankingAsync(string? tier, PageQueryDto pageQueryDto)
+        public async Task PublishRankingAsync(ClaimsPrincipal claimsPrincipal, Guid subeditionId)
         {
-            var validTiers = new[] { TaskItemTiers.TIER_1, TaskItemTiers.TIER_2 };
-            var selectedTier = !string.IsNullOrWhiteSpace(tier) && validTiers.Contains(tier)
-                ? tier
-                : TaskItemTiers.TIER_1;
+            if (!ClaimsHelper.IsAuthenticated(claimsPrincipal))
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            if (!ClaimsHelper.IsOrganizationAdmin(claimsPrincipal))
+                throw new CoreException(CoreErrorCodes.Forbidden, "Only an administrator can publish rankings");
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(s => s.Id == subeditionId);
+            if (subedition == null)
+                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
+            if (!await _db.Rankings.AnyAsync(r => r.SubeditionId == subeditionId))
+                throw new CoreException(CoreErrorCodes.Conflict, "Generate the ranking before publishing it");
+            subedition.RankingPublished = true;
+            await _db.SaveChangesAsync();
+        }
 
-            var maxScore = await _db.TaskItems
-                .AsNoTracking()
-                .CountAsync(t => t.Tier == selectedTier);
-
-            var baseQuery = _db.TaskSubmissions
-                .AsNoTracking()
-                .Where(s => s.TaskItem.Tier == selectedTier);
-
-            var groupedQuery = baseQuery
-                .GroupBy(s => s.TeamId)
-                .Select(g => new
-                {
-                    TeamId = g.Key,
-                    TotalScore = g.Where(s => s.AutoReviewState == true)
-                                .Select(s => s.TaskId)
-                                .Distinct()
-                                .Count(),
-                    LatestUpdatedAt = g.Max(s => (DateTime?)s.UpdatedAt)
-                });
-
-            var totalCount = await groupedQuery.CountAsync();
-            var skipCount = pageQueryDto.PageSize * pageQueryDto.PageNumber;
-
-            var pagedTeams = await groupedQuery
-                .OrderByDescending(r => r.TotalScore)
-                .ThenBy(r => r.LatestUpdatedAt)
-                .Skip(skipCount)
-                .Take(pageQueryDto.PageSize)
+        public async Task<(List<RankingDto>, ApiPagination)> GetRankingAsync(Guid subeditionId, string? tier, PageQueryDto pageQueryDto, bool includeUnpublished = false)
+        {
+            if (!string.IsNullOrWhiteSpace(tier) && tier != TaskItemTiers.TIER_1 && tier != TaskItemTiers.TIER_2)
+                throw new CoreException(CoreErrorCodes.BadRequest, "Unknown ranking tier");
+            var query = _db.Rankings.AsNoTracking().Where(r => r.SubeditionId == subeditionId && (includeUnpublished || r.SubEdition.RankingPublished));
+            if (!string.IsNullOrWhiteSpace(tier)) query = query.Where(r => r.Tier == tier);
+            var totalCount = await query.CountAsync();
+            var rankingDtos = await query.OrderByDescending(r => r.Points).ThenBy(r => r.TeamName).ThenBy(r => r.Id)
+                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize)
+                .Select(r => new RankingDto(r.TeamId, r.TeamName, r.SubeditionId, r.Points, r.PointsMax, r.Tier, r.UpdatedAt))
                 .ToListAsync();
-
-            var rankingDtos = pagedTeams
-                .Select(r => new RankingDto(
-                    r.TeamId,
-                    r.TotalScore,
-                    maxScore,
-                    selectedTier,
-                    r.LatestUpdatedAt
-                ))
-                .ToList();
-
             return (rankingDtos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
     }

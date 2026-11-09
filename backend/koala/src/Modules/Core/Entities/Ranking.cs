@@ -15,6 +15,8 @@ namespace koala.src.Modules.Core
         public Guid Id { get; set; }
         [Column("subedition_id")]
         public Guid SubeditionId { get; set; }
+        [Column("team_id")]
+        public Guid? TeamId { get; set; }
         [Column("team_name")]
         public string TeamName { get; set; }
         [Column("tier")]

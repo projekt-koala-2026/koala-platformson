@@ -70,6 +70,10 @@ namespace koala.src.Modules.Core.Data
                 .HasKey(ts => new { ts.TeamId, ts.TaskId });
 
             modelBuilder.Entity<TaskSubmission>()
+                .Property(ts => ts.Version)
+                .IsConcurrencyToken();
+
+            modelBuilder.Entity<TaskSubmission>()
                 .HasOne(ts => ts.TaskItem)
                 .WithMany(t => t.TaskSubmissions)
                 .HasForeignKey(ts => ts.TaskId)

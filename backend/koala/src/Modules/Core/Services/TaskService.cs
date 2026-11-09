@@ -21,6 +21,18 @@ namespace koala.src.Modules.Core.Services
             _accountModule = accountModule;
         }
 
+        private async Task SaveSubmissionsAsync()
+        {
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new CoreException(CoreErrorCodes.Conflict, "The submission was changed by another user. Refresh and try again.");
+            }
+        }
+
         public async Task<TaskAnswerDto> CreateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, TaskAnswerCreateDto createTaskAnswerDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -241,7 +253,7 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
             }
 
-            bool isTeamPlayer = ClaimsHelper.IsTeamPlayer(claimsPrincipal);
+            bool isTeamPlayer = claimsPrincipal?.IsInRole("TEAM_CAPTAIN") == true;
             if (!isTeamPlayer)
             {
                 throw new CoreException(CoreErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
@@ -262,7 +274,21 @@ namespace koala.src.Modules.Core.Services
             DateTime timeNow = DateTime.UtcNow;
             if(subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Teams cant in this time answer/view tasks");
+                throw new CoreException(CoreErrorCodes.Conflict, "Teams cannot answer tasks outside the answer period");
+            }
+
+            var task = await _db.TaskItems.Include(t => t.SubEdition).ThenInclude(s => s.Edition)
+                .FirstOrDefaultAsync(t => t.Id == task_id && t.SubEditionId == subedition_id);
+            if (task == null)
+            {
+                throw new CoreException(CoreErrorCodes.TaskNotFound, "Task does not belong to the specified subedition");
+            }
+            if (task.SubEdition.State != SubEditionStates.STATE_ACTIVE || task.SubEdition.Edition.State != EditionStates.STATE_ACTIVE ||
+                (task.Tier != TaskItemTiers.TIER_1 && task.Tier != TaskItemTiers.TIER_2) ||
+                (teamInfo.Tier == TaskItemTiers.TIER_1 && task.Tier != TaskItemTiers.TIER_1) ||
+                (teamInfo.Tier != TaskItemTiers.TIER_1 && teamInfo.Tier != TaskItemTiers.TIER_2))
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "This task is not available to the team");
             }
 
             TaskSubmission? submission = null;
@@ -305,7 +331,7 @@ namespace koala.src.Modules.Core.Services
             submission.UpdatedAt = timeNow;
             submission.Version++;
 
-            await _db.SaveChangesAsync();
+            await SaveSubmissionsAsync();
 
             return new TaskSubmissionDto
             (
@@ -317,11 +343,31 @@ namespace koala.src.Modules.Core.Services
                 null,
                 null,
                 submission.Submission,
-                null,
+                submission.State,
                 submission.CreatedAt,
                 submission.UpdatedAt,
                 submission.Version
             );
+        }
+
+        public async Task<TaskSubmissionDto> GetTaskSubmissionTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid subedition_id, Guid task_id, Guid team_id)
+        {
+            if (!ClaimsHelper.IsAuthenticated(claimsPrincipal))
+                throw new CoreException(CoreErrorCodes.Unauthenticated, "User not logged in");
+            if (claimsPrincipal?.IsInRole("TEAM_CAPTAIN") != true)
+                throw new CoreException(CoreErrorCodes.Forbidden, "Only the team captain can view this submission");
+
+            var team = await _accountModule.Internal_GetTeamInfo(team_id);
+            if (team.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
+                throw new CoreException(CoreErrorCodes.Forbidden, "Only the team captain can view this submission");
+
+            var submission = await _db.TaskSubmissions.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.TeamId == team_id && s.TaskId == task_id && s.TaskItem.SubEditionId == subedition_id);
+            if (submission == null)
+                throw new CoreException(CoreErrorCodes.TaskSubmissionNotFound, "Submission for this team and task does not exist");
+
+            return new TaskSubmissionDto(submission.TeamId, submission.TaskId, null, null, null, null, null,
+                submission.Submission, submission.State, submission.CreatedAt, submission.UpdatedAt, submission.Version);
         }
 
         public async Task<(List<TaskSubmissionDto>, ApiPagination)> GetTaskSubmissionsAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, PageQueryDto pageQueryDto)
@@ -381,6 +427,11 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
+            if (reviewer_id != ClaimsHelper.GetUserGuid(claimsPrincipal))
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Reviewer identity does not match the current user");
+            }
+
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id);
             if(subedition == null)
             {
@@ -388,12 +439,12 @@ namespace koala.src.Modules.Core.Services
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(subedition.AnswerOpen <= timeNow || timeNow <= subedition.AnswerClose)
+            if(timeNow <= subedition.AnswerClose)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "canot score subbmisions while team can answer");
+                throw new CoreException(CoreErrorCodes.Conflict, "Cannot score submissions before the answer period ends");
             }
 
-            var submission = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id);
+            var submission = await _db.TaskSubmissions.FirstOrDefaultAsync(e => e.TaskId == task_id && e.TeamId == team_id && e.TaskItem.SubEditionId == subedition_id);
 
             if (submission == null)
             {
@@ -421,9 +472,14 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.Forbidden, "Reviewer is not assigned to this submission");
             }
 
+            if (submission.Review1Score != null && submission.Review2Score != null && submission.Review1Score != submission.Review2Score)
+            {
+                submission.AutoReviewState = null;
+            }
             submission.UpdatedAt = DateTime.UtcNow;
+            submission.Version++;
 
-            await _db.SaveChangesAsync();
+            await SaveSubmissionsAsync();
 
             return new TaskSubmissionDto
             (
@@ -455,6 +511,11 @@ namespace koala.src.Modules.Core.Services
             if (!isOrganizationReviewer)
             {
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            if (reviewer_id != ClaimsHelper.GetUserGuid(claimsPrincipal))
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Reviewer identity does not match the current user");
             }
 
             var query = _db.TaskSubmissions.Where(t => t.Reviewer1Id == reviewer_id || t.Reviewer2Id == reviewer_id).AsNoTracking();
@@ -510,6 +571,11 @@ namespace koala.src.Modules.Core.Services
                 throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             }
 
+            if (DateTime.UtcNow <= subedition.AnswerClose)
+            {
+                throw new CoreException(CoreErrorCodes.Conflict, "Cannot check submissions before the answer period ends");
+            }
+
             // 1. Pobierz zadania dla danej podedycji wraz z ich poprawnymi odpowiedziami z tabeli Answers
             var tasksWithAnswers = await _db.TaskItems
                 .Where(t => t.SubEditionId == subedition_id)
@@ -527,25 +593,25 @@ namespace koala.src.Modules.Core.Services
             var taskIds = tasksWithAnswers.Select(x => x.Task.Id).ToList();
 
             var submissions = await _db.TaskSubmissions
-                .Where(ts => taskIds.Contains(ts.TaskId))
+                .Where(ts => taskIds.Contains(ts.TaskId) && ts.Review1Score == null && ts.Review2Score == null)
                 .ToListAsync();
 
-            var correctAnswerMap = tasksWithAnswers.ToDictionary(x => x.Task.Id, x => x.Answer.Answer);
+            var correctAnswerMap = tasksWithAnswers.GroupBy(x => x.Task.Id)
+                .ToDictionary(group => group.Key, group => group.Select(x => x.Answer.Answer).ToList());
 
             foreach (var submission in submissions)
             {
-                if (correctAnswerMap.TryGetValue(submission.TaskId, out var correctAnswer))
+                if (correctAnswerMap.TryGetValue(submission.TaskId, out var correctAnswers))
                 {
-                    bool isCorrect = string.Equals(
-                        submission.Submission?.Trim(), 
-                        correctAnswer?.Trim(), 
-                        StringComparison.OrdinalIgnoreCase
-                    );
+                    bool isCorrect = correctAnswers.Any(correctAnswer => string.Equals(
+                        submission.Submission?.Trim(), correctAnswer?.Trim(), StringComparison.OrdinalIgnoreCase));
                     submission.AutoReviewState = isCorrect ? true : false;
+                    submission.UpdatedAt = DateTime.UtcNow;
+                    submission.Version++;
                 }
             }
 
-            await _db.SaveChangesAsync();
+            await SaveSubmissionsAsync();
         }
 
         public async Task<(List<TaskSubmissionDto>, ApiPagination)> GetTasksWithConflictsAsync(ClaimsPrincipal? claimsPrincipal, Guid reviewer_id, PageQueryDto pageQueryDto)
@@ -561,6 +627,11 @@ namespace koala.src.Modules.Core.Services
             if (!isOrganizationReviewer)
             {
                 throw new CoreException(CoreErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            if (reviewer_id != ClaimsHelper.GetUserGuid(claimsPrincipal))
+            {
+                throw new CoreException(CoreErrorCodes.Forbidden, "Reviewer identity does not match the current user");
             }
 
             var query = _db.TaskSubmissions.Where(t =>(t.Reviewer1Id == reviewer_id || t.Reviewer2Id == reviewer_id) && t.Review1Score != t.Review2Score && t.Review1Score != null && t.Review2Score != null).AsNoTracking();
@@ -617,12 +688,14 @@ namespace koala.src.Modules.Core.Services
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(subedition.AnswerOpen <= timeNow || timeNow <= subedition.AnswerClose)
+            if(timeNow <= subedition.AnswerClose)
             {
-                throw new CoreException(CoreErrorCodes.SubEditionNotFound, "Cannot assign reviewers while teams can answer");
+                throw new CoreException(CoreErrorCodes.Conflict, "Cannot assign reviewers before the answer period ends");
             }
 
-            if (taskReviewerPairs == null || !taskReviewerPairs.TaskIds.Any() || !taskReviewerPairs.RevierPairIds.Any())
+            if (taskReviewerPairs == null || taskReviewerPairs.TaskIds == null || taskReviewerPairs.RevierPairIds == null ||
+                !taskReviewerPairs.TaskIds.Any() || !taskReviewerPairs.RevierPairIds.Any() ||
+                taskReviewerPairs.RevierPairIds.Any(pair => pair == null || pair.Reviewer1Id == Guid.Empty || pair.Reviewer2Id == Guid.Empty || pair.Reviewer1Id == pair.Reviewer2Id))
             {
                 throw new CoreException(CoreErrorCodes.BadRequest, "No reviewer pairs provided");
             }
@@ -652,14 +725,14 @@ namespace koala.src.Modules.Core.Services
                     var pair = taskReviewerPairs.RevierPairIds[i % pairsCount];
                     var submission = taskSubmissions[i];
 
-                    submission.Reviewer1Id = pair.Item1;
-                    submission.Reviewer2Id = pair.Item2;
+                    submission.Reviewer1Id = pair.Reviewer1Id;
+                    submission.Reviewer2Id = pair.Reviewer2Id;
                     submission.UpdatedAt = now;
                     submission.Version++;
                 }
             }
 
-            await _db.SaveChangesAsync();
+            await SaveSubmissionsAsync();
         }
     }
 }

@@ -27,6 +27,7 @@ namespace koala.src.Modules.Core
             services.AddScoped<EditionService, EditionService>();
             services.AddScoped<SchoolService, SchoolService>();
             services.AddScoped<TaskService, TaskService>();
+            services.AddScoped<RankingService, RankingService>();
 
             // 4. EXCEPTION HANDLERS
             services.AddExceptionHandler<CoreExceptionHandler>();

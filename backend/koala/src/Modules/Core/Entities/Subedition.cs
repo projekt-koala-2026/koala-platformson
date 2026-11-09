@@ -28,6 +28,8 @@ namespace koala.src.Modules.Core.Entities
         public DateTime UpdatedAt { get; set; }
         [Column("version")]
         public int Version { get; set; }
+        [Column("ranking_published")]
+        public bool RankingPublished { get; set; }
         public Edition Edition { get; set; } = null!;
         public ICollection<TaskItem> TaskItems { get; set; } = new List<TaskItem>();
         public ICollection<Ranking> Rankings { get; set; } = new List<Ranking>();

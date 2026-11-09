@@ -133,6 +133,14 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
+        [HttpPut("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
+        public async Task<IActionResult> UpdateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] TaskItemUpdateDto updateTaskDto)
+        {
+            var response = await _editionService.UpdateTaskItemAsync(User, edition_id, subedition_id, task_id, updateTaskDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskItemDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
         [HttpDelete("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
         public async Task<IActionResult> DeleteTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
         {

@@ -60,10 +60,19 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
+        [HttpPut("{task_id}/team/{team_id}/subedition/{subedition_id}")]
         [HttpPut("{task_id}/team/{team_id}/subedition{subedition_id}")]
         public async Task<IActionResult> UpsertTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertTaskSubmissionDto submitTaskSubmissionDto)
         {
-            var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, task_id, team_id, subedition_id, submitTaskSubmissionDto);
+            var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, subedition_id, task_id, team_id, submitTaskSubmissionDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpGet("{task_id}/team/{team_id}/subedition/{subedition_id}")]
+        public async Task<IActionResult> GetTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id)
+        {
+            var response = await _taskService.GetTaskSubmissionTeamAsync(User, subedition_id, task_id, team_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
@@ -85,26 +94,26 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("review/me/submission/{task_id}/subedition/{subedition_id}")]
-        public async Task<IActionResult> UpsertScoreByReviewer([FromRoute] Guid reviewer_id, [FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertReviewDto upsertReviewDto)
+        [HttpPut("review/me/submission/{task_id}/team/{team_id}/subedition/{subedition_id}")]
+        public async Task<IActionResult> UpsertScoreByReviewer([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertReviewDto upsertReviewDto)
         {
-            var response = await _taskService.UpsertScoreByReviewerAsync(User, reviewer_id, task_id, team_id, subedition_id, upsertReviewDto);
+            var response = await _taskService.UpsertScoreByReviewerAsync(User, ClaimsHelper.GetUserGuid(User), task_id, team_id, subedition_id, upsertReviewDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
         [HttpGet("review/me")]
-        public async Task<IActionResult> GetTasksToReview([FromRoute] Guid reviewer_id, [FromQuery] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetTasksToReview([FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _taskService.GetTasksToReviewAsync(User, reviewer_id, pageQueryDto);
+            (var responseData, var responsePagination) = await _taskService.GetTasksToReviewAsync(User, ClaimsHelper.GetUserGuid(User), pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         [Authorize]
         [HttpGet("review-conflicts/me/")]
-        public async Task<IActionResult> GetTasksWithConflicts([FromRoute] Guid reviewer_id, [FromQuery] PageQueryDto pageQueryDto)
+        public async Task<IActionResult> GetTasksWithConflicts([FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _taskService.GetTasksWithConflictsAsync(User, reviewer_id, pageQueryDto);
+            (var responseData, var responsePagination) = await _taskService.GetTasksWithConflictsAsync(User, ClaimsHelper.GetUserGuid(User), pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskSubmissionDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 

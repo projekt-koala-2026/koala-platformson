@@ -44,14 +44,9 @@ namespace koala.src.Modules.Core.Data.Migrations
                 table: "subeditions",
                 newName: "updated_at");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "version",
-                schema: "core",
-                table: "tasks",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid");
+            // The old UUID version cannot be cast to an integer by PostgreSQL.
+            // Existing tasks start a new integer version sequence at 1.
+            migrationBuilder.Sql("ALTER TABLE core.tasks ALTER COLUMN version DROP DEFAULT; ALTER TABLE core.tasks ALTER COLUMN version TYPE integer USING 1;");
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "updated_at",

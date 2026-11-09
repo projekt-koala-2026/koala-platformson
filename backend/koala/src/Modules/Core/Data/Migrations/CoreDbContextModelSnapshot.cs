@@ -93,6 +93,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<bool>("RankingPublished")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ranking_published");
+
                     b.Property<string>("State")
                         .IsRequired()
                         .HasColumnType("text")
@@ -241,6 +245,7 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer")
                         .HasColumnName("version");
 
@@ -273,6 +278,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.Property<Guid>("SubeditionId")
                         .HasColumnType("uuid")
                         .HasColumnName("subedition_id");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
 
                     b.Property<string>("TeamName")
                         .IsRequired()

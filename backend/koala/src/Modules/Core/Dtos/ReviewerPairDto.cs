@@ -3,6 +3,8 @@ namespace koala.src.Modules.Core.Dtos
     public record AssignReviewersDto
     (
         List<Guid> TaskIds,
-        List<(Guid,Guid)> RevierPairIds
+        List<ReviewerPairDto> RevierPairIds
     );
+
+    public record ReviewerPairDto(Guid Reviewer1Id, Guid Reviewer2Id);
  }
