@@ -551,11 +551,16 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var subedition = await _db.SubEditions.FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
+            var subedition = await _db.SubEditions.Include(e => e.Edition).FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
 
             if (subedition == null)
             {
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not a part of the this edition");
+            }
+
+            if (subedition.State == SubEditionStates.STATE_CLOSED || subedition.Edition.State == EditionStates.STATE_CLOSED)
+            {
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed subedition");
             }
 
             var newTask = await _db.TaskItems.FirstOrDefaultAsync(t => t.Name == createTaskDto.Name && t.SubEditionId == subedition_id);

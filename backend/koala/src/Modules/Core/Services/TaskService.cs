@@ -40,6 +40,22 @@ namespace koala.src.Modules.Core.Services
             _db.Rankings.RemoveRange(rankings);
         }
 
+        private async Task InvalidateAnswersAsync(TaskItem task)
+        {
+            var submissions = await _db.TaskSubmissions
+                .Where(s => s.TaskId == task.Id && s.Review1Score == null && s.Review2Score == null && s.AutoReviewState != null)
+                .ToListAsync();
+            foreach (var submission in submissions)
+            {
+                submission.AutoReviewState = null;
+                submission.UpdatedAt = DateTime.UtcNow;
+                submission.Version++;
+            }
+
+            var subedition = await _db.SubEditions.FirstAsync(s => s.Id == task.SubEditionId);
+            await InvalidateRankingAsync(subedition);
+        }
+
         public async Task<TaskAnswerDto> CreateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, TaskAnswerCreateDto createTaskAnswerDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -81,7 +97,8 @@ namespace koala.src.Modules.Core.Services
             };
 
             await _db.TaskAnswers.AddAsync(newTaskAnswer);
-            await _db.SaveChangesAsync();
+            await InvalidateAnswersAsync(task);
+            await SaveSubmissionsAsync();
 
             return new TaskAnswerDto
             (
@@ -139,7 +156,8 @@ namespace koala.src.Modules.Core.Services
             TaskAnswer.UpdatedAt = DateTime.UtcNow;
             TaskAnswer.Version++;
 
-            await _db.SaveChangesAsync();
+            await InvalidateAnswersAsync(task);
+            await SaveSubmissionsAsync();
 
             return new TaskAnswerDto
             (
@@ -175,7 +193,9 @@ namespace koala.src.Modules.Core.Services
             }
 
             _db.TaskAnswers.Remove(TaskAnswer);
-            await _db.SaveChangesAsync();
+            var task = await _db.TaskItems.FirstAsync(t => t.Id == task_id);
+            await InvalidateAnswersAsync(task);
+            await SaveSubmissionsAsync();
         }
 
         public async Task<TaskAnswerDto> GetTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_id, Guid task_answer_id)
