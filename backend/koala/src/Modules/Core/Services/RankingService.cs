@@ -88,7 +88,6 @@ namespace koala.src.Modules.Core.Services
                 {
                     Id = Guid.CreateVersion7(),
                     SubeditionId = subEditionId,
-                    TeamId = teamInfo.TeamId,
                     TeamName = teamInfo.Name, 
                     Tier = teamInfo.Tier,
                     Points = teamRankingsData[teamInfo.TeamId].Count(ts => ts.AutoReviewState == true &&
@@ -143,7 +142,7 @@ namespace koala.src.Modules.Core.Services
             var totalCount = await query.CountAsync();
             var rankingDtos = await query.OrderByDescending(r => r.Points).ThenBy(r => r.TeamName).ThenBy(r => r.Id)
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize)
-                .Select(r => new RankingDto(r.TeamId, r.TeamName, r.SubeditionId, r.Points, r.PointsMax, r.Tier, r.UpdatedAt))
+                .Select(r => new RankingDto(r.TeamName, r.SubeditionId, r.Points, r.PointsMax, r.Tier, r.UpdatedAt))
                 .ToListAsync();
             return (rankingDtos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }

@@ -279,10 +279,6 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("subedition_id");
 
-                    b.Property<Guid?>("TeamId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("team_id");
-
                     b.Property<string>("TeamName")
                         .IsRequired()
                         .HasColumnType("text")
