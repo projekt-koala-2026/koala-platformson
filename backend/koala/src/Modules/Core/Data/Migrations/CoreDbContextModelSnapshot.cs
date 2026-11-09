@@ -251,6 +251,54 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.ToTable("task_submissions", "core");
                 });
 
+            modelBuilder.Entity("koala.src.Modules.Core.Ranking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("integer")
+                        .HasColumnName("points");
+
+                    b.Property<int>("PointsMax")
+                        .HasColumnType("integer")
+                        .HasColumnName("points_max");
+
+                    b.Property<Guid>("SubeditionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subedition_id");
+
+                    b.Property<string>("TeamName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("team_name");
+
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubeditionId");
+
+                    b.ToTable("rankings", "core");
+                });
+
             modelBuilder.Entity("koala.src.Modules.Core.School", b =>
                 {
                     b.Property<Guid>("Id")
@@ -369,6 +417,17 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.Navigation("TaskItem");
                 });
 
+            modelBuilder.Entity("koala.src.Modules.Core.Ranking", b =>
+                {
+                    b.HasOne("koala.src.Modules.Core.Entities.SubEdition", "SubEdition")
+                        .WithMany("Rankings")
+                        .HasForeignKey("SubeditionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SubEdition");
+                });
+
             modelBuilder.Entity("koala.src.Modules.Core.Entities.Edition", b =>
                 {
                     b.Navigation("SubEditions");
@@ -376,6 +435,8 @@ namespace koala.src.Modules.Core.Data.Migrations
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEdition", b =>
                 {
+                    b.Navigation("Rankings");
+
                     b.Navigation("TaskItems");
                 });
 
