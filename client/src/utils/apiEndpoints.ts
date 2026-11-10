@@ -16,6 +16,11 @@ export const apiEndpoints = {
     competitionTasks: (editionId: string, subeditionId: string) =>
         `${API_ROOT}/core/editions/${editionId}/subeditions/${subeditionId}/tasks`,
     taskAnswers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/corr`,
+    assignReviewers: (subeditionId: string) =>
+        `${API_ROOT}/core/tasks/${subeditionId}/assign-reviewers`,
+    reviewerSubmissions: `${API_ROOT}/core/tasks/review/me`,
+    reviewerScore: (taskId: string, teamId: string, subeditionId: string) =>
+        `${API_ROOT}/core/tasks/review/me/submission/${taskId}/team/${teamId}/subedition/${subeditionId}`,
     schools: `${API_ROOT}/core/schools`,
     posts: `${API_ROOT}/cms/posts`,
     sponsors: `${API_ROOT}/cms/sponsors`,
