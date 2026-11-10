@@ -16,6 +16,7 @@ export const apiEndpoints = {
     competitionTasks: (editionId: string, subeditionId: string) =>
         `${API_ROOT}/core/editions/${editionId}/subeditions/${subeditionId}/tasks`,
     taskAnswers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/corr`,
+    taskSubmissions: (taskId: string) => `${API_ROOT}/core/tasks/submissions/${taskId}`,
     assignReviewers: (subeditionId: string) =>
         `${API_ROOT}/core/tasks/${subeditionId}/assign-reviewers`,
     reviewerSubmissions: `${API_ROOT}/core/tasks/review/me`,

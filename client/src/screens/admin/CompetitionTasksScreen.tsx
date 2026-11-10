@@ -7,13 +7,54 @@ import MarkdownEditor from "../../components/MarkdownEditor";
 import Modal from "../../components/Modal";
 import SelectListbox from "../../components/SelectListbox";
 import TaskAnswersModal from "../../components/TaskAnswersModal";
-import type { ApiCompetitionTask, ApiEdition, ApiSubedition } from "../../types/models";
+import type {
+    ApiCompetitionTask,
+    ApiEdition,
+    ApiSubedition,
+    ApiTaskAnswer,
+} from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
+import { decodeMultipleChoice } from "../../utils/competitionAnswers";
 
 const inputClass =
     "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading focus:border-brand-focus focus:outline-none focus:ring-2 focus:ring-brand-muted";
 type TaskForm = { name: string; tier: "TIER_1" | "TIER_2"; contentJson: string };
+type ChoiceOption = { id: string; text: string };
+const optionNumber = (id: string) =>
+    /^[A-Z]+$/.test(id)
+        ? [...id].reduce((value, letter) => value * 26 + letter.charCodeAt(0) - 64, 0)
+        : 0;
+const optionId = (number: number) => {
+    let result = "";
+    while (number > 0) {
+        number--;
+        result = String.fromCharCode(65 + (number % 26)) + result;
+        number = Math.floor(number / 26);
+    }
+    return result;
+};
+const readOptions = (json: string): ChoiceOption[] => {
+    try {
+        const content: unknown = JSON.parse(json);
+        if (
+            !content ||
+            typeof content !== "object" ||
+            !("options" in content) ||
+            !Array.isArray(content.options)
+        )
+            return [];
+        return content.options.filter(
+            (option): option is ChoiceOption =>
+                !!option &&
+                typeof option === "object" &&
+                typeof option.id === "string" &&
+                typeof option.text === "string"
+        );
+    } catch {
+        return [];
+    }
+};
 const emptyForm: TaskForm = {
     name: "",
     tier: "TIER_1",
@@ -80,9 +121,15 @@ export default function CompetitionTasksScreen() {
         ).then(({ data }) => {
             if (!active) return;
             if (data) {
-                setSubeditions(data);
+                const eligible =
+                    selectedEdition?.state === "CLOSED"
+                        ? []
+                        : data.filter((subedition) => subedition.state !== "CLOSED");
+                setSubeditions(eligible);
                 setSubeditionId(
-                    data.find((s) => s.id === params.get("subedition"))?.id ?? data[0]?.id ?? ""
+                    eligible.find((s) => s.id === params.get("subedition"))?.id ??
+                        eligible[0]?.id ??
+                        ""
                 );
             } else setError("Nie udało się pobrać podedycji.");
             setLoadingTasks(false);
@@ -90,7 +137,7 @@ export default function CompetitionTasksScreen() {
         return () => {
             active = false;
         };
-    }, [editionId, navigate, params]);
+    }, [editionId, navigate, params, selectedEdition?.state]);
     useEffect(() => {
         if (!editionId || !subeditionId) return;
         let active = true;
@@ -122,7 +169,7 @@ export default function CompetitionTasksScreen() {
     };
     let body: string | null = null;
     let answerType = "unspecified";
-    let options: { id: string; text: string }[] = [];
+    const options = readOptions(form.contentJson);
     try {
         const content: unknown = JSON.parse(form.contentJson);
         if (
@@ -141,21 +188,6 @@ export default function CompetitionTasksScreen() {
             typeof content.answer_type === "string"
         )
             answerType = content.answer_type;
-        if (
-            content &&
-            typeof content === "object" &&
-            !Array.isArray(content) &&
-            "options" in content &&
-            Array.isArray(content.options)
-        ) {
-            options = content.options.filter(
-                (option): option is { id: string; text: string } =>
-                    !!option &&
-                    typeof option === "object" &&
-                    typeof option.id === "string" &&
-                    typeof option.text === "string"
-            );
-        }
     } catch {
         /* The advanced editor retains invalid input until it is corrected. */
     }
@@ -177,29 +209,39 @@ export default function CompetitionTasksScreen() {
                 const content = JSON.parse(current.contentJson) as Record<string, unknown>;
                 return {
                     ...current,
-                    contentJson: JSON.stringify({ ...content, answer_type: value }, null, 2),
+                    contentJson: JSON.stringify(
+                        {
+                            ...content,
+                            answer_type: value,
+                            ...(["single_choice", "multiple_choice"].includes(value) &&
+                            !Array.isArray(content.options)
+                                ? {
+                                      options: [
+                                          { id: "A", text: "" },
+                                          { id: "B", text: "" },
+                                      ],
+                                  }
+                                : {}),
+                        },
+                        null,
+                        2
+                    ),
                 };
             } catch {
                 return current;
             }
         });
-    const updateOption = (id: string, text: string) =>
+    const updateOptions = (change: (previous: ChoiceOption[]) => ChoiceOption[]) =>
         setForm((current) => {
             try {
                 const content = JSON.parse(current.contentJson) as Record<string, unknown>;
-                const previous = Array.isArray(content.options)
-                    ? (content.options as { id: string; text: string }[])
-                    : [];
-                const values = ["A", "B", "C", "D"].map((key) => ({
-                    id: key,
-                    text:
-                        key === id
-                            ? text
-                            : (previous.find((option) => option?.id === key)?.text ?? ""),
-                }));
                 return {
                     ...current,
-                    contentJson: JSON.stringify({ ...content, options: values }, null, 2),
+                    contentJson: JSON.stringify(
+                        { ...content, options: change(readOptions(current.contentJson)) },
+                        null,
+                        2
+                    ),
                 };
             } catch {
                 return current;
@@ -220,16 +262,78 @@ export default function CompetitionTasksScreen() {
             return;
         }
         if (
-            answerType === "single_choice" &&
-            ["A", "B", "C", "D"].some(
-                (id) => !options.find((option) => option.id === id)?.text.trim()
-            )
+            ["single_choice", "multiple_choice"].includes(answerType) &&
+            (options.length < 2 ||
+                options.some((option) => !option.id.trim() || !option.text.trim()) ||
+                new Set(options.map((option) => option.id.toUpperCase())).size !== options.length)
         ) {
-            setError("Uzupełnij wszystkie cztery warianty odpowiedzi A–D.");
+            setError(
+                "Dodaj co najmniej dwa warianty i uzupełnij ich treść. Oznaczenia wariantów muszą być różne."
+            );
             return;
         }
         setBusy(true);
         setError("");
+        if (editing) {
+            const originalOptions = readOptions(editing.contentJson);
+            let originalType = "";
+            try {
+                const original = JSON.parse(editing.contentJson) as { answer_type?: unknown };
+                if (typeof original.answer_type === "string") originalType = original.answer_type;
+            } catch {
+                /* An existing unknown format may be corrected. */
+            }
+            const retainedIds = new Set(
+                (["single_choice", "multiple_choice"].includes(answerType) ? options : []).map(
+                    (option) => option.id.toLowerCase()
+                )
+            );
+            const removed = originalOptions.filter(
+                (option) => !retainedIds.has(option.id.toLowerCase())
+            );
+            if (removed.length > 0 || originalType !== answerType) {
+                const result = await apiListRequestResult<ApiTaskAnswer>(
+                    `${apiEndpoints.taskAnswers(editing.id)}?${firstPage}`,
+                    null,
+                    "GET",
+                    navigate
+                );
+                if (!result.data) {
+                    setError("Nie udało się sprawdzić poprawnych odpowiedzi. Spróbuj ponownie.");
+                    setBusy(false);
+                    return;
+                }
+                if (originalType !== answerType && result.data.length > 0) {
+                    setError(
+                        "Przed zmianą typu usuń poprawne odpowiedzi zadania i ustaw je ponownie dla nowego typu."
+                    );
+                    setBusy(false);
+                    return;
+                }
+                if (
+                    result.data.some((answer) => {
+                        const values =
+                            originalType === "multiple_choice"
+                                ? decodeMultipleChoice(answer.answer)
+                                : [answer.answer.trim()];
+                        return (
+                            values === null ||
+                            values.some((value) =>
+                                removed.some(
+                                    (option) => option.id.toLowerCase() === value.toLowerCase()
+                                )
+                            )
+                        );
+                    })
+                ) {
+                    setError(
+                        "Nie można usunąć wariantu oznaczonego jako poprawny. Najpierw zmień poprawne odpowiedzi zadania."
+                    );
+                    setBusy(false);
+                    return;
+                }
+            }
+        }
         const url = apiEndpoints.competitionTasks(editionId, subeditionId);
         const result = await apiRequestResult<ApiCompetitionTask>(
             editing ? `${url}/${editing.id}` : url,
@@ -352,7 +456,7 @@ export default function CompetitionTasksScreen() {
                                     />
                                 ) : (
                                     <p className="py-2 text-sm text-ink-secondary">
-                                        Brak podedycji
+                                        Brak podedycji, do których można dodawać zadania.
                                     </p>
                                 )}
                             </div>
@@ -488,9 +592,12 @@ export default function CompetitionTasksScreen() {
                                 ariaLabelledBy="answer-type"
                                 value={answerType}
                                 options={[
-                                    ...(!["open", "single_choice", "true_false"].includes(
-                                        answerType
-                                    )
+                                    ...(![
+                                        "open",
+                                        "single_choice",
+                                        "multiple_choice",
+                                        "true_false",
+                                    ].includes(answerType)
                                         ? [
                                               {
                                                   value: answerType,
@@ -503,28 +610,82 @@ export default function CompetitionTasksScreen() {
                                         : []),
                                     { value: "open", label: "Odpowiedź otwarta" },
                                     { value: "single_choice", label: "Jednokrotny wybór" },
+                                    { value: "multiple_choice", label: "Wielokrotny wybór" },
                                     { value: "true_false", label: "Prawda / fałsz" },
                                 ]}
                                 onChange={updateAnswerType}
                             />
-                            {answerType === "single_choice" && (
+                            {["single_choice", "multiple_choice"].includes(answerType) && (
                                 <div className="mt-4 space-y-3">
-                                    {["A", "B", "C", "D"].map((id) => (
-                                        <label key={id} className="block text-sm text-ink">
-                                            Wariant {id}
-                                            <input
-                                                className={inputClass}
-                                                value={
-                                                    options.find((option) => option.id === id)
-                                                        ?.text ?? ""
+                                    <p className="text-sm text-ink-secondary">
+                                        Wpisz warianty odpowiedzi osobno. Treść zadania powinna
+                                        zawierać samo pytanie.
+                                    </p>
+                                    {options.map((option) => (
+                                        <div key={option.id} className="flex items-end gap-3">
+                                            <label className="min-w-0 flex-1 text-sm text-ink">
+                                                Wariant {option.id}
+                                                <input
+                                                    className={inputClass}
+                                                    value={option.text}
+                                                    onChange={(event) => {
+                                                        const text = event.target.value;
+                                                        updateOptions((previous) =>
+                                                            previous.map((entry) =>
+                                                                entry.id === option.id
+                                                                    ? { ...entry, text }
+                                                                    : entry
+                                                            )
+                                                        );
+                                                    }}
+                                                    required
+                                                />
+                                            </label>
+                                            <Button
+                                                text={
+                                                    <span className="sr-only">
+                                                        Usuń wariant {option.id}
+                                                    </span>
                                                 }
-                                                onChange={(event) =>
-                                                    updateOption(id, event.target.value)
+                                                icon={<FaTrash />}
+                                                className="bg-danger px-3 hover:bg-danger-hover"
+                                                disabled={busy}
+                                                onClick={() =>
+                                                    updateOptions((previous) =>
+                                                        previous.filter(
+                                                            (entry) => entry.id !== option.id
+                                                        )
+                                                    )
                                                 }
-                                                required
                                             />
-                                        </label>
+                                        </div>
                                     ))}
+                                    <Button
+                                        text="Dodaj wariant"
+                                        icon={<FaPlus />}
+                                        disabled={busy}
+                                        onClick={() =>
+                                            updateOptions((previous) => {
+                                                const used = [
+                                                    ...previous,
+                                                    ...(editing
+                                                        ? readOptions(editing.contentJson)
+                                                        : []),
+                                                ];
+                                                const next =
+                                                    Math.max(
+                                                        0,
+                                                        ...used.map((option) =>
+                                                            optionNumber(option.id.toUpperCase())
+                                                        )
+                                                    ) + 1;
+                                                return [
+                                                    ...previous,
+                                                    { id: optionId(next), text: "" },
+                                                ];
+                                            })
+                                        }
+                                    />
                                 </div>
                             )}
                         </div>

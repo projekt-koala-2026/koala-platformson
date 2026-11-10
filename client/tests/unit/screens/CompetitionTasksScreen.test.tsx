@@ -57,6 +57,7 @@ describe("zadania konkursowe", () => {
         const bodies: Record<string, unknown>[] = [];
         server.use(
             ...common(),
+            http.get(answerUrl, () => HttpResponse.json({ data: [] })),
             http.put(`${base}/${task.id}`, async ({ request }) => {
                 const body = (await request.json()) as Record<string, unknown>;
                 bodies.push(body);
@@ -70,6 +71,8 @@ describe("zadania konkursowe", () => {
         await user.type(markdown, "Nowa treść");
         await user.click(screen.getByRole("button", { name: "Typ odpowiedzi" }));
         await user.click(screen.getByRole("option", { name: "Jednokrotny wybór" }));
+        await user.click(screen.getByRole("button", { name: "Dodaj wariant" }));
+        await user.click(screen.getByRole("button", { name: "Dodaj wariant" }));
         for (const option of ["A", "B", "C", "D"]) {
             await user.type(screen.getByLabelText(`Wariant ${option}`), `Odpowiedź ${option}`);
         }

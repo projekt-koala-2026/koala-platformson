@@ -14,6 +14,7 @@ import type {
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 import { getStoredUserId } from "../../utils/authService";
+import { decodeMultipleChoice } from "../../utils/competitionAnswers";
 
 type TaskWithContext = { task: ApiCompetitionTask; subedition: ApiSubedition };
 const bodyOf = (json: string) => {
@@ -52,6 +53,24 @@ const optionsOf = (json: string): { id: string; text: string }[] => {
 };
 const scoreLabel = (score: boolean | null) =>
     score === null ? "Brak" : score ? "Poprawna" : "Niepoprawna";
+const displaySubmission = (submission: string, json: string) => {
+    try {
+        const content = JSON.parse(json) as { answer_type?: string };
+        if (content.answer_type !== "multiple_choice") return submission;
+        const selected = decodeMultipleChoice(submission);
+        if (selected === null) return "Nieprawidłowy format odpowiedzi";
+        if (selected.length === 0) return "Nie zaznaczono żadnego wariantu";
+        const options = optionsOf(json);
+        return selected
+            .map((id) => {
+                const option = options.find((item) => item.id === id);
+                return option ? `${id}. ${option.text}` : `${id} (wariant niedostępny)`;
+            })
+            .join("\n");
+    } catch {
+        return submission;
+    }
+};
 
 export default function ReviewerTasksScreen() {
     const navigate = useNavigate();
@@ -269,7 +288,10 @@ export default function ReviewerTasksScreen() {
                         <section>
                             <h3 className="mb-2 font-semibold text-ink-heading">Odpowiedź</h3>
                             <p className="whitespace-pre-wrap break-words text-ink">
-                                {selected.submission}
+                                {displaySubmission(
+                                    selected.submission,
+                                    taskMap[selected.taskId]?.task.contentJson ?? ""
+                                )}
                             </p>
                         </section>
                         <p className="text-sm text-ink-secondary">

@@ -255,14 +255,17 @@ export default function SubeditionsScreen() {
                                                 </p>
                                             </div>
                                             <div className="flex flex-wrap gap-2">
-                                                <Button
-                                                    text="Zadania"
-                                                    onClick={() =>
-                                                        navigate(
-                                                            `/admin/competition-tasks?edition=${editionId}&subedition=${item.id}`
-                                                        )
-                                                    }
-                                                />
+                                                {item.state !== "CLOSED" &&
+                                                    edition?.state !== "CLOSED" && (
+                                                        <Button
+                                                            text="Zadania"
+                                                            onClick={() =>
+                                                                navigate(
+                                                                    `/admin/competition-tasks?edition=${editionId}&subedition=${item.id}`
+                                                                )
+                                                            }
+                                                        />
+                                                    )}
                                                 <Button
                                                     text="Edytuj"
                                                     icon={<FaEdit />}
