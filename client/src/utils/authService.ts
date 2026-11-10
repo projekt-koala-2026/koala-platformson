@@ -65,7 +65,7 @@ export const isTeamUser = () => getAuthArea() === "team";
 export const getOrganizationHomePath = (roles = getUserRoles()) => {
     if (roles.isAdmin) return "/admin";
     if (roles.isEditor) return "/admin/posts";
-    // The reviewer module does not have a dedicated screen yet.
+    if (roles.isReviewer) return "/admin/reviews";
     return "/";
 };
 
