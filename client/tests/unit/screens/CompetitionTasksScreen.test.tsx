@@ -70,6 +70,9 @@ describe("zadania konkursowe", () => {
         await user.type(markdown, "Nowa treść");
         await user.click(screen.getByRole("button", { name: "Typ odpowiedzi" }));
         await user.click(screen.getByRole("option", { name: "Jednokrotny wybór" }));
+        for (const option of ["A", "B", "C", "D"]) {
+            await user.type(screen.getByLabelText(`Wariant ${option}`), `Odpowiedź ${option}`);
+        }
         await user.click(screen.getByRole("button", { name: "Zapisz" }));
         await waitFor(() => expect(bodies).toHaveLength(1));
         expect(bodies[0].version).toBe(2);
@@ -78,6 +81,7 @@ describe("zadania konkursowe", () => {
             body_pl: "Nowa treść",
             extra: "zachowaj",
             answer_type: "single_choice",
+            options: ["A", "B", "C", "D"].map((id) => ({ id, text: `Odpowiedź ${id}` })),
         });
         expect(await screen.findByRole("status")).toHaveTextContent("Zapisano zadanie");
     });

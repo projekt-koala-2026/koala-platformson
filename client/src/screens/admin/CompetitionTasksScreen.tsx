@@ -122,6 +122,7 @@ export default function CompetitionTasksScreen() {
     };
     let body: string | null = null;
     let answerType = "unspecified";
+    let options: { id: string; text: string }[] = [];
     try {
         const content: unknown = JSON.parse(form.contentJson);
         if (
@@ -140,6 +141,21 @@ export default function CompetitionTasksScreen() {
             typeof content.answer_type === "string"
         )
             answerType = content.answer_type;
+        if (
+            content &&
+            typeof content === "object" &&
+            !Array.isArray(content) &&
+            "options" in content &&
+            Array.isArray(content.options)
+        ) {
+            options = content.options.filter(
+                (option): option is { id: string; text: string } =>
+                    !!option &&
+                    typeof option === "object" &&
+                    typeof option.id === "string" &&
+                    typeof option.text === "string"
+            );
+        }
     } catch {
         /* The advanced editor retains invalid input until it is corrected. */
     }
@@ -167,6 +183,28 @@ export default function CompetitionTasksScreen() {
                 return current;
             }
         });
+    const updateOption = (id: string, text: string) =>
+        setForm((current) => {
+            try {
+                const content = JSON.parse(current.contentJson) as Record<string, unknown>;
+                const previous = Array.isArray(content.options)
+                    ? (content.options as { id: string; text: string }[])
+                    : [];
+                const values = ["A", "B", "C", "D"].map((key) => ({
+                    id: key,
+                    text:
+                        key === id
+                            ? text
+                            : (previous.find((option) => option?.id === key)?.text ?? ""),
+                }));
+                return {
+                    ...current,
+                    contentJson: JSON.stringify({ ...content, options: values }, null, 2),
+                };
+            } catch {
+                return current;
+            }
+        });
     const save = async (event: FormEvent) => {
         event.preventDefault();
         try {
@@ -179,6 +217,15 @@ export default function CompetitionTasksScreen() {
         }
         if (!form.name.trim()) {
             setError("Podaj nazwę zadania.");
+            return;
+        }
+        if (
+            answerType === "single_choice" &&
+            ["A", "B", "C", "D"].some(
+                (id) => !options.find((option) => option.id === id)?.text.trim()
+            )
+        ) {
+            setError("Uzupełnij wszystkie cztery warianty odpowiedzi A–D.");
             return;
         }
         setBusy(true);
@@ -460,9 +507,26 @@ export default function CompetitionTasksScreen() {
                                 ]}
                                 onChange={updateAnswerType}
                             />
-                            <p className="mt-2 text-sm text-ink-secondary">
-                                Warianty odpowiedzi jednokrotnego wyboru wpisz w treści zadania.
-                            </p>
+                            {answerType === "single_choice" && (
+                                <div className="mt-4 space-y-3">
+                                    {["A", "B", "C", "D"].map((id) => (
+                                        <label key={id} className="block text-sm text-ink">
+                                            Wariant {id}
+                                            <input
+                                                className={inputClass}
+                                                value={
+                                                    options.find((option) => option.id === id)
+                                                        ?.text ?? ""
+                                                }
+                                                onChange={(event) =>
+                                                    updateOption(id, event.target.value)
+                                                }
+                                                required
+                                            />
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                     <div>
@@ -505,10 +569,6 @@ export default function CompetitionTasksScreen() {
                             </p>
                         )}
                     </div>
-                    <p className="text-sm text-ink-secondary">
-                        Format treści i typów odpowiedzi wymaga jeszcze uzgodnienia z panelem
-                        uczestnika.
-                    </p>
                     <div className="flex justify-end gap-2">
                         <Button
                             text="Anuluj"

@@ -21,6 +21,19 @@ export default function TaskAnswersModal({
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
+    let answerType = "";
+    try {
+        const content: unknown = JSON.parse(task?.contentJson ?? "{}");
+        if (
+            content &&
+            typeof content === "object" &&
+            "answer_type" in content &&
+            typeof content.answer_type === "string"
+        )
+            answerType = content.answer_type;
+    } catch {
+        /* Existing content can use an unknown format. */
+    }
     useEffect(() => {
         if (!task) return;
         let active = true;
@@ -45,12 +58,26 @@ export default function TaskAnswersModal({
             setError("Podaj poprawną odpowiedź.");
             return;
         }
+        const answer =
+            answerType === "single_choice"
+                ? value.trim().toUpperCase()
+                : answerType === "true_false"
+                  ? value.trim().toLowerCase()
+                  : value.trim();
+        if (answerType === "single_choice" && !["A", "B", "C", "D"].includes(answer)) {
+            setError("Dla zadania jednokrotnego wyboru podaj A, B, C albo D.");
+            return;
+        }
+        if (answerType === "true_false" && !["true", "false"].includes(answer)) {
+            setError("Dla zadania prawda / fałsz podaj true albo false.");
+            return;
+        }
         setBusy(true);
         setError("");
         const base = apiEndpoints.taskAnswers(task.id);
         const result = await apiRequestResult<ApiTaskAnswer>(
             editing ? `${base}/${editing.id}` : base,
-            { answer: value.trim(), ...(editing ? { version: editing.version } : {}) },
+            { answer, ...(editing ? { version: editing.version } : {}) },
             editing ? "PUT" : "POST",
             navigate
         );
@@ -106,6 +133,16 @@ export default function TaskAnswersModal({
                 Zmiana odpowiedzi wycofuje ranking i wymaga ponownego automatycznego sprawdzenia
                 odpowiedzi bez ocen recenzentów.
             </p>
+            {answerType === "single_choice" && (
+                <p className="mt-2 text-sm text-ink-secondary">
+                    Wpisz literę poprawnego wariantu: A, B, C lub D.
+                </p>
+            )}
+            {answerType === "true_false" && (
+                <p className="mt-2 text-sm text-ink-secondary">
+                    Wpisz true dla prawdy albo false dla fałszu.
+                </p>
+            )}
             {error && (
                 <p role="alert" className="app-status-danger mt-4 rounded-xl border p-3">
                     {error}
