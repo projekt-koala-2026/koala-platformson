@@ -244,7 +244,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -333,7 +333,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -416,7 +416,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -605,7 +605,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -674,7 +674,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot join to team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot join to team when no edition is currently active");
             }
 
             var teamJoinCode = await _db.TeamJoinCodes

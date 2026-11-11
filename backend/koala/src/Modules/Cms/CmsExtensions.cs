@@ -4,6 +4,7 @@ using koala.src.Modules.Cms.Services;
 using Microsoft.Extensions.FileProviders;
 using koala.src.Modules.Cms.Entities;
 using koala.src.Shared;
+using koala.src.Shared.Core;
 
 
 namespace koala.src.Modules.Cms
@@ -36,6 +37,7 @@ namespace koala.src.Modules.Cms
             });
             services.AddScoped<SponsorService, SponsorService>();
             services.AddScoped<StaticPageService, StaticPageService>();
+            services.AddScoped<ICmsModule, CmsService>();
 
             // 4. FLUID VALIDATORS
 

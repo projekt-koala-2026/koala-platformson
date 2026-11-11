@@ -293,7 +293,7 @@ namespace koala.src.Modules.Core.Services
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id);
-            if(subedition == null)
+            if (subedition == null)
             {
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             }
@@ -304,7 +304,7 @@ namespace koala.src.Modules.Core.Services
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose)
+            if (subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose)
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Teams cannot answer tasks outside the answer period");
             }
@@ -324,11 +324,11 @@ namespace koala.src.Modules.Core.Services
             }
 
             TaskSubmission? submission = null;
-            if(teamInfo.Tier == TaskItemTiers.TIER_1)
+            if (teamInfo.Tier == TaskItemTiers.TIER_1)
             {
                 submission = await _db.TaskSubmissions.Include(e => e.TaskItem).FirstOrDefaultAsync(e => e.TaskId == task_id && e.TaskItem.Tier == TaskItemTiers.TIER_1 && e.TeamId == team_id);
             }
-            if(teamInfo.Tier == TaskItemTiers.TIER_2)
+            if (teamInfo.Tier == TaskItemTiers.TIER_2)
             {
                 submission = await _db.TaskSubmissions.Include(e => e.TaskItem).FirstOrDefaultAsync(e => e.TaskId == task_id && (e.TaskItem.Tier == TaskItemTiers.TIER_1 || e.TaskItem.Tier == TaskItemTiers.TIER_2) && e.TeamId == team_id);
             }
@@ -465,13 +465,13 @@ namespace koala.src.Modules.Core.Services
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id);
-            if(subedition == null)
+            if (subedition == null)
             {
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(timeNow <= subedition.AnswerClose)
+            if (timeNow <= subedition.AnswerClose)
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot score submissions before the answer period ends");
             }
@@ -675,7 +675,7 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Reviewer identity does not match the current user");
             }
 
-            var query = _db.TaskSubmissions.Where(t =>(t.Reviewer1Id == reviewer_id || t.Reviewer2Id == reviewer_id) && t.Review1Score != t.Review2Score && t.Review1Score != null && t.Review2Score != null).AsNoTracking();
+            var query = _db.TaskSubmissions.Where(t => (t.Reviewer1Id == reviewer_id || t.Reviewer2Id == reviewer_id) && t.Review1Score != t.Review2Score && t.Review1Score != null && t.Review2Score != null).AsNoTracking();
 
             var totalCount = await query.CountAsync();
 
@@ -707,7 +707,7 @@ namespace koala.src.Modules.Core.Services
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task AssignReviewersAsync(ClaimsPrincipal? claimsPrincipal, Guid subEditionId, AssignReviewersDto taskReviewerPairs)
+        public async Task AssignReviewersAsync(ClaimsPrincipal? claimsPrincipal, Guid subEditionId, Guid taskId, AssignReviewersDto taskReviewerPairs)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -723,35 +723,31 @@ namespace koala.src.Modules.Core.Services
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subEditionId);
-            if(subedition == null)
+            if (subedition == null)
             {
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(timeNow <= subedition.AnswerClose)
+            if (timeNow <= subedition.AnswerClose)
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot assign reviewers before the answer period ends");
             }
 
-            if (taskReviewerPairs == null || taskReviewerPairs.TaskIds == null || taskReviewerPairs.RevierPairIds == null ||
-                !taskReviewerPairs.TaskIds.Any() || !taskReviewerPairs.RevierPairIds.Any() ||
-                taskReviewerPairs.RevierPairIds.Any(pair => pair == null || pair.Reviewer1Id == Guid.Empty || pair.Reviewer2Id == Guid.Empty || pair.Reviewer1Id == pair.Reviewer2Id))
+            if (taskReviewerPairs.Reviewer1Id == taskReviewerPairs.Reviewer2Id)
             {
-                throw new KoalaException(KoalaErrorCodes.BadRequest, "No reviewer pairs provided");
+                throw new KoalaException(KoalaErrorCodes.BadRequest, "Invalid pair provided");
             }
 
-            var reviewerIds = taskReviewerPairs.RevierPairIds
-                .SelectMany(pair => new[] { pair.Reviewer1Id, pair.Reviewer2Id }).Distinct().ToList();
-            var validReviewers = await _accountModule.Internal_GetReviewerIdsAsync(reviewerIds);
-            if (validReviewers.Count != reviewerIds.Count)
+            var validReviewers = await _accountModule.Internal_GetReviewerIdsAsync([taskReviewerPairs.Reviewer1Id, taskReviewerPairs.Reviewer2Id]);
+            if (validReviewers.Count != 2)
             {
                 throw new KoalaException(KoalaErrorCodes.BadRequest, "Every assigned reviewer must be a verified user with the reviewer role");
             }
 
             var submissions = await _db.TaskSubmissions
                 .Include(s => s.TaskItem)
-                .Where(s => s.TaskItem.SubEditionId == subEditionId && taskReviewerPairs.TaskIds.Contains(s.TaskId) && s.Reviewer1Id == null && s.Reviewer2Id == null)
+                .Where(s => s.TaskItem.SubEditionId == subEditionId && s.TaskId == taskId && s.Reviewer1Id == null && s.Reviewer2Id == null)
                 .OrderBy(s => s.TaskId)
                 .ThenBy(s => s.TeamId)
                 .ToListAsync();
@@ -762,23 +758,83 @@ namespace koala.src.Modules.Core.Services
             }
 
             var now = DateTime.UtcNow;
-            var submissionsByTask = submissions.GroupBy(s => s.TaskId);
 
-            foreach (var group in submissionsByTask)
+            foreach (var sub in submissions)
             {
-                var taskSubmissions = group.ToList();
-                int pairsCount = taskReviewerPairs.RevierPairIds.Count;
+                sub.Reviewer1Id = taskReviewerPairs.Reviewer1Id;
+                sub.Reviewer2Id = taskReviewerPairs.Reviewer2Id;
+                sub.UpdatedAt = now;
+                sub.Version++;
+            }
 
-                for (int i = 0; i < taskSubmissions.Count; i++)
+            await InvalidateRankingAsync(subedition);
+            await SaveSubmissionsAsync();
+        }
+
+        public async Task UpdateAssignedReviewers(ClaimsPrincipal? claimsPrincipal, Guid subEditionId, Guid taskId, AdminUpdateReviewersDto taskReviewerPairs)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subEditionId);
+            if (subedition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+            if (timeNow <= subedition.AnswerClose)
+            {
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot assign reviewers before the answer period ends");
+            }
+
+            if (taskReviewerPairs.OldReviewer == taskReviewerPairs.NewReviewer)
+            {
+                throw new KoalaException(KoalaErrorCodes.BadRequest, "Invalid old and new reviewer are the same");
+            }
+
+            var validReviewers = await _accountModule.Internal_GetReviewerIdsAsync([taskReviewerPairs.OldReviewer, taskReviewerPairs.NewReviewer]);
+            if (validReviewers.Count != 2)
+            {
+                throw new KoalaException(KoalaErrorCodes.BadRequest, "Every assigned reviewer must be a verified user with the reviewer role");
+            }
+
+            var submissions = await _db.TaskSubmissions
+                .Include(s => s.TaskItem)
+                .Where(s => s.TaskItem.SubEditionId == subEditionId && s.TaskId == taskId && ((s.Reviewer1Id == taskReviewerPairs.OldReviewer && s.Review1Score == null) || (s.Reviewer2Id == taskReviewerPairs.OldReviewer && s.Review2Score == null)))
+                .OrderBy(s => s.TaskId)
+                .ThenBy(s => s.TeamId)
+                .ToListAsync();
+
+            if (!submissions.Any())
+            {
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "did not found un asigned tasks that can be given to the reviewer");
+            }
+
+            var now = DateTime.UtcNow;
+
+            foreach (var sub in submissions)
+            {
+                if (sub.Reviewer1Id == taskReviewerPairs.OldReviewer)
                 {
-                    var pair = taskReviewerPairs.RevierPairIds[i % pairsCount];
-                    var submission = taskSubmissions[i];
-
-                    submission.Reviewer1Id = pair.Reviewer1Id;
-                    submission.Reviewer2Id = pair.Reviewer2Id;
-                    submission.UpdatedAt = now;
-                    submission.Version++;
+                    sub.Reviewer1Id = taskReviewerPairs.NewReviewer;
                 }
+                if (sub.Reviewer2Id == taskReviewerPairs.OldReviewer)
+                {
+                    sub.Reviewer2Id = taskReviewerPairs.NewReviewer;
+                }
+                sub.UpdatedAt = now;
+                sub.Version++;
             }
 
             await InvalidateRankingAsync(subedition);
