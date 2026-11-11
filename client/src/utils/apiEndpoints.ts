@@ -22,9 +22,12 @@ export const apiEndpoints = {
     teamTaskSubmission: (taskId: string, teamId: string, subeditionId: string) =>
         `${API_ROOT}/core/tasks/${taskId}/team/${teamId}/subedition/${subeditionId}`,
     rankings: `${API_ROOT}/core/ranking`,
-    rankingDraft: (subeditionId: string) => `${API_ROOT}/core/ranking/subedition/${subeditionId}/draft`,
-    generateRanking: (subeditionId: string) => `${API_ROOT}/core/ranking/generate/subedition/${subeditionId}`,
-    publishRanking: (subeditionId: string) => `${API_ROOT}/core/ranking/subedition/${subeditionId}/publish`,
+    rankingDraft: (subeditionId: string) =>
+        `${API_ROOT}/core/ranking/subedition/${subeditionId}/draft`,
+    generateRanking: (subeditionId: string) =>
+        `${API_ROOT}/core/ranking/generate/subedition/${subeditionId}`,
+    publishRanking: (subeditionId: string) =>
+        `${API_ROOT}/core/ranking/subedition/${subeditionId}/publish`,
     taskAnswers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/corr`,
     schools: `${API_ROOT}/core/schools`,
     posts: `${API_ROOT}/cms/posts`,
