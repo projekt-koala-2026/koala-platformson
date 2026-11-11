@@ -17,8 +17,12 @@ export const apiEndpoints = {
         `${API_ROOT}/core/editions/${editionId}/subeditions/${subeditionId}/tasks`,
     taskAnswers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/corr`,
     taskSubmissions: (taskId: string) => `${API_ROOT}/core/tasks/submissions/${taskId}`,
-    assignReviewers: (subeditionId: string) =>
-        `${API_ROOT}/core/tasks/${subeditionId}/assign-reviewers`,
+    taskReviewProgress: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/review-progress`,
+    taskPendingReviewers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/pending-reviewers`,
+    assignReviewers: (subeditionId: string, taskId: string) =>
+        `${API_ROOT}/core/tasks/${subeditionId}/assign-reviewers/task/${taskId}`,
+    updateAssignedReviewer: (subeditionId: string, taskId: string) =>
+        `${API_ROOT}/core/tasks/${subeditionId}/updated-assign-reviewer/task/${taskId}`,
     reviewerSubmissions: `${API_ROOT}/core/tasks/review/me`,
     reviewerScore: (taskId: string, teamId: string, subeditionId: string) =>
         `${API_ROOT}/core/tasks/review/me/submission/${taskId}/team/${teamId}/subedition/${subeditionId}`,

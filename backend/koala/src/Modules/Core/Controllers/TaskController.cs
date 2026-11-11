@@ -85,6 +85,22 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
+        [HttpGet("{task_id}/review-progress")]
+        public async Task<IActionResult> GetReviewProgress([FromRoute] Guid task_id)
+        {
+            var response = await _taskService.GetReviewProgressAsync(User, task_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskReviewProgressDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpGet("{task_id}/pending-reviewers")]
+        public async Task<IActionResult> GetPendingReviewers([FromRoute] Guid task_id)
+        {
+            var response = await _taskService.GetPendingReviewersAsync(User, task_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<PendingReviewerDto>>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
         [HttpGet("submissions/{task_id}")]
         public async Task<IActionResult> GetTaskSubmissions([FromRoute] Guid task_id, [FromQuery] PageQueryDto pageQueryDto)
         {
