@@ -771,7 +771,7 @@ namespace koala.src.Modules.Core.Services
             await SaveSubmissionsAsync();
         }
 
-        public async Task UpdateAssignedReviewers(ClaimsPrincipal? claimsPrincipal, Guid subEditionId, Guid taskId, AdminUpdateReviewersDto taskReviewerPairs)
+        public async Task UpdateAssignedReviewer(ClaimsPrincipal? claimsPrincipal, Guid subEditionId, Guid taskId, AdminUpdateReviewersDto taskReviewerPairs)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);

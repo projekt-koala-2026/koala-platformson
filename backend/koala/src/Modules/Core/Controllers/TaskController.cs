@@ -117,12 +117,19 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("{subedition_id}/assign-reviewers/task/{task_id}")]
+        [HttpPut("{subedition_id}/assign-reviewers/task/{task_id}")]
         public async Task<IActionResult> AssignReviewers([FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] AssignReviewersDto requestDto)
         {
             await _taskService.AssignReviewersAsync(User, subedition_id, task_id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
+        [Authorize]
+        [HttpPut("{subedition_id}/updated-assign-reviewer/task/{task_id}")]
+        public async Task<IActionResult> UpdateAssignedReviewer([FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] AdminUpdateReviewersDto requestDto)
+        {
+            await _taskService.UpdateAssignedReviewer(User, subedition_id, task_id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
     }
 }
