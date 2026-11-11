@@ -32,7 +32,11 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const isLoggedIn = isOrganizationUser || isTeamAccount;
     const organizationHomePath = getOrganizationHomePath(roles);
     const links = isTeamAccount
-        ? [...baseLinks, { label: "Drużyny", path: "/captain" }, { label: "Zadania", path: "/captain/tasks" }]
+        ? [
+              ...baseLinks,
+              { label: "Drużyny", path: "/captain" },
+              { label: "Zadania", path: "/captain/tasks" },
+          ]
         : baseLinks;
     const navigationOptions = links.map((link) => ({
         label: link.label,
