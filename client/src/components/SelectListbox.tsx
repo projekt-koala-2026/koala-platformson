@@ -12,6 +12,7 @@ interface SelectListboxProps<T extends string> {
     onChange: (value: T) => void;
     ariaLabelledBy: string;
     className?: string;
+    inline?: boolean;
 }
 
 function SelectListbox<T extends string>({
@@ -20,6 +21,7 @@ function SelectListbox<T extends string>({
     onChange,
     ariaLabelledBy,
     className = "",
+    inline = false,
 }: SelectListboxProps<T>) {
     const [isOpen, setIsOpen] = useState(false);
     const selectedIndex = Math.max(
@@ -87,7 +89,7 @@ function SelectListbox<T extends string>({
                 }}
                 className="flex w-full items-center justify-between gap-3 rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-left text-ink-heading outline-none transition hover:border-brand-border focus:border-brand-focus focus:ring-2 focus:ring-brand-muted"
             >
-                <span>{selectedOption?.label}</span>
+                <span className="min-w-0 break-words">{selectedOption?.label}</span>
                 <FaChevronDown
                     aria-hidden="true"
                     className={`shrink-0 text-xs text-brand-text transition-transform ${
@@ -101,7 +103,7 @@ function SelectListbox<T extends string>({
                     id={listboxId}
                     role="listbox"
                     aria-labelledby={ariaLabelledBy}
-                    className="absolute z-30 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-line bg-surface p-1.5 shadow-panel"
+                    className={`${inline ? "relative" : "absolute z-30"} mt-2 max-h-52 w-full overflow-auto rounded-xl border border-line bg-surface p-1.5 shadow-panel`}
                 >
                     {options.map((option, index) => {
                         const isSelected = option.value === value;
@@ -135,6 +137,7 @@ function SelectListbox<T extends string>({
                                         focusOption(options.length - 1);
                                     } else if (event.key === "Escape") {
                                         event.preventDefault();
+                                        event.stopPropagation();
                                         closeListbox();
                                     } else if (event.key === "Tab") {
                                         setIsOpen(false);
@@ -148,7 +151,7 @@ function SelectListbox<T extends string>({
                                           : "text-ink-secondary"
                                 }`}
                             >
-                                <span>{option.label}</span>
+                                <span className="min-w-0 break-words">{option.label}</span>
                                 {isSelected && (
                                     <FaCheck
                                         aria-hidden="true"

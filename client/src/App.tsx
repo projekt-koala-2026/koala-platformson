@@ -12,6 +12,8 @@ const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));
 const EditionsScreen = lazy(() => import("./screens/admin/EditEditionScreen"));
 const SubeditionsScreen = lazy(() => import("./screens/admin/SubeditionsScreen"));
 const CompetitionTasksScreen = lazy(() => import("./screens/admin/CompetitionTasksScreen"));
+const AssignReviewersScreen = lazy(() => import("./screens/admin/AssignReviewersScreen"));
+const ReviewerTasksScreen = lazy(() => import("./screens/admin/ReviewerTasksScreen"));
 const EditHistory = lazy(() => import("./screens/admin/EditHistoryScreen"));
 const EditKoalicjantInfo = lazy(() => import("./screens/admin/EditKoalicjantInfoScreen"));
 const EditPost = lazy(() => import("./screens/admin/EditPostScreen"));
@@ -34,6 +36,7 @@ const ResetPasswordScreen = lazy(() => import("./screens/public/ResetPasswordScr
 const RuleScreen = lazy(() => import("./screens/public/RuleScreen"));
 
 const adminOnly: Role[] = ["ORGANIZATION_ADMIN"];
+const reviewersOnly: Role[] = ["ORGANIZATION_REVIEWER"];
 const contentEditors: Role[] = ["ORGANIZATION_ADMIN", "ORGANIZATION_EDITOR"];
 const teamMembers: Role[] = ["TEAM_CAPTAIN", "TEAM_GUARDIAN"];
 
@@ -64,6 +67,25 @@ export default function App() {
                 <Suspense fallback={<RouteFallback />}>
                     <Routes>
                         <Route path="/admin/login" element={<AdminLoginScreen />} />
+                        <Route
+                            path="/admin/review-assignments"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <AssignReviewersScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/reviews"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={reviewersOnly}
+                                    redirectTo="/admin/login"
+                                >
+                                    <ReviewerTasksScreen />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route
                             path="/admin"
                             element={

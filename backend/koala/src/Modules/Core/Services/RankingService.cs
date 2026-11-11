@@ -49,9 +49,9 @@ namespace koala.src.Modules.Core.Services
             }
 
             if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subEditionId &&
-                (ts.AutoReviewState == null || (ts.Review1Score == null) != (ts.Review2Score == null) ||
-                ((ts.Reviewer1Id != null || ts.Reviewer2Id != null) && (ts.Review1Score == null || ts.Review2Score == null)) ||
-                (ts.Review1Score != null && ts.Review2Score != null && ts.Review1Score != ts.Review2Score))))
+                (ts.Reviewer1Id == null || ts.Reviewer2Id == null || ts.Reviewer1Id == ts.Reviewer2Id ||
+                ts.Review1Score == null || ts.Review2Score == null || ts.Review1Score != ts.Review2Score ||
+                ts.AutoReviewState == null)))
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Not all task submissions have a final score");
             }

@@ -3,7 +3,7 @@ import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
-import { clearStoredSession, isAdmin } from "../utils/authService";
+import { clearStoredSession, isAdmin, isEditor, isReviewer } from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
@@ -28,6 +28,7 @@ const administratorLinks = [
     { label: "Edycje", path: "/admin/editions" },
     { label: "Podedycje", path: "/admin/subeditions" },
     { label: "Zadania konkursowe", path: "/admin/competition-tasks" },
+    { label: "Przydzielanie recenzji", path: "/admin/review-assignments" },
     ...editorLinks,
     { label: "Szkoły", path: "/admin/schools" },
     { label: "Drużyny", path: "/admin/teams" },
@@ -49,8 +50,13 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
     const [isPasswordOpen, setIsPasswordOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const isAdminUser = useMemo(() => isAdmin(), []);
-    const homePath = isAdminUser ? "/admin" : "/admin/posts";
-    const links = isAdminUser ? administratorLinks : editorLinks;
+    const isEditorUser = useMemo(() => isEditor(), []);
+    const isReviewerUser = useMemo(() => isReviewer(), []);
+    const homePath = isAdminUser ? "/admin" : isEditorUser ? "/admin/posts" : "/admin/reviews";
+    const links = [
+        ...(isAdminUser ? administratorLinks : isEditorUser ? editorLinks : []),
+        ...(isReviewerUser ? [{ label: "Moje recenzje", path: "/admin/reviews" }] : []),
+    ];
     const desktopLinks = links.filter((link) => desktopPaths.has(link.path));
 
     const logout = async () => {
