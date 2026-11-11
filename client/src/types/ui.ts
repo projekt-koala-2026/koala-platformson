@@ -12,4 +12,5 @@ export interface ModalProps {
     onClose: () => void;
     title: string;
     maxWidth?: "md" | "lg" | "xl";
+    footer?: ReactNode;
 }

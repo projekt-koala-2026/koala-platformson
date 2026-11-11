@@ -4,7 +4,7 @@ import type { NavigateFunction } from "react-router-dom";
 import type { ApiPublicFile, ManagedFile } from "../types/models";
 import { adaptPublicFile } from "../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../utils/apiEndpoints";
-import { apiRequest, resolveApiAssetUrl } from "../utils/apiFetcher";
+import { apiListRequest, resolveApiAssetUrl } from "../utils/apiFetcher";
 
 export interface ImagePickerHandle {
     refresh: () => void;
@@ -34,7 +34,7 @@ const ImagePicker = forwardRef<ImagePickerHandle, ImagePickerProps>(
 
         useEffect(() => {
             let active = true;
-            void apiRequest<ApiPublicFile[]>(
+            void apiListRequest<ApiPublicFile>(
                 `${apiEndpoints.publicFiles}?${firstPage}`,
                 null,
                 "GET",

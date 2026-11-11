@@ -18,7 +18,7 @@ const REGISTER_ENDPOINT = apiEndpoints.users;
 const fieldClass =
     "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted";
 
-type RegistrationRole = "TEAM_PLAYER" | "TEAM_ADMIN";
+type RegistrationRole = "TEAM_CAPTAIN" | "TEAM_GUARDIAN";
 type Mode = "login" | "register";
 
 const LoginScreen = () => {
@@ -28,7 +28,7 @@ const LoginScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [registerEmail, setRegisterEmail] = useState("");
-    const [registrationRole, setRegistrationRole] = useState<RegistrationRole>("TEAM_PLAYER");
+    const [registrationRole, setRegistrationRole] = useState<RegistrationRole>("TEAM_CAPTAIN");
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -72,7 +72,7 @@ const LoginScreen = () => {
             }
 
             storeSession(data);
-            navigate(roles.isCaptain ? "/captain" : "/");
+            navigate("/captain");
         } finally {
             setSubmitting(false);
             stopLoading();
@@ -96,7 +96,7 @@ const LoginScreen = () => {
                 REGISTER_ENDPOINT,
                 {
                     email: normalizedEmail,
-                    roles: [registrationRole],
+                    userRoles: [registrationRole],
                 },
                 "POST",
                 navigate
@@ -109,7 +109,7 @@ const LoginScreen = () => {
             setEmail(normalizedEmail);
             setPassword("");
             setRegisterEmail("");
-            setRegistrationRole("TEAM_PLAYER");
+            setRegistrationRole("TEAM_CAPTAIN");
             setMode("login");
             setNotice("Wysłaliśmy wiadomość z linkiem umożliwiającym dokończenie rejestracji.");
         } finally {
@@ -220,7 +220,7 @@ const LoginScreen = () => {
                                     Rodzaj konta
                                 </legend>
                                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                    {(["TEAM_PLAYER", "TEAM_ADMIN"] as RegistrationRole[]).map(
+                                    {(["TEAM_CAPTAIN", "TEAM_GUARDIAN"] as RegistrationRole[]).map(
                                         (role) => (
                                             <label
                                                 key={role}
@@ -238,7 +238,7 @@ const LoginScreen = () => {
                                                     disabled={submitting}
                                                     onChange={() => setRegistrationRole(role)}
                                                 />
-                                                {role === "TEAM_PLAYER" ? "Kapitan" : "Opiekun"}
+                                                {role === "TEAM_CAPTAIN" ? "Kapitan" : "Opiekun"}
                                             </label>
                                         )
                                     )}

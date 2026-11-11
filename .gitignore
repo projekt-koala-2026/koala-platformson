@@ -27,3 +27,5 @@ coverage
 
 postgres_data/*
 backend_data/*
+client/assets/*
+/*.csv
