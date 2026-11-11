@@ -592,7 +592,7 @@ namespace koala.src.Modules.Core.Services
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
 
-        public async Task<AutoCheckProgressDto> GetAutoCheckProgressAsync(ClaimsPrincipal? claimsPrincipal, Guid subeditionId)
+        public async Task<AutoCheckProgressDto> GetSubeditionAutoCheckProgressAsync(ClaimsPrincipal? claimsPrincipal, Guid subeditionId)
         {
             if (!ClaimsHelper.IsAuthenticated(claimsPrincipal))
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
@@ -612,7 +612,7 @@ namespace koala.src.Modules.Core.Services
                 .FirstOrDefaultAsync() ?? new AutoCheckProgressDto(0, 0, 0, 0);
         }
 
-        public async Task AutoCheckSubmissionsAsync(ClaimsPrincipal? claimsPrincipal, Guid subedition_id)
+        public async Task AutoCheckSubeditionSubmissionsAsync(ClaimsPrincipal? claimsPrincipal, Guid subedition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -753,7 +753,7 @@ namespace koala.src.Modules.Core.Services
                 .ToListAsync();
         }
 
-        public async Task<TaskReviewProgressDto> GetReviewProgressAsync(ClaimsPrincipal? claimsPrincipal, Guid taskId)
+        public async Task<TaskReviewProgressDto> GetTaskReviewProgressAsync(ClaimsPrincipal? claimsPrincipal, Guid taskId)
         {
             var groups = await GetReviewGroupsAsync(claimsPrincipal, taskId);
             return new TaskReviewProgressDto(groups.Sum(g => g.Total),
@@ -765,7 +765,7 @@ namespace koala.src.Modules.Core.Services
                         g.Total - g.Reviewer2Reviewed, g.PendingSubmissions)).ToList());
         }
 
-        public async Task<List<PendingReviewerDto>> GetPendingReviewersAsync(ClaimsPrincipal? claimsPrincipal, Guid taskId)
+        public async Task<List<PendingReviewerDto>> GetTaskPendingReviewersAsync(ClaimsPrincipal? claimsPrincipal, Guid taskId)
         {
             var groups = await GetReviewGroupsAsync(claimsPrincipal, taskId);
             var slots = groups.SelectMany(g => new[] {
