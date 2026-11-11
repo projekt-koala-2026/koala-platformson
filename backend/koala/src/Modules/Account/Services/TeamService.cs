@@ -15,6 +15,7 @@ namespace koala.src.Modules.Account.Services
     {
         public Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, TeamCreateRequestDto requestDto);
         public Task DeleteTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
+        public Task DeleteTeamGuardianAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
         public Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamMemberUpsertRequestDto requestDto);
         public Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, TeamMemberUpsertRequestDto requestDto);
         public Task DeleteTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
@@ -222,6 +223,66 @@ namespace koala.src.Modules.Account.Services
 
             return;
         }
+
+        public async Task DeleteTeamGuardianAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if (!isTeamPlayer)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+            }
+
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
+
+            if (activeEdition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            {
+                throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
+            }
+
+            var captain = await _db.Users.Include(u => u.CaptainTeam).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam.Id != teamId)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotPartOfThisTeam, "User is not a captain of this team");
+            }
+
+            if (captain.CaptainTeam.GuardianId == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "This team doesnt have a guardian to delete");
+            }
+
+            captain.CaptainTeam.GuardianId = null;
+            await _db.SaveChangesAsync();
+
+            return;
+        }
+
         //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamMemberUpsertRequestDto requestDto)
         {
