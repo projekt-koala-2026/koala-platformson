@@ -77,6 +77,14 @@ namespace koala.src.Modules.Core.Controllers
 
         //TODO: ENDPOINT DLA ADMINA do generowania automatycznej odpowiedzi po zakonczeniu odpowiedzi na zadania dla druzyn
         [Authorize]
+        [HttpGet("subedition/{subedition_id}/autocheck-progress")]
+        public async Task<IActionResult> GetAutoCheckProgress([FromRoute] Guid subedition_id)
+        {
+            var response = await _taskService.GetAutoCheckProgressAsync(User, subedition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<AutoCheckProgressDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
         [HttpPut("subedition/{subedition_id}/autocheck")]
         public async Task<IActionResult> AutoCheckSubmissions([FromRoute] Guid subedition_id)
         {

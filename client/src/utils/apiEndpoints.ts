@@ -13,6 +13,10 @@ export const apiEndpoints = {
         `${API_ROOT}/core/editions/${editionId}/subeditions/${id}`,
     subeditionAction: (editionId: string, id: string, action: "activate" | "close") =>
         `${API_ROOT}/core/editions/${editionId}/${action}_subedition/${id}`,
+    autoCheckProgress: (subeditionId: string) =>
+        `${API_ROOT}/core/tasks/subedition/${subeditionId}/autocheck-progress`,
+    autoCheck: (subeditionId: string) =>
+        `${API_ROOT}/core/tasks/subedition/${subeditionId}/autocheck`,
     competitionTasks: (editionId: string, subeditionId: string) =>
         `${API_ROOT}/core/editions/${editionId}/subeditions/${subeditionId}/tasks`,
     taskAnswers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/corr`,

@@ -393,8 +393,15 @@ namespace koala.src.Modules.Core.Services
             if (team == null || team.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only the team captain can view this submission");
 
+            var timeNow = DateTime.UtcNow;
             var submission = await _db.TaskSubmissions.AsNoTracking()
-                .FirstOrDefaultAsync(s => s.TeamId == team_id && s.TaskId == task_id && s.TaskItem.SubEditionId == subedition_id && s.TaskItem.SubEdition.EditionId == team.EditionId);
+                .FirstOrDefaultAsync(s => s.TeamId == team_id && s.TaskId == task_id &&
+                    s.TaskItem.SubEditionId == subedition_id && s.TaskItem.SubEdition.EditionId == team.EditionId &&
+                    s.TaskItem.SubEdition.State == SubEditionStates.STATE_ACTIVE &&
+                    s.TaskItem.SubEdition.Edition.State == EditionStates.STATE_ACTIVE &&
+                    s.TaskItem.SubEdition.AnswerOpen <= timeNow && s.TaskItem.SubEdition.AnswerClose >= timeNow &&
+                    (s.TaskItem.Tier == TaskItemTiers.TIER_1 || s.TaskItem.Tier == TaskItemTiers.TIER_2) &&
+                    (team.Tier == TaskItemTiers.TIER_2 || (team.Tier == TaskItemTiers.TIER_1 && s.TaskItem.Tier == TaskItemTiers.TIER_1)));
             if (submission == null)
                 throw new KoalaException(KoalaErrorCodes.TaskSubmissionNotFound, "Submission for this team and task does not exist");
 
@@ -583,6 +590,26 @@ namespace koala.src.Modules.Core.Services
             }).ToList();
 
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+        }
+
+        public async Task<AutoCheckProgressDto> GetAutoCheckProgressAsync(ClaimsPrincipal? claimsPrincipal, Guid subeditionId)
+        {
+            if (!ClaimsHelper.IsAuthenticated(claimsPrincipal))
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            if (!ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal))
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only administrators can view automatic checking progress");
+            if (!await _db.SubEditions.AnyAsync(s => s.Id == subeditionId))
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
+
+            return await _db.TaskSubmissions.AsNoTracking()
+                .Where(s => s.TaskItem.SubEditionId == subeditionId)
+                .GroupBy(s => 1)
+                .Select(g => new AutoCheckProgressDto(
+                    g.Count(),
+                    g.Count(s => s.AutoReviewState == null && s.Review1Score == null && s.Review2Score == null && s.TaskItem.TaskAnswers.Any()),
+                    g.Count(s => s.AutoReviewState == null && s.Review1Score == null && s.Review2Score == null && !s.TaskItem.TaskAnswers.Any()),
+                    g.Count(s => s.AutoReviewState == null && (s.Review1Score != null || s.Review2Score != null))))
+                .FirstOrDefaultAsync() ?? new AutoCheckProgressDto(0, 0, 0, 0);
         }
 
         public async Task AutoCheckSubmissionsAsync(ClaimsPrincipal? claimsPrincipal, Guid subedition_id)

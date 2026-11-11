@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { FaEdit, FaFlagCheckered, FaPlay, FaPlus, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
+import AutoCheckNotice from "../../components/AutoCheckNotice";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import SelectListbox from "../../components/SelectListbox";
@@ -31,8 +32,14 @@ export default function SubeditionsScreen() {
     const [editing, setEditing] = useState<ApiSubedition | null>(null);
     const [modal, setModal] = useState(false);
     const [busy, setBusy] = useState(false);
+    const [now, setNow] = useState(() => Date.now());
     const [form, setForm] = useState({ name: "", answerOpen: "", answerClose: "" });
     const edition = editions.find((item) => item.id === editionId);
+
+    useEffect(() => {
+        const timer = window.setInterval(() => setNow(Date.now()), 30000);
+        return () => window.clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         let active = true;
@@ -211,6 +218,28 @@ export default function SubeditionsScreen() {
                                 options={editions.map((e) => ({ value: e.id, label: e.name }))}
                             />
                         </div>
+                        {!loadingItems &&
+                            items.some(
+                                (item) =>
+                                    item.state !== "CLOSED" &&
+                                    Date.parse(item.answerClose) < now
+                            ) && (
+                                <div className="mt-6 space-y-3">
+                                    {items
+                                        .filter(
+                                            (item) =>
+                                                item.state !== "CLOSED" &&
+                                                Date.parse(item.answerClose) < now
+                                        )
+                                        .map((item) => (
+                                            <AutoCheckNotice
+                                                key={item.id}
+                                                id={item.id}
+                                                name={item.name}
+                                            />
+                                        ))}
+                                </div>
+                            )}
                         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
                             <h2 className="text-xl font-semibold text-ink-heading">
                                 Podedycje wybranej edycji
