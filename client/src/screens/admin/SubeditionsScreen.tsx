@@ -165,7 +165,16 @@ export default function SubeditionsScreen() {
                     : previous.map((entry) => (entry.id === item.id ? result.data! : entry))
             );
             setFeedback("Zaktualizowano podedycję.");
-        } else setError("Nie udało się wykonać operacji. Odśwież dane i spróbuj ponownie.");
+        } else if (
+            operation === "close" &&
+            result.error?.message.includes("before the answer deadline")
+        )
+            setError("Nie można zakończyć podedycji przed upływem terminu odpowiedzi.");
+        else if (operation === "close" && result.error?.message.includes("two matching reviews"))
+            setError(
+                "Przed zakończeniem wszystkie nadesłane odpowiedzi muszą mieć dwie zgodne oceny recenzentów."
+            );
+        else setError("Nie udało się wykonać operacji. Odśwież dane i spróbuj ponownie.");
         setBusy(false);
     };
 
@@ -179,6 +188,10 @@ export default function SubeditionsScreen() {
                 <h1 className="mt-2 text-3xl font-bold text-ink-heading">Podedycje</h1>
                 <p className="mt-3 text-ink-secondary">
                     Zarządzaj etapami konkursu i terminami odpowiadania.
+                </p>
+                <p className="mt-2 text-sm text-ink-secondary">
+                    Zakończenie podedycji wymaga upływu terminu i dwóch zgodnych ocen każdej
+                    nadesłanej odpowiedzi.
                 </p>
                 {feedback && (
                     <p role="status" className="app-status-success mt-6 rounded-xl border p-3">
@@ -219,10 +232,34 @@ export default function SubeditionsScreen() {
                             />
                         </div>
                         {!loadingItems &&
+                            items
+                                .filter(
+                                    (item) =>
+                                        item.state === "INACTIVE" &&
+                                        Date.parse(item.answerOpen) <= now
+                                )
+                                .map((item) => (
+                                    <div
+                                        key={`activation-warning-${item.id}`}
+                                        role="status"
+                                        className="app-status-warning mt-6 rounded-2xl border p-5"
+                                    >
+                                        <p className="font-semibold">
+                                            Podedycja „{item.name}” nie została aktywowana.
+                                        </p>
+                                        <p className="mt-2 text-sm">
+                                            {Date.parse(item.answerClose) < now
+                                                ? "Termin nadsyłania odpowiedzi już minął. Sprawdź i w razie potrzeby zmień terminy przed aktywacją."
+                                                : "Termin nadsyłania odpowiedzi już się rozpoczął, ale drużyny nie mają dostępu do zadań. Aktywuj podedycję, aby mogły odpowiadać."}
+                                            {edition?.state !== "ACTIVE" &&
+                                                " Dostęp do zadań wymaga również aktywnej edycji."}
+                                        </p>
+                                    </div>
+                                ))}
+                        {!loadingItems &&
                             items.some(
                                 (item) =>
-                                    item.state !== "CLOSED" &&
-                                    Date.parse(item.answerClose) < now
+                                    item.state !== "CLOSED" && Date.parse(item.answerClose) < now
                             ) && (
                                 <div className="mt-6 space-y-3">
                                     {items
@@ -326,7 +363,10 @@ export default function SubeditionsScreen() {
                                                     <Button
                                                         text="Zakończ"
                                                         icon={<FaFlagCheckered />}
-                                                        disabled={busy}
+                                                        disabled={
+                                                            busy ||
+                                                            Date.parse(item.answerClose) >= now
+                                                        }
                                                         onClick={() => void action(item, "close")}
                                                     />
                                                 )}
