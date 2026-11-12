@@ -1,4 +1,5 @@
 using FluentValidation;
+using koala.src.Shared;
 using Microsoft.AspNetCore.Http;
 
 namespace koala.src.Modules.Account.Dtos
@@ -28,19 +29,35 @@ namespace koala.src.Modules.Account.Dtos
                 ".pdf"
             };
             RuleFor(x => x.File)
-                .NotNull().WithMessage("File cannot be null!")
-                .Must(file => file.Length > 0).WithMessage("File cannot be empty!")
-                .Must(file => file.Length <= 2 * 1024 * 1024).WithMessage("File size cannot exceed 2 MB!")
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.FileEmpty)
+                .WithMessage("File cannot be empty!")
+
+                .Must(file => file.Length > 0)
+                .WithErrorCode(KoalaValidationErrorCodes.FileEmpty)
+                .WithMessage("File cannot be empty!")
+
+                .Must(file => file.Length <= 2 * 1024 * 1024)
+                .WithErrorCode(KoalaValidationErrorCodes.FileToLarge)
+                .WithMessage("File size cannot exceed 2 MB!")
+
                 .Must(file => allowedContentTypes.Contains(file.ContentType.ToLower()))
+                .WithErrorCode(KoalaValidationErrorCodes.FileInvalidType)
                 .WithMessage("Only image files (JPEG, PNG, WebP) and PDF files are allowed!")
+
                 .Must(file =>
                 {
                     var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                     return allowedExtensions.Contains(extension);
-                }).WithMessage("Invalid file extension. Allowed extensions are: .jpg, .jpeg, .png, .webp, .pdf");
+                })
+                .WithErrorCode(KoalaValidationErrorCodes.FileInvalidType)
+                .WithMessage("Invalid file extension. Allowed extensions are: .jpg, .jpeg, .png, .webp, .pdf");
+
             RuleFor(x => x.Version)
                 .GreaterThan(0)
                 .When(x => x.Version.HasValue)
+                .WithErrorCode(KoalaValidationErrorCodes.ResourceVersionInvalid)
                 .WithMessage("Version field must be greater than 0");
         }
     }

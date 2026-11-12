@@ -119,6 +119,11 @@ namespace koala.src.Shared
         public const string InvalidValue = "KOALA_VALIDATION_INVALID_VALUE";
         public const string ResourceVersionInvalid = "KOALA_VALIDATION_RESOURCE_VERSION_INVALID";
 
+        public const string FileEmpty = "KOALA_VALIDATION_FILE_EMPTY";
+        public const string FileToLarge = "KOALA_VALIDATION_FILE_TO_LARGE";
+        public const string FileInvalidType = "KOALA_VALIDATION_FILE_INVALID_TYPE";
+        public const string FileTitleToLong = "KOALA_VALIDATION_FILE_TITLE_TO_LONG";
+
         // ==========================================
         // ACCOUNT MODULE
         // ==========================================
