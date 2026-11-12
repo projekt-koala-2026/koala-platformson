@@ -1,4 +1,4 @@
-name: Backend_Unit_Tests
+name: Backend_Account_Validation_Tests
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
         run: |
           dotnet clean
           dotnet restore --no-cache
-          dotnet list koala-unit-tests.csproj package
+          dotnet list koala-validation-tests.csproj package
         working-directory: ./backend/koala/src/Modules/Account/Tests/ValidationTests
 
       - name: Build solution

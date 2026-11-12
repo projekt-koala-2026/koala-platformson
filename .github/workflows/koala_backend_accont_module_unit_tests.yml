@@ -1,4 +1,4 @@
-name: Backend_Unit_Tests
+name: Backend_Account_Unit_Tests
 
 on:
   push:
