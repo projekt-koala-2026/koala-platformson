@@ -678,7 +678,6 @@ namespace koala.src.Modules.Account.Services
             }
 
             var teamJoinCode = await _db.TeamJoinCodes
-                .Include(tjc => tjc.Team)
                 .FirstOrDefaultAsync(tjc => tjc.JoinCode == JoinCode);
 
             if (teamJoinCode == null)
@@ -696,18 +695,21 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code is invalid or has expired.");
             }
 
-            if (teamJoinCode.Team.EditionId != activeEdition.Id)
-            {
-                throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code belongs to an inactive edition");
-            }
+            var team = await _db.Teams.Include(t => t.Captain).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .Include(t => t.Guardian).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(t => t.Id == teamJoinCode.TeamId);
 
-            // MAKE SURE ONLY ONE TEAM ADMIN PER TEAM AND WELL TEAM PLAYER CANT JOIN SINCE A TEAM WITH NO CAPTAIN CAN EXIST AND ONLY ONE CAPTAIN PER TEAM IS ALLOWED
-            var team = await _db.Teams.Include(t => t.Captain).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(t => t.Guardian).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(t => t.Id == teamJoinCode.TeamId);
             if (team == null)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamNotFound, "team for this join code does not exist");
             }
 
+            if (team.EditionId != activeEdition.Id)
+            {
+                throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code belongs to an inactive edition");
+            }
+
+            // MAKE SURE ONLY ONE TEAM ADMIN PER TEAM AND WELL TEAM PLAYER CANT JOIN SINCE A TEAM WITH NO CAPTAIN CAN EXIST AND ONLY ONE CAPTAIN PER TEAM IS ALLOWED
             bool teamHasAdmin = team.GuardianId != null ? true : false;
 
             if (teamHasAdmin)

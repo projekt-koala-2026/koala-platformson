@@ -431,3 +431,7 @@ FodyWeavers.xsd
 *.msp
 
 .DS_Store
+
+# Local IDE configuration and generated documentation site
+/.vscode/
+/docs/site/
