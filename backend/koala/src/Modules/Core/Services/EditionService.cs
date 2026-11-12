@@ -519,7 +519,18 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not active");
             }
 
+            if (DateTime.UtcNow <= subedition.AnswerClose)
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot close the subedition before the answer deadline");
+
+            if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subedition_id &&
+                (ts.Reviewer1Id == null || ts.Reviewer2Id == null || ts.Reviewer1Id == ts.Reviewer2Id ||
+                 ts.Review1Score == null || ts.Review2Score == null || ts.Review1Score != ts.Review2Score ||
+                 ts.AutoReviewState == null)))
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot close the subedition until all submitted answers have two matching reviews");
+
             subedition.State = SubEditionStates.STATE_CLOSED;
+            subedition.UpdatedAt = DateTime.UtcNow;
+            subedition.Version++;
             await _db.SaveChangesAsync();
 
             return new SubEditionDto

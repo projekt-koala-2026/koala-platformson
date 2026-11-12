@@ -81,6 +81,7 @@ namespace koala.src.Shared
         // ==========================================
         public const string StaticPageNotFound = "KOALA_STATIC_PAGE_NOT_FOUND";
         public const string KoalicjantNotFound = "KOALA_KOALICJANT_NOT_FOUND";
+        public const string KoalicjantAlreadyExists = "KOALA_KOALICJANT_ALREADY_EXISTS";
         public const string SponsorNotFound = "KOALA_SPONSOR_NOT_FOUND";
         public const string PostNotFound = "KOALA_POST_NOT_FOUND";
 

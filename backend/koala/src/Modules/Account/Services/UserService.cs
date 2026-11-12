@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using koala.src.Shared.Account;
 using System.Security.Claims;
 using koala.src.Shared;
+using koala.src.Shared.Core;
 
 namespace koala.src.Modules.Account.Services
 {
@@ -25,10 +26,12 @@ namespace koala.src.Modules.Account.Services
     {
         private readonly AccountDbContext _db;
         private readonly IEmailService _emailService;
-        public UserService(AccountDbContext db, IEmailService emailService)
+        private readonly ICmsModule _cmsModule;
+        public UserService(AccountDbContext db, IEmailService emailService, ICmsModule cmsModule)
         {
             _db = db;
             _emailService = emailService;
+            _cmsModule = cmsModule;
         }
         public async Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, UserRegisterRequestDto requestDto)
         {
@@ -490,6 +493,11 @@ namespace koala.src.Modules.Account.Services
             if (user == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
+            }
+
+            if (user.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_ORGANIZATION_ADMIN || ur.Role.Name == RoleNames.NAME_ORGANIZATION_EDITOR || ur.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER))
+            {
+                await _cmsModule.Internal_DeleteKoalicjantIfExistsAsync(user.Id);
             }
 
             _db.Users.Remove(user);

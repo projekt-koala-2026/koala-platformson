@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using koala.src.Modules.Cms.Data;
 using koala.src.Modules.Cms.Dtos;
+using koala.src.Modules.Cms.Entities;
 using koala.src.Shared;
+using koala.src.Shared.Account;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,11 +12,14 @@ namespace koala.src.Modules.Cms.Services
     public class KoalicjantService
     {
         private readonly CmsDbContext _db;
-        public KoalicjantService(CmsDbContext db)
+        private readonly IAccountModule _accountModule;
+        public KoalicjantService(CmsDbContext db, IAccountModule accountModule)
         {
             _db = db;
+            _accountModule = accountModule;
         }
-        public async Task<KoalicjantDto> UpdateKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateKoalicjantRequestDto requestDto)
+
+        public async Task<KoalicjantDto> AddKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpsertKoalicjantRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             if (!isAuthenticated)
@@ -24,7 +29,74 @@ namespace koala.src.Modules.Cms.Services
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
-            bool isSelf = await _db.Koalicjants.AnyAsync(k => k.Id == id && k.UserId == ClaimsHelper.GetUserGuid(claimsPrincipal));
+            bool isValidKoalicjantId = await _accountModule.Internal_IsOrganizationUser(id);
+
+            if (!isValidKoalicjantId)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Invalid id there is no koalicjant associeted with it");
+            }
+
+            bool isSelf = id == ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if (!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission.");
+            }
+
+            var koalicjant = await _db.Koalicjants.FirstOrDefaultAsync(k => k.Id == id);
+            if (koalicjant != null)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantAlreadyExists, "Koalicjant for this id already exists");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+            koalicjant = new Koalicjant
+            {
+                Id = id,
+                NameFirst = requestDto.NameFirst,
+                NameLast = requestDto.NameLast,
+                Email = requestDto.Email,
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                IsVisible = requestDto.IsVisible,
+                ContentJson = requestDto.ContentJson,
+                Version = 1
+            };
+
+            await _db.Koalicjants.AddAsync(koalicjant);
+
+            return new KoalicjantDto
+            (
+                koalicjant.Id,
+                koalicjant.NameFirst,
+                koalicjant.NameLast,
+                koalicjant.Email,
+                koalicjant.ContentJson,
+                koalicjant.IsVisible,
+                koalicjant.CreatedAt,
+                koalicjant.UpdatedAt,
+                koalicjant.Version
+            );
+        }
+        public async Task<KoalicjantDto> UpdateKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpsertKoalicjantRequestDto requestDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
+
+            bool isValidKoalicjantId = await _accountModule.Internal_IsOrganizationUser(id);
+
+            if (!isValidKoalicjantId)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Invalid id there is no koalicjant associeted with it");
+            }
+
+            bool isSelf = id == ClaimsHelper.GetUserGuid(claimsPrincipal);
 
             if (!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
             {
@@ -68,6 +140,7 @@ namespace koala.src.Modules.Cms.Services
                 koalicjant.Email,
                 koalicjant.ContentJson,
                 koalicjant.IsVisible,
+                koalicjant.CreatedAt,
                 koalicjant.UpdatedAt,
                 koalicjant.Version
             );
@@ -97,6 +170,7 @@ namespace koala.src.Modules.Cms.Services
                         k.Email,
                         k.ContentJson,
                         k.IsVisible,
+                        k.CreatedAt,
                         k.UpdatedAt,
                         k.Version
                     )
@@ -126,6 +200,7 @@ namespace koala.src.Modules.Cms.Services
                     queryResult.Email,
                     queryResult.ContentJson,
                     queryResult.IsVisible,
+                    queryResult.CreatedAt,
                     queryResult.UpdatedAt,
                     queryResult.Version
                 );

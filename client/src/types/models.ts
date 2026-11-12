@@ -74,6 +74,18 @@ export interface ApiRanking {
     latestUpdatedAt: string | null;
 }
 
+export interface ApiTaskSubmission {
+    teamId: string;
+    taskId: string;
+    reviewer1Id: string | null;
+    reviewer2Id: string | null;
+    autoReviewState: boolean | null;
+    review1Score: boolean | null;
+    review2Score: boolean | null;
+    submission: string;
+    version: number;
+}
+
 export interface ApiPost {
     id: string;
     editionId: string;
