@@ -43,9 +43,9 @@ namespace koala.src.Modules.Core.Services
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(subedition.Edition.State != EditionStates.STATE_CLOSED || timeNow <= subedition.AnswerClose)
+            if(timeNow <= subedition.AnswerClose)
             {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Rankings can only be generated for a closed edition after the answer period ends");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Rankings can only be generated after the subedition answer period ends");
             }
 
             if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subEditionId &&
