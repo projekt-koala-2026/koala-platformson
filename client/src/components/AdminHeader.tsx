@@ -28,6 +28,7 @@ const administratorLinks = [
     { label: "Edycje", path: "/admin/editions" },
     { label: "Podedycje", path: "/admin/subeditions" },
     { label: "Zadania konkursowe", path: "/admin/competition-tasks" },
+    { label: "Rankingi", path: "/admin/rankings" },
     { label: "Przydzielanie recenzji", path: "/admin/review-assignments" },
     ...editorLinks,
     { label: "Szkoły", path: "/admin/schools" },
@@ -38,6 +39,7 @@ const administratorLinks = [
 const desktopPaths = new Set([
     "/admin",
     "/admin/editions",
+    "/admin/rankings",
     "/admin/posts",
     "/admin/history",
     "/admin/rules",

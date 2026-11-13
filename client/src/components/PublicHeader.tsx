@@ -18,6 +18,7 @@ const baseLinks = [
     { label: "Zadania", path: "/problems" },
     { label: "Regulamin", path: "/rules" },
     { label: "Historia", path: "/history" },
+    { label: "Rankingi", path: "/rankings" },
     { label: "KOALicjA", path: "/koalicja" },
 ];
 
@@ -31,7 +32,11 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const isLoggedIn = isOrganizationUser || isTeamAccount;
     const organizationHomePath = getOrganizationHomePath(roles);
     const links = isTeamAccount
-        ? [...baseLinks, { label: "Drużyny", path: "/captain" }]
+        ? [
+              ...baseLinks,
+              { label: "Drużyny", path: "/captain" },
+              { label: "Zadania", path: "/captain/tasks" },
+          ]
         : baseLinks;
     const navigationOptions = links.map((link) => ({
         label: link.label,
@@ -117,6 +122,10 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                               {
                                                   label: "Panel drużyn",
                                                   onClick: () => navigate("/captain"),
+                                              },
+                                              {
+                                                  label: "Zadania drużyny",
+                                                  onClick: () => navigate("/captain/tasks"),
                                               },
                                           ]
                                         : []),
