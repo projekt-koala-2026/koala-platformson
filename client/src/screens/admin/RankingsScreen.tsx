@@ -26,13 +26,18 @@ export default function RankingsScreen() {
     useEffect(() => {
         let active = true;
         void apiListRequestResult<ApiEdition>(
-            `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
+            `${apiEndpoints.editions}?${firstPage}&States=ACTIVE&States=INACTIVE&States=CLOSED`,
             null,
             "GET",
             navigate
         ).then(({ data }) => {
             if (!active) return;
-            const items = data ?? [];
+            const items = [...(data ?? [])].sort((a, b) => {
+                const createdDifference = Date.parse(b.createdAt) - Date.parse(a.createdAt);
+                if (Number.isFinite(createdDifference) && createdDifference !== 0)
+                    return createdDifference;
+                return Date.parse(b.teamRegisterClose) - Date.parse(a.teamRegisterClose);
+            });
             setEditions(items);
             setEditionId(items[0]?.id ?? "");
             if (!data) setError("Nie udało się pobrać edycji.");
@@ -176,7 +181,7 @@ export default function RankingsScreen() {
                     {loading ? (
                         <p className="text-sm text-ink-muted">Ładowanie edycji…</p>
                     ) : editions.length === 0 ? (
-                        <p className="text-sm text-ink-muted">Nie ma jeszcze zamkniętych edycji.</p>
+                        <p className="text-sm text-ink-muted">Nie znaleziono edycji.</p>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div>
@@ -222,8 +227,8 @@ export default function RankingsScreen() {
                                 <strong className="text-ink-heading">
                                     {selectedSubedition.name}
                                 </strong>
-                                . Generowanie wymaga zamkniętej edycji, zakończonego czasu
-                                odpowiedzi i rozstrzygniętych ocen.
+                                . Ranking podedycji można wygenerować po zakończeniu czasu
+                                odpowiedzi i rozstrzygnięciu wszystkich ocen, nawet gdy edycja trwa.
                             </p>
                             <div className="mt-5 flex flex-wrap gap-3">
                                 <Button
@@ -272,7 +277,7 @@ export default function RankingsScreen() {
                             </p>
                         ) : rankings.length === 0 ? (
                             <p className="rounded-xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
-                                Brak rankingu. Wygeneruj go po zakończeniu oceniania.
+                                Brak rankingu. Wygeneruj go po zakończeniu oceniania tej podedycji.
                             </p>
                         ) : (
                             <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
