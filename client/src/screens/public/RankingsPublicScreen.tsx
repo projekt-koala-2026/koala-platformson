@@ -7,13 +7,21 @@ import type { ApiEdition, ApiRanking, ApiSubedition } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult } from "../../utils/apiFetcher";
 
+type DisplayRanking = Pick<
+    ApiRanking,
+    "teamName" | "totalScore" | "maxScore" | "tier" | "latestUpdatedAt"
+>;
+
 export default function RankingsPublicScreen() {
     const navigate = useNavigate();
     const [editions, setEditions] = useState<ApiEdition[]>([]);
     const [editionId, setEditionId] = useState("");
     const [subeditions, setSubeditions] = useState<ApiSubedition[]>([]);
-    const [subeditionId, setSubeditionId] = useState("");
-    const [rankings, setRankings] = useState<ApiRanking[]>([]);
+    const [subeditionFilter, setSubeditionFilter] = useState("ALL");
+    const [rankings, setRankings] = useState<DisplayRanking[]>([]);
+    const [rankingsBySubedition, setRankingsBySubedition] = useState<
+        Record<string, DisplayRanking[]>
+    >({});
     const [tier, setTier] = useState("ALL");
     const [loading, setLoading] = useState(true);
     const [loadingRankings, setLoadingRankings] = useState(false);
@@ -22,13 +30,18 @@ export default function RankingsPublicScreen() {
     useEffect(() => {
         let active = true;
         void apiListRequestResult<ApiEdition>(
-            `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
+            `${apiEndpoints.editions}?${firstPage}&States=ACTIVE&States=INACTIVE&States=CLOSED`,
             null,
             "GET",
             navigate
         ).then(({ data }) => {
             if (!active) return;
-            const items = data ?? [];
+            const items = [...(data ?? [])].sort((a, b) => {
+                const createdDifference = Date.parse(b.createdAt) - Date.parse(a.createdAt);
+                if (Number.isFinite(createdDifference) && createdDifference !== 0)
+                    return createdDifference;
+                return Date.parse(b.teamRegisterClose) - Date.parse(a.teamRegisterClose);
+            });
             setEditions(items);
             setEditionId(items[0]?.id ?? "");
             if (!data) setError("Nie udało się pobrać edycji.");
@@ -42,60 +55,102 @@ export default function RankingsPublicScreen() {
     useEffect(() => {
         if (!editionId) {
             setSubeditions([]);
-            setSubeditionId("");
+            setRankings([]);
+            setRankingsBySubedition({});
             return;
         }
         let active = true;
-        setSubeditions([]);
-        setSubeditionId("");
+        setLoadingRankings(true);
         setRankings([]);
+        setRankingsBySubedition({});
+        setSubeditionFilter("ALL");
+        setError("");
         void apiListRequestResult<ApiSubedition>(
             `${apiEndpoints.subeditions(editionId)}?${firstPage}`,
             null,
             "GET",
             navigate
-        ).then(({ data }) => {
+        ).then(async ({ data: subeditions }) => {
             if (!active) return;
-            const items = data ?? [];
-            setSubeditions(items);
-            setSubeditionId(items[0]?.id ?? "");
-            if (!data) setError("Nie udało się pobrać podedycji.");
+            if (!subeditions) {
+                setError("Nie udało się pobrać podedycji edycji.");
+                setLoadingRankings(false);
+                return;
+            }
+            setSubeditions(subeditions);
+
+            const rankingResults = await Promise.all(
+                subeditions.map((subedition) =>
+                    apiListRequestResult<ApiRanking>(
+                        `${apiEndpoints.rankings}?subeditionId=${encodeURIComponent(subedition.id)}&${firstPage}`,
+                        null,
+                        "GET",
+                        navigate
+                    )
+                )
+            );
+            if (!active) return;
+
+            const totals = new Map<string, DisplayRanking>();
+            const maxScoreByTier = new Map<string, number>();
+            const bySubedition: Record<string, DisplayRanking[]> = {};
+            for (const [index, result] of rankingResults.entries()) {
+                const rows = result.data ?? [];
+                const subeditionId = subeditions[index].id;
+                bySubedition[subeditionId] = [...rows].sort(
+                    (a, b) => b.totalScore - a.totalScore || a.teamName.localeCompare(b.teamName)
+                );
+                const stageMaxByTier = new Map<string, number>();
+                for (const row of rows) {
+                    stageMaxByTier.set(
+                        row.tier,
+                        Math.max(stageMaxByTier.get(row.tier) ?? 0, row.maxScore)
+                    );
+                }
+                for (const [stageTier, stageMax] of stageMaxByTier) {
+                    maxScoreByTier.set(stageTier, (maxScoreByTier.get(stageTier) ?? 0) + stageMax);
+                }
+                for (const row of rows) {
+                    const key = `${row.teamName}\u0000${row.tier}`;
+                    const current = totals.get(key);
+                    if (!current) {
+                        totals.set(key, { ...row, maxScore: 0 });
+                        continue;
+                    }
+                    current.totalScore += row.totalScore;
+                    if (
+                        row.latestUpdatedAt &&
+                        (!current.latestUpdatedAt ||
+                            Date.parse(row.latestUpdatedAt) > Date.parse(current.latestUpdatedAt))
+                    ) {
+                        current.latestUpdatedAt = row.latestUpdatedAt;
+                    }
+                }
+            }
+
+            for (const ranking of totals.values()) {
+                ranking.maxScore = maxScoreByTier.get(ranking.tier) ?? ranking.maxScore;
+            }
+
+            setRankings(
+                [...totals.values()].sort(
+                    (a, b) => b.totalScore - a.totalScore || a.teamName.localeCompare(b.teamName)
+                )
+            );
+            setRankingsBySubedition(bySubedition);
+            setLoadingRankings(false);
         });
         return () => {
             active = false;
         };
     }, [editionId, navigate]);
 
-    useEffect(() => {
-        if (!subeditionId) {
-            setRankings([]);
-            return;
-        }
-        let active = true;
-        setLoadingRankings(true);
-        setRankings([]);
-        setError("");
-        const query = new URLSearchParams({
-            subeditionId,
-            ...Object.fromEntries(firstPage.split("&").map((part) => part.split("="))),
-        });
-        void apiListRequestResult<ApiRanking>(
-            `${apiEndpoints.rankings}?${query.toString()}`,
-            null,
-            "GET",
-            navigate
-        ).then(({ data }) => {
-            if (!active) return;
-            if (data) setRankings(data);
-            else setError("Nie udało się pobrać opublikowanego rankingu.");
-            setLoadingRankings(false);
-        });
-        return () => {
-            active = false;
-        };
-    }, [subeditionId, navigate]);
-
-    const visibleRankings = rankings.filter((item) => tier === "ALL" || item.tier === tier);
+    const selectedSubedition = subeditions.find((item) => item.id === subeditionFilter);
+    const displayedRankings =
+        subeditionFilter === "ALL" ? rankings : (rankingsBySubedition[subeditionFilter] ?? []);
+    const visibleRankings = displayedRankings.filter(
+        (item) => tier === "ALL" || item.tier === tier
+    );
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
@@ -109,8 +164,7 @@ export default function RankingsPublicScreen() {
                             Rankingi drużyn
                         </h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Sprawdź opublikowane wyniki drużyn w poszczególnych edycjach i
-                            podedycjach.
+                            Ranking edycji sumuje opublikowane wyniki ze wszystkich jej podedycji.
                         </p>
                     </div>
                     <KoalaIllustration
@@ -127,22 +181,21 @@ export default function RankingsPublicScreen() {
                 )}
                 <section
                     className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-7"
-                    aria-label="Wybór rankingu"
+                    aria-label="Wybór edycji"
                 >
                     {loading ? (
                         <p className="text-sm text-ink-muted">Ładowanie edycji…</p>
                     ) : editions.length === 0 ? (
-                        <p className="text-sm text-ink-muted">Nie ma jeszcze zamkniętych edycji.</p>
+                        <p className="text-sm text-ink-muted">Nie znaleziono edycji.</p>
                     ) : (
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <label className="text-sm font-medium text-ink">
+                        <div className="grid gap-5">
+                            <label className="block max-w-xl text-sm font-medium text-ink">
                                 Edycja
                                 <select
                                     className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink-heading"
                                     value={editionId}
-                                    onChange={(e) => setEditionId(e.target.value)}
+                                    onChange={(event) => setEditionId(event.target.value)}
                                 >
-                                    <option value="">Wybierz edycję</option>
                                     {editions.map((item) => (
                                         <option value={item.id} key={item.id}>
                                             {item.name}
@@ -150,26 +203,35 @@ export default function RankingsPublicScreen() {
                                     ))}
                                 </select>
                             </label>
-                            <label className="text-sm font-medium text-ink">
-                                Podedycja
-                                <select
-                                    className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink-heading"
-                                    value={subeditionId}
-                                    onChange={(e) => setSubeditionId(e.target.value)}
-                                    disabled={!subeditions.length}
-                                >
-                                    <option value="">Wybierz podedycję</option>
-                                    {subeditions.map((item) => (
-                                        <option value={item.id} key={item.id}>
-                                            {item.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
+                            <div
+                                className="flex flex-wrap items-center gap-2"
+                                aria-label="Filtruj według podedycji"
+                            >
+                                <span className="mr-1 text-sm font-medium text-ink">
+                                    Podedycja:
+                                </span>
+                                {[
+                                    { value: "ALL", label: "Cała edycja" },
+                                    ...subeditions.map((item) => ({
+                                        value: item.id,
+                                        label: item.name,
+                                    })),
+                                ].map((item) => (
+                                    <button
+                                        key={item.value}
+                                        type="button"
+                                        onClick={() => setSubeditionFilter(item.value)}
+                                        aria-pressed={subeditionFilter === item.value}
+                                        className={`rounded-lg px-3 py-2 text-sm font-medium ${subeditionFilter === item.value ? "bg-brand-soft text-brand-text-strong" : "bg-surface-muted text-ink-secondary hover:bg-surface"}`}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </section>
-                {subeditionId && (
+                {editionId && (
                     <section className="mt-8" aria-labelledby="published-ranking-title">
                         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
                             <div>
@@ -177,17 +239,21 @@ export default function RankingsPublicScreen() {
                                     id="published-ranking-title"
                                     className="text-xl font-semibold text-ink-heading"
                                 >
-                                    {subeditions.find((item) => item.id === subeditionId)?.name}
+                                    {selectedSubedition
+                                        ? `Ranking: ${selectedSubedition.name}`
+                                        : "Ranking całej edycji"}
                                 </h2>
                                 <p className="mt-1 text-sm text-ink-muted">
-                                    Kolejność według zdobytych punktów.
+                                    {selectedSubedition
+                                        ? "Wyniki wybranej podedycji."
+                                        : "Łączna liczba punktów z opublikowanych rankingów podedycji."}
                                 </p>
                             </div>
-                            <div className="flex gap-2" aria-label="Filtruj według poziomu">
+                            <div className="flex gap-2" aria-label="Filtruj według szkoły">
                                 {[
                                     { value: "ALL", label: "Wszystkie" },
-                                    { value: "TIER_1", label: "Poziom I" },
-                                    { value: "TIER_2", label: "Poziom II" },
+                                    { value: "TIER_1", label: "Podstawowa" },
+                                    { value: "TIER_2", label: "Średnia" },
                                 ].map((item) => (
                                     <button
                                         key={item.value}
@@ -207,7 +273,9 @@ export default function RankingsPublicScreen() {
                             </p>
                         ) : visibleRankings.length === 0 ? (
                             <p className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
-                                Ranking dla wybranej podedycji nie został jeszcze opublikowany.
+                                {selectedSubedition
+                                    ? "Nie ma jeszcze opublikowanego rankingu dla tej podedycji."
+                                    : "Nie ma jeszcze opublikowanych rankingów podedycji dla tej edycji."}
                             </p>
                         ) : (
                             <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
@@ -216,8 +284,8 @@ export default function RankingsPublicScreen() {
                                         <tr>
                                             <th className="px-4 py-3">Miejsce</th>
                                             <th className="px-4 py-3">Drużyna</th>
-                                            <th className="px-4 py-3">Poziom</th>
-                                            <th className="px-4 py-3 text-right">Punkty</th>
+                                            <th className="px-4 py-3">Szkoła</th>
+                                            <th className="px-4 py-3 text-right">Punkty łącznie</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -234,8 +302,8 @@ export default function RankingsPublicScreen() {
                                                 </td>
                                                 <td className="px-4 py-3 text-ink-secondary">
                                                     {item.tier === "TIER_2"
-                                                        ? "Poziom II"
-                                                        : "Poziom I"}
+                                                        ? "Średnia"
+                                                        : "Podstawowa"}
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-semibold text-ink-heading">
                                                     {item.totalScore} / {item.maxScore}
