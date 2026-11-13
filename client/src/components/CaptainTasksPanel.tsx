@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { ApiCompetitionTask, ApiSubedition, ApiTeam } from "../types/models";
 import { apiEndpoints, firstPage } from "../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../utils/apiFetcher";
+import { decodeMultipleChoice, encodeMultipleChoice } from "../utils/competitionAnswers";
 import MarkdownRenderer from "./MarkdownRenderer";
 
 type Submission = { submission: string; version: number };
@@ -85,23 +86,13 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
         setSubmission(null);
         setAnswer("");
         setMessage("");
-        void Promise.all([
-            apiRequestResult<ApiCompetitionTask>(
-                apiEndpoints.competitionTask(team.editionId, subeditionId, task.id),
-                null,
-                "GET",
-                navigate
-            ),
-            apiRequestResult<Submission>(
-                apiEndpoints.teamTaskSubmission(task.id, team.id, subeditionId),
-                null,
-                "GET",
-                navigate
-            ),
-        ]).then(([taskResult, answerResult]) => {
+        void apiRequestResult<Submission>(
+            apiEndpoints.teamTaskSubmission(task.id, team.id, subeditionId),
+            null,
+            "GET",
+            navigate
+        ).then((answerResult) => {
             if (!active) return;
-            if (taskResult.data) setTask(taskResult.data);
-            else setMessage("Nie udało się otworzyć zadania.");
             if (answerResult.data) {
                 setSubmission(answerResult.data);
                 setAnswer(answerResult.data.submission ?? "");
@@ -120,6 +111,11 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
         }
     }, [task?.contentJson]);
     const answerType = (content.answer_type ?? "open").toLowerCase();
+    const isMultipleChoice = answerType === "multiple_choice";
+    const selectedOptions = useMemo(
+        () => (isMultipleChoice ? (decodeMultipleChoice(answer) ?? []) : []),
+        [answer, isMultipleChoice]
+    );
     const options = useMemo(() => {
         const raw = content.options ?? content.choices ?? content.answers;
         if (Array.isArray(raw))
@@ -152,7 +148,13 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
 
     const save = async (event: FormEvent) => {
         event.preventDefault();
-        if (!task || !subeditionId || !answer.trim()) return;
+        if (
+            !task ||
+            !subeditionId ||
+            !answer.trim() ||
+            (isMultipleChoice && selectedOptions.length === 0)
+        )
+            return;
         setBusy(true);
         setMessage("");
         const result = await apiRequestResult<Submission>(
@@ -263,14 +265,31 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
                                         {options.map((option) => (
                                             <label
                                                 key={option.value}
-                                                className={`flex cursor-pointer items-center gap-3 rounded-xl border bg-surface p-3 text-sm ${answer === option.value ? "border-brand-focus" : "border-line"}`}
+                                                className={`flex cursor-pointer items-center gap-3 rounded-xl border bg-surface p-3 text-sm ${(isMultipleChoice ? selectedOptions.includes(option.value) : answer === option.value) ? "border-brand-focus" : "border-line"}`}
                                             >
                                                 <input
-                                                    type="radio"
+                                                    type={isMultipleChoice ? "checkbox" : "radio"}
                                                     name="team-task-answer"
                                                     value={option.value}
-                                                    checked={answer === option.value}
-                                                    onChange={() => setAnswer(option.value)}
+                                                    checked={
+                                                        isMultipleChoice
+                                                            ? selectedOptions.includes(option.value)
+                                                            : answer === option.value
+                                                    }
+                                                    onChange={() => {
+                                                        if (!isMultipleChoice) {
+                                                            setAnswer(option.value);
+                                                            return;
+                                                        }
+                                                        const next = selectedOptions.includes(
+                                                            option.value
+                                                        )
+                                                            ? selectedOptions.filter(
+                                                                  (id) => id !== option.value
+                                                              )
+                                                            : [...selectedOptions, option.value];
+                                                        setAnswer(encodeMultipleChoice(next));
+                                                    }}
                                                 />
                                                 {option.label}
                                             </label>
@@ -288,7 +307,11 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
                                 )}
                                 <div className="mt-4 flex flex-wrap items-center gap-3">
                                     <button
-                                        disabled={busy || !answer.trim()}
+                                        disabled={
+                                            busy ||
+                                            !answer.trim() ||
+                                            (isMultipleChoice && selectedOptions.length === 0)
+                                        }
                                         className="rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                                     >
                                         {busy
