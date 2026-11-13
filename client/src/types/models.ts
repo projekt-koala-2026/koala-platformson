@@ -74,6 +74,15 @@ export interface ApiRanking {
     latestUpdatedAt: string | null;
 }
 
+export interface ApiEditionRanking {
+    teamName: string;
+    editionId: string;
+    totalScore: number;
+    maxScore: number;
+    tier: "TIER_1" | "TIER_2" | string;
+    latestUpdatedAt: string | null;
+}
+
 export interface ApiTaskSubmission {
     teamId: string;
     taskId: string;
