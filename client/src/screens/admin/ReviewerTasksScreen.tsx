@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaExclamationTriangle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -16,7 +16,7 @@ import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 import { getStoredUserId } from "../../utils/authService";
 import { decodeMultipleChoice } from "../../utils/competitionAnswers";
 
-type TaskWithContext = { task: ApiCompetitionTask; subedition: ApiSubedition };
+type TaskWithContext = { task: ApiCompetitionTask; subedition: ApiSubedition; edition: ApiEdition };
 const bodyOf = (json: string) => {
     try {
         const value: unknown = JSON.parse(json);
@@ -77,6 +77,10 @@ export default function ReviewerTasksScreen() {
     const userId = getStoredUserId();
     const [submissions, setSubmissions] = useState<ApiTaskSubmission[]>([]);
     const [taskMap, setTaskMap] = useState<Record<string, TaskWithContext>>({});
+    const [editions, setEditions] = useState<ApiEdition[]>([]);
+    const [subeditions, setSubeditions] = useState<ApiSubedition[]>([]);
+    const [editionId, setEditionId] = useState("");
+    const [subeditionId, setSubeditionId] = useState("");
     const [selected, setSelected] = useState<ApiTaskSubmission | null>(null);
     const [score, setScore] = useState<"correct" | "incorrect" | "">("");
     const [loading, setLoading] = useState(true);
@@ -101,7 +105,7 @@ export default function ReviewerTasksScreen() {
                 ),
             ]);
             if (!assignments.data || !editions.data) throw new Error();
-            const allSubs = await Promise.all(
+            const allSubsByEdition = await Promise.all(
                 editions.data.map(async (edition) => {
                     const result = await apiListRequestResult<ApiSubedition>(
                         `${apiEndpoints.subeditions(edition.id)}?${firstPage}`,
@@ -109,25 +113,60 @@ export default function ReviewerTasksScreen() {
                         "GET",
                         navigate
                     );
-                    if (!result.data) throw new Error();
-                    return result.data;
+                    if (!result.data) return [];
+                    return result.data.map((subedition) => ({ subedition, edition }));
                 })
             );
+            const allSubs = allSubsByEdition.flat();
             const allTasks = await Promise.all(
-                allSubs.flat().map(async (subedition) => {
+                allSubs.map(async ({ subedition, edition }) => {
                     const result = await apiListRequestResult<ApiCompetitionTask>(
                         `${apiEndpoints.competitionTasks(subedition.editionId, subedition.id)}?${firstPage}`,
                         null,
                         "GET",
                         navigate
                     );
-                    if (!result.data) throw new Error();
-                    return result.data.map((task) => ({ task, subedition }));
+                    if (!result.data) return [];
+                    return result.data.map((task) => ({ task, subedition, edition }));
                 })
             );
+            const flatTasks = allTasks.flat();
             if (!active) return;
-            setTaskMap(Object.fromEntries(allTasks.flat().map((item) => [item.task.id, item])));
+            const loadedTaskIds = new Set(flatTasks.map(({ task }) => task.id));
+            const missingAssignments = assignments.data.some(
+                (assignment) => !loadedTaskIds.has(assignment.taskId)
+            );
+            if (missingAssignments)
+                setError("Nie udało się pobrać treści części przydzielonych zadań.");
+            setTaskMap(Object.fromEntries(flatTasks.map((item) => [item.task.id, item])));
+            setEditions(editions.data);
+            setSubeditions(allSubs.map(({ subedition }) => subedition));
             setSubmissions(assignments.data);
+            const assignedTaskIds = new Set(assignments.data.map((item) => item.taskId));
+            const latestClosed = allSubs
+                .filter(({ subedition }) => Date.parse(subedition.answerClose) <= Date.now())
+                .filter(({ subedition }) =>
+                    flatTasks.some(
+                        ({ task }) =>
+                            task.subEditionId === subedition.id && assignedTaskIds.has(task.id)
+                    )
+                )
+                .sort(
+                    (a, b) =>
+                        Date.parse(b.subedition.answerClose) - Date.parse(a.subedition.answerClose)
+                )[0];
+            const initial =
+                latestClosed ??
+                allSubs.find(({ subedition }) =>
+                    flatTasks.some(
+                        ({ task }) =>
+                            task.subEditionId === subedition.id && assignedTaskIds.has(task.id)
+                    )
+                );
+            if (initial) {
+                setEditionId(initial.edition.id);
+                setSubeditionId(initial.subedition.id);
+            }
         };
         void load()
             .catch(() => {
@@ -151,6 +190,19 @@ export default function ReviewerTasksScreen() {
         item.review1Score !== null &&
         item.review2Score !== null &&
         item.review1Score !== item.review2Score;
+    const visibleSubeditions = subeditions
+        .filter((item) => item.editionId === editionId)
+        .sort((a, b) => Date.parse(b.answerClose) - Date.parse(a.answerClose));
+    const visibleSubmissions = submissions
+        .filter((item) => {
+            const context = taskMap[item.taskId];
+            return context?.edition.id === editionId && context.subedition.id === subeditionId;
+        })
+        .sort((a, b) => {
+            const first = taskMap[a.taskId]?.task.name ?? "";
+            const second = taskMap[b.taskId]?.task.name ?? "";
+            return first.localeCompare(second);
+        });
     const open = (item: ApiTaskSubmission) => {
         const current = ownScore(item);
         setSelected(item);
@@ -221,37 +273,93 @@ export default function ReviewerTasksScreen() {
                 ) : submissions.length === 0 ? (
                     <p className="mt-8 text-ink-secondary">Nie masz przydzielonych odpowiedzi.</p>
                 ) : (
-                    <div className="mt-8 space-y-3">
-                        {submissions.map((item, index) => (
-                            <article
-                                key={`${item.taskId}-${item.teamId}`}
-                                className="rounded-2xl border border-line bg-surface p-5"
-                            >
-                                <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <div>
-                                        <h2 className="font-semibold text-ink-heading">
-                                            {taskMap[item.taskId]?.task.name ??
-                                                "Treść zadania niedostępna"}
-                                        </h2>
-                                        <p className="mt-1 text-sm text-ink-secondary">
-                                            Odpowiedź {index + 1} ·{" "}
-                                            {conflict(item)
-                                                ? "Konflikt ocen"
-                                                : ownScore(item) === null
-                                                  ? "Do oceny"
-                                                  : "Oceniona"}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        text={ownScore(item) === null ? "Oceń" : "Zmień ocenę"}
-                                        icon={<FaEdit />}
-                                        disabled={!taskMap[item.taskId]}
-                                        onClick={() => open(item)}
-                                    />
-                                </div>
-                            </article>
-                        ))}
-                    </div>
+                    <>
+                        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                            <label className="text-sm font-medium text-ink">
+                                Edycja
+                                <select
+                                    className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5"
+                                    value={editionId}
+                                    onChange={(event) => {
+                                        const nextEdition = event.target.value;
+                                        const nextSubedition = subeditions
+                                            .filter((item) => item.editionId === nextEdition)
+                                            .sort(
+                                                (a, b) =>
+                                                    Date.parse(b.answerClose) -
+                                                    Date.parse(a.answerClose)
+                                            )[0];
+                                        setEditionId(nextEdition);
+                                        setSubeditionId(nextSubedition?.id ?? "");
+                                    }}
+                                >
+                                    {editions.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="text-sm font-medium text-ink">
+                                Podedycja
+                                <select
+                                    className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5"
+                                    value={subeditionId}
+                                    onChange={(event) => setSubeditionId(event.target.value)}
+                                >
+                                    {visibleSubeditions.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        </div>
+                        {visibleSubmissions.length === 0 ? (
+                            <p className="mt-6 text-ink-secondary">
+                                Brak przydzielonych odpowiedzi w tej podedycji.
+                            </p>
+                        ) : (
+                            <div className="mt-4 space-y-3">
+                                {visibleSubmissions.map((item, index) => (
+                                    <article
+                                        key={`${item.taskId}-${item.teamId}`}
+                                        className={`rounded-2xl border p-5 ${conflict(item) ? "border-danger-border bg-danger-soft" : "border-line bg-surface"}`}
+                                    >
+                                        <div className="flex flex-wrap items-center justify-between gap-4">
+                                            <div>
+                                                <h2 className="font-semibold text-ink-heading">
+                                                    {taskMap[item.taskId]?.task.name ??
+                                                        "Treść zadania niedostępna"}
+                                                </h2>
+                                                <p className="mt-1 text-sm text-ink-secondary">
+                                                    Odpowiedź {index + 1} ·{" "}
+                                                    {conflict(item) ? (
+                                                        <span className="inline-flex items-center gap-1 text-danger-text">
+                                                            <FaExclamationTriangle aria-hidden="true" />
+                                                            Konflikt opinii
+                                                        </span>
+                                                    ) : ownScore(item) === null ? (
+                                                        "Do oceny"
+                                                    ) : (
+                                                        "Oceniona"
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <Button
+                                                text={
+                                                    ownScore(item) === null ? "Oceń" : "Zmień ocenę"
+                                                }
+                                                icon={<FaEdit />}
+                                                disabled={!taskMap[item.taskId]}
+                                                onClick={() => open(item)}
+                                            />
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </main>
             <Modal

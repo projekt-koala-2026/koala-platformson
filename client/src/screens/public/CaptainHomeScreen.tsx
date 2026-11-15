@@ -51,6 +51,7 @@ const CaptainHomeScreen = () => {
     const [newMembers, setNewMembers] = useState([
         { nameFirst: "", nameLast: "" },
         { nameFirst: "", nameLast: "" },
+        { nameFirst: "", nameLast: "" },
     ]);
     const [memberError, setMemberError] = useState("");
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -414,6 +415,7 @@ const CaptainHomeScreen = () => {
             setNewMembers([
                 { nameFirst: "", nameLast: "" },
                 { nameFirst: "", nameLast: "" },
+                { nameFirst: "", nameLast: "" },
             ]);
             setFeedback({
                 tone: "success",
@@ -436,6 +438,7 @@ const CaptainHomeScreen = () => {
         setAddingMember(false);
         setMemberError("");
         setNewMembers([
+            { nameFirst: "", nameLast: "" },
             { nameFirst: "", nameLast: "" },
             { nameFirst: "", nameLast: "" },
         ]);
@@ -659,7 +662,7 @@ const CaptainHomeScreen = () => {
                                                 icon={<FaPlus />}
                                                 onClick={() => setAddingMember(true)}
                                                 disabled={
-                                                    saving || (team.teamMembers?.length ?? 0) >= 2
+                                                    saving || (team.teamMembers?.length ?? 0) >= 3
                                                 }
                                                 className="mt-5"
                                             />
