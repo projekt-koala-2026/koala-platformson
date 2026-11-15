@@ -29,13 +29,14 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const roles = useMemo(() => getUserRoles(), []);
     const isOrganizationUser = roles.isAdmin || roles.isEditor || roles.isReviewer;
     const isTeamAccount = roles.isCaptain || roles.isGuardian;
+    const isCaptain = roles.isCaptain;
     const isLoggedIn = isOrganizationUser || isTeamAccount;
     const organizationHomePath = getOrganizationHomePath(roles);
     const links = isTeamAccount
         ? [
               ...baseLinks,
               { label: "Drużyny", path: "/captain" },
-              { label: "Zadania", path: "/captain/tasks" },
+              ...(isCaptain ? [{ label: "Zadania", path: "/captain/tasks" }] : []),
           ]
         : baseLinks;
     const navigationOptions = links.map((link) => ({
@@ -123,6 +124,10 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                                   label: "Panel drużyn",
                                                   onClick: () => navigate("/captain"),
                                               },
+                                          ]
+                                        : []),
+                                    ...(isCaptain
+                                        ? [
                                               {
                                                   label: "Zadania drużyny",
                                                   onClick: () => navigate("/captain/tasks"),
