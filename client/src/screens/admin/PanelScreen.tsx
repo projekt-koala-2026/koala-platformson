@@ -4,8 +4,16 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
-import type { Role, User } from "../../types/models";
-import { apiEndpoints } from "../../utils/apiEndpoints";
+import type {
+    ApiCompetitionTask,
+    ApiEdition,
+    ApiSubedition,
+    ApiTaskSubmission,
+    ApiTeam,
+    Role,
+    User,
+} from "../../types/models";
+import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 
 const USERS_ENDPOINT = apiEndpoints.users;
@@ -28,6 +36,20 @@ const inputClass =
     "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted";
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
+type ReviewProgress = {
+    totalSubmissions: number;
+    unassigned: number;
+    incomplete: number;
+    pairs: { total: number; reviewer1Reviewed: number; reviewer2Reviewed: number }[];
+};
+type ReviewOverview = {
+    submissions: number;
+    expectedSubmissions: number;
+    assignedSlots: number;
+    reviewedSlots: number;
+    conflictSlots: number;
+    conflicts: number;
+};
 
 const sortUsers = (users: User[]) =>
     [...users].sort((first, second) => first.email.localeCompare(second.email, "pl"));
@@ -48,6 +70,109 @@ const PanelScreen = () => {
     const [editedRoles, setEditedRoles] = useState<Role[]>([]);
     const [editError, setEditError] = useState("");
     const [updatingRoles, setUpdatingRoles] = useState(false);
+    const [reviewOverview, setReviewOverview] = useState<ReviewOverview | null>(null);
+    const [reviewOverviewLoading, setReviewOverviewLoading] = useState(true);
+    const [hasActiveSubedition, setHasActiveSubedition] = useState(false);
+
+    useEffect(() => {
+        let active = true;
+        const loadReviewOverview = async () => {
+            const editions = await apiListRequestResult<ApiEdition>(
+                `${apiEndpoints.editions}?${firstPage}&States=ACTIVE`,
+                null,
+                "GET",
+                navigate
+            );
+            if (!editions.data) {
+                if (active) {
+                    setHasActiveSubedition(false);
+                    setReviewOverviewLoading(false);
+                }
+                return;
+            }
+            let submissions = 0,
+                expectedSubmissions = 0,
+                assignedSlots = 0,
+                reviewedSlots = 0,
+                conflictSlots = 0,
+                conflicts = 0;
+            let activeSubeditionFound = false;
+            for (const edition of editions.data) {
+                const teams = await apiListRequestResult<ApiTeam>(
+                    `${apiEndpoints.teams}?${firstPage}&EditionId=${edition.id}`,
+                    null,
+                    "GET",
+                    navigate
+                );
+                const subeditions = await apiListRequestResult<ApiSubedition>(
+                    `${apiEndpoints.subeditions(edition.id)}?${firstPage}`,
+                    null,
+                    "GET",
+                    navigate
+                );
+                for (const subedition of (subeditions.data ?? []).filter(
+                    (item) => item.state === "ACTIVE"
+                )) {
+                    activeSubeditionFound = true;
+                    const taskList = await apiListRequestResult<ApiCompetitionTask>(
+                        `${apiEndpoints.competitionTasks(edition.id, subedition.id)}?${firstPage}`,
+                        null,
+                        "GET",
+                        navigate
+                    );
+                    for (const task of taskList.data ?? []) {
+                        expectedSubmissions += (teams.data ?? []).filter(
+                            (team) =>
+                                team.tier === "TIER_2" ||
+                                (team.tier === "TIER_1" && task.tier === "TIER_1")
+                        ).length;
+                        const result = await apiRequestResult<ReviewProgress>(
+                            apiEndpoints.taskReviewProgress(task.id),
+                            null,
+                            "GET",
+                            navigate
+                        );
+                        if (!result.data) continue;
+                        submissions += result.data.totalSubmissions;
+                        for (const pair of result.data.pairs) {
+                            assignedSlots += pair.total * 2;
+                            reviewedSlots += pair.reviewer1Reviewed + pair.reviewer2Reviewed;
+                        }
+                        const taskSubmissions = await apiListRequestResult<ApiTaskSubmission>(
+                            apiEndpoints.taskSubmissions(task.id),
+                            null,
+                            "GET",
+                            navigate
+                        );
+                        const taskConflicts = (taskSubmissions.data ?? []).filter(
+                            (submission) =>
+                                submission.review1Score !== null &&
+                                submission.review2Score !== null &&
+                                submission.review1Score !== submission.review2Score
+                        ).length;
+                        conflicts += taskConflicts;
+                        conflictSlots += taskConflicts * 2;
+                    }
+                }
+            }
+            if (active) {
+                setHasActiveSubedition(activeSubeditionFound);
+                setReviewOverview({
+                    submissions,
+                    expectedSubmissions,
+                    assignedSlots,
+                    reviewedSlots,
+                    conflictSlots,
+                    conflicts,
+                });
+                setReviewOverviewLoading(false);
+            }
+        };
+        void loadReviewOverview();
+        return () => {
+            active = false;
+        };
+    }, [navigate]);
 
     useEffect(() => {
         let active = true;
@@ -201,6 +326,98 @@ const PanelScreen = () => {
         <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
             <main className="app-admin-page">
+                {hasActiveSubedition && (
+                    <section className="mb-8 rounded-2xl border border-line bg-surface p-6 shadow-sm">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                            Ocenianie zadań
+                        </p>
+                        <h2 className="mt-1 text-2xl font-bold text-ink-heading">
+                            Pokrycie ocen przez reviewerów
+                        </h2>
+                        {reviewOverviewLoading ? (
+                            <p className="mt-3 text-sm text-ink-secondary">
+                                Ładowanie postępu ocen…
+                            </p>
+                        ) : reviewOverview ? (
+                            <>
+                                <p className="mt-3 text-4xl font-bold text-brand-text">
+                                    {reviewOverview.assignedSlots
+                                        ? Math.round(
+                                              (reviewOverview.reviewedSlots /
+                                                  reviewOverview.assignedSlots) *
+                                                  100
+                                          )
+                                        : 0}
+                                    %
+                                </p>
+                                <p className="mt-1 text-sm text-ink-secondary">
+                                    {reviewOverview.reviewedSlots} z {reviewOverview.assignedSlots}{" "}
+                                    przydzielonych ocen uzupełnionych · {reviewOverview.submissions}{" "}
+                                    nadesłanych odpowiedzi ·{" "}
+                                    {Math.max(
+                                        0,
+                                        reviewOverview.expectedSubmissions -
+                                            reviewOverview.submissions
+                                    )}{" "}
+                                    odpowiedzi brakuje
+                                </p>
+                                {reviewOverview.conflicts > 0 && (
+                                    <p className="mt-2 text-sm font-semibold text-red-700">
+                                        Występuje {reviewOverview.conflicts}{" "}
+                                        {reviewOverview.conflicts === 1
+                                            ? "konflikt"
+                                            : reviewOverview.conflicts >= 2 &&
+                                                reviewOverview.conflicts <= 4
+                                              ? "konflikty"
+                                              : "konfliktów"}{" "}
+                                        w ocenach.
+                                    </p>
+                                )}
+                                <div
+                                    className="mt-4 h-3 overflow-hidden rounded-full bg-surface-muted"
+                                    role="progressbar"
+                                    aria-label="Pokrycie ocen reviewerów"
+                                    aria-valuenow={
+                                        reviewOverview.assignedSlots
+                                            ? Math.round(
+                                                  (reviewOverview.reviewedSlots /
+                                                      reviewOverview.assignedSlots) *
+                                                      100
+                                              )
+                                            : 0
+                                    }
+                                    aria-valuemin={0}
+                                    aria-valuemax={100}
+                                >
+                                    <div
+                                        className="flex h-full"
+                                        style={{
+                                            width: `${reviewOverview.assignedSlots ? (reviewOverview.reviewedSlots / reviewOverview.assignedSlots) * 100 : 0}%`,
+                                        }}
+                                    >
+                                        <div
+                                            className="h-full bg-brand"
+                                            style={{
+                                                width: `${reviewOverview.reviewedSlots ? (Math.max(0, reviewOverview.reviewedSlots - reviewOverview.conflictSlots) / reviewOverview.reviewedSlots) * 100 : 0}%`,
+                                            }}
+                                        />
+                                        <div
+                                            className="h-full bg-red-600"
+                                            title="Oceny w konflikcie"
+                                            style={{
+                                                width: `${reviewOverview.reviewedSlots ? (reviewOverview.conflictSlots / reviewOverview.reviewedSlots) * 100 : 0}%`,
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <p className="mt-3 text-sm text-ink-secondary">
+                                Nie udało się pobrać postępu ocen.
+                            </p>
+                        )}
+                    </section>
+                )}
                 <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
