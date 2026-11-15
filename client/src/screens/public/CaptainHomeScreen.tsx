@@ -57,6 +57,8 @@ const CaptainHomeScreen = () => {
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [rodoByMember, setRodoByMember] = useState<Record<string, boolean>>({});
     const [rodoStateByMember, setRodoStateByMember] = useState<Record<string, string | null>>({});
+    const [rodoCapitan, setRodoCapitan] = useState(false);
+    const [captainRodo, setCaptainRodo] = useState<ApiTeamMember | null>(null);
     const [createError, setCreateError] = useState("");
     const [saving, setSaving] = useState(false);
     const [feedback, setFeedback] = useState<Feedback>(null);
@@ -108,6 +110,8 @@ const CaptainHomeScreen = () => {
         if (!team) {
             setRodoByMember({});
             setRodoStateByMember({});
+            setRodoCapitan(false);
+            setCaptainRodo(null);
             return () => {
                 active = false;
             };
@@ -131,6 +135,33 @@ const CaptainHomeScreen = () => {
             active = false;
         };
     }, [loading, navigate, team]);
+
+    const teamId = team?.id;
+    const captainId = team?.teamCaptain?.id;
+
+    useEffect(() => {
+        setRodoCapitan(false);
+        setCaptainRodo(null);
+        if (!teamId || !captainId || !roles.isGuardian) return;
+        let active = true;
+        void apiListRequestResult<ApiTeamMember>(
+            `${apiEndpoints.teamRodos(teamId)}?${firstPage}`,
+            null,
+            "GET",
+            navigate
+        ).then(({ data }) => {
+            if (!active || !data) return;
+            const captainRecord = data.find((record) => record.teamMemberId === captainId);
+            if (!captainRecord) return;
+            setCaptainRodo(captainRecord);
+            setRodoCapitan(captainRecord.rodoState !== "RODO_NONE");
+            setRodoStateByMember((current) => ({
+                ...current,
+                [captainRecord.teamMemberId]: captainRecord.rodoState,
+            }));
+        });
+        return () => { active = false; };
+    }, [captainId, navigate, roles.isGuardian, teamId]);
 
     const statusMeta: Record<
         "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED",
@@ -456,15 +487,17 @@ const CaptainHomeScreen = () => {
         }
 
         const member = team.teamMembers.find((item) => item.teamMemberId === memberId);
-        if (!member) return;
+        const isCaptainRodo = team.teamCaptain?.id === memberId;
+        const rodoVersion = member?.rodoVersion ?? captainRodo?.rodoVersion;
+        if (!member && !isCaptainRodo) return;
         const formData = new FormData();
         formData.append("File", file);
         setSaving(true);
         setFeedback(null);
 
-        const hasRodo = rodoByMember[memberId] === true;
-        if (hasRodo && member.rodoVersion) {
-            formData.append("Version", String(member.rodoVersion));
+        const hasRodo = isCaptainRodo ? rodoCapitan : rodoByMember[memberId] === true;
+        if (hasRodo && rodoVersion) {
+            formData.append("Version", String(rodoVersion));
         }
         const result = await apiRequestResult<ApiTeamMember>(
             `${apiEndpoints.teams}/${team.id}/rodos/${memberId}${hasRodo ? "/file" : ""}`,
@@ -475,21 +508,25 @@ const CaptainHomeScreen = () => {
 
         if (result.status === 200 || result.status === 204) {
             setRodoByMember((current) => ({ ...current, [memberId]: true }));
+            if (isCaptainRodo) setRodoCapitan(true);
             setRodoStateByMember((current) => ({
                 ...current,
                 [memberId]: result.data?.rodoState ?? "RODO_UNVERIFIED",
             }));
             if (result.data) {
+                if (isCaptainRodo) setCaptainRodo(result.data);
                 const updatedTeam = {
                     ...team,
                     teamMembers: team.teamMembers.map((item) =>
                         item.teamMemberId === memberId ? result.data! : item
                     ),
                 };
-                setTeam(updatedTeam);
-                setTeams((items) =>
-                    items.map((item) => (item.id === updatedTeam.id ? updatedTeam : item))
-                );
+                if (member) {
+                    setTeam(updatedTeam);
+                    setTeams((items) =>
+                        items.map((item) => (item.id === updatedTeam.id ? updatedTeam : item))
+                    );
+                }
             }
             setFeedback({ tone: "success", message: "Dokument RODO został zapisany." });
         } else
@@ -720,6 +757,90 @@ const CaptainHomeScreen = () => {
                                             Kapitan drużyny
                                         </p>
                                     </div>
+                                    <div className="absolute left-1/2 -translate-x-1/2 text-center">
+                                        {roles.isGuardian && rodoStatusFor((team.teamCaptain?.id ?? "")) && (
+                                            <span
+                                                className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor((team.teamCaptain?.id ?? ""))!.className}`}
+                                            >
+                                                {rodoStatusFor((team.teamCaptain?.id ?? ""))!.label}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {roles.isGuardian &&
+                                        !rodoCapitan && (
+                                            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
+                                                <FaUpload />
+                                                <span>Zgoda RODO</span>
+                                                <input
+                                                    type="file"
+                                                    accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                                    className="sr-only"
+                                                    disabled={saving}
+                                                    onChange={(event) => {
+                                                        const file = event.currentTarget.files?.[0];
+                                                        if (file)
+                                                            void addRodo((team.teamCaptain?.id ?? ""), file);
+                                                        event.currentTarget.value = "";
+                                                    }}
+                                                />
+                                            </label>
+                                        )}
+                                    {roles.isGuardian &&
+                                        rodoCapitan && (
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={() =>
+                                                        void downloadRodo((team.teamCaptain?.id ?? ""))
+                                                    }
+                                                    className="inline-flex items-center gap-2 rounded-lg bg-success-soft px-4 py-2 text-xs font-semibold text-success-text hover:brightness-95 disabled:opacity-50"
+                                                >
+                                                    <FaDownload />
+                                                    <span>Zgoda RODO</span>
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled
+                                                    title="Usuwanie zgód jest chwilowo niedostępne. Możesz zastąpić dokument."
+                                                    className="rounded-lg bg-danger-soft px-2 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                    aria-label={`Usuń zgodę RODO ${team.teamCaptain?.nameFirst} ${team.teamCaptain?.nameLast}`}
+                                                >
+                                                    <FaTrashCan />
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={saving}
+                                                    onClick={() =>
+                                                        document
+                                                            .getElementById(
+                                                                `rodo-replace-${(team.teamCaptain?.id ?? "")}`
+                                                            )
+                                                            ?.click()
+                                                    }
+                                                    aria-label={`Zastąp zgodę RODO ${team.teamCaptain?.nameFirst} ${team.teamCaptain?.nameLast}`}
+                                                    className="rounded-lg bg-brand-soft px-2 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted disabled:opacity-50"
+                                                >
+                                                    <FaExchangeAlt />
+                                                </button>
+                                                <input
+                                                    id={`rodo-replace-${(team.teamCaptain?.id ?? "")}`}
+                                                    type="file"
+                                                    accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                                    className="sr-only"
+                                                    disabled={saving}
+                                                    onChange={(event) => {
+                                                        const file = event.currentTarget.files?.[0];
+                                                        if (file)
+                                                            void addRodo((team.teamCaptain?.id ?? ""), file);
+                                                        event.currentTarget.value = "";
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
                                 </li>
                                 {team.teamMembers?.map((member) => (
                                     <li
