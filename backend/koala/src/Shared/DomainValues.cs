@@ -2,7 +2,6 @@ global using koala.src.Shared;
 
 namespace koala.src.Shared;
 
-/// <summary>Shared persisted string values used across modules and tests.</summary>
 public static class RoleNames
 {
     public const string NAME_ORGANIZATION_ADMIN = "ORGANIZATION_ADMIN";

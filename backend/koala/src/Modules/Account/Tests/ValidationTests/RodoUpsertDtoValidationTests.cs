@@ -116,4 +116,165 @@ public class RodoUpsertDtoValidationTests
     [MemberData(nameof(FileRuleAndVersionFailureCases))]
     public void FileValidationStopsAtFirstRuleFailureWhileVersionIsStillChecked(RodoUpsertDto dto, string[] expected) =>
         ValidationAssertions.HasExactlyMessages(_validator, dto, expected);
+
+    [Theory]
+    [InlineData("image/jpeg")]
+    [InlineData("image/png")]
+    [InlineData("image/webp")]
+    [InlineData("application/pdf")]
+    [InlineData("IMAGE/JPEG")]
+    [InlineData("IMAGE/PNG")]
+    [InlineData("IMAGE/WEBP")]
+    [InlineData("APPLICATION/PDF")]
+    public void EveryAllowedContentTypeIsAcceptedRegardlessOfLetterCase(string contentType) =>
+        ValidationAssertions.IsValid(_validator, new(FormFile(contentType: contentType), null));
+
+    [Theory]
+    [InlineData("text/plain")]
+    [InlineData("text/csv")]
+    [InlineData("application/octet-stream")]
+    [InlineData("image/gif")]
+    [InlineData("image/svg+xml")]
+    [InlineData("image/bmp")]
+    [InlineData("image/tiff")]
+    [InlineData("application/json")]
+    [InlineData("application/zip")]
+    [InlineData("application/msword")]
+    [InlineData("application/xml")]
+    [InlineData("video/mp4")]
+    [InlineData("audio/mpeg")]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("unknown/type")]
+    public void RejectsEveryUnsupportedContentType(string contentType) =>
+        ValidationAssertions.HasError(_validator, new(FormFile(contentType: contentType), null), KoalaValidationErrorCodes.FileInvalidType, ContentTypeMessage);
+
+    [Theory]
+    [InlineData("photo.gif")]
+    [InlineData("photo.bmp")]
+    [InlineData("photo.tif")]
+    [InlineData("photo.tiff")]
+    [InlineData("photo.svg")]
+    [InlineData("photo.heic")]
+    [InlineData("photo.jfif")]
+    [InlineData("photo.zip")]
+    [InlineData("photo.exe")]
+    [InlineData("photo.docx")]
+    [InlineData("photo.png.exe")]
+    [InlineData("photo.jpg.exe")]
+    [InlineData("photo.pdf.exe")]
+    [InlineData("photo")]
+    [InlineData("photo.")]
+    [InlineData("photo.pdf ")]
+    public void RejectsEveryUnsupportedExtension(string fileName) =>
+        ValidationAssertions.HasError(_validator, new(FormFile(name: fileName), null), KoalaValidationErrorCodes.FileInvalidType, ExtensionMessage);
+
+    [Theory]
+    [InlineData("image/jpeg", "photo.jpg")]
+    [InlineData("image/jpeg", "photo.jpeg")]
+    [InlineData("image/png", "photo.png")]
+    [InlineData("image/webp", "photo.webp")]
+    [InlineData("application/pdf", "document.pdf")]
+    [InlineData("IMAGE/JPEG", "PHOTO.JPEG")]
+    [InlineData("IMAGE/PNG", "PHOTO.PNG")]
+    [InlineData("IMAGE/WEBP", "PHOTO.WEBP")]
+    [InlineData("APPLICATION/PDF", "DOCUMENT.PDF")]
+    public void AcceptsEveryAllowedExtensionIncludingUppercase(string contentType, string fileName) =>
+        ValidationAssertions.IsValid(_validator, new(FormFile(name: fileName, contentType: contentType), null));
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2 * 1024 * 1024 - 1)]
+    [InlineData(2 * 1024 * 1024)]
+    public void AcceptsPositiveFilesAtOrBelowTwoMiB(int length) =>
+        ValidationAssertions.IsValid(_validator, new(FormFile(length: length), null));
+
+    [Theory]
+    [InlineData(2 * 1024 * 1024 + 1)]
+    [InlineData(2 * 1024 * 1024 + 1024)]
+    [InlineData(3 * 1024 * 1024)]
+    public void RejectsFilesAboveTwoMiB(int length) =>
+        ValidationAssertions.HasError(_validator, new(FormFile(length: length), null), KoalaValidationErrorCodes.FileToLarge, TooLargeMessage);
+
+    [Theory]
+    [InlineData(int.MinValue)]
+    [InlineData(-100)]
+    [InlineData(-2)]
+    [InlineData(0)]
+    public void EveryNonPositiveVersionIsRejectedWithTheConfiguredCode(int version) =>
+        ValidationAssertions.HasError(_validator, new(FormFile(), version), KoalaValidationErrorCodes.ResourceVersionInvalid, "Version field must be greater than 0");
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(100)]
+    [InlineData(int.MaxValue)]
+    public void EveryPositiveVersionIsAccepted(int version) =>
+        ValidationAssertions.IsValid(_validator, new(FormFile(), version));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void NullFileStopsFileRulesButStillValidatesVersion(int? version)
+    {
+        var result = _validator.Validate(new RodoUpsertDto(null!, version));
+        var expected = version is > 0
+            ? new[] { EmptyFileMessage }
+            : version.HasValue ? new[] { EmptyFileMessage, "Version field must be greater than 0" } : new[] { EmptyFileMessage };
+        ValidationAssertions.HasExactlyMessages(_validator, new RodoUpsertDto(null!, version), expected);
+        Assert.Contains(result.Errors, error => error.ErrorCode == KoalaValidationErrorCodes.FileEmpty);
+        if (version is <= 0)
+            Assert.Contains(result.Errors, error => error.ErrorCode == KoalaValidationErrorCodes.ResourceVersionInvalid);
+    }
+
+    [Theory]
+    [InlineData("application/pdf", "photo.gif", 0, EmptyFileMessage)]
+    [InlineData("text/plain", "photo.gif", 1, ContentTypeMessage)]
+    [InlineData("application/pdf", "photo.gif", 1, ExtensionMessage)]
+    [InlineData("image/png", "photo.png", 2 * 1024 * 1024 + 1, TooLargeMessage)]
+    public void FileValidationStopsAtTheFirstFailure(string contentType, string name, int length, string expectedMessage)
+    {
+        var dto = new RodoUpsertDto(FormFile(length, name, contentType), null);
+        var result = _validator.Validate(dto);
+        Assert.Equal(expectedMessage, Assert.Single(result.Errors).ErrorMessage);
+    }
+
+    [Fact]
+    public void EachFileFailureHasItsCorrespondingKoalaErrorCode()
+    {
+        var cases = new[]
+        {
+            (FormFile(length: 0), KoalaValidationErrorCodes.FileEmpty, EmptyFileMessage),
+            (FormFile(length: 2 * 1024 * 1024 + 1), KoalaValidationErrorCodes.FileToLarge, TooLargeMessage),
+            (FormFile(contentType: "text/plain"), KoalaValidationErrorCodes.FileInvalidType, ContentTypeMessage),
+            (FormFile(name: "invalid.gif"), KoalaValidationErrorCodes.FileInvalidType, ExtensionMessage)
+        };
+
+        foreach (var (file, code, message) in cases)
+        {
+            var failure = Assert.Single(_validator.Validate(new RodoUpsertDto(file, null)).Errors);
+            Assert.Equal(code, failure.ErrorCode);
+            Assert.Equal(message, failure.ErrorMessage);
+        }
+    }
+
+    [Theory]
+    [InlineData("application/pdf; charset=binary")]
+    [InlineData("image/jpeg; charset=utf-8")]
+    [InlineData("image/png; charset=utf-8")]
+    [InlineData("application/pdf ")]
+    public void RejectsContentTypesWithParametersOrTrailingWhitespace(string contentType) =>
+        ValidationAssertions.HasError(_validator, new(FormFile(contentType: contentType), null), KoalaValidationErrorCodes.FileInvalidType, ContentTypeMessage);
+
+    [Theory]
+    [InlineData("photo.pdf?download=1")]
+    [InlineData("photo.pdf#fragment")]
+    [InlineData("photo.jpeg.exe")]
+    public void RejectsFilenamesWhoseFinalExtensionIsNotAnAllowedSuffix(string fileName) =>
+        ValidationAssertions.HasError(_validator, new(FormFile(name: fileName), null), KoalaValidationErrorCodes.FileInvalidType, ExtensionMessage);
+
+    [Fact]
+    public void DotfileNamedPdfIsAcceptedBecauseItsSuffixMatchesAnAllowedExtension() =>
+        ValidationAssertions.IsValid(_validator, new(FormFile(name: ".pdf"), null));
 }
