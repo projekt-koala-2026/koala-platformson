@@ -4,7 +4,7 @@ using koala.src.Shared;
 
 namespace koala.src.Modules.Cms.Dtos
 {
-    public record UpdateKoalicjantRequestDto
+    public record UpsertKoalicjantRequestDto
     (
         string NameFirst,
         string NameLast,

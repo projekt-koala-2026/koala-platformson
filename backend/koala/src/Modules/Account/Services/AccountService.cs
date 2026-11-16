@@ -119,5 +119,12 @@ namespace koala.src.Modules.Account.Services
                 .Where(role => userIds.Contains(role.UserId) && role.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER && role.User.Verified)
                 .Select(role => role.UserId).Distinct().ToListAsync();
         }
+
+        public async Task<bool> Internal_IsOrganizationUser(Guid userId)
+        {
+            return await _db.UserRoles.AsNoTracking()
+                .Include(r => r.Role)
+                .FirstOrDefaultAsync(role => role.UserId == userId && (role.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER || role.Role.Name == RoleNames.NAME_ORGANIZATION_ADMIN || role.Role.Name == RoleNames.NAME_ORGANIZATION_EDITOR) && role.User.Verified) == null ? false : true;
+        }
     }
 }

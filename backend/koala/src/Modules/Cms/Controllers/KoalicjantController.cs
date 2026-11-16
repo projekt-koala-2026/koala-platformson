@@ -19,8 +19,16 @@ namespace koala.src.Modules.Cms.Controllers
         }
 
         [Authorize]
+        [HttpPost("{id}")]
+        public async Task<IActionResult> AddKoalicjant([FromRoute] Guid id, [FromBody] UpsertKoalicjantRequestDto requestDto)
+        {
+            var responseData = await _koalicjantService.AddKoalicjantAsync(User, id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<KoalicjantDto>(true, DateTime.UtcNow, null, null, responseData));
+        }
+
+        [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateKoalicjant([FromRoute] Guid id, [FromBody] UpdateKoalicjantRequestDto requestDto)
+        public async Task<IActionResult> UpdateKoalicjant([FromRoute] Guid id, [FromBody] UpsertKoalicjantRequestDto requestDto)
         {
             var responseData = await _koalicjantService.UpdateKoalicjantAsync(User, id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<KoalicjantDto>(true, DateTime.UtcNow, null, null, responseData));
@@ -36,7 +44,7 @@ namespace koala.src.Modules.Cms.Controllers
 
         [AllowAnonymous]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetKoalicjants([FromRoute] Guid id)
+        public async Task<IActionResult> GetKoalicjant([FromRoute] Guid id)
         {
             var response = await _koalicjantService.GetKoalicjantAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<KoalicjantDto>(true, DateTime.UtcNow, null, null, response));

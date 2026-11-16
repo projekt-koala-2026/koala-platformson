@@ -22,7 +22,7 @@ namespace koala.src.Modules.Account.Controllers
             _rodoService = rodoService;
         }
 
-        // ONLY FOR TEAM PLAYERS + (REQUIRED MOSTLY WITH CAPTAIN POSITION IN TEAM_MEMBERS)
+        // ONLY FOR TEAM CAPTAINS
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateTeam([FromBody] TeamCreateRequestDto requestDto)
@@ -35,6 +35,13 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> DeleteTeam([FromRoute] Guid id)
         {
             await _teamService.DeleteTeamAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+        [Authorize]
+        [HttpDelete("{id}/guardian")]
+        public async Task<IActionResult> DeleteGuardian([FromRoute] Guid id)
+        {
+            await _teamService.DeleteTeamGuardianAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
@@ -72,7 +79,7 @@ namespace koala.src.Modules.Account.Controllers
             var response = await _teamService.CreateJoinTeamCodeAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamJoinCodeDto>(true, DateTime.UtcNow, null, null, response));
         }
-        // ONLY FOR TEAM ADMINS
+        // ONLY FOR TEAM GUARDIANS
         [Authorize]
         [HttpPost("{id}/rodos/{team_member_id}")]
         public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromForm] RodoUpsertDto rodoCreateDto)
@@ -95,7 +102,7 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
-        // ONLY FOR TEAM ADMINS AND PLAYERS
+        // ONLY FOR TEAM GUARDIANS AND CAPTAINS
         [Authorize]
         [HttpPost("join/{join_code}")]
         public async Task<IActionResult> JoinTeamWithCode([FromRoute] string join_code)
@@ -110,7 +117,7 @@ namespace koala.src.Modules.Account.Controllers
             (var responseData, var responsePagination) = await _teamService.GetMyTeamsAsync(User, pageQueryDto, teamQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
-        //ONLY FOR TEAM PLAYERS AND TEAM ADMINS AND ORGANIZATION ADMINS
+        //ONLY FOR TEAM CAPTAINS AND TEAM GUARDIANS AND ORGANIZATION ADMINS
         [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTeam([FromRoute] Guid id)
@@ -118,7 +125,7 @@ namespace koala.src.Modules.Account.Controllers
             var response = await _teamService.GetTeamAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
         }
-        //ONLY FOR TEAM AND ORGANIZATION ADMINS
+        //ONLY FOR TEAM GUARDIANS AND ORGANIZATION ADMINS
 
         [Authorize]
         [HttpGet("{id}/rodos")]
