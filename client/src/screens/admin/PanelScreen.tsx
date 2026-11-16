@@ -428,6 +428,50 @@ const PanelScreen = () => {
                                     );
                                 })()}
                             </div>
+                            {editionOverview.teamsWithoutGuardians > 0 && (
+                                <div className="rounded-xl bg-canvas p-4">
+                                    <h2 className="font-semibold">Opieka drużyn</h2>
+                                    <p className="mt-2 text-sm text-ink-secondary">
+                                        Drużyny bez opiekunów:{" "}
+                                        <b className="text-ink-heading">
+                                            {editionOverview.teamsWithoutGuardians}
+                                        </b>
+                                    </p>
+                                </div>
+                            )}
+                            {editionOverview.subeditions.some((item) => {
+                                const deadline = Date.parse(item.answerOpen);
+                                return (
+                                    item.state === "INACTIVE" &&
+                                    Number.isFinite(deadline) &&
+                                    deadline <= Date.now()
+                                );
+                            }) && (
+                                <div
+                                    role="status"
+                                    className="rounded-xl border border-warning-border bg-warning-soft p-4 text-sm text-warning-text lg:col-span-2"
+                                >
+                                    <h2 className="font-semibold">
+                                        Termin odsyłania zadań już się rozpoczął
+                                    </h2>
+                                    <ul className="mt-2 list-inside list-disc">
+                                        {editionOverview.subeditions
+                                            .filter((item) => {
+                                                const deadline = Date.parse(item.answerOpen);
+                                                return (
+                                                    item.state === "INACTIVE" &&
+                                                    Number.isFinite(deadline) &&
+                                                    deadline <= Date.now()
+                                                );
+                                            })
+                                            .map((item) => (
+                                                <li key={item.id}>
+                                                    {item.name} — podedycja nie została aktywowana.
+                                                </li>
+                                            ))}
+                                    </ul>
+                                </div>
+                            )}
 
                             {hasActiveSubedition && (
                                 <div className="rounded-xl bg-canvas p-4 lg:col-span-2">
