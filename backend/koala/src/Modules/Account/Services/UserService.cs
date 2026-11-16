@@ -40,21 +40,15 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Forbidden");
             }
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email);
-            if (user != null && user.Verified == true)
+            var existingUser = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email);
+            if (existingUser != null && existingUser.Verified == true)
             {
                 throw new KoalaException(KoalaErrorCodes.UserAlreadyExists, "User with this email already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (user != null)
-            {
-                _db.Users.Remove(user);
-                await _db.SaveChangesAsync();
-            }
-
-            user = new User
+            var user = new User
             {
                 Id = Guid.CreateVersion7(),
                 NameFirst = null,
@@ -97,6 +91,12 @@ namespace koala.src.Modules.Account.Services
                 {
                     throw new KoalaException(KoalaErrorCodes.UserInvalidRoles, "Specified role is not a valid user role");
                 }
+            }
+
+            if (existingUser != null)
+            {
+                _db.Users.Remove(existingUser);
+                await _db.SaveChangesAsync();
             }
 
             List<UserRole> userRoles = new List<UserRole>();
@@ -389,7 +389,8 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.UserRoleAgeRequirementNotMet, "Captain role requires you to be at least 13 years old.");
             }
 
-            await _db.UserRoles.Where(ur => ur.UserId == id).ExecuteDeleteAsync();
+            var previousUserRoles = await _db.UserRoles.Where(ur => ur.UserId == id).ToListAsync();
+            _db.UserRoles.RemoveRange(previousUserRoles);
             List<UserRole> userRoles = new List<UserRole>();
 
             foreach (var role in request.UserRoles)

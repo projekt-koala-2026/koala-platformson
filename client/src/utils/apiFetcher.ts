@@ -13,15 +13,27 @@ type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "HEAD";
 export interface ApiResult<T> {
     data: T | null;
     status: number | null;
+    error?: { code?: string; message: string };
+    pagination?: { pageNumber: number; pageSize: number; totalNumber: number };
 }
 
+const parseError = async (response: Response): Promise<ApiResult<never>["error"]> => {
+    try {
+        const body = await response.json();
+        return {
+            code: body.errorCode ?? body.error?.code,
+            message: body.detail ?? body.error?.message ?? body.title ?? `HTTP ${response.status}`,
+        };
+    } catch {
+        return { message: `HTTP ${response.status}` };
+    }
+};
+
 const handleAuthFailure = (response: Response, navigate?: NavigateFunction) => {
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401) {
         const path = window.location.pathname;
-        if (response.status === 401) {
-            localStorage.removeItem("userRoles");
-            localStorage.removeItem("userId");
-        }
+        localStorage.removeItem("userRoles");
+        localStorage.removeItem("userId");
         if (path.startsWith("/admin")) navigate?.("/admin/login");
         else navigate?.("/");
     }
@@ -62,7 +74,21 @@ export const apiRequestResult = async <T = unknown>(
 
         if (!response.ok) {
             handleAuthFailure(response, navigate);
-            return { data: null, status: response.status };
+            return { data: null, status: response.status, error: await parseError(response) };
+        }
+        if (
+            method === "GET" &&
+            response.headers.get("content-type")?.includes("application/json")
+        ) {
+            const body = await response.json();
+            if (typeof body === "object" && body !== null && "data" in body) {
+                return {
+                    data: body.data,
+                    status: response.status,
+                    ...(body.pagination ? { pagination: body.pagination } : {}),
+                };
+            }
+            return { data: body, status: response.status };
         }
         return { data: await parseResponse<T>(response), status: response.status };
     } catch {
@@ -70,7 +96,47 @@ export const apiRequestResult = async <T = unknown>(
     }
 };
 
-// The API returns heterogeneous legacy response envelopes; callers may narrow this generic during the incremental API migration.
+// Fetch all pages for screens that display a complete list or filter it locally.
+export const apiListRequestResult = async <T>(
+    url: string,
+    _options: null,
+    _method: "GET",
+    navigate?: NavigateFunction
+): Promise<ApiResult<T[]>> => {
+    const requestUrl = new URL(url, window.location.origin);
+    requestUrl.searchParams.set("PageNumber", "0");
+    if (!requestUrl.searchParams.has("PageSize")) requestUrl.searchParams.set("PageSize", "100");
+    const items: T[] = [];
+    for (let page = 0; page < 1000; page += 1) {
+        requestUrl.searchParams.set("PageNumber", String(page));
+        const result = await apiRequestResult<T[]>(
+            `${requestUrl.pathname}${requestUrl.search}`,
+            null,
+            "GET",
+            navigate
+        );
+        if (!result.data) return result;
+        items.push(...result.data);
+        if (!result.pagination || items.length >= result.pagination.totalNumber) {
+            return { data: items, status: result.status };
+        }
+        if (result.data.length === 0) break;
+    }
+    return {
+        data: null,
+        status: null,
+        error: { message: "Nie udało się pobrać kompletnej listy." },
+    };
+};
+
+export const apiListRequest = async <T>(
+    url: string,
+    options: null,
+    method: "GET",
+    navigate?: NavigateFunction
+): Promise<T[] | null> => (await apiListRequestResult<T>(url, options, method, navigate)).data;
+
+// Successful responses use the shared API envelope; the helper returns its data field.
 export const apiRequest = async <T = unknown>(
     url: string,
     options: unknown,

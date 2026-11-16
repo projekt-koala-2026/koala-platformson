@@ -16,8 +16,10 @@ namespace koala.src.Shared.Account
     public record _TeamResponseDto
     (
         Guid TeamId,
+        Guid EditionId,
         Guid CaptainId,
         Guid? GuardianId,
-        string Tier
+        string Tier,
+        string Name
     );
 }

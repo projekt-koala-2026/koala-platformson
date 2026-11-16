@@ -5,13 +5,33 @@ using koala.src.Modules.Account.Entities;
 using koala.src.Modules.Account.Services;
 using koala.src.Shared;
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using Xunit;
 
 namespace koala.src.Modules.Account.Tests.UnitTests
 {
     public class TestDataSeeder
     {
+        private static readonly Lazy<Dictionary<string, string>> PasswordHashes = new(() => new()
+        {
+            [PASSWORD_USER_1!] = PasswordHasher.Hash(PASSWORD_USER_1!),
+            [PASSWORD_USER_2!] = PasswordHasher.Hash(PASSWORD_USER_2!),
+            [PASSWORD_USER_3!] = PasswordHasher.Hash(PASSWORD_USER_3!),
+            [PASSWORD_USER_4!] = PasswordHasher.Hash(PASSWORD_USER_4!),
+            [PASSWORD_USER_5!] = PasswordHasher.Hash(PASSWORD_USER_5!),
+            [PASSWORD_USER_6!] = PasswordHasher.Hash(PASSWORD_USER_6!),
+            [PASSWORD_USER_7!] = PasswordHasher.Hash(PASSWORD_USER_7!),
+            [PASSWORD_USER_8!] = PasswordHasher.Hash(PASSWORD_USER_8!),
+            [PASSWORD_USER_9!] = PasswordHasher.Hash(PASSWORD_USER_9!),
+            [PASSWORD_USER_10!] = PasswordHasher.Hash(PASSWORD_USER_10!),
+            [PASSWORD_USER_11!] = PasswordHasher.Hash(PASSWORD_USER_11!),
+            [PASSWORD_USER_12!] = PasswordHasher.Hash(PASSWORD_USER_12!),
+            [PASSWORD_USER_13!] = PasswordHasher.Hash(PASSWORD_USER_13!),
+            [PASSWORD_USER_14!] = PasswordHasher.Hash(PASSWORD_USER_14!),
+            [PASSWORD_USER_15!] = PasswordHasher.Hash(PASSWORD_USER_15!),
+        });
+
+        private static string GetPasswordHash(string password) => PasswordHashes.Value[password];
+
         public static Guid ID_ROLE_1 = Guid.CreateVersion7();
         public static Guid ID_ROLE_2 = Guid.CreateVersion7();
         public static Guid ID_ROLE_3 = Guid.CreateVersion7();
@@ -68,7 +88,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         public static Guid MOCK_ID_EDITION_1 = Guid.CreateVersion7();
         public static string CODE_TEAM_JOIN_CODE_1 = "XAB287C3";
         public static string EMAIL_USER_1 = "user1@test.pl";
-        public static string EMAIL_USER_2 = "user1@test.pl";
+        public static string EMAIL_USER_2 = "user2@test.pl";
         public static string EMAIL_USER_3 = "user3@test.pl";
         public static string EMAIL_USER_4 = "user4@test.pl";
         public static string EMAIL_USER_5 = "user5@test.pl";
@@ -157,21 +177,21 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             List<User> users = new List<User>
             {
-                new User { Id = ID_USER_1, NameFirst = NAME_FIRST_USER_1, NameLast = NAME_LAST_USER_1, Email = EMAIL_USER_1, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_1), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_2, NameFirst = NAME_FIRST_USER_2, NameLast = NAME_LAST_USER_2, Email = EMAIL_USER_2, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_2), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_3, NameFirst = NAME_FIRST_USER_3, NameLast = NAME_LAST_USER_3, Email = EMAIL_USER_3, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_3), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_4, NameFirst = NAME_FIRST_USER_4, NameLast = NAME_LAST_USER_4, Email = EMAIL_USER_4, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_4), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_5, NameFirst = NAME_FIRST_USER_5, NameLast = NAME_LAST_USER_5, Email = EMAIL_USER_5, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_5), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_6, NameFirst = NAME_FIRST_USER_6, NameLast = NAME_LAST_USER_6, Email = EMAIL_USER_6, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_6), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_7, NameFirst = NAME_FIRST_USER_7, NameLast = NAME_LAST_USER_7, Email = EMAIL_USER_7, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_7), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_8, NameFirst = NAME_FIRST_USER_8, NameLast = NAME_LAST_USER_8, Email = EMAIL_USER_8, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_8), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_9, NameFirst = NAME_FIRST_USER_9, NameLast = NAME_LAST_USER_9, Email = EMAIL_USER_9, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_9), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_10, NameFirst = NAME_FIRST_USER_10, NameLast = NAME_LAST_USER_10, Email = EMAIL_USER_10, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_10), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_11, NameFirst = NAME_FIRST_USER_11, NameLast = NAME_LAST_USER_11, Email = EMAIL_USER_11, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_11), Verified = true, VerifiedAt = TIME_CREATED, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_12, NameFirst = NAME_FIRST_USER_12, NameLast = NAME_LAST_USER_12, Email = EMAIL_USER_12, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_12), Verified = true, VerifiedAt = TIME_CREATED, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true},
-                new User { Id = ID_USER_13, NameFirst = NAME_FIRST_USER_13, NameLast = NAME_LAST_USER_13, Email = EMAIL_USER_13, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_13), Verified = false, VerifiedAt = null, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = false, AcceptedRules = false},
-                new User { Id = ID_USER_14, NameFirst = NAME_FIRST_USER_14, NameLast = NAME_LAST_USER_14, Email = EMAIL_USER_14, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_14), Verified = false, VerifiedAt = null, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = false, AcceptedRules = false},
-                new User { Id = ID_USER_15, NameFirst = NAME_FIRST_USER_15, NameLast = NAME_LAST_USER_15, Email = EMAIL_USER_15, PasswordHash = PasswordHasher.Hash(PASSWORD_USER_15), Verified = false, VerifiedAt = null, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = false, AcceptedRules = false},
+                new User { Id = ID_USER_1, NameFirst = NAME_FIRST_USER_1, NameLast = NAME_LAST_USER_1, Email = EMAIL_USER_1, PasswordHash = GetPasswordHash(PASSWORD_USER_1), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_2, NameFirst = NAME_FIRST_USER_2, NameLast = NAME_LAST_USER_2, Email = EMAIL_USER_2, PasswordHash = GetPasswordHash(PASSWORD_USER_2), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_3, NameFirst = NAME_FIRST_USER_3, NameLast = NAME_LAST_USER_3, Email = EMAIL_USER_3, PasswordHash = GetPasswordHash(PASSWORD_USER_3), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_4, NameFirst = NAME_FIRST_USER_4, NameLast = NAME_LAST_USER_4, Email = EMAIL_USER_4, PasswordHash = GetPasswordHash(PASSWORD_USER_4), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_5, NameFirst = NAME_FIRST_USER_5, NameLast = NAME_LAST_USER_5, Email = EMAIL_USER_5, PasswordHash = GetPasswordHash(PASSWORD_USER_5), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_6, NameFirst = NAME_FIRST_USER_6, NameLast = NAME_LAST_USER_6, Email = EMAIL_USER_6, PasswordHash = GetPasswordHash(PASSWORD_USER_6), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_7, NameFirst = NAME_FIRST_USER_7, NameLast = NAME_LAST_USER_7, Email = EMAIL_USER_7, PasswordHash = GetPasswordHash(PASSWORD_USER_7), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_8, NameFirst = NAME_FIRST_USER_8, NameLast = NAME_LAST_USER_8, Email = EMAIL_USER_8, PasswordHash = GetPasswordHash(PASSWORD_USER_8), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_9, NameFirst = NAME_FIRST_USER_9, NameLast = NAME_LAST_USER_9, Email = EMAIL_USER_9, PasswordHash = GetPasswordHash(PASSWORD_USER_9), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_10, NameFirst = NAME_FIRST_USER_10, NameLast = NAME_LAST_USER_10, Email = EMAIL_USER_10, PasswordHash = GetPasswordHash(PASSWORD_USER_10), Verified = true, VerifiedAt = TIME_CREATED, Censored = false, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_11, NameFirst = NAME_FIRST_USER_11, NameLast = NAME_LAST_USER_11, Email = EMAIL_USER_11, PasswordHash = GetPasswordHash(PASSWORD_USER_11), Verified = true, VerifiedAt = TIME_CREATED, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_12, NameFirst = NAME_FIRST_USER_12, NameLast = NAME_LAST_USER_12, Email = EMAIL_USER_12, PasswordHash = GetPasswordHash(PASSWORD_USER_12), Verified = true, VerifiedAt = TIME_CREATED, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = true, AcceptedRules = true, Version = VERSION},
+                new User { Id = ID_USER_13, NameFirst = NAME_FIRST_USER_13, NameLast = NAME_LAST_USER_13, Email = EMAIL_USER_13, PasswordHash = GetPasswordHash(PASSWORD_USER_13), Verified = false, VerifiedAt = null, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = false, AcceptedRules = false, Version = VERSION},
+                new User { Id = ID_USER_14, NameFirst = NAME_FIRST_USER_14, NameLast = NAME_LAST_USER_14, Email = EMAIL_USER_14, PasswordHash = GetPasswordHash(PASSWORD_USER_14), Verified = false, VerifiedAt = null, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = false, AcceptedRules = false, Version = VERSION},
+                new User { Id = ID_USER_15, NameFirst = NAME_FIRST_USER_15, NameLast = NAME_LAST_USER_15, Email = EMAIL_USER_15, PasswordHash = GetPasswordHash(PASSWORD_USER_15), Verified = false, VerifiedAt = null, Censored = true, CreatedAt = TIME_CREATED, AcceptedRodo = false, AcceptedRules = false, Version = VERSION},
             };
             List<UserRole> userRoles = new List<UserRole>
             {
@@ -291,7 +311,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             List<TeamJoinCode> teamJoinCodes = new List<TeamJoinCode>
             {
-                new TeamJoinCode { TeamId = ID_TEAM_1, JoinCode = CODE_TEAM_JOIN_CODE_1, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_TEAM_JOIN_CODE},
+                new TeamJoinCode { TeamId = ID_TEAM_1, JoinCode = CODE_TEAM_JOIN_CODE_1, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_TEAM_JOIN_CODE, Version = VERSION},
             };
             List<Rodo> rodos = new List<Rodo>
             {

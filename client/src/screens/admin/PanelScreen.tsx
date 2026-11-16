@@ -5,8 +5,8 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import type { Role, User } from "../../types/models";
-import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiEndpoints } from "../../utils/apiEndpoints";
+import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 
 const USERS_ENDPOINT = apiEndpoints.users;
 const editableRoles = [
@@ -19,6 +19,11 @@ const roleLabels: Partial<Record<Role, string>> = {
     ORGANIZATION_EDITOR: "redaktor",
     ORGANIZATION_REVIEWER: "recenzent",
 };
+const organizationUsersQuery = new URLSearchParams({
+    PageNumber: "0",
+    PageSize: "100",
+});
+editableRoles.forEach((role) => organizationUsersQuery.append("UserRoles", role));
 const inputClass =
     "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted";
 
@@ -39,17 +44,24 @@ const PanelScreen = () => {
     const [newRoles, setNewRoles] = useState<Role[]>([]);
     const [createError, setCreateError] = useState("");
     const [creating, setCreating] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [editedRoles, setEditedRoles] = useState<Role[]>([]);
+    const [editError, setEditError] = useState("");
+    const [updatingRoles, setUpdatingRoles] = useState(false);
 
     useEffect(() => {
         let active = true;
-        void apiRequestResult<User[]>(`${USERS_ENDPOINT}?${firstPage}`, null, "GET", navigate).then(
-            ({ data }) => {
-                if (!active) return;
-                if (data) setUsers(sortUsers(data));
-                else setFeedback({ tone: "error", message: "Nie udało się pobrać użytkowników." });
-                setLoading(false);
-            }
-        );
+        void apiListRequestResult<User>(
+            `${USERS_ENDPOINT}?${organizationUsersQuery}`,
+            null,
+            "GET",
+            navigate
+        ).then(({ data }) => {
+            if (!active) return;
+            if (data) setUsers(sortUsers(data));
+            else setFeedback({ tone: "error", message: "Nie udało się pobrać użytkowników." });
+            setLoading(false);
+        });
         return () => {
             active = false;
         };
@@ -61,6 +73,23 @@ const PanelScreen = () => {
         setEmail("");
         setNewRoles([]);
         setCreateError("");
+    };
+
+    const openRoleEditor = (user: User) => {
+        setEditingUser(user);
+        setEditedRoles(
+            user.roles.filter((role) =>
+                editableRoles.includes(role as (typeof editableRoles)[number])
+            )
+        );
+        setEditError("");
+    };
+
+    const closeRoleEditor = () => {
+        if (updatingRoles) return;
+        setEditingUser(null);
+        setEditedRoles([]);
+        setEditError("");
     };
 
     const toggleRole = (
@@ -86,7 +115,7 @@ const PanelScreen = () => {
         setCreating(true);
         const { status } = await apiRequestResult<null>(
             USERS_ENDPOINT,
-            { email: normalizedEmail, roles: newRoles },
+            { email: normalizedEmail, userRoles: newRoles },
             "POST",
             navigate
         );
@@ -131,10 +160,47 @@ const PanelScreen = () => {
         setDeletingId(null);
     };
 
+    const updateRoles = async () => {
+        if (!editingUser) return;
+        setEditError("");
+        if (editedRoles.length === 0) {
+            setEditError("Wybierz co najmniej jedną rolę.");
+            return;
+        }
+        if (
+            editedRoles.length === editingUser.roles.length &&
+            editedRoles.every((role) => editingUser.roles.includes(role))
+        ) {
+            setEditError("Nie wprowadzono żadnych zmian.");
+            return;
+        }
+
+        setUpdatingRoles(true);
+        const { data, error } = await apiRequestResult<User>(
+            `${USERS_ENDPOINT}/${editingUser.id}/roles`,
+            { userRoles: editedRoles, version: editingUser.version },
+            "PUT",
+            navigate
+        );
+        if (!data) {
+            setEditError(error?.message ?? "Nie udało się zapisać ról użytkownika.");
+            setUpdatingRoles(false);
+            return;
+        }
+
+        setUsers((current) =>
+            sortUsers(current.map((user) => (user.id === data.id ? data : user)))
+        );
+        setFeedback({ tone: "success", message: `Zmieniono role konta ${data.email}.` });
+        setUpdatingRoles(false);
+        setEditingUser(null);
+        setEditedRoles([]);
+    };
+
     return (
         <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
@@ -220,8 +286,13 @@ const PanelScreen = () => {
                                                         <span className="sr-only">Edytuj role</span>
                                                     </>
                                                 }
-                                                disabled
-                                                title="Zmiana ról będzie dostępna po dodaniu endpointu backendu."
+                                                disabled={isCurrentUser || updatingRoles}
+                                                onClick={() => openRoleEditor(user)}
+                                                title={
+                                                    isCurrentUser
+                                                        ? "Nie można zmienić ról aktualnie używanego konta."
+                                                        : "Edytuj role"
+                                                }
                                                 className="px-3"
                                             />
                                             <Button
@@ -308,6 +379,66 @@ const PanelScreen = () => {
                             type="submit"
                             text={creating ? "Wysyłanie…" : "Wyślij zaproszenie"}
                             disabled={creating}
+                        />
+                    </div>
+                </form>
+            </Modal>
+
+            <Modal
+                isOpen={editingUser !== null}
+                onClose={closeRoleEditor}
+                title="Edytuj role użytkownika"
+                maxWidth="md"
+            >
+                <form
+                    className="space-y-4"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void updateRoles();
+                    }}
+                >
+                    <p className="text-sm text-ink-secondary">
+                        Konto: <span className="font-semibold text-ink">{editingUser?.email}</span>
+                    </p>
+                    {editError && (
+                        <p role="alert" className="rounded-lg border p-3 text-sm app-status-danger">
+                            {editError}
+                        </p>
+                    )}
+                    <div>
+                        <p className="mb-2 text-sm font-semibold text-ink">Role</p>
+                        <div className="flex flex-wrap gap-3">
+                            {editableRoles.map((role) => (
+                                <label
+                                    key={role}
+                                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium text-ink transition hover:bg-brand-soft"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={editedRoles.includes(role)}
+                                        disabled={updatingRoles}
+                                        onChange={() =>
+                                            toggleRole(role, editedRoles, setEditedRoles)
+                                        }
+                                    />
+                                    {roleLabels[role]}
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            disabled={updatingRoles}
+                            onClick={closeRoleEditor}
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            Anuluj
+                        </button>
+                        <Button
+                            type="submit"
+                            text={updatingRoles ? "Zapisywanie…" : "Zapisz role"}
+                            disabled={updatingRoles}
                         />
                     </div>
                 </form>

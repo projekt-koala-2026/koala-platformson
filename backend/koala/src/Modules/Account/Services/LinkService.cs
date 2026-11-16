@@ -274,8 +274,8 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
-            var links = await _db.Links.Where(l => l.UserId == userId).ExecuteDeleteAsync();
-
+            var links = await _db.Links.Where(l => l.UserId == userId).ToListAsync();
+            _db.Links.RemoveRange(links);
             await _db.SaveChangesAsync();
 
             return;

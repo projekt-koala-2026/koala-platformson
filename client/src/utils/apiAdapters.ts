@@ -58,8 +58,10 @@ export const staticPageProblems = (page: ApiStaticPage | undefined): ProblemsByE
 export const adaptEdition = (edition: ApiEdition): Edition => ({
     id: edition.id,
     title: edition.name,
-    startDate: edition.createdAt,
-    endDate: edition.expiredAt ?? "9999-12-31T23:59:59Z",
+    startDate: edition.teamRegisterOpen,
+    endDate: edition.teamRegisterClose,
+    state: edition.state,
+    version: edition.version,
 });
 
 export const adaptSchool = (school: ApiSchool): School => ({

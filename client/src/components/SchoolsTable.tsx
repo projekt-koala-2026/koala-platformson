@@ -31,9 +31,15 @@ interface SchoolsTableProps {
     schools?: School[];
     onRowClick?: (school: School) => void;
     selectedRspo?: number | null;
+    compact?: boolean;
 }
 
-const SchoolsTable = ({ schools = [], onRowClick, selectedRspo = null }: SchoolsTableProps) => {
+const SchoolsTable = ({
+    schools = [],
+    onRowClick,
+    selectedRspo = null,
+    compact = false,
+}: SchoolsTableProps) => {
     const [filters, setFilters] = useState<SchoolFilters>(emptyFilters);
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -78,7 +84,7 @@ const SchoolsTable = ({ schools = [], onRowClick, selectedRspo = null }: Schools
         "mt-2 w-full rounded-lg border border-line bg-surface px-2.5 py-2 text-sm font-normal text-ink-strong outline-none placeholder:text-ink-subtle focus:border-brand-focus focus:ring-2 focus:ring-brand-muted";
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
             <div className="flex flex-col gap-3 border-b border-line bg-canvas px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-ink-secondary">
                     Strona <strong className="text-ink-heading">{visiblePage}</strong> z{" "}
@@ -131,7 +137,9 @@ const SchoolsTable = ({ schools = [], onRowClick, selectedRspo = null }: Schools
                 </div>
             </div>
 
-            <div className="max-h-[38rem] overflow-auto">
+            <div
+                className={`${compact ? "max-h-[clamp(10rem,35dvh,24rem)]" : "max-h-[38rem]"} overflow-auto`}
+            >
                 <table className="w-full min-w-[1180px] border-collapse text-left text-sm">
                     <thead className="sticky top-0 z-10 bg-surface-muted shadow-table-header">
                         <tr>

@@ -42,6 +42,8 @@ namespace koala.src.Shared
         // ==========================================
         public const string ResourceVersionConflict = "KOALA_RESOURCE_VERSION_CONFLICT";
         public const string InvalidJson = "KOALA_INVALID_JSON";
+        public const string BadRequest = "KOALA_BAD_REQUEST";
+        public const string Conflict = "KOALA_CONFLICT";
 
         // ==========================================
         // ACCOUNT MODULE
@@ -106,6 +108,7 @@ namespace koala.src.Shared
 
         public const string TaskAnswerNotFound = "KOALA_TASK_ANSWER_NOT_FOUND";
         public const string TaskAnswerAlreadyExists = "KOALA_TASK_ANSWER_ALREADY_EXISTS";
+        public const string TaskSubmissionNotFound = "KOALA_TASK_SUBMISSION_NOT_FOUND";
     }
 
     public static class KoalaValidationErrorCodes
@@ -123,6 +126,11 @@ namespace koala.src.Shared
         public const string ContentJsonSponsorLogoImageUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_SPONSOR_LOGO_IMAGE_URL_FIELD_INVALID";
         public const string ContentJsonSponsorWebUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_SPONSOR_WEB_URL_FIELD_INVALID";
         public const string ContentJsonKoalicjantProfileImageUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_KOALICJANT_PROFILE_IMAGE_URL_FIELD_INVALID";
+
+        public const string FileEmpty = "KOALA_VALIDATION_FILE_EMPTY";
+        public const string FileToLarge = "KOALA_VALIDATION_FILE_TO_LARGE";
+        public const string FileInvalidType = "KOALA_VALIDATION_FILE_INVALID_TYPE";
+        public const string FileTitleToLong = "KOALA_VALIDATION_FILE_TITLE_TO_LONG";
 
         // ==========================================
         // ACCOUNT MODULE
@@ -268,10 +276,14 @@ namespace koala.src.Shared
                     KoalaErrorCodes.EditionNotFound or
                     KoalaErrorCodes.ActiveEditionNotFound or
                     KoalaErrorCodes.SubEditionNotFound or
+                    KoalaErrorCodes.TaskAnswerNotFound or
+                    KoalaErrorCodes.TaskSubmissionNotFound or
                     KoalaErrorCodes.TaskNotFound =>
                         StatusCodes.Status404NotFound,
 
-                    KoalaErrorCodes.ActiveEditionAlreadyExists =>
+                    KoalaErrorCodes.ActiveEditionAlreadyExists or
+                    KoalaErrorCodes.Conflict or
+                    KoalaErrorCodes.ResourceVersionConflict =>
                         StatusCodes.Status409Conflict,
 
                     _ => StatusCodes.Status400BadRequest
