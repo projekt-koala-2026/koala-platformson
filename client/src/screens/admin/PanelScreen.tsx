@@ -53,6 +53,7 @@ type ReviewOverview = {
 type EditionOverview = {
     edition: ApiEdition;
     subeditions: ApiSubedition[];
+    inactiveSubeditionsPastStart: ApiSubedition[];
     tier1Teams: number;
     tier2Teams: number;
     teamsWithoutGuardians: number;
@@ -122,6 +123,8 @@ const PanelScreen = () => {
                 );
                 if (!overview) {
                     const editionTeams = teams.data ?? [];
+                    const editionSubeditions = subeditions.data ?? [];
+                    const now = Date.now();
                     const members = editionTeams.flatMap((team) => team.teamMembers ?? []);
                     const accepted = members.filter(
                         (member) => member.rodoState === "RODO_ACCEPTED"
@@ -134,7 +137,15 @@ const PanelScreen = () => {
                     ).length;
                     overview = {
                         edition,
-                        subeditions: subeditions.data ?? [],
+                        subeditions: editionSubeditions,
+                        inactiveSubeditionsPastStart: editionSubeditions.filter((item) => {
+                            const deadline = Date.parse(item.answerOpen);
+                            return (
+                                item.state === "INACTIVE" &&
+                                Number.isFinite(deadline) &&
+                                deadline <= now
+                            );
+                        }),
                         tier1Teams: editionTeams.filter((team) => team.tier === "TIER_1").length,
                         tier2Teams: editionTeams.filter((team) => team.tier === "TIER_2").length,
                         teamsWithoutGuardians: editionTeams.filter((team) => !team.teamGuardian)
@@ -439,14 +450,7 @@ const PanelScreen = () => {
                                     </p>
                                 </div>
                             )}
-                            {editionOverview.subeditions.some((item) => {
-                                const deadline = Date.parse(item.answerOpen);
-                                return (
-                                    item.state === "INACTIVE" &&
-                                    Number.isFinite(deadline) &&
-                                    deadline <= Date.now()
-                                );
-                            }) && (
+                            {editionOverview.inactiveSubeditionsPastStart.length > 0 && (
                                 <div
                                     role="status"
                                     className="rounded-xl border border-warning-border bg-warning-soft p-4 text-sm text-warning-text lg:col-span-2"
@@ -455,16 +459,7 @@ const PanelScreen = () => {
                                         Termin odsyłania zadań już się rozpoczął
                                     </h2>
                                     <ul className="mt-2 list-inside list-disc">
-                                        {editionOverview.subeditions
-                                            .filter((item) => {
-                                                const deadline = Date.parse(item.answerOpen);
-                                                return (
-                                                    item.state === "INACTIVE" &&
-                                                    Number.isFinite(deadline) &&
-                                                    deadline <= Date.now()
-                                                );
-                                            })
-                                            .map((item) => (
+                                        {editionOverview.inactiveSubeditionsPastStart.map((item) => (
                                                 <li key={item.id}>
                                                     {item.name} — podedycja nie została aktywowana.
                                                 </li>
