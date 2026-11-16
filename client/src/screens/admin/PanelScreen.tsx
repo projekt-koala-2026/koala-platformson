@@ -50,6 +50,14 @@ type ReviewOverview = {
     conflictSlots: number;
     conflicts: number;
 };
+type EditionOverview = {
+    edition: ApiEdition;
+    subeditions: ApiSubedition[];
+    tier1Teams: number;
+    tier2Teams: number;
+    teamsWithoutGuardians: number;
+    rodo: { submitted: number; accepted: number; rejected: number; missing: number };
+};
 
 const sortUsers = (users: User[]) =>
     [...users].sort((first, second) => first.email.localeCompare(second.email, "pl"));
@@ -73,6 +81,7 @@ const PanelScreen = () => {
     const [reviewOverview, setReviewOverview] = useState<ReviewOverview | null>(null);
     const [reviewOverviewLoading, setReviewOverviewLoading] = useState(true);
     const [hasActiveSubedition, setHasActiveSubedition] = useState(false);
+    const [editionOverview, setEditionOverview] = useState<EditionOverview | null>(null);
 
     useEffect(() => {
         let active = true;
@@ -97,6 +106,7 @@ const PanelScreen = () => {
                 conflictSlots = 0,
                 conflicts = 0;
             let activeSubeditionFound = false;
+            let overview: EditionOverview | null = null;
             for (const edition of editions.data) {
                 const teams = await apiListRequestResult<ApiTeam>(
                     `${apiEndpoints.teams}?${firstPage}&EditionId=${edition.id}`,
@@ -110,6 +120,34 @@ const PanelScreen = () => {
                     "GET",
                     navigate
                 );
+                if (!overview) {
+                    const editionTeams = teams.data ?? [];
+                    const members = editionTeams.flatMap((team) => team.teamMembers ?? []);
+                    const accepted = members.filter(
+                        (member) => member.rodoState === "RODO_ACCEPTED"
+                    ).length;
+                    const rejected = members.filter(
+                        (member) => member.rodoState === "RODO_REJECTED"
+                    ).length;
+                    const submitted = members.filter(
+                        (member) => member.rodoState === "RODO_UNVERIFIED"
+                    ).length;
+                    overview = {
+                        edition,
+                        subeditions: subeditions.data ?? [],
+                        tier1Teams: editionTeams.filter((team) => team.tier === "TIER_1").length,
+                        tier2Teams: editionTeams.filter((team) => team.tier === "TIER_2").length,
+                        teamsWithoutGuardians: editionTeams.filter((team) => !team.teamGuardian)
+                            .length,
+                        rodo: {
+                            submitted,
+                            accepted,
+                            rejected,
+                            missing: members.filter((member) => member.rodoState === "RODO_NONE")
+                                .length,
+                        },
+                    };
+                }
                 for (const subedition of (subeditions.data ?? []).filter(
                     (item) => item.state === "ACTIVE"
                 )) {
@@ -157,6 +195,7 @@ const PanelScreen = () => {
             }
             if (active) {
                 setHasActiveSubedition(activeSubeditionFound);
+                setEditionOverview(overview);
                 setReviewOverview({
                     submissions,
                     expectedSubmissions,
@@ -326,96 +365,164 @@ const PanelScreen = () => {
         <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
             <main className="app-admin-page">
-                {hasActiveSubedition && (
+                {editionOverview && (
                     <section className="mb-8 rounded-2xl border border-line bg-surface p-6 shadow-sm">
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
-                            Ocenianie zadań
+                            Aktywna edycja
                         </p>
-                        <h2 className="mt-1 text-2xl font-bold text-ink-heading">
-                            Pokrycie ocen przez reviewerów
-                        </h2>
-                        {reviewOverviewLoading ? (
-                            <p className="mt-3 text-sm text-ink-secondary">
-                                Ładowanie postępu ocen…
-                            </p>
-                        ) : reviewOverview ? (
-                            <>
-                                <p className="mt-3 text-4xl font-bold text-brand-text">
-                                    {reviewOverview.assignedSlots
-                                        ? Math.round(
-                                              (reviewOverview.reviewedSlots /
-                                                  reviewOverview.assignedSlots) *
-                                                  100
-                                          )
-                                        : 0}
-                                    %
-                                </p>
-                                <p className="mt-1 text-sm text-ink-secondary">
-                                    {reviewOverview.reviewedSlots} z {reviewOverview.assignedSlots}{" "}
-                                    przydzielonych ocen uzupełnionych · {reviewOverview.submissions}{" "}
-                                    nadesłanych odpowiedzi ·{" "}
-                                    {Math.max(
-                                        0,
-                                        reviewOverview.expectedSubmissions -
-                                            reviewOverview.submissions
-                                    )}{" "}
-                                    odpowiedzi brakuje
-                                </p>
-                                {reviewOverview.conflicts > 0 && (
-                                    <p className="mt-2 text-sm font-semibold text-red-700">
-                                        Występuje {reviewOverview.conflicts}{" "}
-                                        {reviewOverview.conflicts === 1
-                                            ? "konflikt"
-                                            : reviewOverview.conflicts >= 2 &&
-                                                reviewOverview.conflicts <= 4
-                                              ? "konflikty"
-                                              : "konfliktów"}{" "}
-                                        w ocenach.
+                        <h1 className="mt-1 text-2xl font-bold">{editionOverview.edition.name}</h1>
+                        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                            <div className="rounded-xl bg-canvas p-4">
+                                <h2 className="font-semibold">Podedycje</h2>
+                                {editionOverview.subeditions.length ? (
+                                    <ul className="mt-2 flex flex-wrap gap-2">
+                                        {editionOverview.subeditions.map((item) => (
+                                            <li
+                                                key={item.id}
+                                                className={`rounded-full px-3 py-1 text-sm ${item.state === "ACTIVE" ? "border border-success-border bg-success-soft text-success-text" : "border border-line bg-surface-muted text-ink-secondary"}`}
+                                            >
+                                                {item.name}
+                                                {item.state === "ACTIVE" ? " · aktywna" : ""}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="mt-2 text-sm text-ink-secondary">
+                                        Brak podedycji.
                                     </p>
                                 )}
-                                <div
-                                    className="mt-4 h-3 overflow-hidden rounded-full bg-surface-muted"
-                                    role="progressbar"
-                                    aria-label="Pokrycie ocen reviewerów"
-                                    aria-valuenow={
-                                        reviewOverview.assignedSlots
-                                            ? Math.round(
-                                                  (reviewOverview.reviewedSlots /
-                                                      reviewOverview.assignedSlots) *
-                                                      100
-                                              )
-                                            : 0
-                                    }
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                >
-                                    <div
-                                        className="flex h-full"
-                                        style={{
-                                            width: `${reviewOverview.assignedSlots ? (reviewOverview.reviewedSlots / reviewOverview.assignedSlots) * 100 : 0}%`,
-                                        }}
-                                    >
-                                        <div
-                                            className="h-full bg-brand"
-                                            style={{
-                                                width: `${reviewOverview.reviewedSlots ? (Math.max(0, reviewOverview.reviewedSlots - reviewOverview.conflictSlots) / reviewOverview.reviewedSlots) * 100 : 0}%`,
-                                            }}
-                                        />
-                                        <div
-                                            className="h-full bg-red-600"
-                                            title="Oceny w konflikcie"
-                                            style={{
-                                                width: `${reviewOverview.reviewedSlots ? (reviewOverview.conflictSlots / reviewOverview.reviewedSlots) * 100 : 0}%`,
-                                            }}
-                                        />
-                                    </div>
+                            </div>
+                            <div className="rounded-xl bg-canvas p-4">
+                                <h2 className="font-semibold">Zespoły według szkół</h2>
+                                {(() => {
+                                    const total =
+                                        editionOverview.tier1Teams + editionOverview.tier2Teams;
+                                    const tier1Width = total
+                                        ? (editionOverview.tier1Teams / total) * 100
+                                        : 0;
+                                    return (
+                                        <>
+                                            <div
+                                                className="mt-3 flex h-4 overflow-hidden rounded-full bg-surface-muted"
+                                                role="img"
+                                                aria-label={`Poziom I: ${editionOverview.tier1Teams}, poziom II: ${editionOverview.tier2Teams}`}
+                                            >
+                                                <div
+                                                    className="bg-brand"
+                                                    style={{ width: `${tier1Width}%` }}
+                                                />
+                                                <div
+                                                    className="bg-emerald-800"
+                                                    style={{ width: `${100 - tier1Width}%` }}
+                                                />
+                                            </div>
+                                            <div className="mt-2 flex justify-between text-sm text-ink-secondary">
+                                                <span>
+                                                    Podstawówka: <b>{editionOverview.tier1Teams}</b>
+                                                </span>
+                                                <span>
+                                                    Liceum: <b>{editionOverview.tier2Teams}</b>
+                                                </span>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+
+                            {hasActiveSubedition && (
+                                <div className="rounded-xl bg-canvas p-4 lg:col-span-2">
+                                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                                        Ocenianie zadań
+                                    </p>
+                                    <h2 className="mt-1 text-2xl font-bold text-ink-heading">
+                                        Pokrycie ocen przez recenzentów
+                                    </h2>
+                                    {reviewOverviewLoading ? (
+                                        <p className="mt-3 text-sm text-ink-secondary">
+                                            Ładowanie postępu ocen…
+                                        </p>
+                                    ) : reviewOverview ? (
+                                        <>
+                                            <p className="mt-3 text-4xl font-bold text-brand-text">
+                                                {reviewOverview.assignedSlots
+                                                    ? Math.round(
+                                                          (reviewOverview.reviewedSlots /
+                                                              reviewOverview.assignedSlots) *
+                                                              100
+                                                      )
+                                                    : 0}
+                                                %
+                                            </p>
+                                            <p className="mt-1 text-sm text-ink-secondary">
+                                                {reviewOverview.reviewedSlots} z{" "}
+                                                {reviewOverview.assignedSlots} przydzielonych ocen
+                                                uzupełnionych · {reviewOverview.submissions}{" "}
+                                                nadesłanych odpowiedzi ·{" "}
+                                                {Math.max(
+                                                    0,
+                                                    reviewOverview.expectedSubmissions -
+                                                        reviewOverview.submissions
+                                                )}{" "}
+                                                odpowiedzi brakuje
+                                            </p>
+                                            {reviewOverview.conflicts > 0 && (
+                                                <p className="mt-2 text-sm font-semibold text-red-700">
+                                                    Występuje {reviewOverview.conflicts}{" "}
+                                                    {reviewOverview.conflicts === 1
+                                                        ? "konflikt"
+                                                        : reviewOverview.conflicts >= 2 &&
+                                                            reviewOverview.conflicts <= 4
+                                                          ? "konflikty"
+                                                          : "konfliktów"}{" "}
+                                                    w ocenach.
+                                                </p>
+                                            )}
+                                            <div
+                                                className="mt-4 h-3 overflow-hidden rounded-full bg-surface-muted"
+                                                role="progressbar"
+                                                aria-label="Pokrycie ocen recenzentów"
+                                                aria-valuenow={
+                                                    reviewOverview.assignedSlots
+                                                        ? Math.round(
+                                                              (reviewOverview.reviewedSlots /
+                                                                  reviewOverview.assignedSlots) *
+                                                                  100
+                                                          )
+                                                        : 0
+                                                }
+                                                aria-valuemin={0}
+                                                aria-valuemax={100}
+                                            >
+                                                <div
+                                                    className="flex h-full"
+                                                    style={{
+                                                        width: `${reviewOverview.assignedSlots ? (reviewOverview.reviewedSlots / reviewOverview.assignedSlots) * 100 : 0}%`,
+                                                    }}
+                                                >
+                                                    <div
+                                                        className="h-full bg-brand"
+                                                        style={{
+                                                            width: `${reviewOverview.reviewedSlots ? (Math.max(0, reviewOverview.reviewedSlots - reviewOverview.conflictSlots) / reviewOverview.reviewedSlots) * 100 : 0}%`,
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="h-full bg-red-600"
+                                                        title="Oceny w konflikcie"
+                                                        style={{
+                                                            width: `${reviewOverview.reviewedSlots ? (reviewOverview.conflictSlots / reviewOverview.reviewedSlots) * 100 : 0}%`,
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p className="mt-3 text-sm text-ink-secondary">
+                                            Nie udało się pobrać postępu ocen.
+                                        </p>
+                                    )}
                                 </div>
-                            </>
-                        ) : (
-                            <p className="mt-3 text-sm text-ink-secondary">
-                                Nie udało się pobrać postępu ocen.
-                            </p>
-                        )}
+                            )}
+                        </div>
                     </section>
                 )}
                 <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
