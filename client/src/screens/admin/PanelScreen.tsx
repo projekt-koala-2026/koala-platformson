@@ -459,11 +459,13 @@ const PanelScreen = () => {
                                         Termin odsyłania zadań już się rozpoczął
                                     </h2>
                                     <ul className="mt-2 list-inside list-disc">
-                                        {editionOverview.inactiveSubeditionsPastStart.map((item) => (
+                                        {editionOverview.inactiveSubeditionsPastStart.map(
+                                            (item) => (
                                                 <li key={item.id}>
                                                     {item.name} — podedycja nie została aktywowana.
                                                 </li>
-                                            ))}
+                                            )
+                                        )}
                                     </ul>
                                 </div>
                             )}
