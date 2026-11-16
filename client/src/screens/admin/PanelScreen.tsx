@@ -472,7 +472,73 @@ const PanelScreen = () => {
                                     </ul>
                                 </div>
                             )}
+                            {editionOverview.rodo.submitted +
+                                editionOverview.rodo.rejected +
+                                editionOverview.rodo.missing >
+                                0 && (
+                                <div className="rounded-xl bg-canvas p-4 lg:col-span-2">
+                                    <h2 className="font-semibold">Zgody RODO</h2>
+                                    {(() => {
+                                        const { submitted, accepted, rejected, missing } =
+                                            editionOverview.rodo;
+                                        const total = submitted + accepted + rejected + missing;
+                                        const width = (count: number) =>
+                                            `${total ? (count / total) * 100 : 0}%`;
+                                        return (
+                                            <>
+                                                <div
+                                                    className="mt-3 flex h-4 overflow-hidden rounded-full bg-surface-muted"
+                                                    role="img"
+                                                    aria-label={`Złożone: ${submitted}, potwierdzone: ${accepted}, odrzucone: ${rejected}, brakujące: ${missing}`}
+                                                >
+                                                    <div
+                                                        className="bg-amber-500"
+                                                        style={{ width: width(submitted) }}
+                                                        title="Złożone, do weryfikacji"
+                                                    />
+                                                    <div
+                                                        className="bg-emerald-600"
+                                                        style={{ width: width(accepted) }}
+                                                        title="Potwierdzone"
+                                                    />
+                                                    <div
+                                                        className="bg-red-600"
+                                                        style={{ width: width(rejected) }}
+                                                        title="Odrzucone"
+                                                    />
+                                                    <div
+                                                        className="bg-surface-muted"
+                                                        style={{ width: width(missing) }}
+                                                        title="Brak zgody"
+                                                    />
+                                                </div>
 
+                                                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-secondary">
+                                                    <span>
+                                                        <b className="text-amber-700">
+                                                            {submitted}
+                                                        </b>{" "}
+                                                        złożone
+                                                    </span>
+                                                    <span>
+                                                        <b className="text-emerald-700">
+                                                            {accepted}
+                                                        </b>{" "}
+                                                        potwierdzone
+                                                    </span>
+                                                    <span>
+                                                        <b className="text-red-700">{rejected}</b>{" "}
+                                                        odrzucone
+                                                    </span>
+                                                    <span>
+                                                        <b>{missing}</b> brakuje
+                                                    </span>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            )}
                             {hasActiveSubedition && (
                                 <div className="rounded-xl bg-canvas p-4 lg:col-span-2">
                                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
