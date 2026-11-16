@@ -65,11 +65,11 @@ public class UserQueryDtoValidationTests
         ValidationAssertions.IsValid(_validator, Query("", "", "", new()));
 
     [Theory]
-    [InlineData("ORGANIZATION_ADMIN")]
-    [InlineData("ORGANIZATION_EDITOR")]
-    [InlineData("ORGANIZATION_REVIEWER")]
-    [InlineData("TEAM_CAPTAIN")]
-    [InlineData("TEAM_GUARDIAN")]
+    [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_EDITOR)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_REVIEWER)]
+    [InlineData(RoleNames.NAME_TEAM_CAPTAIN)]
+    [InlineData(RoleNames.NAME_TEAM_GUARDIAN)]
     public void EveryAllowedRole_IsAccepted(string role) =>
         ValidationAssertions.IsValid(_validator, Query(roles: new() { role }));
 

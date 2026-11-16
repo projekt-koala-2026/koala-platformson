@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -199,8 +199,8 @@ namespace koala.src.Modules.Account.Data.Migrations
                 columns: new[] { "id", "name" },
                 values: new object[,]
                 {
-                    { new Guid("01a027c5-d599-73de-bd5c-11f84a3fc125"), "ORGANIZATION_ADMIN" },
-                    { new Guid("01a027c5-d599-73de-bd5c-14db087cc58f"), "ORGANIZATION_EDITOR" },
+                    { new Guid("01a027c5-d599-73de-bd5c-11f84a3fc125"), RoleNames.NAME_ORGANIZATION_ADMIN },
+                    { new Guid("01a027c5-d599-73de-bd5c-14db087cc58f"), RoleNames.NAME_ORGANIZATION_EDITOR },
                     { new Guid("01a027c5-d599-73de-bd5c-18c05fc3fa53"), "ORGANIZATION_REVIUER" },
                     { new Guid("01a027c5-d599-73de-bd5c-1f8e68687e51"), "TEAM_ADMIN" },
                     { new Guid("01a027c5-d599-73de-bd5c-2068e28b6cf3"), "TEAM_PLAYER" }

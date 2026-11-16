@@ -315,22 +315,22 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task does not belong to the specified subedition");
             }
-            if (task.SubEdition.State != SubEditionStates.STATE_ACTIVE || task.SubEdition.Edition.State != EditionStates.STATE_ACTIVE ||
-                (task.Tier != TaskItemTiers.TIER_1 && task.Tier != TaskItemTiers.TIER_2) ||
-                (teamInfo.Tier == TaskItemTiers.TIER_1 && task.Tier != TaskItemTiers.TIER_1) ||
-                (teamInfo.Tier != TaskItemTiers.TIER_1 && teamInfo.Tier != TaskItemTiers.TIER_2))
+            if (task.SubEdition.State != LifecycleStates.STATE_ACTIVE || task.SubEdition.Edition.State != LifecycleStates.STATE_ACTIVE ||
+                (task.Tier != CompetitionTiers.TIER_1 && task.Tier != CompetitionTiers.TIER_2) ||
+                (teamInfo.Tier == CompetitionTiers.TIER_1 && task.Tier != CompetitionTiers.TIER_1) ||
+                (teamInfo.Tier != CompetitionTiers.TIER_1 && teamInfo.Tier != CompetitionTiers.TIER_2))
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "This task is not available to the team");
             }
 
             TaskSubmission? submission = null;
-            if(teamInfo.Tier == TaskItemTiers.TIER_1)
+            if(teamInfo.Tier == CompetitionTiers.TIER_1)
             {
-                submission = await _db.TaskSubmissions.Include(e => e.TaskItem).FirstOrDefaultAsync(e => e.TaskId == task_id && e.TaskItem.Tier == TaskItemTiers.TIER_1 && e.TeamId == team_id);
+                submission = await _db.TaskSubmissions.Include(e => e.TaskItem).FirstOrDefaultAsync(e => e.TaskId == task_id && e.TaskItem.Tier == CompetitionTiers.TIER_1 && e.TeamId == team_id);
             }
-            if(teamInfo.Tier == TaskItemTiers.TIER_2)
+            if(teamInfo.Tier == CompetitionTiers.TIER_2)
             {
-                submission = await _db.TaskSubmissions.Include(e => e.TaskItem).FirstOrDefaultAsync(e => e.TaskId == task_id && (e.TaskItem.Tier == TaskItemTiers.TIER_1 || e.TaskItem.Tier == TaskItemTiers.TIER_2) && e.TeamId == team_id);
+                submission = await _db.TaskSubmissions.Include(e => e.TaskItem).FirstOrDefaultAsync(e => e.TaskId == task_id && (e.TaskItem.Tier == CompetitionTiers.TIER_1 || e.TaskItem.Tier == CompetitionTiers.TIER_2) && e.TeamId == team_id);
             }
 
             if (submission == null)
@@ -386,7 +386,7 @@ namespace koala.src.Modules.Core.Services
         {
             if (!ClaimsHelper.IsAuthenticated(claimsPrincipal))
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            if (claimsPrincipal?.IsInRole("TEAM_CAPTAIN") != true)
+            if (claimsPrincipal?.IsInRole(RoleNames.NAME_TEAM_CAPTAIN) != true)
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only the team captain can view this submission");
 
             var team = await _accountModule.Internal_GetTeamInfo(team_id);

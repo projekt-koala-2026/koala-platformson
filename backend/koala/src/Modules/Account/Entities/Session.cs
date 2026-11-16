@@ -2,11 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Account.Entities
 {
-    public static class SessionStates
-    {
-        public const string STATE_ACTIVE = "ACTIVE";
-        public const string STATE_INACTIVE = "INACTIVE";
-    }
     public class Session
     {
         [Column("id")]

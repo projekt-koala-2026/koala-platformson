@@ -65,11 +65,11 @@ public class UserRegisterRequestDtoValidationTests
         ValidationAssertions.IsValid(_validator, new(new string('a', 64) + "@" + string.Join('.', Enumerable.Repeat(new string('d', 63), 4)), new() { RoleNames.NAME_TEAM_CAPTAIN }));
 
     [Theory]
-    [InlineData("ORGANIZATION_ADMIN")]
-    [InlineData("ORGANIZATION_EDITOR")]
-    [InlineData("ORGANIZATION_REVIEWER")]
-    [InlineData("TEAM_CAPTAIN")]
-    [InlineData("TEAM_GUARDIAN")]
+    [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_EDITOR)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_REVIEWER)]
+    [InlineData(RoleNames.NAME_TEAM_CAPTAIN)]
+    [InlineData(RoleNames.NAME_TEAM_GUARDIAN)]
     public void EachAllowedRoleCanBeRegisteredIndividually(string role) =>
         ValidationAssertions.IsValid(_validator, new("person@example.com", new() { role }));
 

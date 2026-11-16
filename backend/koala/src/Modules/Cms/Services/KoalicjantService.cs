@@ -2,7 +2,6 @@ using System.Security.Claims;
 using koala.src.Modules.Cms.Data;
 using koala.src.Modules.Cms.Dtos;
 using koala.src.Shared;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Cms.Services
@@ -31,33 +30,30 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission.");
             }
 
-            int affectedRows = await _db.Koalicjants
-                .Where(x => x.Id == id && x.Version == requestDto.Version)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(x => x.NameFirst, requestDto.NameFirst)
-                    .SetProperty(x => x.NameLast, requestDto.NameLast)
-                    .SetProperty(x => x.Email, requestDto.Email)
-                    .SetProperty(x => x.ContentJson, requestDto.ContentJson)
-                    .SetProperty(x => x.IsVisible, requestDto.IsVisible)
-                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
-                    .SetProperty(x => x.Version, x => x.Version + 1));
-
-            if (affectedRows == 0)
+            var koalicjant = await _db.Koalicjants.FirstOrDefaultAsync(x => x.Id == id);
+            if (koalicjant == null)
             {
-                bool isKoalicjant = await _db.Koalicjants.AnyAsync(s => s.Id == id);
-                if (!isKoalicjant)
-                {
-                    throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Specified post does not exist");
-                }
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Specified post does not exist");
+            }
+            if (koalicjant.Version != requestDto.Version)
+            {
                 throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
-
-            var koalicjant = await _db.Koalicjants.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
-
-            if (koalicjant == null)
+            koalicjant.NameFirst = requestDto.NameFirst;
+            koalicjant.NameLast = requestDto.NameLast;
+            koalicjant.Email = requestDto.Email;
+            koalicjant.ContentJson = requestDto.ContentJson;
+            koalicjant.IsVisible = requestDto.IsVisible;
+            koalicjant.UpdatedAt = DateTime.UtcNow;
+            koalicjant.Version++;
+            try
             {
-                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Post does not exist");
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
             return new KoalicjantDto
@@ -118,6 +114,10 @@ namespace koala.src.Modules.Cms.Services
             }
 
             var queryResult = await query.FirstOrDefaultAsync(k => k.Id == id);
+            if (queryResult == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Koalicjant does not exist");
+            }
             var koalicjant = new KoalicjantDto
                 (
                     queryResult.Id,

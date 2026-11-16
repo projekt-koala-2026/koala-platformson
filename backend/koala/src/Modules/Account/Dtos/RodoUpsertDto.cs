@@ -20,14 +20,6 @@ namespace koala.src.Modules.Account.Dtos
                 "image/webp",
                 "application/pdf"
             };
-            var allowedExtensions = new[]
-            {
-                ".jpg",
-                ".jpeg",
-                ".png",
-                ".webp",
-                ".pdf"
-            };
             RuleFor(x => x.File)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()
@@ -49,7 +41,7 @@ namespace koala.src.Modules.Account.Dtos
                 .Must(file =>
                 {
                     var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    return allowedExtensions.Contains(extension);
+                    return RodoTypes.ALLOWED_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
                 })
                 .WithErrorCode(KoalaValidationErrorCodes.FileInvalidType)
                 .WithMessage("Invalid file extension. Allowed extensions are: .jpg, .jpeg, .png, .webp, .pdf");

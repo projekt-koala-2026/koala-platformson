@@ -11,7 +11,7 @@
 		$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated
 	</InterceptorsNamespaces>
 	<!-- Keep nested test outputs out of the web project's content globs. -->
-	<DefaultItemExcludes>$(DefaultItemExcludes);src/Modules/Account/Tests/**</DefaultItemExcludes>
+	<DefaultItemExcludes>$(DefaultItemExcludes);src/Modules/Account/Tests/**;src/Modules/Cms/Tests/**</DefaultItemExcludes>
   </PropertyGroup>
 
 	<ItemGroup>

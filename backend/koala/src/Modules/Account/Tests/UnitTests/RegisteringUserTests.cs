@@ -26,20 +26,20 @@
 //             // PREPERE TEST DATA
 //             db.Roles.AddRange(
 //                 new Role { Id = Guid.CreateVersion7(), Name = "TEAM_ADMIN" },
-//                 new Role { Id = Guid.CreateVersion7(), Name = "ORGANIZATION_ADMIN" }
+//                 new Role { Id = Guid.CreateVersion7(), Name = RoleNames.NAME_ORGANIZATION_ADMIN }
 //             );
 //             await db.SaveChangesAsync();
 
 //             Guid userId = Guid.CreateVersion7();
 //             Guid sessionId = Guid.CreateVersion7();
 //             Guid token = Guid.CreateVersion7();
-//             List<string> roles = ["ORGANIZATION_ADMIN"];
+//             List<string> roles = [RoleNames.NAME_ORGANIZATION_ADMIN];
 //             ClaimsPrincipal claimsPrincipal = await TestHelper.GenerateTestFilledClaimsPrincipalAsync(userId, sessionId, token, roles);
 
 //             RegisterUserRequestDto requestDto = new RegisterUserRequestDto
 //             (
 //                 "test@test.com",
-//                 new List<string>(["ORGANIZATION_ADMIN"])
+//                 new List<string>([RoleNames.NAME_ORGANIZATION_ADMIN])
 //             );
 
 //             // TEST SERVICE
@@ -67,7 +67,7 @@
 //             // PREPERE TEST DATA
 //             db.Roles.AddRange(
 //                 new Role { Id = Guid.CreateVersion7(), Name = "TEAM_ADMIN" },
-//                 new Role { Id = Guid.CreateVersion7(), Name = "ORGANIZATION_ADMIN" }
+//                 new Role { Id = Guid.CreateVersion7(), Name = RoleNames.NAME_ORGANIZATION_ADMIN }
 //             );
 //             await db.SaveChangesAsync();
 

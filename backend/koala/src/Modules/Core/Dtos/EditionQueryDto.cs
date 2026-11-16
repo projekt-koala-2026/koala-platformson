@@ -6,9 +6,9 @@ namespace koala.src.Modules.Core.Dtos
     {
         public List<string> States { get; init; } =
         [
-            EditionStates.STATE_ACTIVE,
-            EditionStates.STATE_INACTIVE,
-            EditionStates.STATE_CLOSED
+            LifecycleStates.STATE_ACTIVE,
+            LifecycleStates.STATE_INACTIVE,
+            LifecycleStates.STATE_CLOSED
         ];
     }
 }

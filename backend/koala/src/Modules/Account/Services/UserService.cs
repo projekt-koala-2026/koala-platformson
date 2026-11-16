@@ -116,7 +116,7 @@ namespace koala.src.Modules.Account.Services
                 Token = Guid.NewGuid(),
                 UserId = user.Id,
                 Type = LinkTypes.TYPE_REGISTRATION,
-                State = LinkStates.STATE_ACTIVE,
+                State = LifecycleStates.STATE_ACTIVE,
                 CreatedAt = timeNow,
                 UpdatedAt = timeNow,
                 ExpiresAt = timeNow.AddDays(1.0f)

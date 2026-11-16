@@ -64,7 +64,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -106,7 +107,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -183,7 +185,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -213,7 +216,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 

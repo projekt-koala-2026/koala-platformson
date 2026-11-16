@@ -38,28 +38,26 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.InvalidJson, "This is not a valid json");
             }
 
-            int affectedRows = await _db.StaticPages
-                .Where(x => x.Id == id && x.Version == requestDto.Version)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(x => x.ContentJson, requestDto.ContentJson)
-                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
-                    .SetProperty(x => x.Version, x => x.Version + 1));
-
-            if (affectedRows == 0)
-            {
-                bool isStaticPage = await _db.StaticPages.AnyAsync(sp => sp.Id == id);
-                if (!isStaticPage)
-                {
-                    throw new KoalaException(KoalaErrorCodes.StaticPageNotFound, "Specified static page does not exist");
-                }
-                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
-            }
-
-            var staticPage = await _db.StaticPages.AsNoTracking().FirstOrDefaultAsync(sp => sp.Id == id);
-
+            var staticPage = await _db.StaticPages.FirstOrDefaultAsync(x => x.Id == id);
             if (staticPage == null)
             {
                 throw new KoalaException(KoalaErrorCodes.StaticPageNotFound, "Specified static page does not exist");
+            }
+            if (staticPage.Version != requestDto.Version)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
+            }
+
+            staticPage.ContentJson = requestDto.ContentJson;
+            staticPage.UpdatedAt = DateTime.UtcNow;
+            staticPage.Version++;
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
             return new StaticPageDto(staticPage.Id, staticPage.Name, staticPage.ContentJson, staticPage.UpdatedAt, staticPage.Version);

@@ -131,7 +131,7 @@ namespace koala.src.Shared
                             }
                         }
 
-                        return (httpContext.User.Identity?.IsAuthenticated == true && httpContext.User.IsInRole("ORGANIZATION_ADMIN"));
+                        return (httpContext.User.Identity?.IsAuthenticated == true && httpContext.User.IsInRole(RoleNames.NAME_ORGANIZATION_ADMIN));
                     })
                 }
             });

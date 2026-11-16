@@ -54,11 +54,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         };
 
         [Theory]
-        [InlineData("ORGANIZATION_ADMIN", true)]
-        [InlineData("ORGANIZATION_EDITOR", true)]
-        [InlineData("ORGANIZATION_REVIEWER", true)]
-        [InlineData("TEAM_CAPTAIN", false)]
-        [InlineData("TEAM_GUARDIAN", false)]
+        [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN, true)]
+        [InlineData(RoleNames.NAME_ORGANIZATION_EDITOR, true)]
+        [InlineData(RoleNames.NAME_ORGANIZATION_REVIEWER, true)]
+        [InlineData(RoleNames.NAME_TEAM_CAPTAIN, false)]
+        [InlineData(RoleNames.NAME_TEAM_GUARDIAN, false)]
         public async Task RegisterUser_ValidRoleForCallerCreatesUnverifiedAccountAndSendsLink(string role, bool organization)
         {
             var (service, db, email) = await Setup();
@@ -78,15 +78,15 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.Single(await db.UserRoles.Where(userRole => userRole.UserId == user.Id).ToListAsync());
             var link = await db.Links.SingleAsync(candidate => candidate.UserId == user.Id);
             Assert.Equal(LinkTypes.TYPE_REGISTRATION, link.Type);
-            Assert.Equal(LinkStates.STATE_ACTIVE, link.State);
+            Assert.Equal(LifecycleStates.STATE_ACTIVE, link.State);
             email.Verify(mock => mock.SendRegisterEmailAsync(request.Email, link.Token.ToString()), Times.Once);
         }
 
         [Theory]
-        [InlineData(3, "ORGANIZATION_EDITOR")]
-        [InlineData(6, "ORGANIZATION_REVIEWER")]
-        [InlineData(8, "TEAM_GUARDIAN")]
-        [InlineData(10, "TEAM_CAPTAIN")]
+        [InlineData(3, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(6, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData(8, RoleNames.NAME_TEAM_GUARDIAN)]
+        [InlineData(10, RoleNames.NAME_TEAM_CAPTAIN)]
         public async Task RegisterUser_AuthenticatedNonAdminIsForbidden(int userNumber, string role)
         {
             var (service, db, email) = await Setup();
@@ -113,9 +113,9 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(false, "ORGANIZATION_ADMIN")]
-        [InlineData(true, "TEAM_CAPTAIN")]
-        [InlineData(true, "TEAM_GUARDIAN")]
+        [InlineData(false, RoleNames.NAME_ORGANIZATION_ADMIN)]
+        [InlineData(true, RoleNames.NAME_TEAM_CAPTAIN)]
+        [InlineData(true, RoleNames.NAME_TEAM_GUARDIAN)]
         public async Task RegisterUser_RoleFromWrongRoleFamilyThrows(bool organization, string role)
         {
             var (service, db, email) = await Setup();
@@ -130,10 +130,10 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(false, "ORGANIZATION_ADMIN", "TEAM_CAPTAIN")]
-        [InlineData(false, "ORGANIZATION_EDITOR", "TEAM_GUARDIAN")]
-        [InlineData(true, "ORGANIZATION_REVIEWER", "TEAM_CAPTAIN")]
-        [InlineData(true, "ORGANIZATION_ADMIN", "TEAM_GUARDIAN")]
+        [InlineData(false, RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_TEAM_CAPTAIN)]
+        [InlineData(false, RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_TEAM_GUARDIAN)]
+        [InlineData(true, RoleNames.NAME_ORGANIZATION_REVIEWER, RoleNames.NAME_TEAM_CAPTAIN)]
+        [InlineData(true, RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_TEAM_GUARDIAN)]
         public async Task RegisterUser_MixedOrganizationAndTeamRolesAreRejected(bool authenticatedAdmin, string organizationRole, string teamRole)
         {
             var (service, db, email) = await Setup();
@@ -206,17 +206,17 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.NotEqual(TestDataSeeder.ID_USER_13, user.Id);
             Assert.False(user.Verified);
             Assert.Equal(TestDataSeeder.VERSION, user.Version);
-            Assert.Single(await db.Links.Where(link => link.UserId == user.Id && link.State == LinkStates.STATE_ACTIVE).ToListAsync());
+            Assert.Single(await db.Links.Where(link => link.UserId == user.Id && link.State == LifecycleStates.STATE_ACTIVE).ToListAsync());
             Assert.Null(await db.Users.FindAsync(TestDataSeeder.ID_USER_13));
             email.Verify(mock => mock.SendRegisterEmailAsync(request.Email, It.IsAny<string>()), Times.Once);
         }
 
         [Theory]
-        [InlineData(1, "ORGANIZATION_ADMIN")]
-        [InlineData(4, "ORGANIZATION_EDITOR")]
-        [InlineData(6, "ORGANIZATION_REVIEWER")]
-        [InlineData(8, "TEAM_GUARDIAN")]
-        [InlineData(10, "TEAM_CAPTAIN")]
+        [InlineData(1, RoleNames.NAME_ORGANIZATION_ADMIN)]
+        [InlineData(4, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(6, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData(8, RoleNames.NAME_TEAM_GUARDIAN)]
+        [InlineData(10, RoleNames.NAME_TEAM_CAPTAIN)]
         public async Task GetUser_AllVerifiedAccountKindsCanReadTheirOwnProfile(int userNumber, string role)
         {
             var (service, db, _) = await Setup();
@@ -305,11 +305,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(1, "ORGANIZATION_ADMIN")]
-        [InlineData(4, "ORGANIZATION_EDITOR")]
-        [InlineData(6, "ORGANIZATION_REVIEWER")]
-        [InlineData(8, "TEAM_GUARDIAN")]
-        [InlineData(10, "TEAM_CAPTAIN")]
+        [InlineData(1, RoleNames.NAME_ORGANIZATION_ADMIN)]
+        [InlineData(4, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(6, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData(8, RoleNames.NAME_TEAM_GUARDIAN)]
+        [InlineData(10, RoleNames.NAME_TEAM_CAPTAIN)]
         public async Task GetDeclaration_UserCanReadOwnDeclaration(int userNumber, string role)
         {
             var (service, _, _) = await Setup();
@@ -403,10 +403,10 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(1, "ORGANIZATION_ADMIN")]
-        [InlineData(4, "ORGANIZATION_EDITOR")]
-        [InlineData(6, "ORGANIZATION_REVIEWER")]
-        [InlineData(8, "TEAM_GUARDIAN")]
+        [InlineData(1, RoleNames.NAME_ORGANIZATION_ADMIN)]
+        [InlineData(4, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(6, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData(8, RoleNames.NAME_TEAM_GUARDIAN)]
         public async Task UpdateDeclaration_AdultRolesMustDeclare18(int userNumber, string role)
         {
             var (service, _, _) = await Setup();
@@ -572,9 +572,9 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(false, "ORGANIZATION_EDITOR")]
-        [InlineData(false, "ORGANIZATION_REVIEWER")]
-        [InlineData(true, "TEAM_GUARDIAN")]
+        [InlineData(false, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(false, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData(true, RoleNames.NAME_TEAM_GUARDIAN)]
         public async Task UpdateUserRoles_RejectsRolesOutsideCallerRoleFamily(bool organization, string role)
         {
             var (service, _, _) = await Setup();
@@ -590,10 +590,10 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData("ORGANIZATION_ADMIN", "TEAM_CAPTAIN")]
-        [InlineData("ORGANIZATION_EDITOR", "TEAM_GUARDIAN")]
-        [InlineData("ORGANIZATION_REVIEWER", "TEAM_CAPTAIN")]
-        [InlineData("ORGANIZATION_ADMIN", "TEAM_GUARDIAN")]
+        [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_TEAM_CAPTAIN)]
+        [InlineData(RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_TEAM_GUARDIAN)]
+        [InlineData(RoleNames.NAME_ORGANIZATION_REVIEWER, RoleNames.NAME_TEAM_CAPTAIN)]
+        [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_TEAM_GUARDIAN)]
         public async Task UpdateUserRoles_CannotMixOrganizationAndTeamRoles(string organizationRole, string teamRole)
         {
             var (service, db, _) = await Setup();
@@ -611,10 +611,10 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(1, "ORGANIZATION_ADMIN")]
-        [InlineData(4, "ORGANIZATION_EDITOR")]
-        [InlineData(8, "TEAM_GUARDIAN")]
-        [InlineData(10, "TEAM_CAPTAIN")]
+        [InlineData(1, RoleNames.NAME_ORGANIZATION_ADMIN)]
+        [InlineData(4, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(8, RoleNames.NAME_TEAM_GUARDIAN)]
+        [InlineData(10, RoleNames.NAME_TEAM_CAPTAIN)]
         public async Task UpdateUserNames_SelfCanUpdateProfileNames(int userNumber, string role)
         {
             var (service, db, _) = await Setup();
@@ -704,11 +704,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(1, "ORGANIZATION_ADMIN")]
-        [InlineData(4, "ORGANIZATION_EDITOR")]
-        [InlineData(6, "ORGANIZATION_REVIEWER")]
-        [InlineData(8, "TEAM_GUARDIAN")]
-        [InlineData(10, "TEAM_CAPTAIN")]
+        [InlineData(1, RoleNames.NAME_ORGANIZATION_ADMIN)]
+        [InlineData(4, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(6, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData(8, RoleNames.NAME_TEAM_GUARDIAN)]
+        [InlineData(10, RoleNames.NAME_TEAM_CAPTAIN)]
         public async Task DeleteUser_SelfCanDeleteAccountAndCascadeAccountData(int userNumber, string role)
         {
             var (service, db, _) = await Setup();

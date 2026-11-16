@@ -39,7 +39,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         private static Link ActiveLink(Guid userId, string type, DateTime? expires = null) => new()
         {
             Id = Guid.NewGuid(), Token = Guid.NewGuid(), UserId = userId, Type = type,
-            State = LinkStates.STATE_ACTIVE, CreatedAt = DateTime.UtcNow,
+            State = LifecycleStates.STATE_ACTIVE, CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow, ExpiresAt = expires ?? DateTime.UtcNow.AddDays(1)
         };
 
@@ -91,7 +91,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             await service.DeactivateUserLinkAsync(User(TestDataSeeder.ID_USER_13), TestDataSeeder.ID_LINK_1);
 
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_1))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_1))!.State);
         }
 
         [Theory]
@@ -105,7 +105,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var userId = scenario == "other-user" ? TestDataSeeder.ID_USER_14 : TestDataSeeder.ID_USER_13;
             if (scenario == "already-inactive")
             {
-                (await db.Links.FindAsync(id))!.State = LinkStates.STATE_INACTIVE;
+                (await db.Links.FindAsync(id))!.State = LifecycleStates.STATE_INACTIVE;
                 await db.SaveChangesAsync();
             }
 
@@ -205,7 +205,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var exception = await Assert.ThrowsAsync<KoalaException>(() => service.ConsumeRegisterLinkAsync(link.Token, Registration()));
 
             Assert.Equal(KoalaErrorCodes.LinkNotFound, exception.ErrorCode);
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(link.Id))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(link.Id))!.State);
         }
 
         [Theory]
@@ -272,7 +272,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             Assert.True(user!.Verified);
             Assert.Equal(request.NameFirst, user.NameFirst);
             Assert.True(PasswordHasher.VerifyAndMaybeRehash(user.PasswordHash!, request.Password).Verified);
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_2))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_2))!.State);
         }
 
         [Fact]
@@ -302,7 +302,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var exception = await Assert.ThrowsAsync<KoalaException>(() => service.ConsumeRegisterLinkAsync(link.Token, Registration()));
 
             Assert.Equal(KoalaErrorCodes.UserNotFound, exception.ErrorCode);
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(link.Id))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(link.Id))!.State);
         }
 
         [Fact]
@@ -316,7 +316,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var user = await db.Users.FindAsync(TestDataSeeder.ID_USER_13);
             Assert.True(user!.Verified);
             Assert.True(user.DeclaredAtLeast18);
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_1))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_1))!.State);
         }
 
         [Fact]
@@ -329,7 +329,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             var user = await db.Users.FindAsync(TestDataSeeder.ID_USER_12);
             Assert.True(PasswordHasher.VerifyAndMaybeRehash(user!.PasswordHash!, request.Password).Verified);
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_4))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_4))!.State);
         }
 
         [Fact]
@@ -344,7 +344,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 link.Token, new LinkConsumeResetPasswordRequestDto("AnotherStrong1!")));
 
             Assert.Equal(KoalaErrorCodes.LinkNotFound, exception.ErrorCode);
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(link.Id))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(link.Id))!.State);
         }
 
         [Theory]
@@ -375,7 +375,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 link.Token, new LinkConsumeResetPasswordRequestDto("AnotherStrong1!")));
 
             Assert.Equal(KoalaErrorCodes.UserNotFound, exception.ErrorCode);
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(link.Id))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(link.Id))!.State);
         }
 
         [Fact]
@@ -407,7 +407,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 expectedArea), Times.Once);
             Assert.Contains(await db.Links.ToListAsync(), link => link.UserId ==
                 (accountType == "organization" ? TestDataSeeder.ID_USER_1 : TestDataSeeder.ID_USER_8) &&
-                link.State == LinkStates.STATE_ACTIVE && link.Type == LinkTypes.TYPE_PASSWORD_RESET);
+                link.State == LifecycleStates.STATE_ACTIVE && link.Type == LinkTypes.TYPE_PASSWORD_RESET);
         }
 
         [Fact]
@@ -417,9 +417,9 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             await service.GenerateResetPasswordLinkAsync(new LinkGenerateResetPasswordRequestDto(TestDataSeeder.EMAIL_USER_12));
 
-            Assert.Equal(LinkStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_4))!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, (await db.Links.FindAsync(TestDataSeeder.ID_LINK_4))!.State);
             Assert.Single(await db.Links.Where(link => link.UserId == TestDataSeeder.ID_USER_12 &&
-                link.Type == LinkTypes.TYPE_PASSWORD_RESET && link.State == LinkStates.STATE_ACTIVE).ToListAsync());
+                link.Type == LinkTypes.TYPE_PASSWORD_RESET && link.State == LifecycleStates.STATE_ACTIVE).ToListAsync());
             email.Verify(service => service.SendPasswordResetEmailAsync(
                 TestDataSeeder.EMAIL_USER_12, It.IsAny<string>(), "team"), Times.Once);
         }

@@ -221,7 +221,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 {
                     Id = ID_TEAM_1,
                     Name = NAME_TEAM_1,
-                    Tier = TeamTiers.TIER_1,
+                    Tier = CompetitionTiers.TIER_1,
                     EditionId = MOCK_ID_EDITION_1,
                     SchoolId = MOCK_ID_SCHOOL_1,
                     CaptainId = ID_USER_10,
@@ -235,7 +235,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                 {
                     Id = ID_TEAM_2,
                     Name = NAME_TEAM_2,
-                    Tier = TeamTiers.TIER_2,
+                    Tier = CompetitionTiers.TIER_2,
                     EditionId = MOCK_ID_EDITION_1,
                     SchoolId = MOCK_ID_SCHOOL_2,
                     CaptainId = ID_USER_11,
@@ -319,21 +319,21 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             };
             List<Link> links = new List<Link>
             {
-                new Link { Id = ID_LINK_1, UserId = ID_USER_13, Token = TOKEN_LINK_1, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_2, UserId = ID_USER_14, Token = TOKEN_LINK_2, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_3, UserId = ID_USER_15, Token = TOKEN_LINK_3, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
-                new Link { Id = ID_LINK_4, UserId = ID_USER_12, Token = TOKEN_LINK_4, State = LinkStates.STATE_ACTIVE, Type = LinkTypes.TYPE_PASSWORD_RESET, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_1, UserId = ID_USER_13, Token = TOKEN_LINK_1, State = LifecycleStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_2, UserId = ID_USER_14, Token = TOKEN_LINK_2, State = LifecycleStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_3, UserId = ID_USER_15, Token = TOKEN_LINK_3, State = LifecycleStates.STATE_ACTIVE, Type = LinkTypes.TYPE_REGISTRATION, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
+                new Link { Id = ID_LINK_4, UserId = ID_USER_12, Token = TOKEN_LINK_4, State = LifecycleStates.STATE_ACTIVE, Type = LinkTypes.TYPE_PASSWORD_RESET, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_LINK},
             };
             List<Session> sessions = new List<Session>
             {
-                new Session { Id = ID_SESSION_1, UserId = ID_USER_1, Token = TOKEN_SESSION_1, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_2, UserId = ID_USER_1, Token = TOKEN_SESSION_2, State = SessionStates.STATE_INACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_3, UserId = ID_USER_1, Token = TOKEN_SESSION_3, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_4, UserId = ID_USER_3, Token = TOKEN_SESSION_4, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_5, UserId = ID_USER_8, Token = TOKEN_SESSION_5, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_6, UserId = ID_USER_10, Token = TOKEN_SESSION_6, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_7, UserId = ID_USER_11, Token = TOKEN_SESSION_7, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
-                new Session { Id = ID_SESSION_8, UserId = ID_USER_12, Token = TOKEN_SESSION_8, State = SessionStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_1, UserId = ID_USER_1, Token = TOKEN_SESSION_1, State = LifecycleStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_2, UserId = ID_USER_1, Token = TOKEN_SESSION_2, State = LifecycleStates.STATE_INACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_3, UserId = ID_USER_1, Token = TOKEN_SESSION_3, State = LifecycleStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_4, UserId = ID_USER_3, Token = TOKEN_SESSION_4, State = LifecycleStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_5, UserId = ID_USER_8, Token = TOKEN_SESSION_5, State = LifecycleStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_6, UserId = ID_USER_10, Token = TOKEN_SESSION_6, State = LifecycleStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_7, UserId = ID_USER_11, Token = TOKEN_SESSION_7, State = LifecycleStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
+                new Session { Id = ID_SESSION_8, UserId = ID_USER_12, Token = TOKEN_SESSION_8, State = LifecycleStates.STATE_ACTIVE, CreatedAt = TIME_CREATED, UpdatedAt = TIME_CREATED, ExpiresAt = TIME_EXPIRES_SESSION},
             };
 
             await db.Users.AddRangeAsync(users);

@@ -208,11 +208,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(1, "ORGANIZATION_ADMIN")]
-        [InlineData(4, "ORGANIZATION_EDITOR")]
-        [InlineData(6, "ORGANIZATION_REVIEWER")]
-        [InlineData(10, "TEAM_CAPTAIN")]
-        [InlineData(8, "TEAM_GUARDIAN")]
+        [InlineData(1, RoleNames.NAME_ORGANIZATION_ADMIN)]
+        [InlineData(4, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(6, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData(10, RoleNames.NAME_TEAM_CAPTAIN)]
+        [InlineData(8, RoleNames.NAME_TEAM_GUARDIAN)]
         public async Task CreateSession_ReturnsTheUserRoleForEachAccountKind(int userNumber, string expectedRole)
         {
             var (service, _, _) = await SetupTestEnvironment();
@@ -324,7 +324,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             await service.DeactivateSessionAsync(AuthenticatedUser(TestDataSeeder.ID_USER_1), TestDataSeeder.ID_SESSION_1);
 
             var session = await db.Sessions.FindAsync(TestDataSeeder.ID_SESSION_1);
-            Assert.Equal(SessionStates.STATE_INACTIVE, session!.State);
+            Assert.Equal(LifecycleStates.STATE_INACTIVE, session!.State);
             cache.Verify(cacheService => cacheService.RemoveKeyAsync($"koala:account:Session:{TestDataSeeder.TOKEN_SESSION_1}"), Times.Once);
         }
 

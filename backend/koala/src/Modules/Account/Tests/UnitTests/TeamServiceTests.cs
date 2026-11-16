@@ -520,9 +520,9 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(4, "ORGANIZATION_EDITOR")]
-        [InlineData(6, "ORGANIZATION_REVIEWER")]
-        [InlineData(10, "TEAM_CAPTAIN")]
+        [InlineData(4, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData(6, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData(10, RoleNames.NAME_TEAM_CAPTAIN)]
         public async Task GetTeams_EditorReviewerAndCaptainAreForbidden(int userNumber, string role)
         {
             var (service, _, _) = await SetupTestEnvironment();
@@ -607,10 +607,10 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData("admin", 1, "ORGANIZATION_ADMIN")]
-        [InlineData("editor", 4, "ORGANIZATION_EDITOR")]
-        [InlineData("reviewer", 6, "ORGANIZATION_REVIEWER")]
-        [InlineData("guardian", 8, "TEAM_GUARDIAN")]
+        [InlineData("admin", 1, RoleNames.NAME_ORGANIZATION_ADMIN)]
+        [InlineData("editor", 4, RoleNames.NAME_ORGANIZATION_EDITOR)]
+        [InlineData("reviewer", 6, RoleNames.NAME_ORGANIZATION_REVIEWER)]
+        [InlineData("guardian", 8, RoleNames.NAME_TEAM_GUARDIAN)]
         public async Task CreateTeam_OnlyCaptainRoleIsAllowed(string _, int userNumber, string role)
         {
             var (service, _, _) = await SetupTestEnvironment();

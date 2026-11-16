@@ -72,7 +72,7 @@ public class LinkConsumeRegisterRequestDtoValidationTests
     [Theory]
     [InlineData("A", "B", "Abcdef1!", true, false)]
     [InlineData("A", "B", "Abcdef1!", false, true)]
-    [InlineData("A", "B", "Abcdef1!", true, false)]
+    [InlineData("A", "B", "Abcdef12!", true, false)]
     [InlineData("A", "B", "AbcdefghijklmnopqrstuvwxyzABCDEFGH1!", true, false)]
     public void ValidBoundariesAndExactlyOneAgeDeclaration_AreAccepted(string first, string last, string password, bool age13, bool age18) =>
         ValidationAssertions.IsValid(_validator, Valid(first, last, password, age13: age13, age18: age18));

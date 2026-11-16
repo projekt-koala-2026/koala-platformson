@@ -33,21 +33,21 @@ namespace koala.src.Modules.Account.Services
         public async Task ConsumeRegisterLinkAsync(Guid token, LinkConsumeRegisterRequestDto requestDto)
         {
             DateTime timeNow = DateTime.UtcNow;
-            var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.State == LinkStates.STATE_ACTIVE) && (l.Type == LinkTypes.TYPE_REGISTRATION));
+            var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.State == LifecycleStates.STATE_ACTIVE) && (l.Type == LinkTypes.TYPE_REGISTRATION));
             if (link == null)
             {
                 throw new KoalaException(KoalaErrorCodes.LinkNotFound, "The verification link with this token does not exist or is expired");
             }
             if (link.ExpiresAt < timeNow)
             {
-                link.State = LinkStates.STATE_INACTIVE;
+                link.State = LifecycleStates.STATE_INACTIVE;
                 await _db.SaveChangesAsync();
                 throw new KoalaException(KoalaErrorCodes.LinkNotFound, "The verification link with this token does not exist or is expired");
             }
             var user = await _db.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == link.UserId && u.Verified == false);
             if (user == null)
             {
-                link.State = LinkStates.STATE_INACTIVE;
+                link.State = LifecycleStates.STATE_INACTIVE;
                 await _db.SaveChangesAsync();
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "User connected to that link no longer exists");
             }
@@ -66,7 +66,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.UserRoleAgeRequirementNotMet, "Captains must confirm they are at least 13 years old.");
             }
 
-            link.State = LinkStates.STATE_INACTIVE;
+            link.State = LifecycleStates.STATE_INACTIVE;
             link.UpdatedAt = timeNow;
             user.NameFirst = requestDto.NameFirst;
             user.NameLast = requestDto.NameLast;
@@ -84,14 +84,14 @@ namespace koala.src.Modules.Account.Services
         public async Task ConsumeResetPasswordLinkAsync(Guid token, LinkConsumeResetPasswordRequestDto requestDto)
         {
             DateTime timeNow = DateTime.UtcNow;
-            var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.State == LinkStates.STATE_ACTIVE) && (l.Type == LinkTypes.TYPE_PASSWORD_RESET));
+            var link = await _db.Links.FirstOrDefaultAsync(l => (l.Token == token) && (l.State == LifecycleStates.STATE_ACTIVE) && (l.Type == LinkTypes.TYPE_PASSWORD_RESET));
             if (link == null)
             {
                 throw new KoalaException(KoalaErrorCodes.LinkNotFound, "The verification link with this token does not exist or is expired");
             }
             if (link.ExpiresAt < timeNow)
             {
-                link.State = LinkStates.STATE_INACTIVE;
+                link.State = LifecycleStates.STATE_INACTIVE;
                 link.UpdatedAt = timeNow;
                 await _db.SaveChangesAsync();
                 throw new KoalaException(KoalaErrorCodes.LinkNotFound, "The verification link with this token does not exist or is expired");
@@ -99,12 +99,12 @@ namespace koala.src.Modules.Account.Services
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == link.UserId && u.Verified == true);
             if (user == null)
             {
-                link.State = LinkStates.STATE_INACTIVE;
+                link.State = LifecycleStates.STATE_INACTIVE;
                 link.UpdatedAt = timeNow;
                 await _db.SaveChangesAsync();
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "User connected to that link no longer exists");
             }
-            link.State = LinkStates.STATE_INACTIVE;
+            link.State = LifecycleStates.STATE_INACTIVE;
             link.UpdatedAt = timeNow;
             user.PasswordHash = PasswordHasher.Hash(requestDto.Password);
             await _db.SaveChangesAsync();
@@ -121,11 +121,11 @@ namespace koala.src.Modules.Account.Services
             DateTime timeNow = DateTime.UtcNow;
 
             var previousLinks = await _db.Links
-                .Where(l => l.UserId == user.Id && l.Type == LinkTypes.TYPE_PASSWORD_RESET && l.State == LinkStates.STATE_ACTIVE)
+                .Where(l => l.UserId == user.Id && l.Type == LinkTypes.TYPE_PASSWORD_RESET && l.State == LifecycleStates.STATE_ACTIVE)
                 .ToListAsync();
             foreach (var previousLink in previousLinks)
             {
-                previousLink.State = LinkStates.STATE_INACTIVE;
+                previousLink.State = LifecycleStates.STATE_INACTIVE;
             }
 
             Link link = new Link
@@ -134,7 +134,7 @@ namespace koala.src.Modules.Account.Services
                 Token = Guid.NewGuid(),
                 UserId = user.Id,
                 Type = LinkTypes.TYPE_PASSWORD_RESET,
-                State = LinkStates.STATE_ACTIVE,
+                State = LifecycleStates.STATE_ACTIVE,
                 CreatedAt = timeNow,
                 UpdatedAt = timeNow,
                 ExpiresAt = timeNow.AddDays(1.0f)
@@ -171,7 +171,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
-            var queryResult = await _db.Links.Where(l => l.State == LinkStates.STATE_ACTIVE && l.UserId == userId).AsNoTracking().AsQueryable().ToListAsync();
+            var queryResult = await _db.Links.Where(l => l.State == LifecycleStates.STATE_ACTIVE && l.UserId == userId).AsNoTracking().AsQueryable().ToListAsync();
             var links = queryResult
                 .Select(l => new LinkDto(l.Id, l.Type, l.State, l.CreatedAt, l.UpdatedAt, l.ExpiresAt))
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
@@ -219,14 +219,14 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
-            var link = await _db.Links.FirstOrDefaultAsync(l => l.Id == id && l.UserId == userId && l.State == LinkStates.STATE_ACTIVE);
+            var link = await _db.Links.FirstOrDefaultAsync(l => l.Id == id && l.UserId == userId && l.State == LifecycleStates.STATE_ACTIVE);
 
             if (link == null)
             {
                 throw new KoalaException(KoalaErrorCodes.LinkNotFound, "Link does not exist or was already deactivated");
             }
 
-            link.State = LinkStates.STATE_INACTIVE;
+            link.State = LifecycleStates.STATE_INACTIVE;
             link.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 

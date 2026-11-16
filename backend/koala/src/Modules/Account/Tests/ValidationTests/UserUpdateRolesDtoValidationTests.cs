@@ -80,11 +80,11 @@ public class UserUpdateRolesDtoValidationTests
         ValidationAssertions.IsValid(_validator, new(new() { RoleNames.NAME_TEAM_CAPTAIN }, int.MaxValue));
 
     [Theory]
-    [InlineData("ORGANIZATION_ADMIN")]
-    [InlineData("ORGANIZATION_EDITOR")]
-    [InlineData("ORGANIZATION_REVIEWER")]
-    [InlineData("TEAM_CAPTAIN")]
-    [InlineData("TEAM_GUARDIAN")]
+    [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_EDITOR)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_REVIEWER)]
+    [InlineData(RoleNames.NAME_TEAM_CAPTAIN)]
+    [InlineData(RoleNames.NAME_TEAM_GUARDIAN)]
     public void EachAllowedRoleCanBeUpdatedIndividually(string role) =>
         ValidationAssertions.IsValid(_validator, new(new() { role }, 1));
 

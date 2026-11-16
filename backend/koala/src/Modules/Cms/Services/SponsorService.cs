@@ -3,10 +3,7 @@ using koala.src.Modules.Cms.Data;
 using koala.src.Modules.Cms.Dtos;
 using koala.src.Modules.Cms.Entities;
 using koala.src.Shared;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations.Operations;
-using Org.BouncyCastle.Ocsp;
 
 namespace koala.src.Modules.Cms.Services
 {
@@ -65,31 +62,28 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            int affectedRows = await _db.Sponsors
-                .Where(x => x.Id == id && x.Version == requestDto.Version)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(x => x.Name, requestDto.Name)
-                    .SetProperty(x => x.ContentJson, requestDto.ContentJson)
-                    .SetProperty(x => x.IsVisible, requestDto.IsVisible)
-                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
-                    .SetProperty(x => x.Version, x => x.Version + 1));
-
-            if (affectedRows == 0)
+            var sponsor = await _db.Sponsors.FirstOrDefaultAsync(x => x.Id == id);
+            if (sponsor == null)
             {
-                bool isSponsor = await _db.Sponsors.AnyAsync(s => s.Id == id);
-                if (!isSponsor)
-                {
-                    throw new KoalaException(KoalaErrorCodes.SponsorNotFound, "Specified sponsor does not exist");
-                }
+                throw new KoalaException(KoalaErrorCodes.SponsorNotFound, "Specified sponsor does not exist");
+            }
+            if (sponsor.Version != requestDto.Version)
+            {
                 throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
-
-            var sponsor = await _db.Sponsors.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
-
-            if (sponsor == null)
+            sponsor.Name = requestDto.Name;
+            sponsor.ContentJson = requestDto.ContentJson;
+            sponsor.IsVisible = requestDto.IsVisible;
+            sponsor.UpdatedAt = DateTime.UtcNow;
+            sponsor.Version++;
+            try
             {
-                throw new KoalaException(KoalaErrorCodes.SponsorNotFound, "Sponsor does not exist");
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
             return new SponsorDto(sponsor.Id, sponsor.Name, sponsor.ContentJson, sponsor.IsVisible, sponsor.UpdatedAt, sponsor.CreatedAt, sponsor.Version);
@@ -163,6 +157,10 @@ namespace koala.src.Modules.Cms.Services
             }
 
             var queryResult = await query.FirstOrDefaultAsync(s => s.Id == id);
+            if (queryResult == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.SponsorNotFound, "Sponsor does not exist");
+            }
             var sponsor = new SponsorDto
                 (
                     queryResult.Id,
