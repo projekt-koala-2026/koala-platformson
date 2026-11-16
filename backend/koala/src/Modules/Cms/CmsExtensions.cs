@@ -4,6 +4,7 @@ using koala.src.Modules.Cms.Services;
 using Microsoft.Extensions.FileProviders;
 using koala.src.Modules.Cms.Entities;
 using koala.src.Shared;
+using FluentValidation;
 
 
 namespace koala.src.Modules.Cms
@@ -38,6 +39,7 @@ namespace koala.src.Modules.Cms
             services.AddScoped<StaticPageService, StaticPageService>();
 
             // 4. FLUID VALIDATORS
+            services.AddValidatorsFromAssemblyContaining<Program>();
 
             return services;
         }
