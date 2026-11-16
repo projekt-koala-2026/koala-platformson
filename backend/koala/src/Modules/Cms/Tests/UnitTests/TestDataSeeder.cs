@@ -24,8 +24,6 @@ public static class TestDataSeeder
     public static readonly Guid ID_SPONSOR_2 = Guid.CreateVersion7();
     public static readonly Guid ID_PUBLIC_FILE_1 = Guid.CreateVersion7();
     public static readonly Guid ID_PUBLIC_FILE_2 = Guid.CreateVersion7();
-    public static readonly Guid ID_KOALICJANT_1 = Guid.CreateVersion7();
-    public static readonly Guid ID_KOALICJANT_2 = Guid.CreateVersion7();
 
     public const string NAME_POST_1 = "Visible test post";
     public const string NAME_POST_2 = "Hidden test post";
@@ -137,8 +135,7 @@ public static class TestDataSeeder
         {
             new Koalicjant
             {
-                Id = ID_KOALICJANT_1,
-                UserId = USER_ID_1,
+                Id = USER_ID_1,
                 NameFirst = NAME_FIRST_KOALICJANT_1,
                 NameLast = NAME_LAST_KOALICJANT_1,
                 Email = EMAIL_KOALICJANT_1,
@@ -149,8 +146,7 @@ public static class TestDataSeeder
             },
             new Koalicjant
             {
-                Id = ID_KOALICJANT_2,
-                UserId = USER_ID_2,
+                Id = USER_ID_2,
                 NameFirst = NAME_FIRST_KOALICJANT_2,
                 NameLast = NAME_LAST_KOALICJANT_2,
                 Email = EMAIL_KOALICJANT_2,

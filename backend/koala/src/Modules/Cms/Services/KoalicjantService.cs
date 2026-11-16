@@ -65,6 +65,7 @@ namespace koala.src.Modules.Cms.Services
             };
 
             await _db.Koalicjants.AddAsync(koalicjant);
+            await _db.SaveChangesAsync();
 
             return new KoalicjantDto
             (

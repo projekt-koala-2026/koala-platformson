@@ -397,11 +397,11 @@ namespace koala.src.Modules.Core.Services
             var submission = await _db.TaskSubmissions.AsNoTracking()
                 .FirstOrDefaultAsync(s => s.TeamId == team_id && s.TaskId == task_id &&
                     s.TaskItem.SubEditionId == subedition_id && s.TaskItem.SubEdition.EditionId == team.EditionId &&
-                    s.TaskItem.SubEdition.State == SubEditionStates.STATE_ACTIVE &&
-                    s.TaskItem.SubEdition.Edition.State == EditionStates.STATE_ACTIVE &&
+                    s.TaskItem.SubEdition.State == LifecycleStates.STATE_ACTIVE &&
+                    s.TaskItem.SubEdition.Edition.State == LifecycleStates.STATE_ACTIVE &&
                     s.TaskItem.SubEdition.AnswerOpen <= timeNow && s.TaskItem.SubEdition.AnswerClose >= timeNow &&
-                    (s.TaskItem.Tier == TaskItemTiers.TIER_1 || s.TaskItem.Tier == TaskItemTiers.TIER_2) &&
-                    (team.Tier == TaskItemTiers.TIER_2 || (team.Tier == TaskItemTiers.TIER_1 && s.TaskItem.Tier == TaskItemTiers.TIER_1)));
+                    (s.TaskItem.Tier == CompetitionTiers.TIER_1 || s.TaskItem.Tier == CompetitionTiers.TIER_2) &&
+                    (team.Tier == CompetitionTiers.TIER_2 || (team.Tier == CompetitionTiers.TIER_1 && s.TaskItem.Tier == CompetitionTiers.TIER_1)));
             if (submission == null)
                 throw new KoalaException(KoalaErrorCodes.TaskSubmissionNotFound, "Submission for this team and task does not exist");
 

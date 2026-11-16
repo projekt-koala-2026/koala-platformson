@@ -4,6 +4,7 @@ using koala.src.Modules.Account.Dtos;
 using koala.src.Modules.Account.Entities;
 using koala.src.Modules.Account.Services;
 using koala.src.Shared;
+using koala.src.Shared.Core;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
@@ -20,7 +21,10 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var email = new Mock<IEmailService>();
             email.Setup(service => service.SendRegisterEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
-            return (new UserService(db, email.Object), db, email);
+            var cms = new Mock<ICmsModule>();
+            cms.Setup(module => module.Internal_DeleteKoalicjantIfExistsAsync(It.IsAny<Guid>()))
+                .Returns(Task.CompletedTask);
+            return (new UserService(db, email.Object, cms.Object), db, email);
         }
 
         private static ClaimsPrincipal Principal(Guid? userId, params string[] roles)

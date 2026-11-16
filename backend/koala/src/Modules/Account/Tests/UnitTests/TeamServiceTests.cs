@@ -13,6 +13,12 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 {
     public class TeamServiceTests
     {
+        private static async Task AssertActiveEditionNotFound(Func<Task> action)
+        {
+            var exception = await Assert.ThrowsAsync<KoalaException>(action);
+            Assert.Equal(KoalaErrorCodes.ActiveEditionNotFound, exception.ErrorCode);
+        }
+
         private static ClaimsPrincipal Principal(Guid userId, params string[] roles)
         {
             var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, userId.ToString()) };
@@ -469,7 +475,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var (service, _, core) = await SetupTestEnvironment();
             core.Setup(module => module.Internal_GetTheActiveEditionAsync()).ReturnsAsync((_EditionDto?)null);
 
-            await Assert.ThrowsAsync<NoActiveEditionException>(() => service.JoinTeamWithCodeAsync(
+            await AssertActiveEditionNotFound(() => service.JoinTeamWithCodeAsync(
                 Principal(TestDataSeeder.ID_USER_8, TestDataSeeder.NAME_ROLE_4), TestDataSeeder.CODE_TEAM_JOIN_CODE_1));
         }
 
@@ -672,13 +678,13 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                     new TeamCreateRequestDto("T", TestDataSeeder.MOCK_ID_SCHOOL_1)))).ErrorCode);
             Assert.Equal(KoalaErrorCodes.ActiveEditionNotFound, (await Assert.ThrowsAsync<KoalaException>(() =>
                 service.DeleteTeamAsync(captain, TestDataSeeder.ID_TEAM_1))).ErrorCode);
-            await Assert.ThrowsAsync<NoActiveEditionException>(() => service.AddTeamMemberAsync(captain, TestDataSeeder.ID_TEAM_1, member));
-            await Assert.ThrowsAsync<NoActiveEditionException>(() => service.UpdateTeamMemberAsync(captain, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, member));
-            await Assert.ThrowsAsync<NoActiveEditionException>(() => service.DeleteTeamMemberAsync(captain, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1));
+            await AssertActiveEditionNotFound(() => service.AddTeamMemberAsync(captain, TestDataSeeder.ID_TEAM_1, member));
+            await AssertActiveEditionNotFound(() => service.UpdateTeamMemberAsync(captain, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, member));
+            await AssertActiveEditionNotFound(() => service.DeleteTeamMemberAsync(captain, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1));
             Assert.Equal(KoalaErrorCodes.ActiveEditionNotFound, (await Assert.ThrowsAsync<KoalaException>(() =>
                 service.UpdateTeamNameAsync(captain, TestDataSeeder.ID_TEAM_1, new TeamUpdateNameRequestDto("T", 1)))).ErrorCode);
-            await Assert.ThrowsAsync<NoActiveEditionException>(() => service.CreateJoinTeamCodeAsync(captain, TestDataSeeder.ID_TEAM_1));
-            await Assert.ThrowsAsync<NoActiveEditionException>(() => service.JoinTeamWithCodeAsync(guardian, TestDataSeeder.CODE_TEAM_JOIN_CODE_1));
+            await AssertActiveEditionNotFound(() => service.CreateJoinTeamCodeAsync(captain, TestDataSeeder.ID_TEAM_1));
+            await AssertActiveEditionNotFound(() => service.JoinTeamWithCodeAsync(guardian, TestDataSeeder.CODE_TEAM_JOIN_CODE_1));
         }
 
         [Fact]

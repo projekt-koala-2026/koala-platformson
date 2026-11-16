@@ -7,8 +7,8 @@ namespace koala.src.Modules.Cms.Tests.ValidationTests;
 public class UpdateKoalicjantRequestDtoValidationTests
 {
     private const string ValidContent = "{\"koalicjant_profile_image_url\":\"/profile.png\",\"body_pl\":\"Opis\",\"version\":\"1\"}";
-    private static UpdateKoalicjantRequestDtoValidator Validator => new();
-    private static UpdateKoalicjantRequestDto Model(string first = "Anna", string last = "Nowak", string email = "anna@example.test", string? content = null, int version = 1) => new(first, last, email, content ?? ValidContent, true, version);
+    private static UpsertKoalicjantRequestDtoValidator Validator => new();
+    private static UpsertKoalicjantRequestDto Model(string first = "Anna", string last = "Nowak", string email = "anna@example.test", string? content = null, int version = 1) => new(first, last, email, content ?? ValidContent, true, version);
 
     [Fact] public void AcceptsValidDto() => ValidationAssertions.IsValid(Validator, Model());
     [Theory]

@@ -14,7 +14,7 @@ namespace koala.src.Modules.Cms.Dtos
         int Version
     );
 
-    public class UpdateKoalicjantRequestDtoValidator : AbstractValidator<UpdateKoalicjantRequestDto>
+    public class UpsertKoalicjantRequestDtoValidator : AbstractValidator<UpsertKoalicjantRequestDto>
     {
         private static bool IsValidJson(string? content)
         {
@@ -57,7 +57,7 @@ namespace koala.src.Modules.Cms.Dtos
                 }
             };
         }
-        public UpdateKoalicjantRequestDtoValidator()
+        public UpsertKoalicjantRequestDtoValidator()
         {
             RuleFor(x => x.NameFirst)
                 .NotEmpty()
