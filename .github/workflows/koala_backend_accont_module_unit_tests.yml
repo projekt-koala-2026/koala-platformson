@@ -33,6 +33,6 @@ jobs:
         run: dotnet build --no-restore --configuration Release
         working-directory: ./backend/koala/src/Modules/Account/Tests/UnitTests
 
-      - name: Run xUnit tests
+      - name: Run Account Service xUnit tests
         run: dotnet test --no-build --configuration Release --verbosity normal
         working-directory: ./backend/koala/src/Modules/Account/Tests/UnitTests
