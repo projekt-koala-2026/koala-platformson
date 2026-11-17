@@ -54,7 +54,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId == null);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId == null);
             if (teamMember == null)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamMemberRodoAlreadyExists, "can only add a rodo for a existing team member that does not have a rodo");
@@ -142,9 +142,9 @@ namespace koala.src.Modules.Account.Services
                         teamMember.NameFirst == null ? teamMember.Team.Captain.NameFirst! : teamMember.NameFirst!,
                         teamMember.NameLast == null ? teamMember.Team.Captain.NameLast! : teamMember.NameLast!,
                         teamMember.RodoState,
-                        teamMember.Rodo.Version,
-                        teamMember.Rodo.CreatedAt,
-                        teamMember.Rodo.UpdatedAt,
+                        teamMember.Rodo?.Version ?? null,
+                        teamMember.Rodo?.CreatedAt ?? null,
+                        teamMember.Rodo?.UpdatedAt ?? null,
                         teamMember.CreatedAt,
                         teamMember.UpdatedAt,
                         teamMember.Version
@@ -177,7 +177,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
             if (teamMember == null)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamMemberRodoNotFound, "can only update a rodo for a existing team member that has a rodo");
@@ -250,9 +250,9 @@ namespace koala.src.Modules.Account.Services
                         teamMember.NameFirst == null ? teamMember.Team.Captain.NameFirst! : teamMember.NameFirst!,
                         teamMember.NameLast == null ? teamMember.Team.Captain.NameLast! : teamMember.NameLast!,
                         teamMember.RodoState,
-                        teamMember.Rodo.Version,
-                        teamMember.Rodo.CreatedAt,
-                        teamMember.Rodo.UpdatedAt,
+                        teamMember.Rodo?.Version ?? null,
+                        teamMember.Rodo?.CreatedAt ?? null,
+                        teamMember.Rodo?.UpdatedAt ?? null,
                         teamMember.CreatedAt,
                         teamMember.UpdatedAt,
                         teamMember.Version
@@ -335,7 +335,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
             if (teamMember == null)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamMemberRodoNotFound, "Team member not found");
@@ -353,9 +353,9 @@ namespace koala.src.Modules.Account.Services
                         teamMember.NameFirst == null ? teamMember.Team.Captain.NameFirst! : teamMember.NameFirst!,
                         teamMember.NameLast == null ? teamMember.Team.Captain.NameLast! : teamMember.NameLast!,
                         teamMember.RodoState,
-                        teamMember.Rodo.Version,
-                        teamMember.Rodo.CreatedAt,
-                        teamMember.Rodo.UpdatedAt,
+                        teamMember.Rodo?.Version ?? null,
+                        teamMember.Rodo?.CreatedAt ?? null,
+                        teamMember.Rodo?.UpdatedAt ?? null,
                         teamMember.CreatedAt,
                         teamMember.UpdatedAt,
                         teamMember.Version
@@ -424,7 +424,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
 
-            var query = _db.TeamMembers.Include(tm => tm.Rodo).AsNoTracking().AsQueryable();
+            var query = _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).AsNoTracking().AsQueryable();
 
             query = query.Where(tm => tm.TeamId == teamId);
 
@@ -439,9 +439,9 @@ namespace koala.src.Modules.Account.Services
                         tm.NameFirst == null ? tm.Team.Captain.NameFirst! : tm.NameFirst!,
                         tm.NameLast == null ? tm.Team.Captain.NameLast! : tm.NameLast!,
                         tm.RodoState,
-                        tm.Rodo.Version,
-                        tm.Rodo.CreatedAt,
-                        tm.Rodo.UpdatedAt,
+                        tm.Rodo?.Version ?? null,
+                        tm.Rodo?.CreatedAt ?? null,
+                        tm.Rodo?.UpdatedAt ?? null,
                         tm.CreatedAt,
                         tm.UpdatedAt,
                         tm.Version
@@ -482,7 +482,7 @@ namespace koala.src.Modules.Account.Services
             }
 
 
-            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).AsNoTracking().FirstOrDefaultAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).AsNoTracking().FirstOrDefaultAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
 
             if (teamMember == null)
             {
@@ -496,9 +496,9 @@ namespace koala.src.Modules.Account.Services
                         teamMember.NameFirst == null ? teamMember.Team.Captain.NameFirst! : teamMember.NameFirst!,
                         teamMember.NameLast == null ? teamMember.Team.Captain.NameLast! : teamMember.NameLast!,
                         teamMember.RodoState,
-                        teamMember.Rodo.Version,
-                        teamMember.Rodo.CreatedAt,
-                        teamMember.Rodo.UpdatedAt,
+                        teamMember.Rodo?.Version ?? null,
+                        teamMember.Rodo?.CreatedAt ?? null,
+                        teamMember.Rodo?.UpdatedAt ?? null,
                         teamMember.CreatedAt,
                         teamMember.UpdatedAt,
                         teamMember.Version
