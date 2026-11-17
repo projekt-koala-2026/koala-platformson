@@ -57,7 +57,10 @@ app.UseCors("AllowFrontend");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+    });
 }
 
 app.UseAuthentication();

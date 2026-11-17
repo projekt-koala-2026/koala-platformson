@@ -30,6 +30,7 @@ namespace koala.src.Shared
         public const string FileNotFound = "KOALA_FILE_NOT_FOUND";
         public const string FileCreationFailure = "KOALA_FILE_CREATION_FAILURE";
         public const string FileReadFailure = "KOALA_FILE_READ_FAILURE";
+        public const string FileDeleteFailure = "KOALA_FILE_DELETE_FAILURE";
         public const string FolderCreationFailure = "KOALA_FOLDER_CREATION_FAILURE";
 
         // ==========================================
@@ -267,26 +268,79 @@ namespace koala.src.Shared
             {
                 statusCode = koalaException.ErrorCode switch
                 {
+                    // ==========================================
+                    // 401 UNAUTHENTICATED
+                    // ==========================================
                     KoalaErrorCodes.Unauthenticated =>
                         StatusCodes.Status401Unauthorized,
 
-                    KoalaErrorCodes.Forbidden =>
+                    // ==========================================
+                    // 403 FORBIDDEN
+                    // ==========================================
+                    KoalaErrorCodes.Forbidden or
+                    KoalaErrorCodes.UserNotPartOfThisTeam or
+                    KoalaErrorCodes.UserNotCaptainOfThisTeam or
+                    KoalaErrorCodes.UserNotGuardianOfThisTeam =>
                         StatusCodes.Status403Forbidden,
 
+                    // ==========================================
+                    // 404 NOT FOUND
+                    // ==========================================
                     KoalaErrorCodes.FileNotFound or
+                    KoalaErrorCodes.UserNotFound or
+                    KoalaErrorCodes.TeamNotFound or
+                    KoalaErrorCodes.TeamMemberNotFound or
+                    KoalaErrorCodes.TeamMemberRodoNotFound or
+                    KoalaErrorCodes.TeamJoinCodeNotFound or
+                    KoalaErrorCodes.LinkNotFound or
+                    KoalaErrorCodes.SessionNotFound or
+                    KoalaErrorCodes.RodoNotFound or
+                    KoalaErrorCodes.StaticPageNotFound or
+                    KoalaErrorCodes.KoalicjantNotFound or
+                    KoalaErrorCodes.SponsorNotFound or
+                    KoalaErrorCodes.PostNotFound or
                     KoalaErrorCodes.EditionNotFound or
                     KoalaErrorCodes.ActiveEditionNotFound or
                     KoalaErrorCodes.SubEditionNotFound or
+                    KoalaErrorCodes.ActiveSubEditionNotFound or
+                    KoalaErrorCodes.SchoolNotFound or
+                    KoalaErrorCodes.TaskNotFound or
                     KoalaErrorCodes.TaskAnswerNotFound or
-                    KoalaErrorCodes.TaskSubmissionNotFound or
-                    KoalaErrorCodes.TaskNotFound =>
+                    KoalaErrorCodes.TaskSubmissionNotFound =>
                         StatusCodes.Status404NotFound,
 
-                    KoalaErrorCodes.ActiveEditionAlreadyExists or
+                    // ==========================================
+                    // 409 CONFLICT
+                    // ==========================================
+                    KoalaErrorCodes.ResourceVersionConflict or
                     KoalaErrorCodes.Conflict or
-                    KoalaErrorCodes.ResourceVersionConflict =>
+                    KoalaErrorCodes.UserAlreadyExists or
+                    KoalaErrorCodes.UserIsCaptainOfTeamAlready or
+                    KoalaErrorCodes.TeamMemberRodoAlreadyExists or
+                    KoalaErrorCodes.TeamMemberAlreadyExists or
+                    KoalaErrorCodes.KoalicjantAlreadyExists or
+                    KoalaErrorCodes.EditionAlreadyExists or
+                    KoalaErrorCodes.ActiveEditionAlreadyExists or
+                    KoalaErrorCodes.SubEditionAlreadyExists or
+                    KoalaErrorCodes.ActiveSubEditionAlreadyExists or
+                    KoalaErrorCodes.SchoolAlreadyExists or
+                    KoalaErrorCodes.TaskAlreadyExists or
+                    KoalaErrorCodes.TaskAnswerAlreadyExists =>
                         StatusCodes.Status409Conflict,
 
+                    // ==========================================
+                    // 500 INTERNAL SERVER ERROR
+                    // ==========================================
+                    KoalaErrorCodes.FileCreationFailure or
+                    KoalaErrorCodes.FileReadFailure or
+                    KoalaErrorCodes.FolderCreationFailure or
+                    KoalaErrorCodes.FileDeleteFailure or
+                    KoalaErrorCodes.DatabaseError =>
+                        StatusCodes.Status500InternalServerError,
+
+                    // ==========================================
+                    // 400 BAD REQUEST (Default)
+                    // ==========================================
                     _ => StatusCodes.Status400BadRequest
                 };
 

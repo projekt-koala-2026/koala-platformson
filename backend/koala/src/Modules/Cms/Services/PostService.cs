@@ -152,7 +152,7 @@ namespace koala.src.Modules.Cms.Services
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
-            if (!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHidden == true))
+            if (!isOrganizationAdmin && !isOrganizationEditor && (postQueryDto.ShowHidden == true || postQueryDto.ShowHidden == null))
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
@@ -169,7 +169,7 @@ namespace koala.src.Modules.Cms.Services
                 query = query.Where(p => p.Name == postQueryDto.Name);
             }
 
-            if (postQueryDto.ShowHidden != null)
+            if (isOrganizationAdmin || isOrganizationEditor)
             {
                 query = query.Where(p => p.IsVisible == !postQueryDto.ShowHidden);
             }

@@ -133,9 +133,6 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.FileNotFound, "Could not find such file");
             }
 
-            _db.PublicFiles.Remove(publicFile);
-            await _db.SaveChangesAsync();
-
             var physicalPath = Path.Combine(_publicFilesPath, publicFile.Path);
 
             try
@@ -144,8 +141,11 @@ namespace koala.src.Modules.Cms.Services
             }
             catch
             {
-                throw;
+                throw new KoalaException(KoalaErrorCodes.FileDeleteFailure, "Could not delete a specified file");
             }
+
+            _db.PublicFiles.Remove(publicFile);
+            await _db.SaveChangesAsync();
         }
 
         public async Task<(List<PublicFileDto>, ApiPagination)> GetFilesAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, PublicFileQueryDto publicFileQueryDto)
