@@ -6,16 +6,16 @@ import ImagePicker, { type ImagePickerHandle } from "../../components/ImagePicke
 import type { ManagedFile } from "../../types/models";
 import { apiEndpoints } from "../../utils/apiEndpoints";
 import { apiRequestResult, uploadFile } from "../../utils/apiFetcher";
-const MAX_IMAGE_SIZE = 16 * 1024 * 1024;
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 
 const validateImage = (file: File) => {
     if (file.size === 0) return "Wybrany plik jest pusty.";
-    if (file.size > MAX_IMAGE_SIZE) return "Obraz przekracza maksymalny rozmiar 16 MB.";
+    if (file.size > MAX_IMAGE_SIZE) return "Obraz przekracza maksymalny rozmiar 10 MB.";
     if (!allowedImageTypes.has(file.type)) {
-        return "Dozwolone formaty to JPG, PNG, WebP i GIF.";
+        return "Dozwolone formaty to JPG, PNG, WebP.";
     }
     return null;
 };
@@ -91,9 +91,9 @@ const ImageHandlingScreen = () => {
                         Plik zostanie zapisany w publicznej bibliotece obrazów.
                     </p>
                     <FileUploader
-                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        accept="image/jpeg,image/png,image/webp"
                         label="Kliknij lub przeciągnij obraz"
-                        hint="JPG, PNG, WebP lub GIF · maksymalnie 16 MB"
+                        hint="JPG, PNG, WebP · maksymalnie 10 MB"
                         disabled={uploading}
                         validateFile={validateImage}
                         onValidationError={(message) => setFeedback({ tone: "error", message })}

@@ -480,10 +480,10 @@ const CaptainHomeScreen = () => {
     const addRodo = async (memberId: string, file?: File) => {
         if (!team || !file) return;
         const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-        if (!allowedTypes.includes(file.type) || file.size > 2 * 1024 * 1024) {
+        if (!allowedTypes.includes(file.type) || file.size > 4 * 1024 * 1024) {
             setFeedback({
                 tone: "error",
-                message: "Wybierz plik PDF, JPG, PNG lub WebP o rozmiarze do 2 MB.",
+                message: "Wybierz plik PDF, JPG, PNG lub WebP o rozmiarze do 4 MB.",
             });
             return;
         }

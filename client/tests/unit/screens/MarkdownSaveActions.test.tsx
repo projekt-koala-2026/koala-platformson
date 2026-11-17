@@ -42,7 +42,7 @@ describe("zapisywanie treści Markdown", () => {
                 return HttpResponse.json({
                     data: {
                         ...page,
-                        contentJson: JSON.stringify({ markdownBody: "Nowa treść" }),
+                        contentJson: JSON.stringify({ version: "1", body_pl: "Nowa treść" }),
                         version: 4,
                     },
                 });
@@ -59,17 +59,20 @@ describe("zapisywanie treści Markdown", () => {
         await user.click(save);
         await waitFor(() =>
             expect(requests).toEqual([
-                { contentJson: JSON.stringify({ markdownBody: "Nowa treść" }), version: 3 },
+                {
+                    contentJson: JSON.stringify({ version: "1", body_pl: "Nowa treść" }),
+                    version: 3,
+                },
             ])
         );
         expect(await screen.findByRole("status")).toHaveTextContent("Treść została zapisana");
     });
 
-    it("tworzy wpis z aktualnym tytułem i treścią przez górny przycisk", async () => {
+    it.each(["ACTIVE", "INACTIVE"])("tworzy wpis zgodny z CMS dla edycji %s", async (state) => {
         const edition = {
             id: "edition-1",
             name: "Test",
-            state: "ACTIVE",
+            state,
             teamRegisterOpen: "2026-01-01T00:00:00Z",
             teamRegisterClose: "2027-01-01T00:00:00Z",
             version: 1,
@@ -102,16 +105,28 @@ describe("zapisywanie treści Markdown", () => {
         const input = await screen.findByRole("textbox", { name: "Treść Markdown" });
         const save = screen.getByRole("button", { name: "Utwórz wpis" });
         expect(save.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        await user.type(screen.getByRole("textbox", { name: /Nazwa robocza/ }), "Komunikat");
         await user.type(screen.getByPlaceholderText("Tytuł wpisu"), "Przykładowy wpis");
         await user.type(input, "Treść testowa");
+        const visibility = screen.getByRole("checkbox");
+        if (state === "ACTIVE") {
+            await user.click(visibility);
+        } else {
+            expect(visibility).toBeDisabled();
+            expect(visibility).not.toBeChecked();
+        }
         await user.click(save);
         await waitFor(() =>
             expect(requests).toEqual([
                 {
-                    name: "Przykładowy wpis",
-                    contentJson: JSON.stringify({ markdownBody: "Treść testowa" }),
+                    name: "Komunikat",
+                    contentJson: JSON.stringify({
+                        version: "1",
+                        title_pl: "Przykładowy wpis",
+                        body_pl: "Treść testowa",
+                    }),
                     editionId: "edition-1",
-                    isVisible: true,
+                    isVisible: state === "ACTIVE",
                     version: 0,
                 },
             ])

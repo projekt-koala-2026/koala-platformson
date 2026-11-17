@@ -54,6 +54,10 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
     }, [navigate, pageName]);
 
     const save = async (content: string) => {
+        if (!content.trim()) {
+            setFeedback({ tone: "error", message: "Treść strony nie może być pusta." });
+            return;
+        }
         setSaving(true);
         setFeedback(null);
         if (!page) {
@@ -63,7 +67,10 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
         }
         const { data } = await apiRequestResult<ApiStaticPage>(
             `${apiEndpoints.staticPages}/${page.id}`,
-            { contentJson: JSON.stringify({ markdownBody: content }), version: page.version },
+            {
+                contentJson: JSON.stringify({ version: "1", body_pl: content }),
+                version: page.version,
+            },
             "PUT",
             navigate
         );

@@ -109,10 +109,10 @@ const EditSponsorInfo = () => {
             setFeedback({ tone: "error", message: "Nazwa sponsora jest wymagana." });
             return;
         }
-        if (normalized.name.length > 100) {
+        if (normalized.name.length > 50 || !/^[\p{L}\s-]+$/u.test(normalized.name)) {
             setFeedback({
                 tone: "error",
-                message: "Nazwa sponsora może mieć maksymalnie 100 znaków.",
+                message: "Nazwa sponsora: do 50 znaków, wyłącznie litery, spacje i myślniki.",
             });
             return;
         }
@@ -130,12 +130,17 @@ const EditSponsorInfo = () => {
             });
             return;
         }
+        if (!normalized.description) {
+            setFeedback({ tone: "error", message: "Opis sponsora jest wymagany." });
+            return;
+        }
         const payload = {
             name: normalized.name,
             contentJson: JSON.stringify({
-                websiteUrl: normalized.websiteUrl,
-                logoUrl: normalized.logoUrl,
-                description: normalized.description,
+                version: "1",
+                sponsor_web_url: normalized.websiteUrl,
+                sponsor_logo_image_url: normalized.logoUrl,
+                body_pl: normalized.description,
             }),
             isVisible: normalized.isVisible,
             version: modal !== "create" && modal ? (versions[modal.id] ?? 0) : 0,
@@ -321,7 +326,7 @@ const EditSponsorInfo = () => {
                         Nazwa *
                         <input
                             value={form.name}
-                            maxLength={100}
+                            maxLength={50}
                             onChange={(event) =>
                                 setForm((value) => ({ ...value, name: event.target.value }))
                             }
