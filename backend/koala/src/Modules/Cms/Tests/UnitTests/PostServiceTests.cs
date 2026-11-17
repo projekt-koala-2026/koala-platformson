@@ -294,13 +294,21 @@ public class PostServiceTests
     [InlineData("", false, 1)]
     [InlineData(RoleNames.NAME_ORGANIZATION_EDITOR, true, 2)]
     [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN, true, 2)]
-    public async Task GetPosts_HiddenVisibilityDependsOnEditorRole(string? role, bool showHidden, int expectedCount)
+    [InlineData(RoleNames.NAME_ORGANIZATION_EDITOR, false, 1)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN, false, 1)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_EDITOR, null, 3)]
+    [InlineData(RoleNames.NAME_ORGANIZATION_ADMIN, null, 3)]
+    public async Task GetPosts_HiddenVisibilityDependsOnEditorRole(string? role, bool? showHidden, int expectedCount)
     {
         await using var db = await CmsTestDatabase.CreateSeededAsync();
         var principal = role is null ? null : role.Length == 0 ? CmsTestPrincipal.Authenticated() : CmsTestPrincipal.Authenticated(roles: [role]);
         var (posts, pagination) = await CreateService(db).GetPostsAsync(principal, new PageQueryDto(0, 10), new PostQueryDto(null, null, showHidden));
         Assert.Equal(expectedCount, posts.Count);
         Assert.Equal(expectedCount, pagination.TotalNumber);
+        if (showHidden == true)
+            Assert.All(posts, post => Assert.False(post.IsVisible));
+        else if (showHidden == false)
+            Assert.All(posts, post => Assert.True(post.IsVisible));
     }
 
     [Fact]
@@ -330,11 +338,26 @@ public class PostServiceTests
         Assert.Equal(KoalaErrorCodes.Forbidden, error.ErrorCode);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(RoleNames.NAME_ORGANIZATION_REVIEWER)]
+    [InlineData(RoleNames.NAME_TEAM_CAPTAIN)]
+    [InlineData(RoleNames.NAME_TEAM_GUARDIAN)]
+    public async Task GetPosts_NonEditorCannotUseDefaultShowHiddenValue(string? role)
+    {
+        await using var db = await CmsTestDatabase.CreateSeededAsync();
+        var principal = role is null ? null : role.Length == 0 ? CmsTestPrincipal.Authenticated() : CmsTestPrincipal.Authenticated(roles: [role]);
+        var error = await Assert.ThrowsAsync<KoalaException>(() => CreateService(db).GetPostsAsync(
+            principal, new PageQueryDto(0, 10), new PostQueryDto(null, null, null)));
+        Assert.Equal(KoalaErrorCodes.Forbidden, error.ErrorCode);
+    }
+
     [Fact]
     public async Task GetPosts_FiltersByEditionAndNameAndPaginates()
     {
         await using var db = await CmsTestDatabase.CreateSeededAsync();
-        var (page, pagination) = await CreateService(db).GetPostsAsync(CmsTestPrincipal.Authenticated(roles: [RoleNames.NAME_ORGANIZATION_ADMIN]), new PageQueryDto(0, 1), new PostQueryDto(TestDataSeeder.EDITION_ID_1, TestDataSeeder.NAME_POST_1, null));
+        var (page, pagination) = await CreateService(db).GetPostsAsync(CmsTestPrincipal.Authenticated(roles: [RoleNames.NAME_ORGANIZATION_ADMIN]), new PageQueryDto(0, 1), new PostQueryDto(TestDataSeeder.EDITION_ID_1, TestDataSeeder.NAME_POST_1, false));
         Assert.Single(page);
         Assert.Equal(TestDataSeeder.ID_POST_1, page[0].Id);
         Assert.Equal(1, pagination.TotalNumber);

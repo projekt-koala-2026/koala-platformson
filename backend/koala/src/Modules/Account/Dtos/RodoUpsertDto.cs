@@ -32,7 +32,7 @@ namespace koala.src.Modules.Account.Dtos
 
                 .Must(file => file.Length <= 4 * 1024 * 1024)
                 .WithErrorCode(KoalaValidationErrorCodes.FileToLarge)
-                .WithMessage("File size cannot exceed 2 MB!")
+                .WithMessage("File size cannot exceed 4 MB!")
 
                 .Must(file => allowedContentTypes.Contains(file.ContentType.ToLower()))
                 .WithErrorCode(KoalaValidationErrorCodes.FileInvalidType)

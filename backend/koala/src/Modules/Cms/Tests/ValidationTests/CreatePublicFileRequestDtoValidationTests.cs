@@ -9,7 +9,7 @@ public class CreatePublicFileRequestDtoValidationTests
 {
     private const string ContentTypeError = "File content type is not supported.";
     private const string ExtensionError = "Invalid file extension. Allowed extensions are: .txt, .csv, .docs, .doc, .docx, .xls, .xlsx, .xlsm, .xlsb, .jpg, .jpeg, .png, .webp, .pdf";
-    private const string TooLargeError = "File size cannot exceed 5 MB!";
+    private const string TooLargeError = "File size cannot exceed 10 MB!";
     private static CreatePublicFileRequestDtoValidator Validator => new();
 
     private static IFormFile FormFile(long length = 1, string fileName = "file.txt", string contentType = "text/plain")
@@ -48,9 +48,9 @@ public class CreatePublicFileRequestDtoValidationTests
     [Theory]
     [InlineData(1)]
     [InlineData(1024)]
-    [InlineData(5 * 1024 * 1024 - 1)]
-    [InlineData(5 * 1024 * 1024)]
-    public void AcceptsNonEmptyFilesUpToAndIncludingFiveMegabytes(int length) =>
+    [InlineData(10 * 1024 * 1024 - 1)]
+    [InlineData(10 * 1024 * 1024)]
+    public void AcceptsNonEmptyFilesUpToAndIncludingTenMegabytes(int length) =>
         ValidationAssertions.IsValid(Validator, Model(FormFile(length: length)));
 
     [Fact]
@@ -68,9 +68,9 @@ public class CreatePublicFileRequestDtoValidationTests
     }
 
     [Theory]
-    [InlineData(5 * 1024 * 1024 + 1)]
-    [InlineData(6 * 1024 * 1024)]
-    public void RejectsFilesLargerThanFiveMegabytes(int length) =>
+    [InlineData(10 * 1024 * 1024 + 1)]
+    [InlineData(11 * 1024 * 1024)]
+    public void RejectsFilesLargerThanTenMegabytes(int length) =>
         ValidationAssertions.HasError(Validator, Model(FormFile(length: length)),
             KoalaValidationErrorCodes.FileToLarge, TooLargeError);
 
