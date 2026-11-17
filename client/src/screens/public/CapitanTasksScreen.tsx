@@ -48,7 +48,7 @@ export default function CapitanTasksScreen() {
                         </p>
                         <h1 className="mt-2 text-3xl font-bold text-ink-heading">Zadania</h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Wybierz podedycję i odpowiadaj na zadania w imieniu swojej drużyny.
+                            Wybierz etap i odpowiadaj na zadania w imieniu swojej drużyny.
                         </p>
                     </div>
                     <KoalaIllustration

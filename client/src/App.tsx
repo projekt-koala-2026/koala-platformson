@@ -24,6 +24,7 @@ const EditSchoolsScreen = lazy(() => import("./screens/admin/EditSchoolsScreen")
 const EditSponsorInfo = lazy(() => import("./screens/admin/EditSponsorInfoScreen"));
 const ImageHandlingScreen = lazy(() => import("./screens/admin/ImageHandlingScreen"));
 const PanelScreen = lazy(() => import("./screens/admin/PanelScreen"));
+const UsersScreen = lazy(() => import("./screens/admin/UsersScreen"));
 const CaptainHomeScreen = lazy(() => import("./screens/public/CaptainHomeScreen"));
 const CapitanTasksScreen = lazy(() => import("./screens/public/CapitanTasksScreen"));
 const CompleteRegistrationScreen = lazy(
@@ -101,7 +102,18 @@ export default function App() {
                             path="/admin/changepass"
                             element={<LegacyPasswordRedirect area="organization" />}
                         />
-                        <Route path="/admin/adduser" element={<Navigate to="/admin" replace />} />
+                        <Route
+                            path="/admin/users"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <UsersScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/adduser"
+                            element={<Navigate to="/admin/users" replace />}
+                        />
                         <Route
                             path="/admin/images"
                             element={

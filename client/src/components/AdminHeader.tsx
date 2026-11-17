@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import type { NavigationLink } from "../types/ui";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
 import { clearStoredSession, isAdmin, isEditor, isReviewer } from "../utils/authService";
@@ -13,31 +14,35 @@ interface AdminHeaderProps {
     navigate: NavigateFunction;
 }
 
-const editorLinks = [
-    { label: "Wpisy", path: "/admin/posts" },
+// Sidebar order; separatorBefore adds a subtle line above a link.
+const editorLinks: NavigationLink[] = [
+    { label: "Wpisy", path: "/admin/posts", separatorBefore: true },
     { label: "Historia", path: "/admin/history" },
     { label: "Regulamin", path: "/admin/rules" },
-    { label: "Sponsorzy", path: "/admin/sponsors" },
+    { label: "Sponsorzy", path: "/admin/sponsors"},
     { label: "Koalicjanci", path: "/admin/koalicjants" },
-    { label: "Zadania", path: "/admin/problems" },
-    { label: "Pliki", path: "/admin/images" },
+    { label: "Pliki archiwalne", path: "/admin/problems", separatorBefore: true},
+    { label: "Zdjęcia", path: "/admin/images" },
 ];
 
-const administratorLinks = [
+const administratorLinks: NavigationLink[] = [
     { label: "Start", path: "/admin" },
-    { label: "Edycje", path: "/admin/editions" },
-    { label: "Podedycje", path: "/admin/subeditions" },
+    { label: "Użytkownicy", path: "/admin/users" },
+    { label: "Edycje", path: "/admin/editions", separatorBefore: true },
+    { label: "Etapy", path: "/admin/subeditions" },
     { label: "Zadania konkursowe", path: "/admin/competition-tasks" },
     { label: "Rankingi", path: "/admin/rankings" },
-    { label: "Przydzielanie recenzji", path: "/admin/review-assignments" },
+    { label: "Przydzielanie recenzentów", path: "/admin/review-assignments" },
     ...editorLinks,
-    { label: "Szkoły", path: "/admin/schools" },
+    { label: "Szkoły", path: "/admin/schools", separatorBefore: true },
     { label: "Drużyny", path: "/admin/teams" },
     { label: "RODO", path: "/admin/rodos" },
 ];
 
-const desktopPaths = new Set([
+// Top header order, independent of the sidebar. Only links permitted for the role appear.
+const desktopPaths = [
     "/admin",
+    "/admin/users",
     "/admin/editions",
     "/admin/rankings",
     "/admin/posts",
@@ -45,7 +50,7 @@ const desktopPaths = new Set([
     "/admin/rules",
     "/admin/problems",
     "/admin/rodos",
-]);
+];
 
 const AdminHeader = ({ navigate }: AdminHeaderProps) => {
     const location = useLocation();
@@ -59,7 +64,7 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
         ...(isAdminUser ? administratorLinks : isEditorUser ? editorLinks : []),
         ...(isReviewerUser ? [{ label: "Moje recenzje", path: "/admin/reviews" }] : []),
     ];
-    const desktopLinks = links.filter((link) => desktopPaths.has(link.path));
+    const desktopLinks = desktopPaths.flatMap((path) => links.filter((link) => link.path === path));
 
     const logout = async () => {
         if (loggingOut) return;
@@ -78,6 +83,7 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                         <Hamburger
                             options={links.map((link) => ({
                                 label: link.label,
+                                separatorBefore: link.separatorBefore,
                                 active: location.pathname === link.path,
                                 onClick: () => navigate(link.path),
                             }))}

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import KoalaIllustration from "../../components/KoalaIllustration";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import SelectListbox from "../../components/SelectListbox";
 import type { ApiEdition, ApiRanking, ApiSubedition } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult } from "../../utils/apiFetcher";
@@ -73,7 +74,7 @@ export default function RankingsPublicScreen() {
         ).then(async ({ data: subeditions }) => {
             if (!active) return;
             if (!subeditions) {
-                setError("Nie udało się pobrać podedycji edycji.");
+                setError("Nie udało się pobrać etapów edycji.");
                 setLoadingRankings(false);
                 return;
             }
@@ -164,7 +165,7 @@ export default function RankingsPublicScreen() {
                             Rankingi drużyn
                         </h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Ranking edycji sumuje opublikowane wyniki ze wszystkich jej podedycji.
+                            Ranking edycji sumuje opublikowane wyniki ze wszystkich jej etapów.
                         </p>
                     </div>
                     <KoalaIllustration
@@ -189,27 +190,28 @@ export default function RankingsPublicScreen() {
                         <p className="text-sm text-ink-muted">Nie znaleziono edycji.</p>
                     ) : (
                         <div className="grid gap-5">
-                            <label className="block max-w-xl text-sm font-medium text-ink">
-                                Edycja
-                                <select
-                                    className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink-heading"
-                                    value={editionId}
-                                    onChange={(event) => setEditionId(event.target.value)}
+                            <div className="max-w-xl">
+                                <span
+                                    id="public-ranking-edition-label"
+                                    className="mb-2 block text-sm font-medium text-ink"
                                 >
-                                    {editions.map((item) => (
-                                        <option value={item.id} key={item.id}>
-                                            {item.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
+                                    Edycja
+                                </span>
+                                <SelectListbox
+                                    ariaLabelledBy="public-ranking-edition-label"
+                                    value={editionId}
+                                    onChange={setEditionId}
+                                    options={editions.map((item) => ({
+                                        value: item.id,
+                                        label: item.name,
+                                    }))}
+                                />
+                            </div>
                             <div
                                 className="flex flex-wrap items-center gap-2"
-                                aria-label="Filtruj według podedycji"
+                                aria-label="Filtruj według etapów"
                             >
-                                <span className="mr-1 text-sm font-medium text-ink">
-                                    Podedycja:
-                                </span>
+                                <span className="mr-1 text-sm font-medium text-ink">Etap:</span>
                                 {[
                                     { value: "ALL", label: "Cała edycja" },
                                     ...subeditions.map((item) => ({
@@ -245,8 +247,8 @@ export default function RankingsPublicScreen() {
                                 </h2>
                                 <p className="mt-1 text-sm text-ink-muted">
                                     {selectedSubedition
-                                        ? "Wyniki wybranej podedycji."
-                                        : "Łączna liczba punktów z opublikowanych rankingów podedycji."}
+                                        ? "Wyniki wybranego etapu."
+                                        : "Łączna liczba punktów z opublikowanych rankingów etapów."}
                                 </p>
                             </div>
                             <div className="flex gap-2" aria-label="Filtruj według szkoły">
@@ -274,8 +276,8 @@ export default function RankingsPublicScreen() {
                         ) : visibleRankings.length === 0 ? (
                             <p className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
                                 {selectedSubedition
-                                    ? "Nie ma jeszcze opublikowanego rankingu dla tej podedycji."
-                                    : "Nie ma jeszcze opublikowanych rankingów podedycji dla tej edycji."}
+                                    ? "Nie ma jeszcze opublikowanego rankingu dla tego etapu."
+                                    : "Nie ma jeszcze opublikowanych rankingów etapów dla tej edycji."}
                             </p>
                         ) : (
                             <div className="overflow-x-auto rounded-2xl border border-line bg-surface">

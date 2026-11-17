@@ -252,7 +252,7 @@ const EditProblemsScreen = () => {
                         Materiały konkursowe
                     </p>
                     <h1 className="mt-1 text-3xl font-bold tracking-tight">
-                        Zadania i dokumenty PDF
+                        Pliki archiwalne
                     </h1>
                     <p className="mt-2 max-w-3xl text-sm text-ink-secondary">
                         Porządkuj pliki w sekcje osobno dla każdej edycji konkursu.

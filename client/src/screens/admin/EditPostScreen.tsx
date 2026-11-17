@@ -5,6 +5,7 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
+import Modal from "../../components/Modal";
 import type { ApiEdition, ApiPost, Edition, Post } from "../../types/models";
 import { adaptEdition, adaptPost } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -34,9 +35,12 @@ const EditPostScreen = () => {
     const [postVersions, setPostVersions] = useState<Record<string, number>>({});
     const [editions, setEditions] = useState<Edition[]>([]);
     const [form, setForm] = useState(emptyForm);
+    const [editForm, setEditForm] = useState(emptyForm);
+    const [initialEditForm, setInitialEditForm] = useState(emptyForm);
     const [editingPostId, setEditingPostId] = useState<string | null>(null);
     const [editorRevision, setEditorRevision] = useState(0);
     const [sidePanel, setSidePanel] = useState<SidePanel>("preview");
+    const [expandedPosts, setExpandedPosts] = useState<Set<string>>(() => new Set());
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -90,22 +94,33 @@ const EditPostScreen = () => {
     };
 
     const startEditing = (post: Post) => {
-        setEditingPostId(post.id);
-        setForm({
+        const value = {
             name: postNames[post.id] ?? post.title,
             title: post.title,
             markdownBody: post.markdownBody,
             editionId: post.editionId,
             isVisible: post.isVisible,
-        });
-        setEditorRevision((revision) => revision + 1);
+        };
+        setEditForm(value);
+        setInitialEditForm(value);
+        setEditingPostId(post.id);
         setFeedback(null);
-        setSidePanel("preview");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    const closeEditing = () => {
+        if (saving) return;
+        if (
+            JSON.stringify(editForm) !== JSON.stringify(initialEditForm) &&
+            !window.confirm("Porzucić niezapisane zmiany?")
+        )
+            return;
+        setEditingPostId(null);
+        setFeedback(null);
     };
 
-    const savePost = async (markdownBody: string) => {
-        const title = form.title.trim();
+    const savePost = async (markdownBody: string, editing = false) => {
+        const value = editing ? editForm : form;
+        const postId = editing ? editingPostId : null;
+        const title = value.title.trim();
         if (title.length < 3 || title.length > 200) {
             setFeedback({ tone: "error", message: "Tytuł musi mieć od 3 do 200 znaków." });
             return;
@@ -114,24 +129,24 @@ const EditPostScreen = () => {
             setFeedback({ tone: "error", message: "Treść wpisu nie może być pusta." });
             return;
         }
-        if (!form.editionId) {
+        if (!value.editionId) {
             setFeedback({ tone: "error", message: "Wybierz edycję konkursu." });
             return;
         }
 
-        const name = form.name.trim();
+        const name = value.name.trim();
         if (!name || name.length > 50 || !/^[\p{L}\s-]+$/u.test(name)) {
             setFeedback({
                 tone: "error",
-                message: "Nazwa robocza: do 50 znak\u00f3w, litery, spacje i my\u015blniki.",
+                message: "Nazwa robocza: do 50 znaków, litery, spacje i myślniki.",
             });
             return;
         }
-        const edition = editions.find((item) => item.id === form.editionId);
-        if (!edition || (!editingPostId && edition.state === "CLOSED")) {
+        const edition = editions.find((item) => item.id === value.editionId);
+        if (!edition || (!postId && edition.state === "CLOSED")) {
             setFeedback({
                 tone: "error",
-                message: "Wybierz edycj\u0119 dost\u0119pn\u0105 dla tego wpisu.",
+                message: "Wybierz edycję dostępną dla tego wpisu.",
             });
             return;
         }
@@ -140,12 +155,12 @@ const EditPostScreen = () => {
         const payload = {
             name,
             contentJson: JSON.stringify({ version: "1", title_pl: title, body_pl: markdownBody }),
-            editionId: form.editionId,
-            isVisible: edition.state === "INACTIVE" ? false : form.isVisible,
-            version: editingPostId ? (postVersions[editingPostId] ?? 0) : 0,
+            editionId: value.editionId,
+            isVisible: edition.state === "INACTIVE" ? false : value.isVisible,
+            version: postId ? (postVersions[postId] ?? 0) : 0,
         };
-        const endpoint = editingPostId ? `${POSTS_ENDPOINT}/${editingPostId}` : POSTS_ENDPOINT;
-        const method = editingPostId ? "PUT" : "POST";
+        const endpoint = postId ? `${POSTS_ENDPOINT}/${postId}` : POSTS_ENDPOINT;
+        const method = postId ? "PUT" : "POST";
         const { data } = await apiRequestResult<ApiPost>(endpoint, payload, method, navigate);
 
         if (!data) {
@@ -161,15 +176,16 @@ const EditPostScreen = () => {
         setPostNames((current) => ({ ...current, [data.id]: data.name }));
         setPostVersions((current) => ({ ...current, [data.id]: data.version }));
         setPosts((current) =>
-            editingPostId
-                ? current.map((post) => (post.id === editingPostId ? adapted : post))
+            postId
+                ? current.map((post) => (post.id === postId ? adapted : post))
                 : [adapted, ...current]
         );
         setFeedback({
             tone: "success",
-            message: editingPostId ? "Zmiany zostały zapisane." : "Wpis został utworzony.",
+            message: postId ? "Zmiany zostały zapisane." : "Wpis został utworzony.",
         });
-        resetForm();
+        if (editing) setEditingPostId(null);
+        else resetForm();
         setSaving(false);
     };
 
@@ -196,6 +212,125 @@ const EditPostScreen = () => {
     const editionTitle = (editionId: string) =>
         editions.find((edition) => edition.id === editionId)?.title ?? "Nieprzypisana";
 
+    const renderFields = (
+        value: typeof emptyForm,
+        onChange: React.Dispatch<React.SetStateAction<typeof emptyForm>>,
+        sourceId: string | null
+    ) => (
+        <fieldset disabled={saving} className="min-w-0">
+            <div className="space-y-5">
+                <label className="block text-sm font-medium text-ink">
+                    Nazwa robocza *
+                    <input
+                        type="text"
+                        value={value.name}
+                        maxLength={50}
+                        onChange={(event) =>
+                            onChange((current) => ({
+                                ...current,
+                                name: event.target.value,
+                            }))
+                        }
+                        className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5"
+                    />
+                    <span className="mt-1 block text-xs text-ink-muted">
+                        Nazwa do identyfikacji w panelu: do 50 znaków, litery, spacje i myślniki.
+                        Tytuł publiczny wpisz poniżej.
+                    </span>
+                </label>
+                <label className="block text-sm font-medium text-ink">
+                    Tytuł *
+                    <input
+                        type="text"
+                        value={value.title}
+                        maxLength={200}
+                        onChange={(event) =>
+                            onChange((current) => ({
+                                ...current,
+                                title: event.target.value,
+                            }))
+                        }
+                        className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted"
+                        placeholder="Tytuł wpisu"
+                    />
+                </label>
+                <label className="block text-sm font-medium text-ink">
+                    Edycja *
+                    <select
+                        value={value.editionId}
+                        onChange={(event) =>
+                            onChange((current) => ({
+                                ...current,
+                                editionId: event.target.value,
+                                isVisible:
+                                    editions.find((edition) => edition.id === event.target.value)
+                                        ?.state === "INACTIVE"
+                                        ? false
+                                        : current.isVisible,
+                            }))
+                        }
+                        className="app-select mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted"
+                    >
+                        <option value="">Wybierz edycję konkursu</option>
+                        {editions
+                            .filter(
+                                (edition) =>
+                                    edition.state !== "CLOSED" ||
+                                    (sourceId &&
+                                        posts.find((post) => post.id === sourceId)?.editionId ===
+                                            edition.id)
+                            )
+                            .map((edition) => (
+                                <option key={edition.id} value={edition.id}>
+                                    {edition.title}
+                                </option>
+                            ))}
+                    </select>
+                </label>
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-4">
+                    <input
+                        type="checkbox"
+                        checked={
+                            editions.find((edition) => edition.id === value.editionId)?.state !==
+                                "INACTIVE" && value.isVisible
+                        }
+                        disabled={
+                            editions.find((edition) => edition.id === value.editionId)?.state ===
+                            "INACTIVE"
+                        }
+                        onChange={(event) =>
+                            onChange((current) => ({
+                                ...current,
+                                isVisible: event.target.checked,
+                            }))
+                        }
+                        className="mt-0.5 h-4 w-4 rounded border-line-strong text-brand-text focus:ring-brand-focus"
+                    />
+                    <span>
+                        <span className="block text-sm font-medium text-ink">
+                            Widoczny na stronie publicznej
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-ink-muted">
+                            Dla nieaktywnej edycji wpis pozostaje ukryty. W pozostałych przypadkach
+                            możesz zmienić jego widoczność.
+                        </span>
+                    </span>
+                </label>
+                <div>
+                    <span className="mb-2 block text-sm font-medium text-ink">Treść *</span>
+                    <MarkdownEditor
+                        key={`${sourceId ?? "new"}-${editorRevision}`}
+                        initialValue={value.markdownBody}
+                        onChange={(markdownBody) =>
+                            onChange((current) => ({ ...current, markdownBody }))
+                        }
+                        disabled={saving}
+                    />
+                </div>
+            </div>
+        </fieldset>
+    );
+
     return (
         <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
@@ -211,7 +346,7 @@ const EditPostScreen = () => {
                     </p>
                 </div>
 
-                {feedback && (
+                {feedback && !editingPostId && (
                     <div
                         role="status"
                         className={`mb-6 rounded-xl border px-4 py-3 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
@@ -225,161 +360,27 @@ const EditPostScreen = () => {
                         Ładowanie wpisów…
                     </div>
                 ) : (
-                    <div className="grid gap-8 xl:grid-cols-2">
-                        <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
+                    <div className="grid items-start gap-8 xl:grid-cols-2">
+                        <section className="min-w-0 rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
                             <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
                                 <div>
-                                    <h2 className="text-xl font-semibold">
-                                        {editingPostId ? "Edytuj wpis" : "Dodaj wpis"}
-                                    </h2>
+                                    <h2 className="text-xl font-semibold">Dodaj wpis</h2>
                                     <p className="mt-1 text-sm text-ink-muted">
                                         Pola oznaczone gwiazdką są wymagane.
                                     </p>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {editingPostId && (
-                                        <Button
-                                            text="Anuluj edycję"
-                                            onClick={resetForm}
-                                            disabled={saving}
-                                            className="bg-ink-secondary hover:bg-ink"
-                                        />
-                                    )}
-                                    <Button
-                                        text={
-                                            saving
-                                                ? "Zapisywanie…"
-                                                : editingPostId
-                                                  ? "Zapisz zmiany"
-                                                  : "Utwórz wpis"
-                                        }
-                                        icon={editingPostId ? undefined : <FaPlus />}
-                                        onClick={() => void savePost(form.markdownBody)}
-                                        disabled={saving}
-                                    />
-                                </div>
+                                <Button
+                                    text={saving ? "Zapisywanie…" : "Utwórz wpis"}
+                                    icon={<FaPlus />}
+                                    onClick={() => void savePost(form.markdownBody)}
+                                    disabled={saving}
+                                />
                             </div>
 
-                            <div className="space-y-5">
-                                <label className="block text-sm font-medium text-ink">
-                                    Nazwa robocza *
-                                    <input
-                                        type="text"
-                                        value={form.name}
-                                        maxLength={50}
-                                        onChange={(event) =>
-                                            setForm((current) => ({
-                                                ...current,
-                                                name: event.target.value,
-                                            }))
-                                        }
-                                        className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5"
-                                    />
-                                    <span className="mt-1 block text-xs text-ink-muted">
-                                        Nazwa do identyfikacji w panelu: do 50 znaków, litery,
-                                        spacje i myślniki. Tytuł publiczny wpisz poniżej.
-                                    </span>
-                                </label>
-                                <label className="block text-sm font-medium text-ink">
-                                    Tytuł *
-                                    <input
-                                        type="text"
-                                        value={form.title}
-                                        maxLength={200}
-                                        onChange={(event) =>
-                                            setForm((current) => ({
-                                                ...current,
-                                                title: event.target.value,
-                                            }))
-                                        }
-                                        className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted"
-                                        placeholder="Tytuł wpisu"
-                                    />
-                                </label>
-                                <label className="block text-sm font-medium text-ink">
-                                    Edycja *
-                                    <select
-                                        value={form.editionId}
-                                        onChange={(event) =>
-                                            setForm((current) => ({
-                                                ...current,
-                                                editionId: event.target.value,
-                                                isVisible:
-                                                    editions.find(
-                                                        (edition) =>
-                                                            edition.id === event.target.value
-                                                    )?.state === "INACTIVE"
-                                                        ? false
-                                                        : current.isVisible,
-                                            }))
-                                        }
-                                        className="app-select mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted"
-                                    >
-                                        <option value="">Wybierz edycję konkursu</option>
-                                        {editions
-                                            .filter(
-                                                (edition) =>
-                                                    edition.state !== "CLOSED" ||
-                                                    (editingPostId &&
-                                                        posts.find(
-                                                            (post) => post.id === editingPostId
-                                                        )?.editionId === edition.id)
-                                            )
-                                            .map((edition) => (
-                                                <option key={edition.id} value={edition.id}>
-                                                    {edition.title}
-                                                </option>
-                                            ))}
-                                    </select>
-                                </label>
-                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-4">
-                                    <input
-                                        type="checkbox"
-                                        checked={
-                                            editions.find(
-                                                (edition) => edition.id === form.editionId
-                                            )?.state !== "INACTIVE" && form.isVisible
-                                        }
-                                        disabled={
-                                            editions.find(
-                                                (edition) => edition.id === form.editionId
-                                            )?.state === "INACTIVE"
-                                        }
-                                        onChange={(event) =>
-                                            setForm((current) => ({
-                                                ...current,
-                                                isVisible: event.target.checked,
-                                            }))
-                                        }
-                                        className="mt-0.5 h-4 w-4 rounded border-line-strong text-brand-text focus:ring-brand-focus"
-                                    />
-                                    <span>
-                                        <span className="block text-sm font-medium text-ink">
-                                            Widoczny na stronie publicznej
-                                        </span>
-                                        <span className="mt-1 block text-xs leading-5 text-ink-muted">
-                                            Dla nieaktywnej edycji wpis pozostaje ukryty. W
-                                            pozostałych przypadkach możesz zmienić jego widoczność.
-                                        </span>
-                                    </span>
-                                </label>
-                                <div>
-                                    <span className="mb-2 block text-sm font-medium text-ink">
-                                        Treść *
-                                    </span>
-                                    <MarkdownEditor
-                                        key={`${editingPostId ?? "new"}-${editorRevision}`}
-                                        initialValue={form.markdownBody}
-                                        onChange={(markdownBody) =>
-                                            setForm((current) => ({ ...current, markdownBody }))
-                                        }
-                                        disabled={saving}
-                                    />
-                                </div>
-                            </div>
+                            {renderFields(form, setForm, null)}
                         </section>
 
-                        <section className="min-w-0">
+                        <section className="min-w-0 xl:sticky xl:top-24">
                             <div className="mb-4 flex rounded-xl bg-surface-subtle p-1">
                                 {(["preview", "posts"] as SidePanel[]).map((panel) => (
                                     <button
@@ -396,7 +397,7 @@ const EditPostScreen = () => {
                             </div>
 
                             {sidePanel === "preview" ? (
-                                <article className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
+                                <article className="max-h-[70dvh] overflow-y-auto overscroll-contain rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6 xl:max-h-[calc(100dvh-10rem)]">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
                                         {editionTitle(form.editionId)}
                                     </p>
@@ -424,7 +425,12 @@ const EditPostScreen = () => {
                                     Brak wpisów.
                                 </div>
                             ) : (
-                                <div className="space-y-4">
+                                <div
+                                    role="region"
+                                    aria-label="Lista wpisów"
+                                    tabIndex={0}
+                                    className="max-h-[70dvh] space-y-4 overflow-y-auto overscroll-contain rounded-2xl border border-line bg-canvas p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus xl:max-h-[calc(100dvh-10rem)]"
+                                >
                                     {posts.map((post) => (
                                         <article
                                             key={post.id}
@@ -479,8 +485,36 @@ const EditPostScreen = () => {
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="mt-4 max-h-48 overflow-hidden border-t border-line-subtle pt-4 text-sm">
-                                                <MarkdownRenderer content={post.markdownBody} />
+                                            <div className="mt-4 border-t border-line-subtle pt-4 text-sm">
+                                                <div
+                                                    id={`post-content-${post.id}`}
+                                                    className={
+                                                        expandedPosts.has(post.id)
+                                                            ? ""
+                                                            : "max-h-40 overflow-hidden"
+                                                    }
+                                                >
+                                                    <MarkdownRenderer content={post.markdownBody} />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    aria-expanded={expandedPosts.has(post.id)}
+                                                    aria-controls={`post-content-${post.id}`}
+                                                    onClick={() =>
+                                                        setExpandedPosts((current) => {
+                                                            const next = new Set(current);
+                                                            if (next.has(post.id))
+                                                                next.delete(post.id);
+                                                            else next.add(post.id);
+                                                            return next;
+                                                        })
+                                                    }
+                                                    className="mt-3 rounded-lg px-2 py-1.5 text-sm font-medium text-brand-text hover:bg-brand-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus"
+                                                >
+                                                    {expandedPosts.has(post.id)
+                                                        ? "Zwiń treść"
+                                                        : "Rozwiń treść"}
+                                                </button>
                                             </div>
                                         </article>
                                     ))}
@@ -490,6 +524,36 @@ const EditPostScreen = () => {
                     </div>
                 )}
             </main>
+            <Modal
+                isOpen={editingPostId !== null}
+                onClose={closeEditing}
+                title="Edytuj wpis"
+                maxWidth="xl"
+                footer={
+                    <div className="flex justify-end gap-3">
+                        <button
+                            type="button"
+                            disabled={saving}
+                            onClick={closeEditing}
+                            className="rounded-xl px-4 py-2 text-ink-secondary hover:bg-surface-muted disabled:opacity-50"
+                        >
+                            Anuluj
+                        </button>
+                        <Button
+                            text={saving ? "Zapisywanie…" : "Zapisz zmiany"}
+                            disabled={saving}
+                            onClick={() => void savePost(editForm.markdownBody, true)}
+                        />
+                    </div>
+                }
+            >
+                {feedback?.tone === "error" && (
+                    <p role="alert" className="app-status-danger mb-5 rounded-xl border p-3">
+                        {feedback.message}
+                    </p>
+                )}
+                {renderFields(editForm, setEditForm, editingPostId)}
+            </Modal>
         </div>
     );
 };

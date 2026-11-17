@@ -6,6 +6,13 @@ export interface NavigationOption {
     disabled?: boolean;
 }
 
+export interface NavigationLink {
+    label: string;
+    path: string;
+    /** Draw a sidebar separator above this link (except when it is first). */
+    separatorBefore?: boolean;
+}
+
 export interface ModalProps {
     children: ReactNode;
     isOpen: boolean;

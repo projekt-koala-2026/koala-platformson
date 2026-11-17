@@ -72,7 +72,7 @@ export default function SubeditionsScreen() {
         ).then(({ data }) => {
             if (!active) return;
             if (data) setItems(data);
-            else setError("Nie udało się pobrać podedycji.");
+            else setError("Nie udało się pobrać etapów.");
             setLoadingItems(false);
         });
         return () => {
@@ -130,22 +130,22 @@ export default function SubeditionsScreen() {
                     : [...previous, result.data!]
             );
             setModal(false);
-            setFeedback(editing ? "Zapisano zmiany." : "Dodano podedycję.");
+            setFeedback(editing ? "Zapisano zmiany." : "Dodano etap.");
         } else
             setError(
                 result.status === 409
                     ? "Dane zostały zmienione. Odśwież stronę i spróbuj ponownie."
-                    : "Nie udało się zapisać podedycji. Sprawdź nazwę i terminy."
+                    : "Nie udało się zapisać etapu. Sprawdź nazwę i terminy."
             );
         setBusy(false);
     };
     const action = async (item: ApiSubedition, operation: "activate" | "close" | "delete") => {
         const label =
             operation === "delete"
-                ? "usunąć podedycję wraz z jej zadaniami"
+                ? "usunąć etap wraz z jego zadaniami"
                 : operation === "close"
-                  ? "zakończyć podedycję"
-                  : "aktywować podedycję";
+                  ? "zakończyć etap"
+                  : "aktywować etap";
         if (!window.confirm(`Czy na pewno chcesz ${label} „${item.name}”?`)) return;
         setBusy(true);
         setError("");
@@ -164,12 +164,12 @@ export default function SubeditionsScreen() {
                     ? previous.filter((entry) => entry.id !== item.id)
                     : previous.map((entry) => (entry.id === item.id ? result.data! : entry))
             );
-            setFeedback("Zaktualizowano podedycję.");
+            setFeedback("Zaktualizowano etap.");
         } else if (
             operation === "close" &&
             result.error?.message.includes("before the answer deadline")
         )
-            setError("Nie można zakończyć podedycji przed upływem terminu odpowiedzi.");
+            setError("Nie można zakończyć etapu przed upływem terminu odpowiedzi.");
         else if (operation === "close" && result.error?.message.includes("two matching reviews"))
             setError(
                 "Przed zakończeniem wszystkie nadesłane odpowiedzi muszą mieć dwie zgodne oceny recenzentów."
@@ -185,12 +185,12 @@ export default function SubeditionsScreen() {
                 <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                     Konkurs
                 </p>
-                <h1 className="mt-2 text-3xl font-bold text-ink-heading">Podedycje</h1>
+                <h1 className="mt-2 text-3xl font-bold text-ink-heading">Etapy</h1>
                 <p className="mt-3 text-ink-secondary">
                     Zarządzaj etapami konkursu i terminami odpowiadania.
                 </p>
                 <p className="mt-2 text-sm text-ink-secondary">
-                    Zakończenie podedycji wymaga upływu terminu i dwóch zgodnych ocen każdej
+                    Zakończenie etapu wymaga upływu terminu i dwóch zgodnych ocen każdej
                     nadesłanej odpowiedzi.
                 </p>
                 {feedback && (
@@ -245,12 +245,12 @@ export default function SubeditionsScreen() {
                                         className="app-status-warning mt-6 rounded-2xl border p-5"
                                     >
                                         <p className="font-semibold">
-                                            Podedycja „{item.name}” nie została aktywowana.
+                                            Etap „{item.name}” nie został aktywowany.
                                         </p>
                                         <p className="mt-2 text-sm">
                                             {Date.parse(item.answerClose) < now
                                                 ? "Termin nadsyłania odpowiedzi już minął. Sprawdź i w razie potrzeby zmień terminy przed aktywacją."
-                                                : "Termin nadsyłania odpowiedzi już się rozpoczął, ale drużyny nie mają dostępu do zadań. Aktywuj podedycję, aby mogły odpowiadać."}
+                                                : "Termin nadsyłania odpowiedzi już się rozpoczął, ale drużyny nie mają dostępu do zadań. Aktywuj etap, aby mogły odpowiadać."}
                                             {edition?.state !== "ACTIVE" &&
                                                 " Dostęp do zadań wymaga również aktywnej edycji."}
                                         </p>
@@ -279,10 +279,10 @@ export default function SubeditionsScreen() {
                             )}
                         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
                             <h2 className="text-xl font-semibold text-ink-heading">
-                                Podedycje wybranej edycji
+                                Etapy wybranej edycji
                             </h2>
                             <Button
-                                text="Dodaj podedycję"
+                                text="Dodaj etap"
                                 icon={<FaPlus />}
                                 disabled={busy || edition?.state === "CLOSED"}
                                 onClick={() => openForm()}
@@ -290,13 +290,13 @@ export default function SubeditionsScreen() {
                         </div>
                         {edition?.state === "CLOSED" && (
                             <p className="mt-2 text-sm text-ink-secondary">
-                                Nie można dodawać podedycji do zakończonej edycji.
+                                Nie można dodawać etapów do zakończonej edycji.
                             </p>
                         )}
                         {loadingItems ? (
-                            <p className="mt-5 text-ink-secondary">Ładowanie podedycji…</p>
+                            <p className="mt-5 text-ink-secondary">Ładowanie etapów…</p>
                         ) : items.length === 0 ? (
-                            <p className="mt-5 text-ink-secondary">Brak podedycji w tej edycji.</p>
+                            <p className="mt-5 text-ink-secondary">Brak etapów w tej edycji.</p>
                         ) : (
                             <div className="mt-5 space-y-3">
                                 {items.map((item) => (
@@ -387,7 +387,7 @@ export default function SubeditionsScreen() {
                         setError("");
                     }
                 }}
-                title={editing ? "Edytuj podedycję" : "Dodaj podedycję"}
+                title={editing ? "Edytuj etap" : "Dodaj etap"}
                 maxWidth="md"
             >
                 <form onSubmit={(event) => void save(event)} className="space-y-4">

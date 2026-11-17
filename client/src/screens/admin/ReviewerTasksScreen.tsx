@@ -301,7 +301,7 @@ export default function ReviewerTasksScreen() {
                                 </select>
                             </label>
                             <label className="text-sm font-medium text-ink">
-                                Podedycja
+                                Etap
                                 <select
                                     className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5"
                                     value={subeditionId}
@@ -317,7 +317,7 @@ export default function ReviewerTasksScreen() {
                         </div>
                         {visibleSubmissions.length === 0 ? (
                             <p className="mt-6 text-ink-secondary">
-                                Brak przydzielonych odpowiedzi w tej podedycji.
+                                Brak przydzielonych odpowiedzi w tego etapu.
                             </p>
                         ) : (
                             <div className="mt-4 space-y-3">

@@ -68,7 +68,7 @@ export default function AssignReviewersScreen() {
                 });
                 setSubeditions(eligible);
                 setSubeditionId(eligible[0]?.id ?? "");
-            } else setError("Nie udało się pobrać podedycji.");
+            } else setError("Nie udało się pobrać etapów.");
         });
         return () => {
             active = false;
@@ -147,7 +147,7 @@ export default function AssignReviewersScreen() {
                                     id="assign-subedition"
                                     className="mb-2 block text-sm text-ink"
                                 >
-                                    Podedycja
+                                    Etap
                                 </span>
                                 {subeditionId ? (
                                     <SelectListbox
@@ -168,7 +168,7 @@ export default function AssignReviewersScreen() {
                                     />
                                 ) : (
                                     <p className="py-3 text-sm text-ink-secondary">
-                                        Brak podedycji po terminie odpowiadania.
+                                        Brak etapów po terminie odpowiadania.
                                     </p>
                                 )}
                             </div>

@@ -22,8 +22,8 @@ const subedition = {
 const editionsUrl = `${apiUrl}${apiEndpoints.editions}`;
 const subsUrl = `${apiUrl}${apiEndpoints.subeditions(edition.id)}`;
 
-describe("zarządzanie podedycjami", () => {
-    it("tworzy podedycję z terminami i pokazuje wynik", async () => {
+describe("zarządzanie etapami", () => {
+    it("tworzy etap z terminami i pokazuje wynik", async () => {
         const requests: unknown[] = [];
         server.use(
             http.get(editionsUrl, () => HttpResponse.json({ data: [edition] })),
@@ -35,7 +35,7 @@ describe("zarządzanie podedycjami", () => {
             })
         );
         const { user } = renderWithRouter(<SubeditionsScreen />);
-        await user.click(await screen.findByRole("button", { name: "Dodaj podedycję" }));
+        await user.click(await screen.findByRole("button", { name: "Dodaj etap" }));
         await user.type(screen.getByLabelText("Nazwa"), "Etap szkolny");
         await user.type(screen.getByLabelText("Początek odpowiadania"), "2026-03-01T10:00");
         await user.type(screen.getByLabelText("Koniec odpowiadania"), "2026-03-03T10:00");
@@ -57,7 +57,7 @@ describe("zarządzanie podedycjami", () => {
             http.post(subsUrl, post)
         );
         const { user } = renderWithRouter(<SubeditionsScreen />);
-        await user.click(await screen.findByRole("button", { name: "Dodaj podedycję" }));
+        await user.click(await screen.findByRole("button", { name: "Dodaj etap" }));
         await user.type(screen.getByLabelText("Nazwa"), "Test");
         await user.type(screen.getByLabelText("Początek odpowiadania"), "2026-03-03T10:00");
         await user.type(screen.getByLabelText("Koniec odpowiadania"), "2026-03-01T10:00");
@@ -66,7 +66,7 @@ describe("zarządzanie podedycjami", () => {
         expect(post).not.toHaveBeenCalled();
     });
 
-    it("aktualizuje wersję edytowanej podedycji", async () => {
+    it("aktualizuje wersję edytowanego etapu", async () => {
         const put = vi.fn(async ({ request }: { request: Request }) => {
             const body = await request.json();
             return HttpResponse.json({ data: { ...subedition, ...(body as object), version: 4 } });
