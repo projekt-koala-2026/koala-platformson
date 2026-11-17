@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using koala.src.Shared.Account;
 using System.Security.Claims;
 using koala.src.Shared;
+using koala.src.Shared.Core;
 
 namespace koala.src.Modules.Account.Services
 {
@@ -25,10 +26,12 @@ namespace koala.src.Modules.Account.Services
     {
         private readonly AccountDbContext _db;
         private readonly IEmailService _emailService;
-        public UserService(AccountDbContext db, IEmailService emailService)
+        private readonly ICmsModule _cmsModule;
+        public UserService(AccountDbContext db, IEmailService emailService, ICmsModule cmsModule)
         {
             _db = db;
             _emailService = emailService;
+            _cmsModule = cmsModule;
         }
         public async Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, UserRegisterRequestDto requestDto)
         {
@@ -40,21 +43,15 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Forbidden");
             }
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email);
-            if (user != null && user.Verified == true)
+            var existingUser = await _db.Users.FirstOrDefaultAsync(u => u.Email == requestDto.Email);
+            if (existingUser != null && existingUser.Verified == true)
             {
                 throw new KoalaException(KoalaErrorCodes.UserAlreadyExists, "User with this email already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (user != null)
-            {
-                _db.Users.Remove(user);
-                await _db.SaveChangesAsync();
-            }
-
-            user = new User
+            var user = new User
             {
                 Id = Guid.CreateVersion7(),
                 NameFirst = null,
@@ -99,6 +96,12 @@ namespace koala.src.Modules.Account.Services
                 }
             }
 
+            if (existingUser != null)
+            {
+                _db.Users.Remove(existingUser);
+                await _db.SaveChangesAsync();
+            }
+
             List<UserRole> userRoles = new List<UserRole>();
 
             foreach (var role in requestDto.UserRoles)
@@ -116,7 +119,7 @@ namespace koala.src.Modules.Account.Services
                 Token = Guid.NewGuid(),
                 UserId = user.Id,
                 Type = LinkTypes.TYPE_REGISTRATION,
-                State = LinkStates.STATE_ACTIVE,
+                State = LifecycleStates.STATE_ACTIVE,
                 CreatedAt = timeNow,
                 UpdatedAt = timeNow,
                 ExpiresAt = timeNow.AddDays(1.0f)
@@ -389,7 +392,8 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.UserRoleAgeRequirementNotMet, "Captain role requires you to be at least 13 years old.");
             }
 
-            await _db.UserRoles.Where(ur => ur.UserId == id).ExecuteDeleteAsync();
+            var previousUserRoles = await _db.UserRoles.Where(ur => ur.UserId == id).ToListAsync();
+            _db.UserRoles.RemoveRange(previousUserRoles);
             List<UserRole> userRoles = new List<UserRole>();
 
             foreach (var role in request.UserRoles)
@@ -490,6 +494,11 @@ namespace koala.src.Modules.Account.Services
             if (user == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
+            }
+
+            if (user.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_ORGANIZATION_ADMIN || ur.Role.Name == RoleNames.NAME_ORGANIZATION_EDITOR || ur.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER))
+            {
+                await _cmsModule.Internal_DeleteKoalicjantIfExistsAsync(user.Id);
             }
 
             _db.Users.Remove(user);

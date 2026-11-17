@@ -3,6 +3,7 @@ using koala.src.Modules.Cms.Data;
 using koala.src.Modules.Cms.Dtos;
 using koala.src.Modules.Cms.Entities;
 using koala.src.Shared;
+using koala.src.Shared.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Cms.Services
@@ -10,10 +11,12 @@ namespace koala.src.Modules.Cms.Services
     public class PostService
     {
         private readonly CmsDbContext _db;
+        private readonly ICoreModule _coreModule;
 
-        public PostService(CmsDbContext db)
+        public PostService(CmsDbContext db, ICoreModule coreModule)
         {
             _db = db;
+            _coreModule = coreModule;
         }
 
         public async Task<PostDto> CreatePostAsync(ClaimsPrincipal? claimsPrincipal, CreatePostRequestDto requestDto)
@@ -31,7 +34,7 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            //TODO: CHECK IF ACTIVE / REAL EDITION
+            await ValidateEditionAsync(requestDto.EditionId, requestDto.IsVisible, isCreate: true);
 
             DateTime timeNow = DateTime.UtcNow;
 
@@ -68,37 +71,54 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            //FIXME: CHECK IF ACTIVE / REAL EDITION
-
-            int affectedRows = await _db.Posts
-                .Where(x => x.Id == id && x.Version == requestDto.Version)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(x => x.EditionId, requestDto.EditionId)
-                    .SetProperty(x => x.Name, requestDto.Name)
-                    .SetProperty(x => x.ContentJson, requestDto.ContentJson)
-                    .SetProperty(x => x.IsVisible, requestDto.IsVisible)
-                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
-                    .SetProperty(x => x.Version, x => x.Version + 1));
-
-            if (affectedRows == 0)
+            var post = await _db.Posts.FirstOrDefaultAsync(x => x.Id == id);
+            if (post == null)
             {
-                bool isPost = await _db.Posts.AnyAsync(s => s.Id == id);
-                if (!isPost)
-                {
-                    throw new KoalaException(KoalaErrorCodes.PostNotFound, "Specified post does not exist");
-                }
+                throw new KoalaException(KoalaErrorCodes.PostNotFound, "Specified post does not exist");
+            }
+            if (post.Version != requestDto.Version)
+            {
                 throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
+            await ValidateEditionAsync(requestDto.EditionId, requestDto.IsVisible, isCreate: false, existingPostEditionId: post.EditionId);
 
-            var post = await _db.Posts.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
-
-            if (post == null)
+            post.EditionId = requestDto.EditionId;
+            post.Name = requestDto.Name;
+            post.ContentJson = requestDto.ContentJson;
+            post.IsVisible = requestDto.IsVisible;
+            post.UpdatedAt = DateTime.UtcNow;
+            post.Version++;
+            try
             {
-                throw new KoalaException(KoalaErrorCodes.PostNotFound, "Post does not exist");
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
             return new PostDto(post.Id, post.EditionId, post.Name, post.ContentJson, post.CreatedAt, post.UpdatedAt, post.IsVisible, post.Version);
+        }
+
+        private async Task ValidateEditionAsync(Guid editionId, bool isVisible, bool isCreate, Guid? existingPostEditionId = null)
+        {
+            var edition = await _coreModule.Internal_GetEditionAsync(editionId);
+            if (edition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Specified edition does not exist");
+            }
+
+            if (edition.State == LifecycleStates.STATE_CLOSED &&
+                (isCreate || existingPostEditionId != editionId))
+            {
+                throw new KoalaException(KoalaErrorCodes.EditionInvalidStates, "Posts cannot be created or moved to a closed edition");
+            }
+
+            if (edition.State == LifecycleStates.STATE_INACTIVE && isVisible)
+            {
+                throw new KoalaException(KoalaErrorCodes.EditionInvalidStates, "Posts for inactive editions must remain hidden");
+            }
         }
 
         public async Task DeletePostAsync(ClaimsPrincipal? claimsPrincipal, Guid id)

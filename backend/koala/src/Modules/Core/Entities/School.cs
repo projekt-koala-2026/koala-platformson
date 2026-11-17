@@ -2,28 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core
 {
-    public static class SchoolTiers
-    {
-        public const string TIER_1 = "TIER_1";
-        public const string TIER_2 = "TIER_2";
-    };
 
-    public static class SchoolTypes
-    {
-        public const string TYPE_1_TIER_1 = "Ogólnokształcąca szkoła muzyczna I stopnia";
-        public const string TYPE_2_TIER_1 = "Poznańska szkoła chóralna";
-        public const string TYPE_3_TIER_1 = "Szkoła podstawowa";
-        public const string TYPE_1_TIER_2 = "Bednarska Szkoła Realna";
-        public const string TYPE_2_TIER_2 = "Branżowa szkoła I stopnia";
-        public const string TYPE_3_TIER_2 = "Branżowa szkoła II stopnia";
-        public const string TYPE_4_TIER_2 = "Liceum ogólnokształcące";
-        public const string TYPE_5_TIER_2 = "Liceum ogólnokształcące uzupełniające dla absolwentów zasadniczych szkół zawodowych";
-        public const string TYPE_6_TIER_2 = "Liceum profilowane";
-        public const string TYPE_7_TIER_2 = "Szkoła policealna";
-        public const string TYPE_8_TIER_2 = "Szkoła specjalna przysposabiająca do pracy";
-        public const string TYPE_9_TIER_2 = "Technikum";
-        public const string TYPE_10_TIER_2 = "Technikum uzupełniające dla absolwentów zasadniczych szkół zawodowych";
-    };
 
     public class School
     {

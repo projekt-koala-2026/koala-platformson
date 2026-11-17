@@ -49,7 +49,7 @@ namespace koala.src.Modules.Account.Services
             // STRIKE DATABASE
             var session = await _db.Sessions
                 .Include(s => s.User)
-                .FirstOrDefaultAsync(s => s.Token == sessionToken && s.State == SessionStates.STATE_ACTIVE);
+                .FirstOrDefaultAsync(s => s.Token == sessionToken && s.State == LifecycleStates.STATE_ACTIVE);
 
             if (session == null)
             {
@@ -58,7 +58,7 @@ namespace koala.src.Modules.Account.Services
 
             if (session.ExpiresAt <= DateTimeOffset.UtcNow)
             {
-                session.State = SessionStates.STATE_INACTIVE;
+                session.State = LifecycleStates.STATE_INACTIVE;
                 await _db.SaveChangesAsync();
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Session expired.");
             }
@@ -118,6 +118,13 @@ namespace koala.src.Modules.Account.Services
             return await _db.UserRoles.AsNoTracking()
                 .Where(role => userIds.Contains(role.UserId) && role.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER && role.User.Verified)
                 .Select(role => role.UserId).Distinct().ToListAsync();
+        }
+
+        public async Task<bool> Internal_IsOrganizationUser(Guid userId)
+        {
+            return await _db.UserRoles.AsNoTracking()
+                .Include(r => r.Role)
+                .FirstOrDefaultAsync(role => role.UserId == userId && (role.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER || role.Role.Name == RoleNames.NAME_ORGANIZATION_ADMIN || role.Role.Name == RoleNames.NAME_ORGANIZATION_EDITOR) && role.User.Verified) == null ? false : true;
         }
     }
 }

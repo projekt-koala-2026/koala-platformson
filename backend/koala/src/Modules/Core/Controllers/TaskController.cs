@@ -61,7 +61,6 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPut("{task_id}/team/{team_id}/subedition/{subedition_id}")]
-        [HttpPut("{task_id}/team/{team_id}/subedition{subedition_id}")]
         public async Task<IActionResult> UpsertTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertTaskSubmissionDto submitTaskSubmissionDto)
         {
             var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, subedition_id, task_id, team_id, submitTaskSubmissionDto);
@@ -76,13 +75,36 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
-        //TODO: ENDPOINT DLA ADMINA do generowania automatycznej odpowiedzi po zakonczeniu odpowiedzi na zadania dla druzyn
+        [Authorize]
+        [HttpGet("subedition/{subedition_id}/autocheck-progress")]
+        public async Task<IActionResult> GetSubeditionAutoCheckProgressAsync([FromRoute] Guid subedition_id)
+        {
+            var response = await _taskService.GetSubeditionAutoCheckProgressAsync(User, subedition_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<AutoCheckProgressDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
         [Authorize]
         [HttpPut("subedition/{subedition_id}/autocheck")]
-        public async Task<IActionResult> AutoCheckSubmissions([FromRoute] Guid subedition_id)
+        public async Task<IActionResult> AutoCheckSubeditionSubmissionsAsync([FromRoute] Guid subedition_id)
         {
-            await _taskService.AutoCheckSubmissionsAsync(User, subedition_id);
+            await _taskService.AutoCheckSubeditionSubmissionsAsync(User, subedition_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+
+        [Authorize]
+        [HttpGet("{task_id}/review-progress")]
+        public async Task<IActionResult> GetTaskReviewProgressAsync([FromRoute] Guid task_id)
+        {
+            var response = await _taskService.GetTaskReviewProgressAsync(User, task_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskReviewProgressDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        [Authorize]
+        [HttpGet("{task_id}/pending-reviewers")]
+        public async Task<IActionResult> GetTaskPendingReviewersAsync([FromRoute] Guid task_id)
+        {
+            var response = await _taskService.GetTaskPendingReviewersAsync(User, task_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<PendingReviewerDto>>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
@@ -118,12 +140,19 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("{subedition_id}/assign-reviewers")]
-        public async Task<ActionResult<ApiResponseWrapper<List<TaskSubmissionDto>>>> AssignReviewers([FromRoute] Guid subedition_id, [FromBody] AssignReviewersDto requestDto)
+        [HttpPut("{subedition_id}/assign-reviewers/task/{task_id}")]
+        public async Task<IActionResult> AssignReviewers([FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] AssignReviewersDto requestDto)
         {
-            await _taskService.AssignReviewersAsync(User, subedition_id, requestDto);
+            await _taskService.AssignReviewersAsync(User, subedition_id, task_id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
+        [Authorize]
+        [HttpPut("{subedition_id}/updated-assign-reviewer/task/{task_id}")]
+        public async Task<IActionResult> UpdateAssignedReviewer([FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] AdminUpdateReviewersDto requestDto)
+        {
+            await _taskService.UpdateAssignedReviewer(User, subedition_id, task_id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
     }
 }

@@ -35,6 +35,10 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("content_json");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text")
@@ -58,13 +62,10 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -106,7 +107,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -183,7 +185,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -213,7 +216,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 

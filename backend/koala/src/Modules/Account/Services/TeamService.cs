@@ -15,6 +15,7 @@ namespace koala.src.Modules.Account.Services
     {
         public Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, TeamCreateRequestDto requestDto);
         public Task DeleteTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
+        public Task DeleteTeamGuardianAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
         public Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamMemberUpsertRequestDto requestDto);
         public Task<List<TeamMemberDto>> UpdateTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId, TeamMemberUpsertRequestDto requestDto);
         public Task DeleteTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, Guid teamMemberId);
@@ -222,6 +223,66 @@ namespace koala.src.Modules.Account.Services
 
             return;
         }
+
+        public async Task DeleteTeamGuardianAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+
+            bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if (!isTeamPlayer)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team player with position captain can manage the team");
+            }
+
+            var activeEdition = await _coreService.Internal_GetTheActiveEditionAsync();
+
+            if (activeEdition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            {
+                throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
+            }
+
+            var captain = await _db.Users.Include(u => u.CaptainTeam).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam.Id != teamId)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotPartOfThisTeam, "User is not a captain of this team");
+            }
+
+            if (captain.CaptainTeam.GuardianId == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "This team doesnt have a guardian to delete");
+            }
+
+            captain.CaptainTeam.GuardianId = null;
+            await _db.SaveChangesAsync();
+
+            return;
+        }
+
         //FIXME: ADD SAFTY CHECKS FOR CONCURENCY UPDATES
         public async Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamMemberUpsertRequestDto requestDto)
         {
@@ -244,7 +305,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -333,7 +394,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -416,7 +477,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -605,7 +666,7 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot edit or delete team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot edit or delete team when no edition is currently active");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -674,11 +735,10 @@ namespace koala.src.Modules.Account.Services
 
             if (activeEdition == null)
             {
-                throw new NoActiveEditionException("Cannot join to team when no edition is currently active");
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Cannot join to team when no edition is currently active");
             }
 
             var teamJoinCode = await _db.TeamJoinCodes
-                .Include(tjc => tjc.Team)
                 .FirstOrDefaultAsync(tjc => tjc.JoinCode == JoinCode);
 
             if (teamJoinCode == null)
@@ -696,18 +756,21 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code is invalid or has expired.");
             }
 
-            if (teamJoinCode.Team.EditionId != activeEdition.Id)
-            {
-                throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code belongs to an inactive edition");
-            }
+            var team = await _db.Teams.Include(t => t.Captain).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .Include(t => t.Guardian).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(t => t.Id == teamJoinCode.TeamId);
 
-            // MAKE SURE ONLY ONE TEAM ADMIN PER TEAM AND WELL TEAM PLAYER CANT JOIN SINCE A TEAM WITH NO CAPTAIN CAN EXIST AND ONLY ONE CAPTAIN PER TEAM IS ALLOWED
-            var team = await _db.Teams.Include(t => t.Captain).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(t => t.Guardian).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(t => t.Id == teamJoinCode.TeamId);
             if (team == null)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamNotFound, "team for this join code does not exist");
             }
 
+            if (team.EditionId != activeEdition.Id)
+            {
+                throw new KoalaException(KoalaErrorCodes.TeamJoinCodeNotFound, "The join code belongs to an inactive edition");
+            }
+
+            // MAKE SURE ONLY ONE TEAM ADMIN PER TEAM AND WELL TEAM PLAYER CANT JOIN SINCE A TEAM WITH NO CAPTAIN CAN EXIST AND ONLY ONE CAPTAIN PER TEAM IS ALLOWED
             bool teamHasAdmin = team.GuardianId != null ? true : false;
 
             if (teamHasAdmin)

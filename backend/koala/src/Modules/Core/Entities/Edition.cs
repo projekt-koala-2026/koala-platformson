@@ -2,12 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core.Entities
 {
-    public static class EditionStates
-    {
-        public const string STATE_ACTIVE = "ACTIVE";
-        public const string STATE_INACTIVE = "INACTIVE";
-        public const string STATE_CLOSED = "CLOSED";
-    }
     public class Edition
     {
         [Column("id")]

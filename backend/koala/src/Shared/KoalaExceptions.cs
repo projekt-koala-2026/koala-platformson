@@ -81,6 +81,7 @@ namespace koala.src.Shared
         // ==========================================
         public const string StaticPageNotFound = "KOALA_STATIC_PAGE_NOT_FOUND";
         public const string KoalicjantNotFound = "KOALA_KOALICJANT_NOT_FOUND";
+        public const string KoalicjantAlreadyExists = "KOALA_KOALICJANT_ALREADY_EXISTS";
         public const string SponsorNotFound = "KOALA_SPONSOR_NOT_FOUND";
         public const string PostNotFound = "KOALA_POST_NOT_FOUND";
 
@@ -126,6 +127,11 @@ namespace koala.src.Shared
         public const string ContentJsonSponsorLogoImageUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_SPONSOR_LOGO_IMAGE_URL_FIELD_INVALID";
         public const string ContentJsonSponsorWebUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_SPONSOR_WEB_URL_FIELD_INVALID";
         public const string ContentJsonKoalicjantProfileImageUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_KOALICJANT_PROFILE_IMAGE_URL_FIELD_INVALID";
+
+        public const string FileEmpty = "KOALA_VALIDATION_FILE_EMPTY";
+        public const string FileToLarge = "KOALA_VALIDATION_FILE_TO_LARGE";
+        public const string FileInvalidType = "KOALA_VALIDATION_FILE_INVALID_TYPE";
+        public const string FileTitleToLong = "KOALA_VALIDATION_FILE_TITLE_TO_LONG";
 
         // ==========================================
         // ACCOUNT MODULE

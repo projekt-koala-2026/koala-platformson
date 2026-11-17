@@ -2,11 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core.Entities
 {
-    public static class TaskItemTiers
-    {
-        public const string TIER_1 = "TIER_1";
-        public const string TIER_2 = "TIER_2";
-    }
     public class TaskItem
     {
         [Column("id")]

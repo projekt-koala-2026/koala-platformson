@@ -2,13 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Account.Entities
 {
-    public static class TeamMemberRodoState
-    {
-        public const string RODOSTATE_ACCEPETED = "RODO_ACCEPTED";
-        public const string RODOSTATE_REJECTED = "RODO_REJECTED";
-        public const string RODOSTATE_UNVERIFIED = "RODO_UNVERIFIED";
-        public const string RODOSTATE_NONE = "RODO_NONE";
-    };
     public class TeamMember
     {
         [Column("id")]

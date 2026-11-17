@@ -56,7 +56,7 @@ namespace koala.src.Modules.Account.Services
                 CreatedAt = timeNow,
                 UpdatedAt = timeNow,
                 ExpiresAt = timeNow.AddHours(12.0f),
-                State = SessionStates.STATE_ACTIVE
+                State = LifecycleStates.STATE_ACTIVE
             };
 
             await _db.Sessions.AddAsync(session);
@@ -113,7 +113,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             var session = await _db.Sessions
-                .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == session_id && s.State == SessionStates.STATE_ACTIVE);
+                .FirstOrDefaultAsync(s => s.UserId == userId && s.Id == session_id && s.State == LifecycleStates.STATE_ACTIVE);
 
             if (session == null)
             {
@@ -121,7 +121,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             await _cache.RemoveKeyAsync($"koala:account:Session:{session.Token}");
-            session.State = SessionStates.STATE_INACTIVE;
+            session.State = LifecycleStates.STATE_INACTIVE;
             session.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
         }
@@ -162,7 +162,7 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Invalid or missing user id claim.");
             }
 
-            var queryResults = await _db.Sessions.Where(s => s.UserId == userId && s.State == SessionStates.STATE_ACTIVE).AsNoTracking().AsQueryable().ToListAsync();
+            var queryResults = await _db.Sessions.Where(s => s.UserId == userId && s.State == LifecycleStates.STATE_ACTIVE).AsNoTracking().AsQueryable().ToListAsync();
             var sessions = queryResults
                 .Select(s => new SessionDto(s.Id, s.UserId, s.State, s.CreatedAt, s.UpdatedAt, s.ExpiresAt))
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)

@@ -2,11 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Account.Entities
 {
-    public static class TeamTiers
-    {
-        public const string TIER_1 = "TIER_1";
-        public const string TIER_2 = "TIER_2";
-    }
     public class Team
     {
         [Column("id")]

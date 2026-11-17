@@ -6,8 +6,6 @@ namespace koala.src.Modules.Cms.Entities
     {
         [Column("id")]
         public Guid Id { get; set; }
-        [Column("user_id")]
-        public Guid UserId { get; set; }
         [Column("name_first")]
         public string NameFirst { get; set; }
         [Column("name_last")]
@@ -16,11 +14,13 @@ namespace koala.src.Modules.Cms.Entities
         public string Email { get; set; }
         [Column("content_json", TypeName = "jsonb")]
         public string ContentJson { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
         [Column("version")]
         public int Version { get; set; }
         [Column("is_visiable")]
         public bool IsVisible { get; set; }
-    } 
+    }
 }

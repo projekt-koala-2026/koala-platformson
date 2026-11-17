@@ -43,15 +43,15 @@ namespace koala.src.Modules.Core.Services
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(subedition.Edition.State != EditionStates.STATE_CLOSED || timeNow <= subedition.AnswerClose)
+            if(subedition.Edition.State != LifecycleStates.STATE_CLOSED && timeNow <= subedition.AnswerClose)
             {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Rankings can only be generated for a closed edition after the answer period ends");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Rankings can only be generated after the subedition answer period ends");
             }
 
             if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == subEditionId &&
-                (ts.AutoReviewState == null || (ts.Review1Score == null) != (ts.Review2Score == null) ||
-                ((ts.Reviewer1Id != null || ts.Reviewer2Id != null) && (ts.Review1Score == null || ts.Review2Score == null)) ||
-                (ts.Review1Score != null && ts.Review2Score != null && ts.Review1Score != ts.Review2Score))))
+                (ts.Reviewer1Id == null || ts.Reviewer2Id == null || ts.Reviewer1Id == ts.Reviewer2Id ||
+                ts.Review1Score == null || ts.Review2Score == null || ts.Review1Score != ts.Review2Score ||
+                ts.AutoReviewState == null)))
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Not all task submissions have a final score");
             }
@@ -59,8 +59,8 @@ namespace koala.src.Modules.Core.Services
                 .Where(t => t.SubEditionId == subEditionId)
                 .ToListAsync();
         
-            int tier1TaskCount = tasks.Count(t => t.Tier == TaskItemTiers.TIER_1);
-            int tier2TaskCount = tasks.Count(t => t.Tier == TaskItemTiers.TIER_2);
+            int tier1TaskCount = tasks.Count(t => t.Tier == CompetitionTiers.TIER_1);
+            int tier2TaskCount = tasks.Count(t => t.Tier == CompetitionTiers.TIER_2);
         
             // 2. Pobierz zgłoszenia wraz z powiązanymi zadaniami
             var submissions = await _db.TaskSubmissions
@@ -81,7 +81,7 @@ namespace koala.src.Modules.Core.Services
         
             foreach (var teamInfo in teams)
             {
-                if (teamInfo.Tier != TaskItemTiers.TIER_1 && teamInfo.Tier != TaskItemTiers.TIER_2)
+                if (teamInfo.Tier != CompetitionTiers.TIER_1 && teamInfo.Tier != CompetitionTiers.TIER_2)
                     throw new KoalaException(KoalaErrorCodes.Conflict, "A team has an invalid tier");
         
                 var ranking = new Ranking
@@ -91,8 +91,8 @@ namespace koala.src.Modules.Core.Services
                     TeamName = teamInfo.Name, 
                     Tier = teamInfo.Tier,
                     Points = teamRankingsData[teamInfo.TeamId].Count(ts => ts.AutoReviewState == true &&
-                        (ts.TaskItem.Tier == TaskItemTiers.TIER_1 || (teamInfo.Tier == TaskItemTiers.TIER_2 && ts.TaskItem.Tier == TaskItemTiers.TIER_2))),
-                    PointsMax = teamInfo.Tier == TaskItemTiers.TIER_2 ? tier1TaskCount + tier2TaskCount : tier1TaskCount,
+                        (ts.TaskItem.Tier == CompetitionTiers.TIER_1 || (teamInfo.Tier == CompetitionTiers.TIER_2 && ts.TaskItem.Tier == CompetitionTiers.TIER_2))),
+                    PointsMax = teamInfo.Tier == CompetitionTiers.TIER_2 ? tier1TaskCount + tier2TaskCount : tier1TaskCount,
                     CreatedAt = timeNow,
                     UpdatedAt = timeNow,
                     Version = 1
@@ -135,7 +135,7 @@ namespace koala.src.Modules.Core.Services
 
         public async Task<(List<RankingDto>, ApiPagination)> GetRankingAsync(Guid subeditionId, string? tier, PageQueryDto pageQueryDto, bool includeUnpublished = false)
         {
-            if (!string.IsNullOrWhiteSpace(tier) && tier != TaskItemTiers.TIER_1 && tier != TaskItemTiers.TIER_2)
+            if (!string.IsNullOrWhiteSpace(tier) && tier != CompetitionTiers.TIER_1 && tier != CompetitionTiers.TIER_2)
                 throw new KoalaException(KoalaErrorCodes.BadRequest, "Unknown ranking tier");
             var query = _db.Rankings.AsNoTracking().Where(r => r.SubeditionId == subeditionId && (includeUnpublished || r.SubEdition.RankingPublished));
             if (!string.IsNullOrWhiteSpace(tier)) query = query.Where(r => r.Tier == tier);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -271,7 +271,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                 keyColumn: "id",
                 keyValue: new Guid("01a027c5-d599-73de-bd5c-1f8e68687e51"),
                 column: "name",
-                value: "TEAM_GUARDIAN");
+                value: RoleNames.NAME_TEAM_GUARDIAN);
 
             migrationBuilder.UpdateData(
                 schema: "account",
@@ -279,7 +279,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                 keyColumn: "id",
                 keyValue: new Guid("01a027c5-d599-73de-bd5c-2068e28b6cf3"),
                 column: "name",
-                value: "TEAM_CAPTAIN");
+                value: RoleNames.NAME_TEAM_CAPTAIN);
 
             migrationBuilder.CreateIndex(
                 name: "IX_teams_captain_id",

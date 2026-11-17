@@ -72,7 +72,7 @@ describe("authService", () => {
         expect(getAuthArea({ ...noRoles, isAdmin: true })).toBe("organization");
         expect(getAuthenticatedHomePath({ ...noRoles, isAdmin: true })).toBe("/admin");
         expect(getAuthenticatedHomePath({ ...noRoles, isEditor: true })).toBe("/admin/posts");
-        expect(getAuthenticatedHomePath({ ...noRoles, isReviewer: true })).toBe("/");
+        expect(getAuthenticatedHomePath({ ...noRoles, isReviewer: true })).toBe("/admin/reviews");
         expect(getAuthenticatedHomePath({ ...noRoles, isGuardian: true })).toBe("/captain");
         expect(getAuthenticatedHomePath(noRoles)).toBeNull();
     });
