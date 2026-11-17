@@ -30,6 +30,7 @@ namespace koala.src.Shared
         public const string FileNotFound = "KOALA_FILE_NOT_FOUND";
         public const string FileCreationFailure = "KOALA_FILE_CREATION_FAILURE";
         public const string FileReadFailure = "KOALA_FILE_READ_FAILURE";
+        public const string FileDeleteFailure = "KOALA_FILE_DELETE_FAILURE";
         public const string FolderCreationFailure = "KOALA_FOLDER_CREATION_FAILURE";
 
         // ==========================================
@@ -119,6 +120,19 @@ namespace koala.src.Shared
         // ==========================================
         public const string InvalidValue = "KOALA_VALIDATION_INVALID_VALUE";
         public const string ResourceVersionInvalid = "KOALA_VALIDATION_RESOURCE_VERSION_INVALID";
+        public const string ContentJsonEmpty = "KOALA_VALIDATION_CONTENT_JSON_EMPTY";
+        public const string ContentJsonInvalid = "KOALA_VALIDATION_CONTENT_JSON_INVALID";
+        public const string ContentJsonVersionFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_VERSION_FIELD_INVALID";
+        public const string ContentJsonBodyPLFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_BODY_PL_FIELD_INVALID";
+        public const string ContentJsonTitlePLFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_TITLE_PL_FIELD_INVALID";
+        public const string ContentJsonSponsorLogoImageUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_SPONSOR_LOGO_IMAGE_URL_FIELD_INVALID";
+        public const string ContentJsonSponsorWebUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_SPONSOR_WEB_URL_FIELD_INVALID";
+        public const string ContentJsonKoalicjantProfileImageUrlFieldInvalid = "KOALA_VALIDATION_CONTENT_JSON_KOALICJANT_PROFILE_IMAGE_URL_FIELD_INVALID";
+
+        public const string FileEmpty = "KOALA_VALIDATION_FILE_EMPTY";
+        public const string FileToLarge = "KOALA_VALIDATION_FILE_TO_LARGE";
+        public const string FileInvalidType = "KOALA_VALIDATION_FILE_INVALID_TYPE";
+        public const string FileTitleToLong = "KOALA_VALIDATION_FILE_TITLE_TO_LONG";
 
         // ==========================================
         // ACCOUNT MODULE
@@ -163,6 +177,16 @@ namespace koala.src.Shared
         public const string UserRoleEmpty = "KOALA_VALIDATION_USER_ROLE_EMPTY";
         public const string UserRoleTooLong = "KOALA_VALIDATION_USER_ROLE_TOO_LONG";
         public const string UserRoleInvalid = "KOALA_VALIDATION_USER_ROLE_INVALID";
+
+        // ==========================================
+        // CMS MODULE
+        // ==========================================
+        public const string PostNameEmpty = "KOALA_VALIDATION_POST_NAME_EMPTY";
+        public const string PostNameTooLong = "KOALA_VALIDATION_POST_NAME_TOO_LONG";
+        public const string PostNameInvalidCharacter = "KOALA_VALIDATION_POST_NAME_INVALID_CHARACTER";
+        public const string SponsorNameEmpty = "KOALA_VALIDATION_SPONSOR_NAME_EMPTY";
+        public const string SponsorNameTooLong = "KOALA_VALIDATION_SPONSOR_NAME_TOO_LONG";
+        public const string SponsorNameInvalidCharacter = "KOALA_VALIDATION_SPONSOR_NAME_INVALID_CHARACTER";
     }
 
     public class KoalaProblems : ProblemDetails
@@ -244,26 +268,79 @@ namespace koala.src.Shared
             {
                 statusCode = koalaException.ErrorCode switch
                 {
+                    // ==========================================
+                    // 401 UNAUTHENTICATED
+                    // ==========================================
                     KoalaErrorCodes.Unauthenticated =>
                         StatusCodes.Status401Unauthorized,
 
-                    KoalaErrorCodes.Forbidden =>
+                    // ==========================================
+                    // 403 FORBIDDEN
+                    // ==========================================
+                    KoalaErrorCodes.Forbidden or
+                    KoalaErrorCodes.UserNotPartOfThisTeam or
+                    KoalaErrorCodes.UserNotCaptainOfThisTeam or
+                    KoalaErrorCodes.UserNotGuardianOfThisTeam =>
                         StatusCodes.Status403Forbidden,
 
+                    // ==========================================
+                    // 404 NOT FOUND
+                    // ==========================================
                     KoalaErrorCodes.FileNotFound or
+                    KoalaErrorCodes.UserNotFound or
+                    KoalaErrorCodes.TeamNotFound or
+                    KoalaErrorCodes.TeamMemberNotFound or
+                    KoalaErrorCodes.TeamMemberRodoNotFound or
+                    KoalaErrorCodes.TeamJoinCodeNotFound or
+                    KoalaErrorCodes.LinkNotFound or
+                    KoalaErrorCodes.SessionNotFound or
+                    KoalaErrorCodes.RodoNotFound or
+                    KoalaErrorCodes.StaticPageNotFound or
+                    KoalaErrorCodes.KoalicjantNotFound or
+                    KoalaErrorCodes.SponsorNotFound or
+                    KoalaErrorCodes.PostNotFound or
                     KoalaErrorCodes.EditionNotFound or
                     KoalaErrorCodes.ActiveEditionNotFound or
                     KoalaErrorCodes.SubEditionNotFound or
+                    KoalaErrorCodes.ActiveSubEditionNotFound or
+                    KoalaErrorCodes.SchoolNotFound or
+                    KoalaErrorCodes.TaskNotFound or
                     KoalaErrorCodes.TaskAnswerNotFound or
-                    KoalaErrorCodes.TaskSubmissionNotFound or
-                    KoalaErrorCodes.TaskNotFound =>
+                    KoalaErrorCodes.TaskSubmissionNotFound =>
                         StatusCodes.Status404NotFound,
 
-                    KoalaErrorCodes.ActiveEditionAlreadyExists or
+                    // ==========================================
+                    // 409 CONFLICT
+                    // ==========================================
+                    KoalaErrorCodes.ResourceVersionConflict or
                     KoalaErrorCodes.Conflict or
-                    KoalaErrorCodes.ResourceVersionConflict =>
+                    KoalaErrorCodes.UserAlreadyExists or
+                    KoalaErrorCodes.UserIsCaptainOfTeamAlready or
+                    KoalaErrorCodes.TeamMemberRodoAlreadyExists or
+                    KoalaErrorCodes.TeamMemberAlreadyExists or
+                    KoalaErrorCodes.KoalicjantAlreadyExists or
+                    KoalaErrorCodes.EditionAlreadyExists or
+                    KoalaErrorCodes.ActiveEditionAlreadyExists or
+                    KoalaErrorCodes.SubEditionAlreadyExists or
+                    KoalaErrorCodes.ActiveSubEditionAlreadyExists or
+                    KoalaErrorCodes.SchoolAlreadyExists or
+                    KoalaErrorCodes.TaskAlreadyExists or
+                    KoalaErrorCodes.TaskAnswerAlreadyExists =>
                         StatusCodes.Status409Conflict,
 
+                    // ==========================================
+                    // 500 INTERNAL SERVER ERROR
+                    // ==========================================
+                    KoalaErrorCodes.FileCreationFailure or
+                    KoalaErrorCodes.FileReadFailure or
+                    KoalaErrorCodes.FolderCreationFailure or
+                    KoalaErrorCodes.FileDeleteFailure or
+                    KoalaErrorCodes.DatabaseError =>
+                        StatusCodes.Status500InternalServerError,
+
+                    // ==========================================
+                    // 400 BAD REQUEST (Default)
+                    // ==========================================
                     _ => StatusCodes.Status400BadRequest
                 };
 

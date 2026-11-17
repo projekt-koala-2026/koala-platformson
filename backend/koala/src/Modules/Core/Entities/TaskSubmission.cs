@@ -2,10 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core.Entities
 {
-    public static class TaskSubmissionStates
-    {
-        public const string STATE_UNCHECKED = "UN_CHECKED";
-    }
     public class TaskSubmission
     {
 

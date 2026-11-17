@@ -3,11 +3,7 @@ using koala.src.Modules.Core.Entities;
 
 namespace koala.src.Modules.Core
 {
-    public static class RankingTiers
-    {
-        public const string TIER_1 = "TIER_1";
-        public const string TIER_2 = "TIER_2";
-    };
+
 
     public class Ranking
     {

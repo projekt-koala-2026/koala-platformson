@@ -84,6 +84,7 @@ namespace koala.src.Modules.Cms.Data
             // STATIC_PAGE CONFIG
             modelBuilder.Entity<StaticPage>()
                 .HasKey(sp => sp.Id);
+            modelBuilder.Entity<StaticPage>().Property(sp => sp.Version).IsConcurrencyToken();
             
             Guid home_page_id = Guid.Parse(static_id_guid_page_home);
             Guid tasks_page_id = Guid.Parse(static_id_guid_page_tasks);
@@ -94,24 +95,27 @@ namespace koala.src.Modules.Cms.Data
             modelBuilder.Entity<StaticPage>()
                 .HasData
                 (
-                    new StaticPage{Id = home_page_id, Name = "HOME_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
-                    new StaticPage{Id = tasks_page_id, Name = "TASKS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
-                    new StaticPage{Id = history_page_id, Name = "HISTORY_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
-                    new StaticPage{Id = rules_page_id, Name = "RULES_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0},
-                    new StaticPage{Id = koalicjants_page_id, Name = "KOALICJANTS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 0}
+                    new StaticPage{Id = home_page_id, Name = "HOME_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1},
+                    new StaticPage{Id = tasks_page_id, Name = "TASKS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1},
+                    new StaticPage{Id = history_page_id, Name = "HISTORY_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1},
+                    new StaticPage{Id = rules_page_id, Name = "RULES_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1},
+                    new StaticPage{Id = koalicjants_page_id, Name = "KOALICJANTS_PAGE", ContentJson = "{}", UpdatedAt = timeNow, Version = 1}
                 );
 
             // KOALICJANT CONFIG
             modelBuilder.Entity<Koalicjant>()
                 .HasKey(k => k.Id);
+            modelBuilder.Entity<Koalicjant>().Property(k => k.Version).IsConcurrencyToken();
 
             // SPONSOR CONFIG
             modelBuilder.Entity<Sponsor>()
                 .HasKey(s => s.Id);
+            modelBuilder.Entity<Sponsor>().Property(s => s.Version).IsConcurrencyToken();
 
             // POST CONFIG
             modelBuilder.Entity<Post>()
                 .HasKey(p => p.Id);
+            modelBuilder.Entity<Post>().Property(p => p.Version).IsConcurrencyToken();
         }
     };
 }

@@ -18,7 +18,19 @@ namespace koala.src.Modules.Core.Services
 
         public async Task<_EditionDto?> Internal_GetTheActiveEditionAsync()
         {
-            var edition = await _db.Editions.AsNoTracking().FirstOrDefaultAsync(e => e.State == EditionStates.STATE_ACTIVE);
+            var edition = await _db.Editions.AsNoTracking().FirstOrDefaultAsync(e => e.State == LifecycleStates.STATE_ACTIVE);
+
+            if (edition == null)
+            {
+                return null;
+            }
+
+            return new _EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+        }
+
+        public async Task<_EditionDto?> Internal_GetEditionAsync(Guid id)
+        {
+            var edition = await _db.Editions.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
 
             if (edition == null)
             {

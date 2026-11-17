@@ -2,16 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Account.Entities
 {
-    public static class LinkTypes
-    {
-        public const string TYPE_PASSWORD_RESET = "PASSWORD_RESET";
-        public const string TYPE_REGISTRATION = "REGISTRATION";
-    }
-    public static class LinkStates
-    {
-        public const string STATE_ACTIVE = "ACTIVE";
-        public const string STATE_INACTIVE = "INACTIVE";
-    }
     public class Link
     {
         [Column("id")]

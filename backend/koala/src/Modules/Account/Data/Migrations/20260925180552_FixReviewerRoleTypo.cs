@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -17,7 +17,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                 keyColumn: "id",
                 keyValue: new Guid("01a027c5-d599-73de-bd5c-18c05fc3fa53"),
                 column: "name",
-                value: "ORGANIZATION_REVIEWER");
+                value: RoleNames.NAME_ORGANIZATION_REVIEWER);
         }
 
         /// <inheritdoc />

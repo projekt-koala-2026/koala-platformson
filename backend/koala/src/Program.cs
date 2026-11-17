@@ -4,9 +4,7 @@ using koala.src.Modules.Account;
 using koala.src.Modules.Cms;
 using koala.src.Modules.Core;
 using koala.src.Shared.Validation;
-using Microsoft.OpenApi;
-using Microsoft.AspNetCore.OpenApi;
-using Microsoft.AspNetCore.Mvc;
+using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,13 +15,16 @@ IConfigurationRoot configuration = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
 
-builder.Services.AddOpenApi();
 
 // MODULES INIT
 builder.Services.AddSharedModule(configuration);
 builder.Services.AddAccountModule(configuration);
 builder.Services.AddCmsModule(configuration);
 builder.Services.AddCoreModule(configuration);
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddFluentValidationRulesToSwagger();
 
 // ALL ROUTING IS LOWER CASE
 builder.Services.AddRouting(options =>
@@ -55,8 +56,11 @@ app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.UseSwagger();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+    });
 }
 
 app.UseAuthentication();

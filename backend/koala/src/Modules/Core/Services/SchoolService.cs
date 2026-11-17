@@ -21,21 +21,21 @@ namespace koala.src.Modules.Core.Services
         private static readonly Dictionary<string, string> TypeToTierMap = new(StringComparer.OrdinalIgnoreCase)
         {
             // TIER 1
-            { SchoolTypes.TYPE_1_TIER_1, SchoolTiers.TIER_1 },
-            { SchoolTypes.TYPE_2_TIER_1, SchoolTiers.TIER_1 },
-            { SchoolTypes.TYPE_3_TIER_1, SchoolTiers.TIER_1 },
+            { SchoolTypes.TYPE_1_TIER_1, CompetitionTiers.TIER_1 },
+            { SchoolTypes.TYPE_2_TIER_1, CompetitionTiers.TIER_1 },
+            { SchoolTypes.TYPE_3_TIER_1, CompetitionTiers.TIER_1 },
 
             // TIER 2
-            { SchoolTypes.TYPE_1_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_2_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_3_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_4_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_5_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_6_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_7_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_8_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_9_TIER_2, SchoolTiers.TIER_2 },
-            { SchoolTypes.TYPE_10_TIER_2, SchoolTiers.TIER_2 },
+            { SchoolTypes.TYPE_1_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_2_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_3_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_4_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_5_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_6_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_7_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_8_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_9_TIER_2, CompetitionTiers.TIER_2 },
+            { SchoolTypes.TYPE_10_TIER_2, CompetitionTiers.TIER_2 },
         };
 
         private static bool SchoolValidateTypeAndGetTier(string schoolType, out string tier)

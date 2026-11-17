@@ -49,7 +49,7 @@ namespace koala.src.Modules.Account.Services
             // STRIKE DATABASE
             var session = await _db.Sessions
                 .Include(s => s.User)
-                .FirstOrDefaultAsync(s => s.Token == sessionToken && s.State == SessionStates.STATE_ACTIVE);
+                .FirstOrDefaultAsync(s => s.Token == sessionToken && s.State == LifecycleStates.STATE_ACTIVE);
 
             if (session == null)
             {
@@ -58,7 +58,7 @@ namespace koala.src.Modules.Account.Services
 
             if (session.ExpiresAt <= DateTimeOffset.UtcNow)
             {
-                session.State = SessionStates.STATE_INACTIVE;
+                session.State = LifecycleStates.STATE_INACTIVE;
                 await _db.SaveChangesAsync();
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "Session expired.");
             }

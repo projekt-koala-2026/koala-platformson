@@ -36,7 +36,7 @@
 //             Guid userId = Guid.CreateVersion7();
 //             Guid sessionId = Guid.CreateVersion7();
 //             Guid token = Guid.CreateVersion7();
-//             List<string> roles = ["ORGANIZATION_ADMIN"];
+//             List<string> roles = [RoleNames.NAME_ORGANIZATION_ADMIN];
 
 //             await db.Roles.AddRangeAsync(
 //                  new Role { Id = tempRoleId1, Name = "TEAM_ADMIN" }
@@ -93,10 +93,10 @@
 //             Guid userId = Guid.CreateVersion7();
 //             Guid sessionId = Guid.CreateVersion7();
 //             Guid token = Guid.CreateVersion7();
-//             List<string> roles = ["ORGANIZATION_ADMIN"];
+//             List<string> roles = [RoleNames.NAME_ORGANIZATION_ADMIN];
 
 //             db.Roles.AddRange(
-//                 new Role { Id = tempRoleId1, Name = "ORGANIZATION_ADMIN" }
+//                 new Role { Id = tempRoleId1, Name = RoleNames.NAME_ORGANIZATION_ADMIN }
 //             );
 //             db.Users.Add(
 //                 new User
@@ -151,10 +151,10 @@
 //             Guid userId = Guid.CreateVersion7();
 //             Guid sessionId = Guid.CreateVersion7();
 //             Guid token = Guid.CreateVersion7();
-//             List<string> roles = ["ORGANIZATION_EDITOR"];
+//             List<string> roles = [RoleNames.NAME_ORGANIZATION_EDITOR];
 
 //             db.Roles.AddRange(
-//                 new Role { Id = tempRoleId1, Name = "ORGANIZATION_EDITOR" }
+//                 new Role { Id = tempRoleId1, Name = RoleNames.NAME_ORGANIZATION_EDITOR }
 //             );
 //             db.Users.Add(
 //                 new User
@@ -209,10 +209,10 @@
 //             Guid userId = Guid.CreateVersion7();
 //             Guid sessionId = Guid.CreateVersion7();
 //             Guid token = Guid.CreateVersion7();
-//             List<string> roles = ["ORGANIZATION_REVIEWER"];
+//             List<string> roles = [RoleNames.NAME_ORGANIZATION_REVIEWER];
 
 //             db.Roles.AddRange(
-//                 new Role { Id = tempRoleId1, Name = "ORGANIZATION_REVIEWER" }
+//                 new Role { Id = tempRoleId1, Name = RoleNames.NAME_ORGANIZATION_REVIEWER }
 //             );
 //             db.Users.Add(
 //                 new User

@@ -4,18 +4,46 @@ using koala.src.Modules.Cms.Dtos;
 using koala.src.Modules.Cms.Entities;
 using koala.src.Shared;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Security;
 
 namespace koala.src.Modules.Cms.Services
 {
+    public interface IPublicFileOperations
+    {
+        void CreateDirectory(string path);
+        Task WriteAsync(string path, Microsoft.AspNetCore.Http.IFormFile file);
+        bool Exists(string path);
+        void Delete(string path);
+    }
+
+    internal sealed class PhysicalPublicFileOperations : IPublicFileOperations
+    {
+        public void CreateDirectory(string path) => Directory.CreateDirectory(path);
+
+        public async Task WriteAsync(string path, Microsoft.AspNetCore.Http.IFormFile file)
+        {
+            await using var stream = new FileStream(path, FileMode.CreateNew);
+            await file.CopyToAsync(stream);
+        }
+
+        public bool Exists(string path) => File.Exists(path);
+        public void Delete(string path) => File.Delete(path);
+    }
+
     public class PublicFileService
     {
         private readonly CmsDbContext _db;
         private readonly string _publicFilesPath;
+        private readonly IPublicFileOperations _fileOperations;
         public PublicFileService(CmsDbContext db, string publicFilesPath)
+            : this(db, publicFilesPath, new PhysicalPublicFileOperations())
+        {
+        }
+
+        public PublicFileService(CmsDbContext db, string publicFilesPath, IPublicFileOperations fileOperations)
         {
             _db = db;
             _publicFilesPath = publicFilesPath;
+            _fileOperations = fileOperations;
         }
 
         public async Task<PublicFileDto> AddFileAsync(ClaimsPrincipal? claimsPrincipal, CreatePublicFileRequestDto createPublicFileRequestDto)
@@ -35,7 +63,7 @@ namespace koala.src.Modules.Cms.Services
 
             try
             {
-                Directory.CreateDirectory(_publicFilesPath);
+                _fileOperations.CreateDirectory(_publicFilesPath);
             }
             catch
             {
@@ -48,10 +76,7 @@ namespace koala.src.Modules.Cms.Services
             var physicalPath = Path.Combine(_publicFilesPath, path);
             try
             {
-                await using (var stream = new FileStream(physicalPath, FileMode.CreateNew))
-                {
-                    await createPublicFileRequestDto.File.CopyToAsync(stream);
-                }
+                await _fileOperations.WriteAsync(physicalPath, createPublicFileRequestDto.File);
             }
             catch
             {
@@ -75,9 +100,9 @@ namespace koala.src.Modules.Cms.Services
             }
             catch
             {
-                if (File.Exists(physicalPath))
+                if (_fileOperations.Exists(physicalPath))
                 {
-                    File.Delete(physicalPath);
+                    _fileOperations.Delete(physicalPath);
                 }
 
                 throw new KoalaException(KoalaErrorCodes.DatabaseError, "Error saving public file record to database");
@@ -108,19 +133,19 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.FileNotFound, "Could not find such file");
             }
 
-            _db.PublicFiles.Remove(publicFile);
-            await _db.SaveChangesAsync();
-
             var physicalPath = Path.Combine(_publicFilesPath, publicFile.Path);
 
             try
             {
-                File.Delete(physicalPath);
+                _fileOperations.Delete(physicalPath);
             }
             catch
             {
-                throw;
+                throw new KoalaException(KoalaErrorCodes.FileDeleteFailure, "Could not delete a specified file");
             }
+
+            _db.PublicFiles.Remove(publicFile);
+            await _db.SaveChangesAsync();
         }
 
         public async Task<(List<PublicFileDto>, ApiPagination)> GetFilesAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, PublicFileQueryDto publicFileQueryDto)

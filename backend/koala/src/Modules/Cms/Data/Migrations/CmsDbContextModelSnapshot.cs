@@ -64,7 +64,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -106,7 +107,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -183,7 +185,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -213,7 +216,8 @@ namespace koala.src.Modules.Cms.Data.Migrations
 
                     b.Property<int>("Version")
                         .HasColumnType("integer")
-                        .HasColumnName("version");
+                        .HasColumnName("version")
+                        .IsConcurrencyToken();
 
                     b.HasKey("Id");
 
@@ -226,7 +230,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                             ContentJson = "{}",
                             Name = "HOME_PAGE",
                             UpdatedAt = new DateTime(2026, 7, 6, 7, 6, 7, 0, DateTimeKind.Utc),
-                            Version = 0
+                            Version = 1
                         },
                         new
                         {
@@ -234,7 +238,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                             ContentJson = "{}",
                             Name = "TASKS_PAGE",
                             UpdatedAt = new DateTime(2026, 7, 6, 7, 6, 7, 0, DateTimeKind.Utc),
-                            Version = 0
+                            Version = 1
                         },
                         new
                         {
@@ -242,7 +246,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                             ContentJson = "{}",
                             Name = "HISTORY_PAGE",
                             UpdatedAt = new DateTime(2026, 7, 6, 7, 6, 7, 0, DateTimeKind.Utc),
-                            Version = 0
+                            Version = 1
                         },
                         new
                         {
@@ -250,7 +254,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                             ContentJson = "{}",
                             Name = "RULES_PAGE",
                             UpdatedAt = new DateTime(2026, 7, 6, 7, 6, 7, 0, DateTimeKind.Utc),
-                            Version = 0
+                            Version = 1
                         },
                         new
                         {
@@ -258,7 +262,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                             ContentJson = "{}",
                             Name = "KOALICJANTS_PAGE",
                             UpdatedAt = new DateTime(2026, 7, 6, 7, 6, 7, 0, DateTimeKind.Utc),
-                            Version = 0
+                            Version = 1
                         });
                 });
 #pragma warning restore 612, 618

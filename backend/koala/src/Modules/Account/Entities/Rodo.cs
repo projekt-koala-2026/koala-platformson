@@ -3,12 +3,6 @@ using Mono.TextTemplating;
 
 namespace koala.src.Modules.Account.Entities
 {
-    public static class RodoTypes
-    {
-        public static string TYPE_JPG = ".jpg";
-        public static string TYPE_PNG = ".png";
-        public static string TYPE_PDF = ".pdf";
-    }
     public class Rodo
     {
         [Column("id")]
