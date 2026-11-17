@@ -471,10 +471,10 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Reviewer identity does not match the current user");
             }
 
-            var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id);
+            var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id && se.State == SubEditionStates.STATE_ACTIVE);
             if (subedition == null)
             {
-                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist or is inactive or closed");
             }
 
             DateTime timeNow = DateTime.UtcNow;
