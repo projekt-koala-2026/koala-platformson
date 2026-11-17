@@ -10,6 +10,7 @@ import type {
     ApiSubedition,
     ApiTaskSubmission,
     ApiTeam,
+    ApiTeamMember,
     Role,
     User,
 } from "../../types/models";
@@ -125,14 +126,24 @@ const PanelScreen = () => {
                     const editionTeams = teams.data ?? [];
                     const editionSubeditions = subeditions.data ?? [];
                     const now = Date.now();
-                    const members = editionTeams.flatMap((team) => team.teamMembers ?? []);
-                    const accepted = members.filter(
+                    const rodoResults = await Promise.all(
+                        editionTeams.map((team) =>
+                            apiListRequestResult<ApiTeamMember>(
+                                `${apiEndpoints.teamRodos(team.id)}?${firstPage}`,
+                                null,
+                                "GET",
+                                navigate
+                            )
+                        )
+                    );
+                    const rodoDocuments = rodoResults.flatMap((result) => result.data ?? []);
+                    const accepted = rodoDocuments.filter(
                         (member) => member.rodoState === "RODO_ACCEPTED"
                     ).length;
-                    const rejected = members.filter(
+                    const rejected = rodoDocuments.filter(
                         (member) => member.rodoState === "RODO_REJECTED"
                     ).length;
-                    const submitted = members.filter(
+                    const submitted = rodoDocuments.filter(
                         (member) => member.rodoState === "RODO_UNVERIFIED"
                     ).length;
                     overview = {
@@ -154,8 +165,9 @@ const PanelScreen = () => {
                             submitted,
                             accepted,
                             rejected,
-                            missing: members.filter((member) => member.rodoState === "RODO_NONE")
-                                .length,
+                            missing: rodoDocuments.filter(
+                                (member) => member.rodoState === "RODO_NONE"
+                            ).length,
                         },
                     };
                 }
