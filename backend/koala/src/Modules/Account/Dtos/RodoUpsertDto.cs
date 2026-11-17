@@ -30,7 +30,7 @@ namespace koala.src.Modules.Account.Dtos
                 .WithErrorCode(KoalaValidationErrorCodes.FileEmpty)
                 .WithMessage("File cannot be empty!")
 
-                .Must(file => file.Length <= 2 * 1024 * 1024)
+                .Must(file => file.Length <= 4 * 1024 * 1024)
                 .WithErrorCode(KoalaValidationErrorCodes.FileToLarge)
                 .WithMessage("File size cannot exceed 2 MB!")
 

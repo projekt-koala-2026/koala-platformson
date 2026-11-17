@@ -11,7 +11,7 @@ namespace koala.src.Modules.Cms.Dtos
 
     public class CreatePublicFileRequestDtoValidator : AbstractValidator<CreatePublicFileRequestDto>
     {
-        private const long MaxFileSizeBytes = 5 * 1024 * 1024;
+        private const long MaxFileSizeBytes = 10 * 1024 * 1024;
 
         public CreatePublicFileRequestDtoValidator()
         {
