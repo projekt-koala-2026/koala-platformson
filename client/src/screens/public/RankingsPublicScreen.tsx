@@ -38,13 +38,15 @@ export default function RankingsPublicScreen() {
         ).then(({ data }) => {
             if (!active) return;
             const items = [...(data ?? [])].sort((a, b) => {
+                if (a.state === "ACTIVE" && b.state !== "ACTIVE") return -1;
+                if (b.state === "ACTIVE" && a.state !== "ACTIVE") return 1;
                 const createdDifference = Date.parse(b.createdAt) - Date.parse(a.createdAt);
                 if (Number.isFinite(createdDifference) && createdDifference !== 0)
                     return createdDifference;
                 return Date.parse(b.teamRegisterClose) - Date.parse(a.teamRegisterClose);
             });
             setEditions(items);
-            setEditionId(items[0]?.id ?? "");
+            setEditionId(items.find((item) => item.state === "ACTIVE")?.id ?? items[0]?.id ?? "");
             if (!data) setError("Nie udało się pobrać edycji.");
             setLoading(false);
         });

@@ -142,11 +142,20 @@ const EditPostScreen = () => {
             return;
         }
 
-        const name = value.name.trim();
-        if (!name || name.length > 50 || !/^[\p{L}\s-]+$/u.test(name)) {
+        const suppliedName = value.name.trim();
+        const name =
+            suppliedName ||
+            title
+                .replace(/[^\p{L}\s-]/gu, " ")
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 50) ||
+            "Wpis";
+        if (suppliedName && (suppliedName.length > 50 || !/^[\p{L}\s-]+$/u.test(suppliedName))) {
             setFeedback({
                 tone: "error",
-                message: "Nazwa robocza: do 50 znaków, litery, spacje i myślniki.",
+                message:
+                    "Nazwa robocza może mieć maksymalnie 50 znaków i zawierać tylko litery, spacje lub łączniki.",
             });
             return;
         }
@@ -165,7 +174,7 @@ const EditPostScreen = () => {
             contentJson: JSON.stringify({ version: "1", title_pl: title, body_pl: markdownBody }),
             editionId: value.editionId,
             isVisible: edition.state === "INACTIVE" ? false : value.isVisible,
-            version: postId ? (postVersions[postId] ?? 0) : 0,
+            ...(postId ? { version: postVersions[postId] ?? 0 } : {}),
         };
         const endpoint = postId ? `${POSTS_ENDPOINT}/${postId}` : POSTS_ENDPOINT;
         const method = postId ? "PUT" : "POST";
@@ -234,7 +243,7 @@ const EditPostScreen = () => {
         <fieldset disabled={saving} className="min-w-0">
             <div className="space-y-5">
                 <label className="block text-sm font-medium text-ink">
-                    Nazwa robocza *
+                    Nazwa robocza (opcjonalna)
                     <input
                         type="text"
                         value={value.name}
@@ -248,8 +257,7 @@ const EditPostScreen = () => {
                         className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5"
                     />
                     <span className="mt-1 block text-xs text-ink-muted">
-                        Nazwa do identyfikacji w panelu: do 50 znaków, litery, spacje i myślniki.
-                        Tytuł publiczny wpisz poniżej.
+                        Jeśli pozostawisz to pole puste, nazwa zostanie utworzona z tytułu wpisu.
                     </span>
                 </label>
                 <label className="block text-sm font-medium text-ink">

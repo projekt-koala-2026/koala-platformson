@@ -231,7 +231,7 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
                                             {item.name}
                                         </span>
                                         <span className="mt-1 block text-xs text-ink-muted">
-                                            {item.tier === "TIER_2" ? "Poziom II" : "Poziom I"}
+                                            {item.tier === "TIER_2" ? "Średnia" : "Podstawowa"}
                                         </span>
                                     </button>
                                 </li>

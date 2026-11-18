@@ -281,7 +281,7 @@ const PanelScreen = () => {
                                             <div
                                                 className="mt-3 flex h-4 overflow-hidden rounded-full bg-surface-muted"
                                                 role="img"
-                                                aria-label={`Poziom I: ${editionOverview.tier1Teams}, poziom II: ${editionOverview.tier2Teams}`}
+                                                aria-label={`Podstawowa: ${editionOverview.tier1Teams}, Średnia: ${editionOverview.tier2Teams}`}
                                             >
                                                 <div
                                                     className="bg-brand"
@@ -296,10 +296,10 @@ const PanelScreen = () => {
                                             </div>
                                             <div className="mt-2 flex justify-between text-sm text-ink-secondary">
                                                 <span>
-                                                    Poziom I: <b>{editionOverview.tier1Teams}</b>
+                                                    Podstawowa: <b>{editionOverview.tier1Teams}</b>
                                                 </span>
                                                 <span>
-                                                    Poziom II: <b>{editionOverview.tier2Teams}</b>
+                                                    Średnia: <b>{editionOverview.tier2Teams}</b>
                                                 </span>
                                             </div>
                                         </>
