@@ -27,11 +27,13 @@ namespace koala.src.Modules.Account.Services
         private readonly AccountDbContext _db;
         private readonly IEmailService _emailService;
         private readonly ICmsModule _cmsModule;
-        public UserService(AccountDbContext db, IEmailService emailService, ICmsModule cmsModule)
+        private readonly ICoreModule _coreModule;
+        public UserService(AccountDbContext db, IEmailService emailService, ICmsModule cmsModule, ICoreModule coreModule)
         {
             _db = db;
             _emailService = emailService;
             _cmsModule = cmsModule;
+            _coreModule = coreModule;
         }
         public async Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, UserRegisterRequestDto requestDto)
         {
@@ -49,11 +51,18 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.UserAlreadyExists, "User with this email already exists");
             }
 
+            var active_edition = await _coreModule.Internal_GetTheActiveEditionAsync();
+            if (active_edition == null && !isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.ActiveEditionNotFound, "Canot create a user account of role captain/guardian when there is no active edition");
+            }
+
             DateTime timeNow = DateTime.UtcNow;
 
             var user = new User
             {
                 Id = Guid.CreateVersion7(),
+                EditionId = isOrganizationAdmin ? null : active_edition.Id,
                 NameFirst = null,
                 NameLast = null,
                 Email = requestDto.Email,

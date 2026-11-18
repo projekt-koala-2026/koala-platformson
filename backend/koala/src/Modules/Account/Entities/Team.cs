@@ -29,7 +29,6 @@ namespace koala.src.Modules.Account.Entities
 
         public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
         public TeamJoinCode? TeamJoinCode { get; set; }
-        public ICollection<Rodo> Rodos { get; set; } = new List<Rodo>();
         public User Captain { get; set; } = null!;
         public User? Guardian { get; set; } = null;
     }

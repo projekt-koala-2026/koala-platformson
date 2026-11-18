@@ -8,6 +8,7 @@ namespace koala.src.Shared.Account
         Task<_TeamResponseDto?> Internal_GetTeamInfo(Guid team_id);
         Task<List<_TeamResponseDto>> Internal_GetTeamsForEditionAsync(Guid editionId);
         Task<List<Guid>> Internal_GetReviewerIdsAsync(List<Guid> userIds);
+        Task Internal_DeleteUserAndTeamDataAfterEditionCloses(Guid editionId);
         Task<bool> Internal_IsOrganizationUser(Guid userId);
     }
 }
