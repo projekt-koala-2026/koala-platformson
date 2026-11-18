@@ -73,6 +73,7 @@ public class RodoServiceTests
     {
         var files = new Mock<IRodoFileOperations>(MockBehavior.Strict);
         files.Setup(file => file.CreateDirectory(It.IsAny<string>()));
+        files.Setup(file => file.Move(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()));
         files.Setup(file => file.WriteAsync(It.IsAny<string>(), It.IsAny<IFormFile>(), It.IsAny<bool>())).Returns(Task.CompletedTask);
         files.Setup(file => file.ReadAllBytesAsync(It.IsAny<string>())).ReturnsAsync("saved rodo"u8.ToArray());
         files.Setup(file => file.Exists(It.IsAny<string>())).Returns(false);
@@ -315,8 +316,31 @@ public class RodoServiceTests
         Assert.Equal(4, rodo.Version);
         Assert.True(rodo.UpdatedAt > rodo.CreatedAt);
         files.Verify(file => file.CreateDirectory(FilesPath), Times.Once);
-        files.Verify(file => file.WriteAsync(Path.Combine(FilesPath, $"{rodo.Id}.pdf"), It.IsAny<IFormFile>(), true), Times.Once);
+        files.Verify(file => file.WriteAsync(
+            It.Is<string>(path => path.StartsWith(Path.Combine(FilesPath, $"{rodo.Id}_")) && path.EndsWith(".tmp")),
+            It.IsAny<IFormFile>(), true), Times.Once);
+        files.Verify(file => file.Move(
+            It.Is<string>(path => path.StartsWith(Path.Combine(FilesPath, $"{rodo.Id}_")) && path.EndsWith(".tmp")),
+            Path.Combine(FilesPath, $"{rodo.Id}.pdf"), true), Times.Once);
         files.Verify(file => file.ReadAllBytesAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateRodo_MoveFailureReturnsFileCreationFailureAfterDatabaseUpdate()
+    {
+        await using var db = await SeededDb();
+        var rodo = await AddRodoAsync(db, TestDataSeeder.ID_TEAM_MEMBER_1, ".png", 2);
+        var files = FileOperations();
+        files.Setup(file => file.Move(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Throws(new IOException("move failed"));
+
+        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).UpdateRodoAsync(
+            TeamGuardian(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, UploadDto("updated.pdf", 2)));
+
+        Assert.Equal(KoalaErrorCodes.FileCreationFailure, error.ErrorCode);
+        Assert.Equal(".pdf", rodo.Type);
+        Assert.Equal(3, rodo.Version);
+        files.Verify(file => file.Move(It.IsAny<string>(), Path.Combine(FilesPath, $"{rodo.Id}.pdf"), true), Times.Once);
     }
 
     [Fact]
@@ -434,7 +458,8 @@ public class RodoServiceTests
         files.Setup(file => file.WriteAsync(It.IsAny<string>(), It.IsAny<IFormFile>(), true)).ThrowsAsync(new IOException("write failure"));
         var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).UpdateRodoAsync(TeamGuardian(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, UploadDto(version: 1)));
         Assert.Equal(KoalaErrorCodes.FileCreationFailure, error.ErrorCode);
-        files.Verify(file => file.Exists(It.IsAny<string>()), Times.Never);
+        files.Verify(file => file.Exists(It.Is<string>(path => path.EndsWith(".tmp"))), Times.Once);
+        files.Verify(file => file.Delete(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

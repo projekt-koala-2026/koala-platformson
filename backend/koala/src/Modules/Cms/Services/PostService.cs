@@ -169,9 +169,9 @@ namespace koala.src.Modules.Cms.Services
                 query = query.Where(p => p.Name == postQueryDto.Name);
             }
 
-            if (isOrganizationAdmin || isOrganizationEditor)
+            if (postQueryDto.ShowHidden.HasValue)
             {
-                query = query.Where(p => p.IsVisible == !postQueryDto.ShowHidden);
+                query = query.Where(p => p.IsVisible == !postQueryDto.ShowHidden.Value);
             }
 
             var queryResults = await query.ToListAsync();

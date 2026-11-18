@@ -27,7 +27,7 @@ namespace koala.src.Modules.Cms.Dtos
 
                 .Must(file => file.Length <= MaxFileSizeBytes)
                 .WithErrorCode(KoalaValidationErrorCodes.FileToLarge)
-                .WithMessage("File size cannot exceed 5 MB!")
+                .WithMessage("File size cannot exceed 10 MB!")
 
                 .Must(file => PublicFileTypes.ALLOWED_CONTENT_TYPES.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
                 .WithErrorCode(KoalaValidationErrorCodes.FileInvalidType)

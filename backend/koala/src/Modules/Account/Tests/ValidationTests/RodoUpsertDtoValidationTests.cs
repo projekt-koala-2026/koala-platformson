@@ -8,7 +8,7 @@ namespace koala.src.Modules.Account.Tests.ValidationTests;
 public class RodoUpsertDtoValidationTests
 {
     private const string EmptyFileMessage = "File cannot be empty!";
-    private const string TooLargeMessage = "File size cannot exceed 2 MB!";
+    private const string TooLargeMessage = "File size cannot exceed 4 MB!";
     private const string ContentTypeMessage = "Only image files (JPEG, PNG, WebP) and PDF files are allowed!";
     private const string ExtensionMessage = "Invalid file extension. Allowed extensions are: .jpg, .jpeg, .png, .webp, .pdf";
     private readonly RodoUpsertDtoValidator _validator = new();
@@ -34,16 +34,16 @@ public class RodoUpsertDtoValidationTests
         ValidationAssertions.IsValid(_validator, new(FormFile(name: filename, contentType: contentType), null));
 
     [Fact]
-    public void MaximumFileSizeOf2MiB_IsAccepted() =>
-        ValidationAssertions.IsValid(_validator, new(FormFile(length: 2 * 1024 * 1024), 1));
+    public void MaximumFileSizeOf4MiB_IsAccepted() =>
+        ValidationAssertions.IsValid(_validator, new(FormFile(length: 4 * 1024 * 1024), 1));
 
     [Fact]
     public void EmptyFile_ReturnsConfiguredMessage() =>
         ValidationAssertions.HasMessage(_validator, new(FormFile(length: 0), null), EmptyFileMessage);
 
     [Fact]
-    public void FileOneByteOver2MiB_ReturnsConfiguredMessage() =>
-        ValidationAssertions.HasMessage(_validator, new(FormFile(length: 2 * 1024 * 1024 + 1), null), TooLargeMessage);
+    public void FileOneByteOver4MiB_ReturnsConfiguredMessage() =>
+        ValidationAssertions.HasMessage(_validator, new(FormFile(length: 4 * 1024 * 1024 + 1), null), TooLargeMessage);
 
     [Fact]
     public void UnsupportedContentType_ReturnsConfiguredMessage() =>
@@ -76,7 +76,7 @@ public class RodoUpsertDtoValidationTests
         var invalidDtos = new[]
         {
             (new RodoUpsertDto(FormFile(length: 0), null), KoalaValidationErrorCodes.FileEmpty, EmptyFileMessage),
-            (new RodoUpsertDto(FormFile(length: 2 * 1024 * 1024 + 1), null), KoalaValidationErrorCodes.FileToLarge, TooLargeMessage),
+            (new RodoUpsertDto(FormFile(length: 4 * 1024 * 1024 + 1), null), KoalaValidationErrorCodes.FileToLarge, TooLargeMessage),
             (new RodoUpsertDto(FormFile(contentType: "text/plain"), null), KoalaValidationErrorCodes.FileInvalidType, ContentTypeMessage),
             (new RodoUpsertDto(FormFile(name: "document.gif"), null), KoalaValidationErrorCodes.FileInvalidType, ExtensionMessage),
             (new RodoUpsertDto(FormFile(), 0), KoalaValidationErrorCodes.ResourceVersionInvalid, "Version field must be greater than 0")
@@ -101,7 +101,7 @@ public class RodoUpsertDtoValidationTests
             };
             yield return new object[]
             {
-                new RodoUpsertDto(FormFile(length: 2 * 1024 * 1024 + 1, name: "bad.gif", contentType: "text/plain"), -1),
+                new RodoUpsertDto(FormFile(length: 4 * 1024 * 1024 + 1, name: "bad.gif", contentType: "text/plain"), -1),
                 new[] { TooLargeMessage, "Version field must be greater than 0" }
             };
             yield return new object[]
@@ -184,16 +184,16 @@ public class RodoUpsertDtoValidationTests
 
     [Theory]
     [InlineData(1)]
-    [InlineData(2 * 1024 * 1024 - 1)]
-    [InlineData(2 * 1024 * 1024)]
-    public void AcceptsPositiveFilesAtOrBelowTwoMiB(int length) =>
+    [InlineData(4 * 1024 * 1024 - 1)]
+    [InlineData(4 * 1024 * 1024)]
+    public void AcceptsPositiveFilesAtOrBelowFourMiB(int length) =>
         ValidationAssertions.IsValid(_validator, new(FormFile(length: length), null));
 
     [Theory]
-    [InlineData(2 * 1024 * 1024 + 1)]
-    [InlineData(2 * 1024 * 1024 + 1024)]
-    [InlineData(3 * 1024 * 1024)]
-    public void RejectsFilesAboveTwoMiB(int length) =>
+    [InlineData(4 * 1024 * 1024 + 1)]
+    [InlineData(4 * 1024 * 1024 + 1024)]
+    [InlineData(5 * 1024 * 1024)]
+    public void RejectsFilesAboveFourMiB(int length) =>
         ValidationAssertions.HasError(_validator, new(FormFile(length: length), null), KoalaValidationErrorCodes.FileToLarge, TooLargeMessage);
 
     [Theory]
@@ -232,7 +232,7 @@ public class RodoUpsertDtoValidationTests
     [InlineData("application/pdf", "photo.gif", 0, EmptyFileMessage)]
     [InlineData("text/plain", "photo.gif", 1, ContentTypeMessage)]
     [InlineData("application/pdf", "photo.gif", 1, ExtensionMessage)]
-    [InlineData("image/png", "photo.png", 2 * 1024 * 1024 + 1, TooLargeMessage)]
+    [InlineData("image/png", "photo.png", 4 * 1024 * 1024 + 1, TooLargeMessage)]
     public void FileValidationStopsAtTheFirstFailure(string contentType, string name, int length, string expectedMessage)
     {
         var dto = new RodoUpsertDto(FormFile(length, name, contentType), null);
@@ -246,7 +246,7 @@ public class RodoUpsertDtoValidationTests
         var cases = new[]
         {
             (FormFile(length: 0), KoalaValidationErrorCodes.FileEmpty, EmptyFileMessage),
-            (FormFile(length: 2 * 1024 * 1024 + 1), KoalaValidationErrorCodes.FileToLarge, TooLargeMessage),
+            (FormFile(length: 4 * 1024 * 1024 + 1), KoalaValidationErrorCodes.FileToLarge, TooLargeMessage),
             (FormFile(contentType: "text/plain"), KoalaValidationErrorCodes.FileInvalidType, ContentTypeMessage),
             (FormFile(name: "invalid.gif"), KoalaValidationErrorCodes.FileInvalidType, ExtensionMessage)
         };
