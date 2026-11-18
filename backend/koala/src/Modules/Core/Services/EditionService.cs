@@ -236,6 +236,23 @@ namespace koala.src.Modules.Core.Services
                         {
                             _db.TaskSubmissions.RemoveRange(taskItem.TaskSubmissions);
                         }
+
+                        if (taskItem.ImageId != null && taskItem.ImageType != null)
+                        {
+                            var physicalPath = Path.Combine(_privateFilesPath, $"{taskItem.ImageId}{taskItem.ImageType}");
+
+                            try
+                            {
+                                if (_fileOperations.Exists(physicalPath))
+                                {
+                                    _fileOperations.Delete(physicalPath);
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+                        }
                         _db.TaskItems.Remove(taskItem);
                     }
                 }
