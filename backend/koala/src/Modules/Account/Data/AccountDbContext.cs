@@ -182,6 +182,9 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<TeamMember>()
                 .HasKey(tm => tm.Id);
             modelBuilder.Entity<TeamMember>()
+                .Property(tm => tm.Version)
+                .IsConcurrencyToken();
+            modelBuilder.Entity<TeamMember>()
                 .HasOne(tm => tm.Team)
                 .WithMany(t => t.TeamMembers)
                 .HasForeignKey(tm => tm.TeamId)

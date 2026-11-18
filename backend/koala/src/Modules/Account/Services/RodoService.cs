@@ -516,28 +516,26 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
-            int affectedRows = await _db.TeamMembers
-                .Where(x => x.TeamId == teamId && x.Id == teamMemberId && x.Version == rodoStateUpdateDto.Version)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(x => x.RodoState, rodoStateUpdateDto.State)
-                    .SetProperty(x => x.UpdatedAt, DateTime.UtcNow)
-                    .SetProperty(x => x.Version, x => x.Version + 1));
-
-            if (affectedRows == 0)
+            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).FirstOrDefaultAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
+            if (teamMember == null)
             {
-                bool isTeamMember = await _db.TeamMembers.AnyAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
-                if (!isTeamMember)
-                {
-                    throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "Specified TeamMember does not exist");
-                }
+                throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "Specified TeamMember does not exist");
+            }
+            if (teamMember.Version != rodoStateUpdateDto.Version)
+            {
                 throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
-            var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).AsNoTracking().FirstOrDefaultAsync(x => x.TeamId == teamId && x.Id == teamMemberId);
-
-            if (teamMember == null)
+            teamMember.RodoState = rodoStateUpdateDto.State;
+            teamMember.UpdatedAt = DateTime.UtcNow;
+            teamMember.Version++;
+            try
             {
-                throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "TeamMember does not exist");
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
             }
 
             return new TeamMemberDto
