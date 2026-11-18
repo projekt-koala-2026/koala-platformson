@@ -8,6 +8,10 @@ namespace koala.src.Modules.Core.Entities
         public Guid Id { get; set; }
         [Column("subedition_id")]
         public Guid SubEditionId { get; set; }
+        [Column("image_id")]
+        public Guid? ImageId { get; set; }
+        [Column("image_type")]
+        public string? ImageType { get; set; }
         [Column("name")]
         public string Name { get; set; }
         [Column("tier")]

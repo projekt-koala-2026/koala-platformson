@@ -8,6 +8,7 @@ namespace koala.src.Modules.Core.Dtos
         string Name,
         string Tier,
         string ContentJson,
+        bool HasImage,
         DateTime CreatedAt,
         DateTime UpdatedAt,
         int Version

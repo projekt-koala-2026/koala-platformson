@@ -167,6 +167,14 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid?>("ImageId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("image_id");
+
+                    b.Property<string>("ImageType")
+                        .HasColumnType("text")
+                        .HasColumnName("image_type");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
