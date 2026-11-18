@@ -1,28 +1,56 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
-import type { ApiTeam } from "../../types/models";
+import type { ApiEdition, ApiSchool, ApiTeam } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult } from "../../utils/apiFetcher";
 
 const AdminTeamsScreen = () => {
     const navigate = useNavigate();
     const [teams, setTeams] = useState<ApiTeam[]>([]);
+    const [schoolNames, setSchoolNames] = useState<Record<string, string>>({});
+    const [editionNames, setEditionNames] = useState<Record<string, string>>({});
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
+    const [lookupError, setLookupError] = useState(false);
 
     useEffect(() => {
         let active = true;
-        void apiListRequestResult<ApiTeam>(
-            `${apiEndpoints.teams}?${firstPage}`,
-            null,
-            "GET",
-            navigate
-        ).then(({ data }) => {
+        void Promise.all([
+            apiListRequestResult<ApiTeam>(
+                `${apiEndpoints.teams}?${firstPage}`,
+                null,
+                "GET",
+                navigate
+            ),
+            apiListRequestResult<ApiSchool>(
+                `${apiEndpoints.schools}?${firstPage}`,
+                null,
+                "GET",
+                navigate
+            ),
+            apiListRequestResult<ApiEdition>(
+                `${apiEndpoints.editions}?${firstPage}`,
+                null,
+                "GET",
+                navigate
+            ),
+        ]).then(([teamsResult, schoolsResult, editionsResult]) => {
             if (!active) return;
-            setTeams(data ?? []);
-            setHasError(data === null);
+            setTeams(teamsResult.data ?? []);
+            setHasError(teamsResult.data === null);
+            setSchoolNames(
+                Object.fromEntries(
+                    (schoolsResult.data ?? []).map((school) => [school.id, school.nameFull])
+                )
+            );
+            setEditionNames(
+                Object.fromEntries(
+                    (editionsResult.data ?? []).map((edition) => [edition.id, edition.name])
+                )
+            );
+            setLookupError(schoolsResult.data === null || editionsResult.data === null);
             setLoading(false);
         });
         return () => {
@@ -36,6 +64,8 @@ const AdminTeamsScreen = () => {
         return teams.filter((team) =>
             [
                 team.name,
+                schoolNames[team.schoolId],
+                editionNames[team.editionId],
                 team.schoolId,
                 team.editionId,
                 ...team.teamMembers.map((member) => member.teamMemberId),
@@ -44,7 +74,7 @@ const AdminTeamsScreen = () => {
                 .toLocaleLowerCase("pl-PL")
                 .includes(normalized)
         );
-    }, [query, teams]);
+    }, [editionNames, query, schoolNames, teams]);
 
     return (
         <div className="min-h-screen bg-canvas">
@@ -80,6 +110,14 @@ const AdminTeamsScreen = () => {
                         className="mt-6 rounded-xl border p-4 text-sm app-status-danger"
                     >
                         Nie udało się pobrać listy drużyn.
+                    </p>
+                )}
+                {lookupError && (
+                    <p
+                        role="status"
+                        className="mt-4 rounded-xl border p-4 text-sm app-status-warning"
+                    >
+                        Nie udało się pobrać nazw wszystkich szkół lub edycji.
                     </p>
                 )}
 
@@ -121,11 +159,11 @@ const AdminTeamsScreen = () => {
                                             <td className="px-4 py-4 text-ink-secondary">
                                                 {team.teamMembers.length}
                                             </td>
-                                            <td className="px-4 py-4 font-mono text-xs text-ink-secondary">
-                                                {team.schoolId}
+                                            <td className="px-4 py-4 text-ink-secondary">
+                                                {schoolNames[team.schoolId] ?? "Nieznana szkoła"}
                                             </td>
-                                            <td className="px-4 py-4 font-mono text-xs text-ink-secondary">
-                                                {team.editionId}
+                                            <td className="px-4 py-4 text-ink-secondary">
+                                                {editionNames[team.editionId] ?? "Nieznana edycja"}
                                             </td>
                                             <td className="px-4 py-4 text-ink-secondary">
                                                 {new Date(team.createdAt).toLocaleDateString(

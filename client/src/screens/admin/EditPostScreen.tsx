@@ -125,6 +125,14 @@ const EditPostScreen = () => {
             setFeedback({ tone: "error", message: "Tytuł musi mieć od 3 do 200 znaków." });
             return;
         }
+        if (title.length > 50 || !/^[\p{L}\s-]+$/u.test(title)) {
+            setFeedback({
+                tone: "error",
+                message:
+                    "Tytuł może mieć maksymalnie 50 znaków i zawierać tylko litery, spacje lub łączniki.",
+            });
+            return;
+        }
         if (!markdownBody.trim()) {
             setFeedback({ tone: "error", message: "Treść wpisu nie może być pusta." });
             return;
@@ -161,12 +169,18 @@ const EditPostScreen = () => {
         };
         const endpoint = postId ? `${POSTS_ENDPOINT}/${postId}` : POSTS_ENDPOINT;
         const method = postId ? "PUT" : "POST";
-        const { data } = await apiRequestResult<ApiPost>(endpoint, payload, method, navigate);
+        const { data, error } = await apiRequestResult<ApiPost>(
+            endpoint,
+            payload,
+            method,
+            navigate
+        );
 
         if (!data) {
             setFeedback({
                 tone: "error",
-                message: "Nie udało się zapisać wpisu. Formularz nie został wyczyszczony.",
+                message:
+                    error?.message ?? "Nie udało się zapisać wpisu. Formularz został zachowany.",
             });
             setSaving(false);
             return;
@@ -377,7 +391,78 @@ const EditPostScreen = () => {
                                 />
                             </div>
 
-                            {renderFields(form, setForm, null)}
+                            <div className="space-y-5">
+                                <label className="block text-sm font-medium text-ink">
+                                    Tytuł *
+                                    <input
+                                        type="text"
+                                        value={form.title}
+                                        maxLength={50}
+                                        onChange={(event) =>
+                                            setForm((current) => ({
+                                                ...current,
+                                                title: event.target.value,
+                                            }))
+                                        }
+                                        className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted"
+                                        placeholder="Tytuł wpisu"
+                                    />
+                                </label>
+                                <label className="block text-sm font-medium text-ink">
+                                    Edycja *
+                                    <select
+                                        value={form.editionId}
+                                        onChange={(event) =>
+                                            setForm((current) => ({
+                                                ...current,
+                                                editionId: event.target.value,
+                                            }))
+                                        }
+                                        className="app-select mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted"
+                                    >
+                                        <option value="">Wybierz edycję konkursu</option>
+                                        {editions.map((edition) => (
+                                            <option key={edition.id} value={edition.id}>
+                                                {edition.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-4">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.isVisible}
+                                        onChange={(event) =>
+                                            setForm((current) => ({
+                                                ...current,
+                                                isVisible: event.target.checked,
+                                            }))
+                                        }
+                                        className="mt-0.5 h-4 w-4 rounded border-line-strong text-brand-text focus:ring-brand-focus"
+                                    />
+                                    <span>
+                                        <span className="block text-sm font-medium text-ink">
+                                            Widoczny na stronie publicznej
+                                        </span>
+                                        <span className="mt-1 block text-xs leading-5 text-ink-muted">
+                                            Wyłącz, aby zachować wpis jako ukryty szkic.
+                                        </span>
+                                    </span>
+                                </label>
+                                <div>
+                                    <span className="mb-2 block text-sm font-medium text-ink">
+                                        Treść *
+                                    </span>
+                                    <MarkdownEditor
+                                        key={`${editingPostId ?? "new"}-${editorRevision}`}
+                                        initialValue={form.markdownBody}
+                                        onChange={(markdownBody) =>
+                                            setForm((current) => ({ ...current, markdownBody }))
+                                        }
+                                        disabled={saving}
+                                    />
+                                </div>
+                            </div>
                         </section>
 
                         <section className="min-w-0 xl:sticky xl:top-24">

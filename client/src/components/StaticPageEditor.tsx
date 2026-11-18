@@ -60,6 +60,11 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
         }
         setSaving(true);
         setFeedback(null);
+        if (!content.trim()) {
+            setFeedback({ tone: "error", message: "Treść strony nie może być pusta." });
+            setSaving(false);
+            return;
+        }
         if (!page) {
             setFeedback({ tone: "error", message: "Nie znaleziono strony do zapisania." });
             setSaving(false);
