@@ -24,7 +24,23 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var cms = new Mock<ICmsModule>();
             cms.Setup(module => module.Internal_DeleteKoalicjantIfExistsAsync(It.IsAny<Guid>()))
                 .Returns(Task.CompletedTask);
-            return (new UserService(db, email.Object, cms.Object), db, email);
+            var core = new Mock<ICoreModule>();
+            core.Setup(module => module.Internal_GetTheActiveEditionAsync())
+                .ReturnsAsync
+                (
+                    new _EditionDto
+                    (
+                        TestDataSeeder.MOCK_ID_EDITION_1,
+                        "test",
+                        LifecycleStates.STATE_ACTIVE,
+                        DateTime.UtcNow.AddDays(-1),
+                        DateTime.UtcNow.AddDays(+1),
+                        DateTime.UtcNow,
+                        DateTime.UtcNow,
+                        1
+                    )
+                );
+            return (new UserService(db, email.Object, cms.Object, core.Object), db, email);
         }
 
         private static ClaimsPrincipal Principal(Guid? userId, params string[] roles)
@@ -47,13 +63,20 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
         private static Guid UserId(int userNumber) => userNumber switch
         {
-            1 => TestDataSeeder.ID_USER_1, 2 => TestDataSeeder.ID_USER_2,
-            3 => TestDataSeeder.ID_USER_3, 4 => TestDataSeeder.ID_USER_4,
-            5 => TestDataSeeder.ID_USER_5, 6 => TestDataSeeder.ID_USER_6,
-            7 => TestDataSeeder.ID_USER_7, 8 => TestDataSeeder.ID_USER_8,
-            9 => TestDataSeeder.ID_USER_9, 10 => TestDataSeeder.ID_USER_10,
-            11 => TestDataSeeder.ID_USER_11, 12 => TestDataSeeder.ID_USER_12,
-            13 => TestDataSeeder.ID_USER_13, 14 => TestDataSeeder.ID_USER_14,
+            1 => TestDataSeeder.ID_USER_1,
+            2 => TestDataSeeder.ID_USER_2,
+            3 => TestDataSeeder.ID_USER_3,
+            4 => TestDataSeeder.ID_USER_4,
+            5 => TestDataSeeder.ID_USER_5,
+            6 => TestDataSeeder.ID_USER_6,
+            7 => TestDataSeeder.ID_USER_7,
+            8 => TestDataSeeder.ID_USER_8,
+            9 => TestDataSeeder.ID_USER_9,
+            10 => TestDataSeeder.ID_USER_10,
+            11 => TestDataSeeder.ID_USER_11,
+            12 => TestDataSeeder.ID_USER_12,
+            13 => TestDataSeeder.ID_USER_13,
+            14 => TestDataSeeder.ID_USER_14,
             _ => TestDataSeeder.ID_USER_15
         };
 
