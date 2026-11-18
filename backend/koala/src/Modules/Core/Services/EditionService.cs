@@ -180,6 +180,8 @@ namespace koala.src.Modules.Core.Services
             edition.UpdatedAt = timeNow;
             await _db.SaveChangesAsync();
 
+            await _accountModule.Internal_DeleteUserAndTeamDataAfterEditionCloses(id);
+
             return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
 
@@ -779,34 +781,34 @@ namespace koala.src.Modules.Core.Services
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id);
-            if(subedition == null)
+            if (subedition == null)
             {
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose)
+            if (subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose)
             {
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Teams cant in this time answer/view tasks");
             }
-            
+
             var query = _db.TaskItems.AsNoTracking()
                 .Where(e => e.SubEditionId == subedition_id
                         && e.SubEdition.State == "ACTIVE"
                         && e.SubEdition.EditionId == edition_id
                         && e.SubEdition.Edition.State == "ACTIVE");
 
-            if(teamInfo.Tier == CompetitionTiers.TIER_1)
+            if (teamInfo.Tier == CompetitionTiers.TIER_1)
             {
                 query = query.Where(e => e.Tier == CompetitionTiers.TIER_1);
             }
-            if(teamInfo.Tier == CompetitionTiers.TIER_2)
+            if (teamInfo.Tier == CompetitionTiers.TIER_2)
             {
                 query = query.Where(e => e.Tier == CompetitionTiers.TIER_1 || e.Tier == CompetitionTiers.TIER_2);
             }
 
             var totalCount = await query.CountAsync();
-            
+
             var taskItems = await query
                 .OrderBy(e => e.CreatedAt)
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
