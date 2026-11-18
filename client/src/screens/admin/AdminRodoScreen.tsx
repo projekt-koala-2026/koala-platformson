@@ -25,7 +25,7 @@ interface RodoApplication {
     team: ApiTeamDetails;
     personName: string;
     personEmail: string | null;
-    personRole: "Uczestnik";
+    personRole: "Uczestnik" | "Kapitan";
 }
 
 const statusMeta: Record<
@@ -56,11 +56,14 @@ const statusFor = (state: string) =>
         label: state || statusMeta.UNKNOWN.label,
     };
 
-const personFor = (member: ApiTeamMember) => {
+const personFor = (member: ApiTeamMember, team: ApiTeamDetails) => {
+    const captain = team.teamCaptain?.id === member.teamMemberId ? team.teamCaptain : null;
     return {
-        name: `${member.nameFist} ${member.nameLast}`.trim() || "Uczestnik",
-        email: null,
-        role: "Uczestnik" as const,
+        name: captain
+            ? `${captain.nameFirst} ${captain.nameLast}`.trim()
+            : `${member.nameFist} ${member.nameLast}`.trim() || "Uczestnik",
+        email: captain?.email ?? null,
+        role: captain ? ("Kapitan" as const) : ("Uczestnik" as const),
     };
 };
 
@@ -97,15 +100,36 @@ const AdminRodoScreen = () => {
             }
 
             const loadedTeams = teamsResult.data;
+            const rodoResults = await Promise.all(
+                loadedTeams.map(async (team) => ({
+                    teamId: team.id,
+                    result: await apiListRequestResult<ApiTeamMember>(
+                        `${apiEndpoints.teamRodos(team.id)}?${firstPage}`,
+                        null,
+                        "GET",
+                        navigate
+                    ),
+                    fallback: team.teamMembers,
+                }))
+            );
+            if (!active) return;
+
             const nextRodos = Object.fromEntries(
-                loadedTeams.map((team) => [
-                    team.id,
-                    team.teamMembers.filter((member) => member.rodoState !== "RODO_NONE"),
+                rodoResults.map(({ teamId, result, fallback }) => [
+                    teamId,
+                    (result.data ?? fallback).filter((member) => member.rodoState !== "RODO_NONE"),
                 ])
             ) satisfies Record<string, ApiTeamMember[]>;
 
             setTeams(loadedTeams);
             setRodosByTeam(nextRodos);
+            if (rodoResults.some(({ result }) => result.data === null)) {
+                setFeedback({
+                    tone: "warning",
+                    message:
+                        "Nie udało się pobrać zgód RODO dla wszystkich drużyn. Odśwież listę, aby spróbować ponownie.",
+                });
+            }
             setLoading(false);
         })();
 
@@ -118,7 +142,7 @@ const AdminRodoScreen = () => {
         () =>
             teams.flatMap((team) =>
                 (rodosByTeam[team.id] ?? []).map((rodo) => {
-                    const person = personFor(rodo);
+                    const person = personFor(rodo, team);
                     return {
                         key: `${team.id}:${rodo.teamMemberId}`,
                         rodo,

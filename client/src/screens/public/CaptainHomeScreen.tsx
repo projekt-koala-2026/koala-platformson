@@ -184,7 +184,10 @@ const CaptainHomeScreen = () => {
     };
 
     const rodoStatusFor = (memberKey: string) => {
-        const state = rodoStateByMember[memberKey];
+        const state =
+            memberKey === team?.teamCaptain?.id
+                ? (captainRodo?.rodoState ?? rodoStateByMember[memberKey])
+                : rodoStateByMember[memberKey];
         if (!state || !(state in statusMeta)) {
             return {
                 label: "Brak zgody",
