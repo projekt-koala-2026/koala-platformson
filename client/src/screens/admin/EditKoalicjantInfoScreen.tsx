@@ -118,6 +118,10 @@ const EditKoalicjantInfo = () => {
             setFeedback({ tone: "error", message: "Wybierz zdjęcie lub podaj jego adres." });
             return;
         }
+        if (!normalized.description) {
+            setFeedback({ tone: "error", message: "Opis koalicjanta jest wymagany." });
+            return;
+        }
         setSaving(true);
         if (modal) {
             const source = rawKoalicjants[modal.id];
@@ -128,8 +132,9 @@ const EditKoalicjantInfo = () => {
                     nameLast: normalized.nameLast,
                     email: normalized.email,
                     contentJson: JSON.stringify({
-                        profilePicture: normalized.profilePicture,
-                        description: normalized.description,
+                        koalicjant_profile_image_url: normalized.profilePicture,
+                        body_pl: normalized.description,
+                        version: "1",
                     }),
                     isVisible: normalized.isVisible,
                     version: source?.version ?? 0,

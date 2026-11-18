@@ -103,6 +103,14 @@ const EditPostScreen = () => {
             setFeedback({ tone: "error", message: "Tytuł musi mieć od 3 do 200 znaków." });
             return;
         }
+        if (title.length > 50 || !/^[\p{L}\s-]+$/u.test(title)) {
+            setFeedback({
+                tone: "error",
+                message:
+                    "Tytuł może mieć maksymalnie 50 znaków i zawierać tylko litery, spacje lub łączniki.",
+            });
+            return;
+        }
         if (!markdownBody.trim()) {
             setFeedback({ tone: "error", message: "Treść wpisu nie może być pusta." });
             return;
@@ -116,19 +124,25 @@ const EditPostScreen = () => {
         setFeedback(null);
         const payload = {
             name: title,
-            contentJson: JSON.stringify({ markdownBody }),
+            contentJson: JSON.stringify({ title_pl: title, body_pl: markdownBody, version: "1" }),
             editionId: form.editionId,
             isVisible: form.isVisible,
             version: editingPostId ? (postVersions[editingPostId] ?? 0) : 0,
         };
         const endpoint = editingPostId ? `${POSTS_ENDPOINT}/${editingPostId}` : POSTS_ENDPOINT;
         const method = editingPostId ? "PUT" : "POST";
-        const { data } = await apiRequestResult<ApiPost>(endpoint, payload, method, navigate);
+        const { data, error } = await apiRequestResult<ApiPost>(
+            endpoint,
+            payload,
+            method,
+            navigate
+        );
 
         if (!data) {
             setFeedback({
                 tone: "error",
-                message: "Nie udało się zapisać wpisu. Formularz nie został wyczyszczony.",
+                message:
+                    error?.message ?? "Nie udało się zapisać wpisu. Formularz został zachowany.",
             });
             setSaving(false);
             return;
@@ -242,7 +256,7 @@ const EditPostScreen = () => {
                                     <input
                                         type="text"
                                         value={form.title}
-                                        maxLength={200}
+                                        maxLength={50}
                                         onChange={(event) =>
                                             setForm((current) => ({
                                                 ...current,
