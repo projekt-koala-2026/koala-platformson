@@ -737,15 +737,16 @@ namespace koala.src.Modules.Core.Services
 
             var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.SubEditionId == subedition_id);
 
-            if (taskItem != null)
+            if (taskItem == null)
             {
-                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "Task with this name already exists");
+                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task not found");
             }
 
             if (taskItem.ImageId == null && taskItem.ImageType == null)
             {
-                throw new KoalaException(KoalaErrorCodes.FileNotFound, "This task item has now image to display");
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "This task item has no image to display");
             }
+
             var id = taskItem.ImageId;
             var extension = taskItem.ImageType;
             var path = $"{id}{extension}";
@@ -770,6 +771,7 @@ namespace koala.src.Modules.Core.Services
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isReviewer = ClaimsHelper.IsRoleOrganizationReviewer(claimsPrincipal);
             bool isCaptain = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
 
             if (!isAuthenticated)
@@ -777,7 +779,7 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
-            if (!isOrganizationAdmin && !isCaptain)
+            if (!isOrganizationAdmin && !isCaptain && !isReviewer)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
@@ -791,25 +793,25 @@ namespace koala.src.Modules.Core.Services
 
             if (subedition.State == LifecycleStates.STATE_CLOSED || subedition.Edition.State == LifecycleStates.STATE_CLOSED)
             {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed subedition");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot view task image of a closed subedition");
             }
 
             DateTime timeNow = DateTime.UtcNow;
             if (isCaptain && (subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose))
             {
-                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Teams cant in this time answer/view tasks");
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Captain can only view image while window for answers is open");
             }
 
             var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.SubEditionId == subedition_id);
 
-            if (taskItem != null)
+            if (taskItem == null)
             {
-                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "Task with this name already exists");
+                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task not found");
             }
 
             if (taskItem.ImageId == null && taskItem.ImageType == null)
             {
-                throw new KoalaException(KoalaErrorCodes.FileNotFound, "This task item has now image to display");
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "This task item has no image to display");
             }
             var id = taskItem.ImageId;
             var extension = taskItem.ImageType;
@@ -845,9 +847,9 @@ namespace koala.src.Modules.Core.Services
 
             var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.SubEditionId == subedition_id);
 
-            if (taskItem != null)
+            if (taskItem == null)
             {
-                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "Task with this name already exists");
+                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task not found");
             }
 
             DateTime timeNow = DateTime.UtcNow;

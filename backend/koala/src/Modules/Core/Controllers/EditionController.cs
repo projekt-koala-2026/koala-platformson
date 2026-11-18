@@ -177,7 +177,7 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPut("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}/image")]
-        public async Task<IActionResult> UpsertTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] TaskItemImageUpsertDto request)
+        public async Task<IActionResult> UpsertTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromForm] TaskItemImageUpsertDto request)
         {
             var physicalPath = await _editionService.UpsertTaskItemImageAsync(User, edition_id, subedition_id, task_id, request);
             var provider = new FileExtensionContentTypeProvider();
