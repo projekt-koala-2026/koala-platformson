@@ -6,18 +6,27 @@ using koala.src.Modules.Account.Dtos;
 using koala.src.Modules.Account.Entities;
 using koala.src.Shared;
 using koala.src.Shared.Account;
+using Microsoft.CodeAnalysis.Differencing;
 using Microsoft.EntityFrameworkCore;
 
 namespace koala.src.Modules.Account.Services
 {
     public class AccountService : IAccountModule
     {
+        private readonly string _privateFilesPath;
         private readonly AccountDbContext _db;
         private readonly ICacheService _cache;
-        public AccountService(AccountDbContext db, ICacheService cache)
+        private readonly IRodoFileOperations _fileOperations;
+        public AccountService(AccountDbContext db, ICacheService cache, string privateFilesPath)
+            : this(db, cache, privateFilesPath, new PhysicalRodoFileOperations())
+        {
+        }
+        public AccountService(AccountDbContext db, ICacheService cache, string privateFilesPath, IRodoFileOperations fileOperations)
         {
             _db = db;
             _cache = cache;
+            _privateFilesPath = privateFilesPath;
+            _fileOperations = fileOperations;
         }
         public async Task<_SessionResponseDto?> Internal_ValidateSessionFromPrincipalAsync(ClaimsPrincipal? claimsPrincipal)
         {
@@ -125,6 +134,62 @@ namespace koala.src.Modules.Account.Services
             return await _db.UserRoles.AsNoTracking()
                 .Include(r => r.Role)
                 .FirstOrDefaultAsync(role => role.UserId == userId && (role.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER || role.Role.Name == RoleNames.NAME_ORGANIZATION_ADMIN || role.Role.Name == RoleNames.NAME_ORGANIZATION_EDITOR) && role.User.Verified) == null ? false : true;
+        }
+
+        public async Task Internal_DeleteUserAndTeamDataAfterEditionCloses(Guid editionId)
+        {
+            var teamsToDrop = await _db.Teams
+            .Include(t => t.TeamJoinCode)
+            .Include(t => t.TeamMembers)
+            .ThenInclude(tm => tm.Rodo)
+            .Where(t => t.EditionId == editionId)
+            .ToListAsync();
+
+            foreach (var t in teamsToDrop)
+            {
+                if (t.TeamJoinCode != null)
+                {
+                    _db.TeamJoinCodes.Remove(t.TeamJoinCode);
+                }
+                foreach (var tm in t.TeamMembers)
+                {
+                    if (tm.Rodo != null)
+                    {
+                        var physicalPath = Path.Combine(_privateFilesPath, $"{tm.RodoId}{tm.Rodo.Type}");
+
+                        try
+                        {
+                            if (_fileOperations.Exists(physicalPath))
+                            {
+                                _fileOperations.Delete(physicalPath);
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                        _db.Rodos.Remove(tm.Rodo);
+                    }
+                }
+                _db.Teams.Remove(t);
+            }
+
+            var usersToDrop = await _db.Users
+            .Include(u => u.Links)
+            .Include(u => u.Sessions)
+            .Include(u => u.UserRoles)
+            .Where(u => u.EditionId == editionId)
+            .ToListAsync();
+
+            foreach (var u in usersToDrop)
+            {
+                _db.Links.RemoveRange(u.Links);
+                _db.Sessions.RemoveRange(u.Sessions);
+                _db.UserRoles.RemoveRange(u.UserRoles);
+                _db.Users.Remove(u);
+            }
+
+            await _db.SaveChangesAsync();
         }
     }
 }

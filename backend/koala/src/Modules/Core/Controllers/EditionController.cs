@@ -5,6 +5,7 @@ using koala.src.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace koala.src.Modules.Core.Controllers
 {
@@ -148,15 +149,43 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
         public async Task<IActionResult> GetTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
         {
             var response = await _editionService.GetTaskItemAsync(User, edition_id, subedition_id, task_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskItemDto>(true, DateTime.UtcNow, null, null, response));
         }
 
-        [AllowAnonymous]
+        [Authorize]
+        [HttpDelete("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}/image")]
+        public async Task<IActionResult> DeleteTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
+        {
+            await _editionService.DeleteTaskItemImageAsync(User, edition_id, subedition_id, task_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+
+        [Authorize]
+        [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}/image")]
+        public async Task<IActionResult> GetTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
+        {
+            var physicalPath = await _editionService.GetTaskItemImageAsync(User, edition_id, subedition_id, task_id);
+            var provider = new FileExtensionContentTypeProvider();
+            provider.TryGetContentType(physicalPath, out var contentType);
+            return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
+        }
+
+        [Authorize]
+        [HttpPut("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}/image")]
+        public async Task<IActionResult> UpsertTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] TaskItemImageUpsertDto request)
+        {
+            var physicalPath = await _editionService.UpsertTaskItemImageAsync(User, edition_id, subedition_id, task_id, request);
+            var provider = new FileExtensionContentTypeProvider();
+            provider.TryGetContentType(physicalPath, out var contentType);
+            return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
+        }
+
+        [Authorize]
         [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks")]
         public async Task<IActionResult> GetTaskItems([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromQuery] PageQueryDto pageQueryDto)
         {
@@ -164,7 +193,7 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpGet("{edition_id}/subeditions/{subedition_id}/task/active/{team_id}")]
         public async Task<IActionResult> GetTasksActive([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid team_id, [FromQuery] PageQueryDto pageQueryDto)
         {

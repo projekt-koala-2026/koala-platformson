@@ -7,18 +7,53 @@ using koala.src.Shared.Account;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.CodeAnalysis.Differencing;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Ocsp;
 
 namespace koala.src.Modules.Core.Services
 {
+    public interface ITaskItemFileOperations
+    {
+        void CreateDirectory(string path);
+        void Move(string source_path, string destination_path, bool overwrite);
+        Task WriteAsync(string path, IFormFile file, bool overwrite);
+        Task<byte[]> ReadAllBytesAsync(string path);
+        bool Exists(string path);
+        void Delete(string path);
+    }
+
+    internal sealed class PhysicalTaskItemFileOperations : ITaskItemFileOperations
+    {
+        public void CreateDirectory(string path) => Directory.CreateDirectory(path);
+
+        public async Task WriteAsync(string path, IFormFile file, bool overwrite)
+        {
+            await using var stream = new FileStream(path, overwrite ? FileMode.Create : FileMode.CreateNew);
+            await file.CopyToAsync(stream);
+        }
+
+        public Task<byte[]> ReadAllBytesAsync(string path) => File.ReadAllBytesAsync(path);
+        public bool Exists(string path) => File.Exists(path);
+        public void Delete(string path) => File.Delete(path);
+        public void Move(string source_path, string destination_path, bool overwrite) => File.Move(source_path, destination_path, overwrite);
+    }
     public class EditionService
     {
         private readonly CoreDbContext _db;
         private readonly IAccountModule _accountModule;
+        private readonly string _privateFilesPath;
+        private readonly ITaskItemFileOperations _fileOperations;
 
-        public EditionService(CoreDbContext db, IAccountModule accountModule)
+        public EditionService(CoreDbContext db, IAccountModule accountModule, string privateFilesPath)
+            : this(db, accountModule, privateFilesPath, new PhysicalTaskItemFileOperations())
+        {
+        }
+
+        public EditionService(CoreDbContext db, IAccountModule accountModule, string privateFilesPath, ITaskItemFileOperations fileOperations)
         {
             _db = db;
             _accountModule = accountModule;
+            _privateFilesPath = privateFilesPath;
+            _fileOperations = fileOperations;
         }
 
         public async Task<EditionDto> CreateEditionAsync(ClaimsPrincipal? claimsPrincipal, EditionCreateDto createEditionDto)
@@ -167,7 +202,14 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id && e.State == LifecycleStates.STATE_ACTIVE);
+            var edition = await _db.Editions
+                .Include(e => e.SubEditions)
+                .ThenInclude(se => se.TaskItems)
+                .ThenInclude(ti => ti.TaskAnswers)
+                .Include(e => e.SubEditions)
+                .ThenInclude(se => se.TaskItems)
+                .ThenInclude(ti => ti.TaskSubmissions)
+                .FirstOrDefaultAsync(e => e.Id == id && e.State == LifecycleStates.STATE_ACTIVE);
 
             if (edition == null)
             {
@@ -178,7 +220,46 @@ namespace koala.src.Modules.Core.Services
 
             edition.State = LifecycleStates.STATE_CLOSED;
             edition.UpdatedAt = timeNow;
+
+            if (edition != null)
+            {
+                foreach (var subEdition in edition.SubEditions)
+                {
+                    foreach (var taskItem in subEdition.TaskItems)
+                    {
+                        if (taskItem.TaskAnswers != null && taskItem.TaskAnswers.Any())
+                        {
+                            _db.TaskAnswers.RemoveRange(taskItem.TaskAnswers);
+                        }
+
+                        if (taskItem.TaskSubmissions != null && taskItem.TaskSubmissions.Any())
+                        {
+                            _db.TaskSubmissions.RemoveRange(taskItem.TaskSubmissions);
+                        }
+
+                        if (taskItem.ImageId != null && taskItem.ImageType != null)
+                        {
+                            var physicalPath = Path.Combine(_privateFilesPath, $"{taskItem.ImageId}{taskItem.ImageType}");
+
+                            try
+                            {
+                                if (_fileOperations.Exists(physicalPath))
+                                {
+                                    _fileOperations.Delete(physicalPath);
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+                        _db.TaskItems.Remove(taskItem);
+                    }
+                }
+            }
+
             await _db.SaveChangesAsync();
+            await _accountModule.Internal_DeleteUserAndTeamDataAfterEditionCloses(id);
 
             return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
@@ -606,10 +687,278 @@ namespace koala.src.Modules.Core.Services
                 newTask.Name,
                 newTask.Tier,
                 newTask.ContentJson,
+                (newTask.ImageId == null || newTask.ImageType == null) ? false : true,
                 newTask.CreatedAt,
                 newTask.UpdatedAt,
                 newTask.Version
             );
+        }
+        private void TryDeletePhysicalFile(string path)
+        {
+            try
+            {
+                if (_fileOperations.Exists(path))
+                {
+                    _fileOperations.Delete(path);
+                }
+            }
+            catch
+            {
+                // Preserve the original database error if best-effort file cleanup also fails.
+            }
+        }
+
+        public async Task DeleteTaskItemImageAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid taskItem_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.Include(e => e.Edition).FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
+
+            if (subedition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not a part of the this edition");
+            }
+
+            if (subedition.State == LifecycleStates.STATE_CLOSED || subedition.Edition.State == LifecycleStates.STATE_CLOSED)
+            {
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed subedition");
+            }
+
+            var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.SubEditionId == subedition_id);
+
+            if (taskItem != null)
+            {
+                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "Task with this name already exists");
+            }
+
+            if (taskItem.ImageId == null && taskItem.ImageType == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "This task item has now image to display");
+            }
+            var id = taskItem.ImageId;
+            var extension = taskItem.ImageType;
+            var path = $"{id}{extension}";
+            var physicalPath = Path.Combine(_privateFilesPath, path);
+            try
+            {
+                if (_fileOperations.Exists(physicalPath))
+                {
+                    _fileOperations.Delete(physicalPath);
+                }
+            }
+            catch
+            {
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "Error deleting the physical file from disk");
+            }
+            taskItem.UpdatedAt = DateTime.UtcNow;
+            taskItem.ImageId = null;
+            taskItem.ImageType = null;
+            await _db.SaveChangesAsync();
+        }
+        public async Task<string> GetTaskItemImageAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid taskItem_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isCaptain = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin && !isCaptain)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.Include(e => e.Edition).FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
+
+            if (subedition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not a part of the this edition");
+            }
+
+            if (subedition.State == LifecycleStates.STATE_CLOSED || subedition.Edition.State == LifecycleStates.STATE_CLOSED)
+            {
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed subedition");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+            if (isCaptain && (subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose))
+            {
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Teams cant in this time answer/view tasks");
+            }
+
+            var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.SubEditionId == subedition_id);
+
+            if (taskItem != null)
+            {
+                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "Task with this name already exists");
+            }
+
+            if (taskItem.ImageId == null && taskItem.ImageType == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "This task item has now image to display");
+            }
+            var id = taskItem.ImageId;
+            var extension = taskItem.ImageType;
+            var path = $"{id}{extension}";
+            return Path.Combine(_privateFilesPath, path);
+        }
+        public async Task<string> UpsertTaskItemImageAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid taskItem_id, TaskItemImageUpsertDto request)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var subedition = await _db.SubEditions.Include(e => e.Edition).FirstOrDefaultAsync(e => e.Id == subedition_id && e.EditionId == edition_id);
+
+            if (subedition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "SubEdition of provided id does not exist or is not a part of the this edition");
+            }
+
+            if (subedition.State == LifecycleStates.STATE_CLOSED || subedition.Edition.State == LifecycleStates.STATE_CLOSED)
+            {
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed subedition");
+            }
+
+            var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.SubEditionId == subedition_id);
+
+            if (taskItem != null)
+            {
+                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "Task with this name already exists");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+            try
+            {
+                _fileOperations.CreateDirectory(_privateFilesPath);
+            }
+            catch
+            {
+                throw new KoalaException(KoalaErrorCodes.FolderCreationFailure, "Error when creating a folder holding private files");
+            }
+
+            if (taskItem.Version != request.Version)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Error make sure u have fresh data versions does not match");
+            }
+
+            if (taskItem.ImageId == null && taskItem.ImageType == null)
+            {
+                try
+                {
+                    _fileOperations.CreateDirectory(_privateFilesPath);
+                }
+                catch
+                {
+                    throw new KoalaException(KoalaErrorCodes.FolderCreationFailure, "Error when creating a folder holding private files");
+                }
+
+                var id = Guid.CreateVersion7();
+                var extension = Path.GetExtension(request.File.FileName);
+                var path = $"{id}{extension}";
+                var physicalPath = Path.Combine(_privateFilesPath, path);
+
+                try
+                {
+                    await _fileOperations.WriteAsync(physicalPath, request.File, overwrite: false);
+                }
+                catch
+                {
+                    throw new KoalaException(KoalaErrorCodes.FileCreationFailure, "Error creating a private file");
+                }
+                try
+                {
+                    taskItem.ImageId = id;
+                    taskItem.ImageType = extension;
+                    taskItem.UpdatedAt = timeNow;
+                    await _db.SaveChangesAsync();
+                }
+                catch
+                {
+                    TryDeletePhysicalFile(physicalPath);
+                    throw new KoalaException(KoalaErrorCodes.DatabaseError, "Error saving public file record to database");
+                }
+
+                return physicalPath;
+            }
+            else
+            {
+                var temp_id = Guid.CreateVersion7();
+                var id = taskItem.ImageId;
+                var oldExtension = taskItem.ImageType;
+                var newExtension = Path.GetExtension(request.File.FileName);
+
+                var oldPhysicalPath = Path.Combine(_privateFilesPath, $"{id}{oldExtension}");
+                var newPhysicalPath = Path.Combine(_privateFilesPath, $"{id}{newExtension}");
+                var tempPhysicalPath = Path.Combine(_privateFilesPath, $"{id}_{temp_id}.tmp");
+
+                try
+                {
+                    await _fileOperations.WriteAsync(tempPhysicalPath, request.File, overwrite: true);
+                }
+                catch
+                {
+                    TryDeletePhysicalFile(tempPhysicalPath);
+                    throw new KoalaException(KoalaErrorCodes.FileCreationFailure, "Error creating a private file");
+                }
+
+                try
+                {
+                    taskItem.ImageId = id;
+                    taskItem.ImageType = newExtension;
+                    taskItem.UpdatedAt = timeNow;
+                    await _db.SaveChangesAsync();
+                }
+                catch
+                {
+                    TryDeletePhysicalFile(tempPhysicalPath);
+                    throw new KoalaException(KoalaErrorCodes.DatabaseError, "Error saving private file record to database");
+                }
+
+                try
+                {
+                    _fileOperations.Move(tempPhysicalPath, newPhysicalPath, overwrite: true);
+                }
+                catch
+                {
+                    throw new KoalaException(KoalaErrorCodes.FileCreationFailure, "Error finalizing private file update");
+                }
+
+                if (!string.Equals(oldExtension, newExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    TryDeletePhysicalFile(oldPhysicalPath);
+                }
+
+                await _db.SaveChangesAsync();
+
+                return newPhysicalPath;
+            }
+
+
         }
 
         public async Task<TaskItemDto> UpdateTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid task_id, TaskItemUpdateDto request)
@@ -637,7 +986,7 @@ namespace koala.src.Modules.Core.Services
                     .SetProperty(t => t.UpdatedAt, now).SetProperty(t => t.Version, t => t.Version + 1));
             if (updated == 0)
                 throw new KoalaException(KoalaErrorCodes.Conflict, "The task changed, is closed, or already has submissions");
-            return new TaskItemDto(task.Id, task.SubEditionId, request.Name, request.Tier, request.ContentJson, task.CreatedAt, now, request.Version + 1);
+            return new TaskItemDto(task.Id, task.SubEditionId, request.Name, request.Tier, request.ContentJson, (task.ImageId == null || task.ImageType == null) ? false : true, task.CreatedAt, now, request.Version + 1);
         }
 
         public async Task DeleteTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid subedition_id, Guid task_id)
@@ -703,6 +1052,7 @@ namespace koala.src.Modules.Core.Services
                 task.Name,
                 task.Tier,
                 task.ContentJson,
+                (task.ImageId == null || task.ImageType == null) ? false : true,
                 task.CreatedAt,
                 task.UpdatedAt,
                 task.Version
@@ -744,6 +1094,7 @@ namespace koala.src.Modules.Core.Services
                 e.Name,
                 e.Tier,
                 e.ContentJson,
+                (e.ImageId == null || e.ImageType == null) ? false : true,
                 e.CreatedAt,
                 e.UpdatedAt,
                 e.Version
@@ -779,34 +1130,34 @@ namespace koala.src.Modules.Core.Services
             }
 
             var subedition = await _db.SubEditions.FirstOrDefaultAsync(se => se.Id == subedition_id);
-            if(subedition == null)
+            if (subedition == null)
             {
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist");
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if(subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose)
+            if (subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose)
             {
                 throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Teams cant in this time answer/view tasks");
             }
-            
+
             var query = _db.TaskItems.AsNoTracking()
                 .Where(e => e.SubEditionId == subedition_id
                         && e.SubEdition.State == "ACTIVE"
                         && e.SubEdition.EditionId == edition_id
                         && e.SubEdition.Edition.State == "ACTIVE");
 
-            if(teamInfo.Tier == CompetitionTiers.TIER_1)
+            if (teamInfo.Tier == CompetitionTiers.TIER_1)
             {
                 query = query.Where(e => e.Tier == CompetitionTiers.TIER_1);
             }
-            if(teamInfo.Tier == CompetitionTiers.TIER_2)
+            if (teamInfo.Tier == CompetitionTiers.TIER_2)
             {
                 query = query.Where(e => e.Tier == CompetitionTiers.TIER_1 || e.Tier == CompetitionTiers.TIER_2);
             }
 
             var totalCount = await query.CountAsync();
-            
+
             var taskItems = await query
                 .OrderBy(e => e.CreatedAt)
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
@@ -817,6 +1168,7 @@ namespace koala.src.Modules.Core.Services
                     e.Name,
                     e.Tier,
                     e.ContentJson,
+                    (e.ImageId == null || e.ImageType == null) ? false : true,
                     e.CreatedAt,
                     e.UpdatedAt,
                     e.Version
