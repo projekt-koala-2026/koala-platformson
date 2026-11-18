@@ -234,6 +234,14 @@ const EditPostScreen = () => {
 
     const editionTitle = (editionId: string) =>
         editions.find((edition) => edition.id === editionId)?.title ?? "Nieprzypisana";
+    const postsNewestFirst = useMemo(
+        () =>
+            [...posts].sort((first, second) => {
+                const difference = Date.parse(second.createdAt) - Date.parse(first.createdAt);
+                return Number.isFinite(difference) ? difference : 0;
+            }),
+        [posts]
+    );
 
     const renderFields = (
         value: typeof emptyForm,
@@ -524,7 +532,7 @@ const EditPostScreen = () => {
                                     tabIndex={0}
                                     className="max-h-[70dvh] space-y-4 overflow-y-auto overscroll-contain rounded-2xl border border-line bg-canvas p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus xl:max-h-[calc(100dvh-10rem)]"
                                 >
-                                    {posts.map((post) => (
+                                    {postsNewestFirst.map((post) => (
                                         <article
                                             key={post.id}
                                             className="rounded-2xl border border-line bg-surface p-5 shadow-sm"

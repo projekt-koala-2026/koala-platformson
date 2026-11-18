@@ -190,8 +190,8 @@ export default function SubeditionsScreen() {
                     Zarządzaj etapami konkursu i terminami odpowiadania.
                 </p>
                 <p className="mt-2 text-sm text-ink-secondary">
-                    Zakończenie etapu wymaga upływu terminu i dwóch zgodnych ocen każdej
-                    nadesłanej odpowiedzi.
+                    Zakończenie etapu wymaga upływu terminu i dwóch zgodnych ocen każdej nadesłanej
+                    odpowiedzi.
                 </p>
                 {feedback && (
                     <p role="status" className="app-status-success mt-6 rounded-xl border p-3">
