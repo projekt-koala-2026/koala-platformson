@@ -167,7 +167,14 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == id && e.State == LifecycleStates.STATE_ACTIVE);
+            var edition = await _db.Editions
+                .Include(e => e.SubEditions)
+                .ThenInclude(se => se.TaskItems)
+                .ThenInclude(ti => ti.TaskAnswers)
+                .Include(e => e.SubEditions)
+                .ThenInclude(se => se.TaskItems)
+                .ThenInclude(ti => ti.TaskSubmissions)
+                .FirstOrDefaultAsync(e => e.Id == id && e.State == LifecycleStates.STATE_ACTIVE);
 
             if (edition == null)
             {
@@ -178,8 +185,28 @@ namespace koala.src.Modules.Core.Services
 
             edition.State = LifecycleStates.STATE_CLOSED;
             edition.UpdatedAt = timeNow;
-            await _db.SaveChangesAsync();
 
+            if (edition != null)
+            {
+                foreach (var subEdition in edition.SubEditions)
+                {
+                    foreach (var taskItem in subEdition.TaskItems)
+                    {
+                        if (taskItem.TaskAnswers != null && taskItem.TaskAnswers.Any())
+                        {
+                            _db.TaskAnswers.RemoveRange(taskItem.TaskAnswers);
+                        }
+
+                        if (taskItem.TaskSubmissions != null && taskItem.TaskSubmissions.Any())
+                        {
+                            _db.TaskSubmissions.RemoveRange(taskItem.TaskSubmissions);
+                        }
+                        _db.TaskItems.Remove(taskItem);
+                    }
+                }
+            }
+
+            await _db.SaveChangesAsync();
             await _accountModule.Internal_DeleteUserAndTeamDataAfterEditionCloses(id);
 
             return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
