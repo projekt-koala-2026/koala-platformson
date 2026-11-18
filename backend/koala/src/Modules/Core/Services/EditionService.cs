@@ -753,13 +753,14 @@ namespace koala.src.Modules.Core.Services
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isCaptain = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
 
             if (!isAuthenticated)
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
             }
 
-            if (!isOrganizationAdmin)
+            if (!isOrganizationAdmin && !isCaptain)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
@@ -774,6 +775,12 @@ namespace koala.src.Modules.Core.Services
             if (subedition.State == LifecycleStates.STATE_CLOSED || subedition.Edition.State == LifecycleStates.STATE_CLOSED)
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed subedition");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+            if (isCaptain && (subedition.AnswerOpen > timeNow || timeNow > subedition.AnswerClose))
+            {
+                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Teams cant in this time answer/view tasks");
             }
 
             var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.SubEditionId == subedition_id);
