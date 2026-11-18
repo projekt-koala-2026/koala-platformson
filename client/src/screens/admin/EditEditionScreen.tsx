@@ -194,7 +194,7 @@ const EditEditionScreen = () => {
     const endEdition = async (edition: Edition) => {
         if (
             !window.confirm(
-                `Czy na pewno chcesz zakończyć edycję „${edition.title}”? Tej operacji nie można cofnąć z poziomu panelu.`
+                `Czy na pewno chcesz zakończyć edycję „${edition.title}”?\n\nZakończenie edycji usuwa jej drużyny, dane uczestników i zgody RODO, konta kapitanów i opiekunów przypisane do edycji oraz zadania konkursowe, odpowiedzi i oceny. Zapisane rankingi pozostają.\n\nPrzed zakończeniem dokończ ocenianie i wygeneruj potrzebne rankingi — później nie będzie można ich ponownie wygenerować.\n\nTej operacji nie można cofnąć.`
             )
         )
             return;

@@ -172,6 +172,7 @@ const AdminRodoScreen = () => {
     };
 
     const setRodoState = async (application: RodoApplication, state: RodoState) => {
+        if (savingKey) return;
         setSavingKey(application.key);
         setFeedback(null);
         const memberPath = application.rodo.teamMemberId;
@@ -235,7 +236,7 @@ const AdminRodoScreen = () => {
                     />
                 </header>
 
-                {feedback && (
+                {feedback && !selectedApplication && (
                     <p
                         role={feedback.tone === "error" ? "alert" : "status"}
                         className={`mt-6 rounded-xl border px-4 py-3 text-sm ${
@@ -375,9 +376,10 @@ const AdminRodoScreen = () => {
                                                                     Szczegóły
                                                                 </>
                                                             }
-                                                            onClick={() =>
-                                                                setSelectedKey(application.key)
-                                                            }
+                                                            onClick={() => {
+                                                                setFeedback(null);
+                                                                setSelectedKey(application.key);
+                                                            }}
                                                             className="px-3"
                                                         />
                                                     </td>
@@ -394,12 +396,22 @@ const AdminRodoScreen = () => {
 
             <Modal
                 isOpen={selectedApplication !== null}
-                onClose={() => setSelectedKey(null)}
+                onClose={() => {
+                    if (!savingKey) setSelectedKey(null);
+                }}
                 title="Weryfikacja zgody RODO"
                 maxWidth="lg"
             >
                 {selectedApplication && (
                     <div className="space-y-5">
+                        {feedback && (
+                            <p
+                                role={feedback.tone === "error" ? "alert" : "status"}
+                                className={`rounded-xl border p-3 text-sm ${feedback.tone === "error" ? "app-status-danger" : "app-status-success"}`}
+                            >
+                                {feedback.message}
+                            </p>
+                        )}
                         <dl className="grid gap-4 rounded-xl bg-surface-muted p-4 sm:grid-cols-2">
                             <div>
                                 <dt className="text-xs font-semibold uppercase tracking-wide text-ink-muted">

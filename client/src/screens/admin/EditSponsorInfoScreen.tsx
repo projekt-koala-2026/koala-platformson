@@ -97,6 +97,7 @@ const EditSponsorInfo = () => {
 
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (saving) return;
         setFeedback(null);
         const normalized: SponsorForm = {
             name: form.name.trim(),
@@ -224,7 +225,7 @@ const EditSponsorInfo = () => {
                         onClick={openCreate}
                     />
                 </header>
-                {feedback && (
+                {feedback && !modal && (
                     <div
                         role={feedback.tone === "error" ? "alert" : "status"}
                         className={`rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
@@ -322,6 +323,11 @@ const EditSponsorInfo = () => {
                 maxWidth="lg"
             >
                 <form onSubmit={submit} className="space-y-4">
+                    {feedback?.tone === "error" && (
+                        <p role="alert" className="app-status-danger rounded-xl border p-3 text-sm">
+                            {feedback.message}
+                        </p>
+                    )}
                     <label className="block text-sm font-medium text-ink">
                         Nazwa *
                         <input

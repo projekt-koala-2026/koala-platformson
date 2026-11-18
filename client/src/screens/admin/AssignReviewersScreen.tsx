@@ -102,8 +102,8 @@ export default function AssignReviewersScreen() {
                 </p>
                 <h1 className="mt-2 text-3xl font-bold text-ink-heading">Przydzielanie recenzji</h1>
                 <p className="mt-3 text-ink-secondary">
-                    Wybierz zadanie i utwórz pary recenzentów. Odpowiedzi zostaną rozdzielone
-                    pomiędzy pary.
+                    Wybierz zadanie i przydziel mu parę recenzentów. Późniejsza zmiana recenzenta
+                    przenosi tylko jego nieocenione odpowiedzi, zachowując dotychczasowe oceny.
                 </p>
                 {error && (
                     <p role="alert" className="app-status-danger mt-6 rounded-xl border p-3">

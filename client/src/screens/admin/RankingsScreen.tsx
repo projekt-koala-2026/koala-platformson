@@ -126,7 +126,22 @@ export default function RankingsScreen() {
                 ),
             ]);
             if (!active) return;
-            if (!draft.data || !publicRanking.data || !tasks.data || !teams.data) {
+            if (!draft.data || !publicRanking.data) {
+                setError("Nie udało się pobrać rankingu. Spróbuj ponownie.");
+                setLoadingRanking(false);
+                return;
+            }
+            setRankings(draft.data);
+            setPublished(Boolean(publicRanking.data.length));
+            if (editions.find((item) => item.id === editionId)?.state === "CLOSED") {
+                setReadiness({
+                    id: subeditionId,
+                    reason: "Edycja jest zakończona. Dane konkursowe zostały usunięte, więc nie można ponownie wygenerować rankingu. Zapisany ranking można nadal przeglądać i opublikować.",
+                });
+                setLoadingRanking(false);
+                return;
+            }
+            if (!tasks.data || !teams.data) {
                 setError(
                     "Nie uda\u0142o si\u0119 sprawdzi\u0107 gotowo\u015bci rankingu. Spr\u00f3buj ponownie."
                 );
@@ -192,6 +207,12 @@ export default function RankingsScreen() {
 
     const canGenerate =
         readiness?.id === subeditionId && readiness.reason === "" && !loadingRanking;
+    const canPublish =
+        readiness?.id === subeditionId &&
+        !loadingRanking &&
+        (editions.find((item) => item.id === editionId)?.state === "CLOSED" || canGenerate) &&
+        rankings.length > 0 &&
+        !published;
     const changeEdition = (id: string) => {
         if (busy) return;
         setEditionId(id);
@@ -234,7 +255,7 @@ export default function RankingsScreen() {
     };
 
     const publish = async () => {
-        if (!subeditionId || busy || !canGenerate || published || !rankings.length) return;
+        if (!subeditionId || busy || !canPublish) return;
         setBusy(true);
         setError("");
         setNotice("");
@@ -347,7 +368,7 @@ export default function RankingsScreen() {
                                               ? "Opublikowano"
                                               : "Opublikuj ranking"
                                     }
-                                    disabled={busy || !canGenerate || !rankings.length || published}
+                                    disabled={busy || !canPublish}
                                     onClick={() => void publish()}
                                 />
                             </div>
@@ -398,7 +419,9 @@ export default function RankingsScreen() {
                             </p>
                         ) : rankings.length === 0 ? (
                             <p className="rounded-xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
-                                Brak rankingu. Wygeneruj go po zakończeniu oceniania tego etapu.
+                                {editions.find((item) => item.id === editionId)?.state === "CLOSED"
+                                    ? "Brak zapisanego rankingu dla tego etapu. Po zakończeniu edycji nie można go już wygenerować."
+                                    : "Brak rankingu. Wygeneruj go po zakończeniu oceniania tego etapu."}
                             </p>
                         ) : (
                             <div className="overflow-x-auto rounded-2xl border border-line bg-surface">

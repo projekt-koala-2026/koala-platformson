@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { FaEdit, FaImage, FaPlus, FaTrash } from "react-icons/fa";
+import { FaEdit, FaImage } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -97,6 +97,7 @@ const EditKoalicjantInfo = () => {
 
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (saving) return;
         setFeedback(null);
         const normalized: KoalicjantForm = {
             nameFirst: form.nameFirst.trim(),
@@ -182,21 +183,12 @@ const EditKoalicjantInfo = () => {
                         </p>
                         <h1 className="mt-1 text-3xl font-bold tracking-tight">Koalicjanci</h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Zarządzaj osobami prezentowanymi na publicznej stronie KOALicjA.
+                            Edytuj publiczne profile osób z administracji konkursu oraz ich
+                            widoczność na stronie KOALicjA.
                         </p>
                     </div>
-                    <Button
-                        text={
-                            <>
-                                <FaPlus />
-                                <span className="ml-2">Dodaj osobę</span>
-                            </>
-                        }
-                        disabled
-                        title="Dodawanie będzie dostępne po uzupełnieniu endpointu backendu."
-                    />
                 </header>
-                {feedback && (
+                {feedback && !modal && (
                     <div
                         role={feedback.tone === "error" ? "alert" : "status"}
                         className={`rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
@@ -212,7 +204,8 @@ const EditKoalicjantInfo = () => {
                     <div className="rounded-2xl border border-dashed border-line bg-surface p-12 text-center">
                         <h2 className="font-semibold text-ink-strong">Brak koalicjantów</h2>
                         <p className="mt-2 text-sm text-ink-muted">
-                            Dodaj pierwszą osobę do publicznej prezentacji.
+                            Lista prezentuje profile osób z administracji konkursu. Kontami i ich
+                            rolami zarządza administrator w zakładce „Użytkownicy”.
                         </p>
                     </div>
                 ) : (
@@ -261,17 +254,6 @@ const EditKoalicjantInfo = () => {
                                         onClick={() => openEdit(person)}
                                         className="px-3"
                                     />
-                                    <Button
-                                        text={
-                                            <>
-                                                <FaTrash />
-                                                <span className="ml-2">Usuń</span>
-                                            </>
-                                        }
-                                        disabled
-                                        title="Usuwanie będzie dostępne po uzupełnieniu endpointu backendu."
-                                        className="bg-danger px-3 hover:bg-danger-hover focus:ring-danger-emphasis"
-                                    />
                                 </div>
                             </article>
                         ))}
@@ -285,6 +267,11 @@ const EditKoalicjantInfo = () => {
                 maxWidth="xl"
             >
                 <form onSubmit={submit} className="space-y-4">
+                    {feedback?.tone === "error" && (
+                        <p role="alert" className="app-status-danger rounded-xl border p-3 text-sm">
+                            {feedback.message}
+                        </p>
+                    )}
                     <div className="grid gap-5 md:grid-cols-[1fr_12rem]">
                         <div className="space-y-4">
                             <label className="block text-sm font-medium text-ink">
