@@ -16,9 +16,9 @@ import {
 const LOGIN_ENDPOINT = apiEndpoints.sessions;
 const REGISTER_ENDPOINT = apiEndpoints.users;
 const fieldClass =
-    "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100";
+    "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted";
 
-type RegistrationRole = "TEAM_PLAYER" | "TEAM_ADMIN";
+type RegistrationRole = "TEAM_CAPTAIN" | "TEAM_GUARDIAN";
 type Mode = "login" | "register";
 
 const LoginScreen = () => {
@@ -28,7 +28,7 @@ const LoginScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [registerEmail, setRegisterEmail] = useState("");
-    const [registrationRole, setRegistrationRole] = useState<RegistrationRole>("TEAM_PLAYER");
+    const [registrationRole, setRegistrationRole] = useState<RegistrationRole>("TEAM_CAPTAIN");
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
     const [submitting, setSubmitting] = useState(false);
@@ -72,7 +72,7 @@ const LoginScreen = () => {
             }
 
             storeSession(data);
-            navigate(roles.isCaptain ? "/captain" : "/");
+            navigate("/captain");
         } finally {
             setSubmitting(false);
             stopLoading();
@@ -92,24 +92,30 @@ const LoginScreen = () => {
         setSubmitting(true);
         startLoading();
         try {
-            const { status } = await apiRequestResult<null>(
+            const { status, error: registrationError } = await apiRequestResult<null>(
                 REGISTER_ENDPOINT,
                 {
                     email: normalizedEmail,
-                    roles: [registrationRole],
+                    userRoles: [registrationRole],
                 },
                 "POST",
                 navigate
             );
             if (status !== 201) {
-                setError("Nie udało się wysłać zaproszenia. Adres może być już zajęty.");
+                setError(
+                    registrationError?.code === "KOALA_ACTIVE_EDITION_NOT_FOUND"
+                        ? "Rejestracja jest obecnie niedostępna — nie trwa żadna aktywna edycja konkursu. Spróbuj ponownie po rozpoczęciu kolejnej edycji."
+                        : registrationError?.code === "KOALA_USER_ALREADY_EXISTS"
+                          ? "Konto z tym adresem e-mail już istnieje. Zaloguj się na swoje konto."
+                          : "Nie udało się wysłać wiadomości rejestracyjnej. Spróbuj ponownie później."
+                );
                 return;
             }
 
             setEmail(normalizedEmail);
             setPassword("");
             setRegisterEmail("");
-            setRegistrationRole("TEAM_PLAYER");
+            setRegistrationRole("TEAM_CAPTAIN");
             setMode("login");
             setNotice("Wysłaliśmy wiadomość z linkiem umożliwiającym dokończenie rejestracji.");
         } finally {
@@ -119,26 +125,26 @@ const LoginScreen = () => {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="grid flex-1 place-items-center px-4 py-10 sm:px-6">
-                <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                <section className="w-full max-w-md rounded-2xl border border-line bg-surface p-6 shadow-sm sm:p-8">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Konto uczestnika
                     </p>
-                    <h1 className="mt-2 text-2xl font-bold text-slate-900">
+                    <h1 className="mt-2 text-2xl font-bold text-ink-heading">
                         {mode === "register" ? "Utwórz konto" : "Zaloguj się"}
                     </h1>
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="mt-2 text-sm text-ink-muted">
                         {mode === "register"
-                            ? "Rejestracja jest dostępna dla kapitanów i opiekunów drużyn."
+                            ? "Rejestracja jest dostępna dla kapitanów i opiekunów drużyn podczas aktywnej edycji konkursu."
                             : "Użyj loginu lub adresu e-mail przypisanego do konta."}
                     </p>
 
                     {error && (
                         <p
                             role="alert"
-                            className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                            className="mt-5 rounded-xl border p-3 text-sm app-status-danger"
                         >
                             {error}
                         </p>
@@ -146,7 +152,7 @@ const LoginScreen = () => {
                     {notice && (
                         <p
                             role="status"
-                            className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"
+                            className="mt-5 rounded-xl border p-3 text-sm app-status-success"
                         >
                             {notice}
                         </p>
@@ -154,7 +160,7 @@ const LoginScreen = () => {
 
                     {mode === "login" ? (
                         <form onSubmit={login} className="mt-6 space-y-4">
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label className="block text-sm font-medium text-ink">
                                 Login lub e-mail
                                 <input
                                     className={fieldClass}
@@ -166,7 +172,7 @@ const LoginScreen = () => {
                                     required
                                 />
                             </label>
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label className="block text-sm font-medium text-ink">
                                 Hasło
                                 <input
                                     className={fieldClass}
@@ -188,7 +194,7 @@ const LoginScreen = () => {
                                 type="button"
                                 disabled={submitting}
                                 onClick={() => navigate("/reset-password")}
-                                className="w-full rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                                className="w-full rounded-lg px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-muted disabled:opacity-50"
                             >
                                 Nie pamiętasz hasła?
                             </button>
@@ -196,14 +202,14 @@ const LoginScreen = () => {
                                 type="button"
                                 disabled={submitting}
                                 onClick={() => switchMode("register")}
-                                className="w-full rounded-lg px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                                className="w-full rounded-lg px-3 py-2 text-sm font-medium text-brand-text hover:bg-brand-soft disabled:opacity-50"
                             >
                                 Nie masz konta? Zarejestruj się
                             </button>
                         </form>
                     ) : (
                         <form onSubmit={createAccount} className="mt-6 space-y-4">
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label className="block text-sm font-medium text-ink">
                                 E-mail
                                 <input
                                     className={fieldClass}
@@ -216,15 +222,19 @@ const LoginScreen = () => {
                                 />
                             </label>
                             <fieldset>
-                                <legend className="text-sm font-medium text-slate-700">
+                                <legend className="text-sm font-medium text-ink">
                                     Rodzaj konta
                                 </legend>
                                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                    {(["TEAM_PLAYER", "TEAM_ADMIN"] as RegistrationRole[]).map(
+                                    {(["TEAM_CAPTAIN", "TEAM_GUARDIAN"] as RegistrationRole[]).map(
                                         (role) => (
                                             <label
                                                 key={role}
-                                                className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700 hover:bg-emerald-50"
+                                                className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-3 text-sm transition focus-within:ring-2 focus-within:ring-brand-focus ${
+                                                    registrationRole === role
+                                                        ? "border-brand-focus bg-brand-soft font-medium text-brand-text-strong"
+                                                        : "border-line text-ink hover:border-brand-border-strong hover:bg-brand-soft"
+                                                }`}
                                             >
                                                 <input
                                                     type="radio"
@@ -234,7 +244,7 @@ const LoginScreen = () => {
                                                     disabled={submitting}
                                                     onChange={() => setRegistrationRole(role)}
                                                 />
-                                                {role === "TEAM_PLAYER" ? "Kapitan" : "Opiekun"}
+                                                {role === "TEAM_CAPTAIN" ? "Kapitan" : "Opiekun"}
                                             </label>
                                         )
                                     )}
@@ -250,7 +260,7 @@ const LoginScreen = () => {
                                 type="button"
                                 disabled={submitting}
                                 onClick={() => switchMode("login")}
-                                className="w-full rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                                className="w-full rounded-lg px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-muted disabled:opacity-50"
                             >
                                 Wróć do logowania
                             </button>

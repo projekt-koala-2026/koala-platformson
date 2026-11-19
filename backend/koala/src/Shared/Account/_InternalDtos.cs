@@ -12,4 +12,14 @@ namespace koala.src.Shared.Account
         List<string> UserRoles,
         UserDto User
     );
+
+    public record _TeamResponseDto
+    (
+        Guid TeamId,
+        Guid EditionId,
+        Guid CaptainId,
+        Guid? GuardianId,
+        string Tier,
+        string Name
+    );
 }

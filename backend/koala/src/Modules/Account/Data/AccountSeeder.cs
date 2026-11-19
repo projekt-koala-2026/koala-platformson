@@ -10,10 +10,13 @@ namespace koala.src.Modules.Account.Data
     public class AccountSeederHostedService : IHostedService
     {
         private readonly IServiceProvider _serviceProvider;
-
-        public AccountSeederHostedService(IServiceProvider serviceProvider)
+        private readonly string _admin_passw;
+        private readonly string _admin_email;
+        public AccountSeederHostedService(IServiceProvider serviceProvider, string admin_email, string admin_passw)
         {
             _serviceProvider = serviceProvider;
+            _admin_email = admin_email;
+            _admin_passw = admin_passw;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -28,18 +31,19 @@ namespace koala.src.Modules.Account.Data
                     ur => ur.RoleId,
                     r => r.Id,
                     (ur, r) => r.Name)
-                .AnyAsync(roleName => roleName == "ORGANIZATION_ADMIN", cancellationToken);
+                .AnyAsync(roleName => roleName == RoleNames.NAME_ORGANIZATION_ADMIN, cancellationToken);
 
             if (!hasAdmin)
             {
-                var adminRoleId = Guid.Parse("01a027c5-d599-73de-bd5c-11f84a3fc125");
+                var adminRoleId = Guid.Parse(AccountDbContext.static_id_guid_role_organization_admin);
                 var dummyAdmin = new User
                 {
                     Id = Guid.NewGuid(),
-                    Email = "admin",
-                    NameFirst = null,
-                    NameLast = null,
-                    PasswordHash = PasswordHasher.Hash("admin"), 
+                    EditionId = null,
+                    Email = _admin_email,
+                    NameFirst = "seeded",
+                    NameLast = "seeded",
+                    PasswordHash = PasswordHasher.Hash(_admin_passw),
                     Verified = true,
                     AcceptedRodo = true,
                     AcceptedRules = true,

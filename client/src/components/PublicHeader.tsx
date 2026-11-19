@@ -1,22 +1,25 @@
 import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import type { NavigationLink } from "../types/ui";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
 import { clearStoredSession, getOrganizationHomePath, getUserRoles } from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
+import ThemeToggle from "./ThemeToggle";
 
 interface PublicHeaderProps {
     navigate: NavigateFunction;
 }
 
-const baseLinks = [
+const baseLinks: NavigationLink[] = [
     { label: "Aktualności", path: "/" },
-    { label: "Zadania", path: "/problems" },
+    { label: "Pliki archiwalne", path: "/problems" },
     { label: "Regulamin", path: "/rules" },
     { label: "Historia", path: "/history" },
+    { label: "Rankingi", path: "/rankings" },
     { label: "KOALicjA", path: "/koalicja" },
 ];
 
@@ -27,13 +30,20 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const roles = useMemo(() => getUserRoles(), []);
     const isOrganizationUser = roles.isAdmin || roles.isEditor || roles.isReviewer;
     const isTeamAccount = roles.isCaptain || roles.isGuardian;
+    const isCaptain = roles.isCaptain;
     const isLoggedIn = isOrganizationUser || isTeamAccount;
     const organizationHomePath = getOrganizationHomePath(roles);
-    const links = isTeamAccount
-        ? [...baseLinks, { label: "Drużyny", path: "/captain" }]
+    const links: NavigationLink[] = isTeamAccount
+        ? [
+              ...baseLinks,
+              { label: "Drużyny", path: "/captain", separatorBefore: true },
+              ...(isCaptain ? [{ label: "Zadania", path: "/captain/tasks" }] : []),
+          ]
         : baseLinks;
     const navigationOptions = links.map((link) => ({
         label: link.label,
+        separatorBefore: link.separatorBefore,
+        active: location.pathname === link.path,
         onClick: () => navigate(link.path),
     }));
 
@@ -48,21 +58,38 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
 
     return (
         <>
-            <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-md sm:px-6">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-                    <button
-                        type="button"
-                        onClick={() => navigate("/")}
-                        aria-label="Przejdź na stronę główną"
-                        className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500"
-                    >
-                        <span className="block text-xl font-bold tracking-tight text-slate-950">
-                            KOALA
-                        </span>
-                        <span className="hidden text-xs font-semibold text-emerald-700 sm:block">
-                            Kombinatoryka · Algorytmika · Logika
-                        </span>
-                    </button>
+            <header className="sticky top-0 z-40 border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md sm:px-6">
+                <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <div>
+                            <Hamburger
+                                options={[
+                                    ...navigationOptions,
+                                    ...(!isLoggedIn
+                                        ? [
+                                              {
+                                                  label: "Zaloguj",
+                                                  onClick: () => navigate("/login"),
+                                              },
+                                          ]
+                                        : []),
+                                ]}
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            aria-label="Przejdź na stronę główną"
+                            className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus"
+                        >
+                            <span className="block text-xl font-bold tracking-tight text-ink-heading">
+                                KOALA
+                            </span>
+                            <span className="hidden text-xs font-semibold text-brand-text sm:block">
+                                Kombinatoryka · Algorytmika · Logika
+                            </span>
+                        </button>
+                    </div>
 
                     <nav
                         aria-label="Główna nawigacja"
@@ -76,10 +103,10 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                     key={link.path}
                                     onClick={() => navigate(link.path)}
                                     aria-current={isActive ? "page" : undefined}
-                                    className={`rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                                    className={`rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-focus ${
                                         isActive
-                                            ? "bg-emerald-50 text-emerald-900"
-                                            : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                                            ? "bg-brand-soft text-brand-text-strong"
+                                            : "text-ink hover:bg-surface-muted hover:text-ink-heading"
                                     }`}
                                 >
                                     {link.label}
@@ -88,7 +115,8 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                         })}
                     </nav>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex shrink-0 items-center justify-self-end gap-3">
+                        <ThemeToggle />
                         {isLoggedIn ? (
                             <ProfileButton
                                 options={[
@@ -97,6 +125,14 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                               {
                                                   label: "Panel drużyn",
                                                   onClick: () => navigate("/captain"),
+                                              },
+                                          ]
+                                        : []),
+                                    ...(isCaptain
+                                        ? [
+                                              {
+                                                  label: "Zadania drużyny",
+                                                  onClick: () => navigate("/captain/tasks"),
                                               },
                                           ]
                                         : []),
@@ -127,26 +163,11 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                             <button
                                 type="button"
                                 onClick={() => navigate("/login")}
-                                className="hidden appearance-none overflow-hidden rounded-xl border-0 bg-emerald-600 bg-clip-border px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-300 sm:inline-flex"
+                                className="hidden min-h-10 appearance-none items-center overflow-hidden rounded-xl border-0 bg-brand bg-clip-border px-4 py-2 text-sm font-medium text-ink-inverse shadow-sm transition hover:bg-brand-hover active:bg-brand-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-border-strong lg:inline-flex"
                             >
                                 Zaloguj
                             </button>
                         )}
-                        <div className="lg:hidden">
-                            <Hamburger
-                                options={[
-                                    ...navigationOptions,
-                                    ...(!isLoggedIn
-                                        ? [
-                                              {
-                                                  label: "Zaloguj",
-                                                  onClick: () => navigate("/login"),
-                                              },
-                                          ]
-                                        : []),
-                                ]}
-                            />
-                        </div>
                     </div>
                 </div>
             </header>

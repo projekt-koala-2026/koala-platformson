@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Account.Entities
-{    
+{
     public class User
     {
         [Column("id")]
         public Guid Id { get; set; }
+        [Column("edition_id")]
+        public Guid? EditionId { get; set; }
         [Column("name_first")]
         public string? NameFirst { get; set; }
         [Column("name_last")]
@@ -22,14 +24,22 @@ namespace koala.src.Modules.Account.Entities
         public bool AcceptedRodo { get; set; }
         [Column("accepted_rules")]
         public bool AcceptedRules { get; set; }
+        [Column("declared_at_least_13")]
+        public bool DeclaredAtLeast13 { get; set; }
+        [Column("declared_at_least_18")]
+        public bool DeclaredAtLeast18 { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+        [Column("version")]
+        public int Version { get; set; }
         [Column("verified_at")]
         public DateTime? VerifiedAt { get; set; }
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<Session> Sessions { get; set; } = new List<Session>();
         public ICollection<Link> Links { get; set; } = new List<Link>();
-        public Rodo Rodo { get; set; }
-        public ICollection<UserTeam> UserTeams { get; set; } = new List<UserTeam>();
+        public Team? CaptainTeam { get; set; } = null;
+        public ICollection<Team> GuardianTeams { get; set; } = new List<Team>();
     }
 }

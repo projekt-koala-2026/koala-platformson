@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core
 {
+
+
     public class School
     {
         [Column("id")]
@@ -22,11 +24,15 @@ namespace koala.src.Modules.Core
         public string Building { get; set; }
         [Column("type")]
         public string Type { get; set; }
+        [Column("tier")]
+        public string Tier { get; set; }
         [Column("email")]
         public string Email { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
+        [Column("version")]
+        public int Version { get; set; }
     };
 }

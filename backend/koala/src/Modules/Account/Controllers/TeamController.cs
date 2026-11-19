@@ -22,10 +22,10 @@ namespace koala.src.Modules.Account.Controllers
             _rodoService = rodoService;
         }
 
-        // ONLY FOR TEAM PLAYERS + (REQUIRED MOSTLY WITH CAPTAIN POSITION IN TEAM_MEMBERS)
+        // ONLY FOR TEAM CAPTAINS
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequestDto requestDto)
+        public async Task<IActionResult> CreateTeam([FromBody] TeamCreateRequestDto requestDto)
         {
             var response = await _teamService.CreateTeamAsync(User, requestDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
@@ -38,15 +38,22 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
         [Authorize]
+        [HttpDelete("{id}/guardian")]
+        public async Task<IActionResult> DeleteGuardian([FromRoute] Guid id)
+        {
+            await _teamService.DeleteTeamGuardianAsync(User, id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+        [Authorize]
         [HttpPost("{id}/member")]
-        public async Task<IActionResult> CreateTeamMember([FromRoute] Guid id, [FromBody] MemberUpsertRequestDto requestDto)
+        public async Task<IActionResult> CreateTeamMember([FromRoute] Guid id, [FromBody] TeamMemberUpsertRequestDto requestDto)
         {
             var response = await _teamService.AddTeamMemberAsync(User, id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpPut("{id}/member/{team_member_id}")]
-        public async Task<IActionResult> UpdateTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] MemberUpsertRequestDto requestDto)
+        public async Task<IActionResult> UpdateTeamMember([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] TeamMemberUpsertRequestDto requestDto)
         {
             var response = await _teamService.UpdateTeamMemberAsync(User, id, team_member_id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, null, response));
@@ -60,7 +67,7 @@ namespace koala.src.Modules.Account.Controllers
         }
         [Authorize]
         [HttpPut("{id}/name")]
-        public async Task<IActionResult> UpdateTeamName([FromRoute] Guid id, [FromBody] UpdateTeamNameRequestDto requestDto)
+        public async Task<IActionResult> UpdateTeamName([FromRoute] Guid id, [FromBody] TeamUpdateNameRequestDto requestDto)
         {
             var response = await _teamService.UpdateTeamNameAsync(User, id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
@@ -72,20 +79,20 @@ namespace koala.src.Modules.Account.Controllers
             var response = await _teamService.CreateJoinTeamCodeAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamJoinCodeDto>(true, DateTime.UtcNow, null, null, response));
         }
-        // ONLY FOR TEAM ADMINS
+        // ONLY FOR TEAM GUARDIANS
         [Authorize]
         [HttpPost("{id}/rodos/{team_member_id}")]
-        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromForm] RodoCreateDto rodoCreateDto)
+        public async Task<IActionResult> CreateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromForm] RodoUpsertDto rodoCreateDto)
         {
             var response = await _rodoService.AddRodoAsync(User, id, team_member_id, rodoCreateDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamMemberDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpPut("{id}/rodos/{team_member_id}/file")]
-        public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoUpdateDto rodoUpdateDto)
+        public async Task<IActionResult> UpdateTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromForm] RodoUpsertDto rodoUpdateDto)
         {
             var response = await _rodoService.UpdateRodoAsync(User, id, team_member_id, rodoUpdateDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamMemberDto>(true, DateTime.UtcNow, null, null, response));
         }
         [Authorize]
         [HttpDelete("{id}/rodos/{team_member_id}")]
@@ -95,7 +102,7 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
-        // ONLY FOR TEAM ADMINS AND PLAYERS
+        // ONLY FOR TEAM GUARDIANS AND CAPTAINS
         [Authorize]
         [HttpPost("join/{join_code}")]
         public async Task<IActionResult> JoinTeamWithCode([FromRoute] string join_code)
@@ -110,7 +117,7 @@ namespace koala.src.Modules.Account.Controllers
             (var responseData, var responsePagination) = await _teamService.GetMyTeamsAsync(User, pageQueryDto, teamQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
-        //ONLY FOR TEAM PLAYERS AND TEAM ADMINS AND ORGANIZATION ADMINS
+        //ONLY FOR TEAM CAPTAINS AND TEAM GUARDIANS AND ORGANIZATION ADMINS
         [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTeam([FromRoute] Guid id)
@@ -118,31 +125,31 @@ namespace koala.src.Modules.Account.Controllers
             var response = await _teamService.GetTeamAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
         }
-        //ONLY FOR TEAM AND ORGANIZATION ADMINS
+        //ONLY FOR TEAM GUARDIANS AND ORGANIZATION ADMINS
 
         [Authorize]
         [HttpGet("{id}/rodos")]
         public async Task<IActionResult> GetTeamRodos([FromRoute] Guid id, [FromQuery] PageQueryDto pageQueryDto)
         {
             (var responseData, var responsePagination) = await _rodoService.GetRodosAsync(User, id, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<RodoDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
-        }
-        [Authorize]
-        [HttpGet("{id}/rodos/{team_member_id}")]
-        public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
-        {
-            var response = await _rodoService.GetRodoAsync(User, id, team_member_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
-
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamMemberDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
         [Authorize]
         [HttpGet("{id}/rodos/{team_member_id}/file")]
         public async Task<IActionResult> GetTeamMemberRodoFile([FromRoute] Guid id, [FromRoute] Guid team_member_id)
         {
+
             string physicalPath = await _rodoService.GetRodoFileAsync(User, id, team_member_id);
             var provider = new FileExtensionContentTypeProvider();
             provider.TryGetContentType(physicalPath, out var contentType);
             return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
+        }
+        [Authorize]
+        [HttpGet("{id}/rodos/{team_member_id}")]
+        public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
+        {
+            var result = await _rodoService.GetRodoAsync(User, id, team_member_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamMemberDto>(true, DateTime.UtcNow, null, null, result));
         }
 
         //ONLY FOR ORGANIZATION ADMINS
@@ -159,7 +166,7 @@ namespace koala.src.Modules.Account.Controllers
         public async Task<IActionResult> SetTeamMemberRodoState([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoStateUpdateDto rodoStateUpdateDto)
         {
             var response = await _rodoService.SetRodoStateAsync(User, id, team_member_id, rodoStateUpdateDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RodoDto>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamMemberDto>(true, DateTime.UtcNow, null, null, response));
         }
     }
 }

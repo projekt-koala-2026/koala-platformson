@@ -1,14 +1,9 @@
 export type Role =
-    | "ADMIN"
-    | "EDITOR"
-    | "REVIEWER"
-    | "GUARDIAN"
-    | "CAPTAIN"
     | "ORGANIZATION_ADMIN"
     | "ORGANIZATION_EDITOR"
     | "ORGANIZATION_REVIEWER"
-    | "TEAM_ADMIN"
-    | "TEAM_PLAYER";
+    | "TEAM_CAPTAIN"
+    | "TEAM_GUARDIAN";
 
 export interface User {
     id: string;
@@ -17,6 +12,9 @@ export interface User {
     nameFirst?: string | null;
     nameLast?: string | null;
     censored?: boolean;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 export interface SessionUser {
     id: string;
@@ -25,13 +23,67 @@ export interface SessionUser {
     email?: string;
     censored?: boolean;
     roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiEdition {
     id: string;
     name: string;
+    state: "ACTIVE" | "INACTIVE" | "CLOSED" | string;
+    teamRegisterOpen: string;
+    teamRegisterClose: string;
     createdAt: string;
-    expiredAt: string | null;
+    updatedAt: string;
+    version: number;
+}
+
+export interface ApiSubedition {
+    id: string;
+    editionId: string;
+    name: string;
+    answerOpen: string;
+    answerClose: string;
+    state: "ACTIVE" | "INACTIVE" | "CLOSED";
+    version: number;
+}
+
+export interface ApiCompetitionTask {
+    id: string;
+    subEditionId: string;
+    name: string;
+    tier: "TIER_1" | "TIER_2";
+    contentJson: string;
+    version: number;
+}
+
+export interface ApiTaskAnswer {
+    id: string;
+    taskItemId: string;
+    answer: string;
+    version: number;
+}
+
+export interface ApiRanking {
+    teamName: string;
+    subeditionId: string;
+    totalScore: number;
+    maxScore: number;
+    tier: "TIER_1" | "TIER_2" | string;
+    latestUpdatedAt: string | null;
+}
+
+export interface ApiTaskSubmission {
+    teamId: string;
+    taskId: string;
+    reviewer1Id: string | null;
+    reviewer2Id: string | null;
+    autoReviewState: boolean | null;
+    review1Score: boolean | null;
+    review2Score: boolean | null;
+    submission: string;
+    version: number;
 }
 
 export interface ApiPost {
@@ -72,26 +124,98 @@ export interface ApiStaticPage {
 }
 
 export interface ApiTeamMember {
-    id: string;
-    position: "CAPTAIN" | "ADMIN" | "PLAYER" | string;
+    teamMemberId: string;
+    teamId: string;
+    nameFist: string;
+    nameLast: string;
+    rodoState: RodoState;
+    rodoVersion: number | null;
+    rodoCreatedAt: string | null;
+    rodoUpdatedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiTeamJoinCode {
     joinCode: string;
     createdAt: string;
+    updatedAt: string;
     expiresAt: string;
 }
 
-export interface ApiTeam {
+export type ApiTeamCaptain = {
+    id: string;
+    nameFirst: string;
+    nameLast: string;
+    email: string;
+    censored: boolean;
+    roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
+};
+
+export type ApiTeam = {
     id: string;
     editionId: string;
     schoolId: string;
     name: string;
+    tier: string;
     isCensored: boolean;
     createdAt: string;
+    updatedAt: string;
+    version: number;
+    teamCaptain: ApiTeamCaptain | null;
+    teamGuardian: ApiTeamCaptain | null;
     teamMembers: ApiTeamMember[];
     joinCode: ApiTeamJoinCode | null;
+};
+
+export interface ApiTeamUser {
+    id: string;
+    nameFirst: string;
+    nameLast: string;
+    email: string;
+    censored: boolean;
+    roles: Role[];
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
+
+export interface ApiNamedTeamMember {
+    teamMemberId: string;
+    teamId: string;
+    // Backend currently exposes the property with this typo.
+    nameFist: string;
+    nameLast: string;
+    rodoState: RodoState;
+    rodoVersion: number | null;
+    rodoCreatedAt: string | null;
+    rodoUpdatedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
+}
+
+export interface ApiTeamDetails {
+    id: string;
+    editionId: string;
+    schoolId: string;
+    name: string;
+    tier: string;
+    isCensored: boolean;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
+    teamCaptain: ApiTeamUser | null;
+    teamGuardian: ApiTeamUser | null;
+    teamMembers: ApiNamedTeamMember[];
+    joinCode: ApiTeamJoinCode | null;
+}
+
+export type RodoState = "RODO_NONE" | "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED";
 
 export interface Team {
     id: string;
@@ -121,9 +245,11 @@ export interface ApiSchool {
     building: string;
     rspo: string;
     type: string;
+    tier: string;
     email: string;
     createdAt: string;
     updatedAt: string;
+    version: number;
 }
 export interface School {
     id?: string;
@@ -140,6 +266,8 @@ export interface Edition {
     title: string;
     startDate: string;
     endDate: string;
+    state: ApiEdition["state"];
+    version: number;
 }
 export interface Post {
     id: string;

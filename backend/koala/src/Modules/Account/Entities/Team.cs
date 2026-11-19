@@ -10,15 +10,26 @@ namespace koala.src.Modules.Account.Entities
         public Guid EditionId { get; set; }
         [Column("school_id")]
         public Guid SchoolId { get; set; }
+        [Column("guardian_id")]
+        public Guid? GuardianId { get; set; }
+        [Column("captain_id")]
+        public Guid CaptainId { get; set; }
         [Column("name")]
         public string Name { get; set; }
+        [Column("tier")]
+        public string Tier { get; set; }
         [Column("name_accepted")]
         public bool NameAccepted { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+        [Column("version")]
+        public int Version { get; set; }
+
         public ICollection<TeamMember> TeamMembers { get; set; } = new List<TeamMember>();
         public TeamJoinCode? TeamJoinCode { get; set; }
-        public ICollection<Rodo> Rodos { get; set; } = new List<Rodo>();
-        public ICollection<UserTeam> UserTeams { get; set; } = new List<UserTeam>();
+        public User Captain { get; set; } = null!;
+        public User? Guardian { get; set; } = null;
     }
 }

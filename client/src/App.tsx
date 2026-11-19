@@ -7,8 +7,14 @@ import type { Role } from "./types/models";
 import { getAuthArea, getOrganizationHomePath, getUserRoles } from "./utils/authService";
 
 const AdminLoginScreen = lazy(() => import("./screens/admin/AdminLoginScreen"));
+const AdminRodoScreen = lazy(() => import("./screens/admin/AdminRodoScreen"));
 const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));
 const EditionsScreen = lazy(() => import("./screens/admin/EditEditionScreen"));
+const SubeditionsScreen = lazy(() => import("./screens/admin/SubeditionsScreen"));
+const CompetitionTasksScreen = lazy(() => import("./screens/admin/CompetitionTasksScreen"));
+const RankingsScreen = lazy(() => import("./screens/admin/RankingsScreen"));
+const AssignReviewersScreen = lazy(() => import("./screens/admin/AssignReviewersScreen"));
+const ReviewerTasksScreen = lazy(() => import("./screens/admin/ReviewerTasksScreen"));
 const EditHistory = lazy(() => import("./screens/admin/EditHistoryScreen"));
 const EditKoalicjantInfo = lazy(() => import("./screens/admin/EditKoalicjantInfoScreen"));
 const EditPost = lazy(() => import("./screens/admin/EditPostScreen"));
@@ -18,7 +24,9 @@ const EditSchoolsScreen = lazy(() => import("./screens/admin/EditSchoolsScreen")
 const EditSponsorInfo = lazy(() => import("./screens/admin/EditSponsorInfoScreen"));
 const ImageHandlingScreen = lazy(() => import("./screens/admin/ImageHandlingScreen"));
 const PanelScreen = lazy(() => import("./screens/admin/PanelScreen"));
+const UsersScreen = lazy(() => import("./screens/admin/UsersScreen"));
 const CaptainHomeScreen = lazy(() => import("./screens/public/CaptainHomeScreen"));
+const CapitanTasksScreen = lazy(() => import("./screens/public/CapitanTasksScreen"));
 const CompleteRegistrationScreen = lazy(
     () => import("./screens/public/CompleteRegistrationScreen")
 );
@@ -29,14 +37,16 @@ const LoginScreen = lazy(() => import("./screens/public/LoginScreen"));
 const ProblemsPublicScreen = lazy(() => import("./screens/public/ProblemsPublicScreen"));
 const ResetPasswordScreen = lazy(() => import("./screens/public/ResetPasswordScreen"));
 const RuleScreen = lazy(() => import("./screens/public/RuleScreen"));
+const PublicRankingsScreen = lazy(() => import("./screens/public/RankingsPublicScreen"));
 
 const adminOnly: Role[] = ["ORGANIZATION_ADMIN"];
+const reviewersOnly: Role[] = ["ORGANIZATION_REVIEWER"];
 const contentEditors: Role[] = ["ORGANIZATION_ADMIN", "ORGANIZATION_EDITOR"];
-const teamMembers: Role[] = ["TEAM_PLAYER", "TEAM_ADMIN"];
+const teamMembers: Role[] = ["TEAM_CAPTAIN", "TEAM_GUARDIAN"];
 
 const RouteFallback = () => (
     <main className="flex min-h-[40vh] items-center justify-center px-4" role="status">
-        <span className="text-sm font-medium text-slate-500">Ładowanie widoku…</span>
+        <span className="text-sm font-medium text-ink-muted">Ładowanie widoku…</span>
     </main>
 );
 
@@ -62,6 +72,25 @@ export default function App() {
                     <Routes>
                         <Route path="/admin/login" element={<AdminLoginScreen />} />
                         <Route
+                            path="/admin/review-assignments"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <AssignReviewersScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/reviews"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={reviewersOnly}
+                                    redirectTo="/admin/login"
+                                >
+                                    <ReviewerTasksScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
                             path="/admin"
                             element={
                                 <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
@@ -73,7 +102,18 @@ export default function App() {
                             path="/admin/changepass"
                             element={<LegacyPasswordRedirect area="organization" />}
                         />
-                        <Route path="/admin/adduser" element={<Navigate to="/admin" replace />} />
+                        <Route
+                            path="/admin/users"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <UsersScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/adduser"
+                            element={<Navigate to="/admin/users" replace />}
+                        />
                         <Route
                             path="/admin/images"
                             element={
@@ -149,6 +189,30 @@ export default function App() {
                             }
                         />
                         <Route
+                            path="/admin/subeditions"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <SubeditionsScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/competition-tasks"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <CompetitionTasksScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/rankings"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <RankingsScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
                             path="/admin/problems"
                             element={
                                 <ProtectedRoute
@@ -175,6 +239,14 @@ export default function App() {
                                 </ProtectedRoute>
                             }
                         />
+                        <Route
+                            path="/admin/rodos"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <AdminRodoScreen />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route path="/" element={<HomeScreen />} />
                         <Route path="/login" element={<LoginScreen />} />
                         <Route path="/register" element={<CompleteRegistrationScreen />} />
@@ -186,12 +258,21 @@ export default function App() {
                             element={<LegacyPasswordRedirect area="team" />}
                         />
                         <Route path="/history" element={<HistoryScreen />} />
+                        <Route path="/rankings" element={<PublicRankingsScreen />} />
                         <Route path="/koalicja" element={<KoalicjaScreen />} />
                         <Route
                             path="/captain"
                             element={
                                 <ProtectedRoute allowedRoles={teamMembers}>
                                     <CaptainHomeScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/captain/tasks"
+                            element={
+                                <ProtectedRoute allowedRoles={teamMembers}>
+                                    <CapitanTasksScreen />
                                 </ProtectedRoute>
                             }
                         />

@@ -30,10 +30,6 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<bool>("Active")
-                        .HasColumnType("boolean")
-                        .HasColumnName("active");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -42,72 +38,14 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
-                    b.Property<Guid>("Token")
-                        .HasColumnType("uuid")
-                        .HasColumnName("token");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("type");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("links", "account");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Account.Entities.Member", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("NameFirst")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name_first");
-
-                    b.Property<string>("NameLast")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name_last");
-
-                    b.Property<string>("Position")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("position");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("members", "account");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Account.Entities.Rodo", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
                     b.Property<string>("State")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("state");
 
-                    b.Property<Guid>("TeamId")
+                    b.Property<Guid>("Token")
                         .HasColumnType("uuid")
-                        .HasColumnName("team_id");
+                        .HasColumnName("token");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -124,10 +62,36 @@ namespace koala.src.Modules.Account.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TeamId");
+                    b.HasIndex("UserId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.ToTable("links", "account");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Account.Entities.Rodo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
 
                     b.ToTable("rodos", "account");
                 });
@@ -167,12 +131,12 @@ namespace koala.src.Modules.Account.Data.Migrations
                         new
                         {
                             Id = new Guid("01a027c5-d599-73de-bd5c-1f8e68687e51"),
-                            Name = "TEAM_ADMIN"
+                            Name = "TEAM_GUARDIAN"
                         },
                         new
                         {
                             Id = new Guid("01a027c5-d599-73de-bd5c-2068e28b6cf3"),
-                            Name = "TEAM_PLAYER"
+                            Name = "TEAM_CAPTAIN"
                         });
                 });
 
@@ -183,10 +147,6 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<bool>("Active")
-                        .HasColumnType("boolean")
-                        .HasColumnName("active");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -195,9 +155,18 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("state");
+
                     b.Property<Guid>("Token")
                         .HasColumnType("uuid")
                         .HasColumnName("token");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -217,6 +186,10 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("CaptainId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("captain_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -224,6 +197,10 @@ namespace koala.src.Modules.Account.Data.Migrations
                     b.Property<Guid>("EditionId")
                         .HasColumnType("uuid")
                         .HasColumnName("edition_id");
+
+                    b.Property<Guid?>("GuardianId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("guardian_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -238,7 +215,25 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("school_id");
 
+                    b.Property<string>("Tier")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tier");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CaptainId")
+                        .IsUnique();
+
+                    b.HasIndex("GuardianId");
 
                     b.ToTable("teams", "account");
                 });
@@ -262,6 +257,14 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("join_code");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
                     b.HasKey("TeamId");
 
                     b.ToTable("TeamJoinCodes", "account");
@@ -269,17 +272,48 @@ namespace koala.src.Modules.Account.Data.Migrations
 
             modelBuilder.Entity("koala.src.Modules.Account.Entities.TeamMember", b =>
                 {
-                    b.Property<Guid>("MemberId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
-                        .HasColumnName("member_id");
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("NameFirst")
+                        .HasColumnType("text")
+                        .HasColumnName("name_first");
+
+                    b.Property<string>("NameLast")
+                        .HasColumnType("text")
+                        .HasColumnName("name_last");
+
+                    b.Property<Guid?>("RodoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rodo_id");
+
+                    b.Property<string>("RodoState")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("rodo_state");
 
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid")
                         .HasColumnName("team_id");
 
-                    b.HasKey("MemberId", "TeamId");
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
-                    b.HasIndex("MemberId")
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RodoId")
                         .IsUnique();
 
                     b.HasIndex("TeamId");
@@ -310,6 +344,18 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<bool>("DeclaredAtLeast13")
+                        .HasColumnType("boolean")
+                        .HasColumnName("declared_at_least_13");
+
+                    b.Property<bool>("DeclaredAtLeast18")
+                        .HasColumnType("boolean")
+                        .HasColumnName("declared_at_least_18");
+
+                    b.Property<Guid?>("EditionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("edition_id");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text")
@@ -327,6 +373,10 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
                     b.Property<bool>("Verified")
                         .HasColumnType("boolean")
                         .HasColumnName("verified");
@@ -334,6 +384,10 @@ namespace koala.src.Modules.Account.Data.Migrations
                     b.Property<DateTime?>("VerifiedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("verified_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 
@@ -357,28 +411,6 @@ namespace koala.src.Modules.Account.Data.Migrations
                     b.ToTable("user_roles", "account");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Account.Entities.UserTeam", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.Property<Guid>("TeamId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("team_id");
-
-                    b.Property<string>("Position")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("position");
-
-                    b.HasKey("UserId", "TeamId");
-
-                    b.HasIndex("TeamId");
-
-                    b.ToTable("user_teams", "account");
-                });
-
             modelBuilder.Entity("koala.src.Modules.Account.Entities.Link", b =>
                 {
                     b.HasOne("koala.src.Modules.Account.Entities.User", "User")
@@ -386,25 +418,6 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Account.Entities.Rodo", b =>
-                {
-                    b.HasOne("koala.src.Modules.Account.Entities.Team", "Team")
-                        .WithMany("Rodos")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("koala.src.Modules.Account.Entities.User", "User")
-                        .WithOne("Rodo")
-                        .HasForeignKey("koala.src.Modules.Account.Entities.Rodo", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Team");
 
                     b.Navigation("User");
                 });
@@ -420,6 +433,24 @@ namespace koala.src.Modules.Account.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("koala.src.Modules.Account.Entities.Team", b =>
+                {
+                    b.HasOne("koala.src.Modules.Account.Entities.User", "Captain")
+                        .WithOne("CaptainTeam")
+                        .HasForeignKey("koala.src.Modules.Account.Entities.Team", "CaptainId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("koala.src.Modules.Account.Entities.User", "Guardian")
+                        .WithMany("GuardianTeams")
+                        .HasForeignKey("GuardianId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Captain");
+
+                    b.Navigation("Guardian");
+                });
+
             modelBuilder.Entity("koala.src.Modules.Account.Entities.TeamJoinCode", b =>
                 {
                     b.HasOne("koala.src.Modules.Account.Entities.Team", "Team")
@@ -433,11 +464,10 @@ namespace koala.src.Modules.Account.Data.Migrations
 
             modelBuilder.Entity("koala.src.Modules.Account.Entities.TeamMember", b =>
                 {
-                    b.HasOne("koala.src.Modules.Account.Entities.Member", "Member")
+                    b.HasOne("koala.src.Modules.Account.Entities.Rodo", "Rodo")
                         .WithOne("TeamMember")
-                        .HasForeignKey("koala.src.Modules.Account.Entities.TeamMember", "MemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("koala.src.Modules.Account.Entities.TeamMember", "RodoId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("koala.src.Modules.Account.Entities.Team", "Team")
                         .WithMany("TeamMembers")
@@ -445,7 +475,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Member");
+                    b.Navigation("Rodo");
 
                     b.Navigation("Team");
                 });
@@ -469,26 +499,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Account.Entities.UserTeam", b =>
-                {
-                    b.HasOne("koala.src.Modules.Account.Entities.Team", "Team")
-                        .WithMany("UserTeams")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("koala.src.Modules.Account.Entities.User", "User")
-                        .WithMany("UserTeams")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Team");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Account.Entities.Member", b =>
+            modelBuilder.Entity("koala.src.Modules.Account.Entities.Rodo", b =>
                 {
                     b.Navigation("TeamMember")
                         .IsRequired();
@@ -501,27 +512,22 @@ namespace koala.src.Modules.Account.Data.Migrations
 
             modelBuilder.Entity("koala.src.Modules.Account.Entities.Team", b =>
                 {
-                    b.Navigation("Rodos");
-
                     b.Navigation("TeamJoinCode");
 
                     b.Navigation("TeamMembers");
-
-                    b.Navigation("UserTeams");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Account.Entities.User", b =>
                 {
-                    b.Navigation("Links");
+                    b.Navigation("CaptainTeam");
 
-                    b.Navigation("Rodo")
-                        .IsRequired();
+                    b.Navigation("GuardianTeams");
+
+                    b.Navigation("Links");
 
                     b.Navigation("Sessions");
 
                     b.Navigation("UserRoles");
-
-                    b.Navigation("UserTeams");
                 });
 #pragma warning restore 612, 618
         }

@@ -7,6 +7,9 @@ namespace koala.src.Modules.Account.Dtos
         string NameLast,
         string Email,
         bool Censored,
-        List<string> Roles
+        List<string> Roles,
+        DateTime CreatedAt,
+        DateTime UpdatedAt,
+        int Version
     );
 }

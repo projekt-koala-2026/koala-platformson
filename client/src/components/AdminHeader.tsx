@@ -1,52 +1,70 @@
 import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import type { NavigationLink } from "../types/ui";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
-import { clearStoredSession, isAdmin } from "../utils/authService";
+import { clearStoredSession, isAdmin, isEditor, isReviewer } from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
+import ThemeToggle from "./ThemeToggle";
 
 interface AdminHeaderProps {
     navigate: NavigateFunction;
 }
 
-const editorLinks = [
-    { label: "Wpisy", path: "/admin/posts" },
+// Sidebar order; separatorBefore adds a subtle line above a link.
+const editorLinks: NavigationLink[] = [
+    { label: "Wpisy", path: "/admin/posts", separatorBefore: true },
     { label: "Historia", path: "/admin/history" },
     { label: "Regulamin", path: "/admin/rules" },
     { label: "Sponsorzy", path: "/admin/sponsors" },
     { label: "Koalicjanci", path: "/admin/koalicjants" },
-    { label: "Zadania", path: "/admin/problems" },
-    { label: "Pliki", path: "/admin/images" },
+    { label: "Pliki archiwalne", path: "/admin/problems", separatorBefore: true },
+    { label: "Zdjęcia", path: "/admin/images" },
 ];
 
-const administratorLinks = [
+const administratorLinks: NavigationLink[] = [
     { label: "Start", path: "/admin" },
-    { label: "Edycje", path: "/admin/editions" },
+    { label: "Użytkownicy", path: "/admin/users" },
+    { label: "Edycje", path: "/admin/editions", separatorBefore: true },
+    { label: "Etapy", path: "/admin/subeditions" },
+    { label: "Zadania konkursowe", path: "/admin/competition-tasks" },
+    { label: "Rankingi", path: "/admin/rankings" },
+    { label: "Przydzielanie recenzentów", path: "/admin/review-assignments" },
     ...editorLinks,
-    { label: "Szkoły", path: "/admin/schools" },
+    { label: "Szkoły", path: "/admin/schools", separatorBefore: true },
     { label: "Drużyny", path: "/admin/teams" },
+    { label: "RODO", path: "/admin/rodos" },
 ];
 
-const desktopPaths = new Set([
+// Top header order, independent of the sidebar. Only links permitted for the role appear.
+const desktopPaths = [
     "/admin",
+    "/admin/users",
     "/admin/editions",
+    "/admin/rankings",
     "/admin/posts",
     "/admin/history",
     "/admin/rules",
     "/admin/problems",
-]);
+    "/admin/rodos",
+];
 
 const AdminHeader = ({ navigate }: AdminHeaderProps) => {
     const location = useLocation();
     const [isPasswordOpen, setIsPasswordOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const isAdminUser = useMemo(() => isAdmin(), []);
-    const homePath = isAdminUser ? "/admin" : "/admin/posts";
-    const links = isAdminUser ? administratorLinks : editorLinks;
-    const desktopLinks = links.filter((link) => desktopPaths.has(link.path));
+    const isEditorUser = useMemo(() => isEditor(), []);
+    const isReviewerUser = useMemo(() => isReviewer(), []);
+    const homePath = isAdminUser ? "/admin" : isEditorUser ? "/admin/posts" : "/admin/reviews";
+    const links = [
+        ...(isAdminUser ? administratorLinks : isEditorUser ? editorLinks : []),
+        ...(isReviewerUser ? [{ label: "Moje recenzje", path: "/admin/reviews" }] : []),
+    ];
+    const desktopLinks = desktopPaths.flatMap((path) => links.filter((link) => link.path === path));
 
     const logout = async () => {
         if (loggingOut) return;
@@ -59,21 +77,31 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
 
     return (
         <>
-            <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-md sm:px-6">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-                    <button
-                        type="button"
-                        onClick={() => navigate(homePath)}
-                        aria-label="Przejdź na stronę główną panelu"
-                        className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-500"
-                    >
-                        <span className="block text-xl font-bold tracking-tight text-slate-950">
-                            KOALA
-                        </span>
-                        <span className="block text-xs font-semibold text-emerald-700">
-                            Panel administracyjny
-                        </span>
-                    </button>
+            <header className="sticky top-0 z-40 border-b border-line bg-surface/90 px-4 py-3 backdrop-blur-md sm:px-6">
+                <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <Hamburger
+                            options={links.map((link) => ({
+                                label: link.label,
+                                separatorBefore: link.separatorBefore,
+                                active: location.pathname === link.path,
+                                onClick: () => navigate(link.path),
+                            }))}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => navigate(homePath)}
+                            aria-label="Przejdź na stronę główną panelu"
+                            className="rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus"
+                        >
+                            <span className="block text-xl font-bold tracking-tight text-ink-heading">
+                                KOALA
+                            </span>
+                            <span className="block text-xs font-semibold text-brand-text">
+                                Panel administracyjny
+                            </span>
+                        </button>
+                    </div>
 
                     <nav
                         aria-label="Nawigacja panelu"
@@ -87,10 +115,10 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                                     key={link.path}
                                     aria-current={isActive ? "page" : undefined}
                                     onClick={() => navigate(link.path)}
-                                    className={`rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                                    className={`rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-focus ${
                                         isActive
-                                            ? "bg-emerald-50 text-emerald-900"
-                                            : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+                                            ? "bg-brand-soft text-brand-text-strong"
+                                            : "text-ink hover:bg-surface-muted hover:text-ink-heading"
                                     }`}
                                 >
                                     {link.label}
@@ -99,7 +127,8 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                         })}
                     </nav>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex shrink-0 items-center justify-self-end gap-3">
+                        <ThemeToggle />
                         <ProfileButton
                             options={[
                                 {
@@ -112,12 +141,6 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                                     disabled: loggingOut,
                                 },
                             ]}
-                        />
-                        <Hamburger
-                            options={links.map((link) => ({
-                                label: link.label,
-                                onClick: () => navigate(link.path),
-                            }))}
                         />
                     </div>
                 </div>

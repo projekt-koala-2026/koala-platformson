@@ -5,6 +5,10 @@ namespace koala.src.Shared.Account
     public interface IAccountModule
     {
         Task<_SessionResponseDto?> Internal_ValidateSessionFromPrincipalAsync(ClaimsPrincipal? principal);
-        Task Internal_GetUsersByIdsAsync();
+        Task<_TeamResponseDto?> Internal_GetTeamInfo(Guid team_id);
+        Task<List<_TeamResponseDto>> Internal_GetTeamsForEditionAsync(Guid editionId);
+        Task<List<Guid>> Internal_GetReviewerIdsAsync(List<Guid> userIds);
+        Task Internal_DeleteUserAndTeamDataAfterEditionCloses(Guid editionId);
+        Task<bool> Internal_IsOrganizationUser(Guid userId);
     }
 }

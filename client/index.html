@@ -4,6 +4,23 @@
         <meta charset="UTF-8" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="color-scheme" content="light dark" />
+        <script>
+            (() => {
+                const storageKey = "koala-theme";
+                let theme;
+                try {
+                    const storedTheme = localStorage.getItem(storageKey);
+                    if (storedTheme === "light" || storedTheme === "dark") theme = storedTheme;
+                } catch {
+                    // Local storage may be unavailable in a restricted browser context.
+                }
+                if (!theme) {
+                    theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                }
+                document.documentElement.dataset.theme = theme;
+            })();
+        </script>
         <title>KOALA</title>
     </head>
     <body>

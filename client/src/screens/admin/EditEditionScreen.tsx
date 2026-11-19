@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { FaEdit, FaFlagCheckered, FaPlus } from "react-icons/fa";
+import { FaEdit, FaFlagCheckered, FaPlay, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -7,19 +7,21 @@ import Modal from "../../components/Modal";
 import type { ApiEdition, Edition } from "../../types/models";
 import { adaptEdition } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 
 const EDITIONS_ENDPOINT = apiEndpoints.editions;
 
 interface EditionForm {
     title: string;
+    teamRegisterOpen: string;
+    teamRegisterClose: string;
 }
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 
-const emptyForm: EditionForm = { title: "" };
+const emptyForm: EditionForm = { title: "", teamRegisterOpen: "", teamRegisterClose: "" };
 const inputClass =
-    "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-100";
+    "mt-2 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted";
 
 const sortEditions = (editions: Edition[]) =>
     [...editions].sort(
@@ -27,30 +29,36 @@ const sortEditions = (editions: Edition[]) =>
             new Date(second.startDate).getTime() - new Date(first.startDate).getTime()
     );
 
+const toDateTimeLocal = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const offset = date.getTimezoneOffset() * 60_000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
 const EditEditionScreen = () => {
     const navigate = useNavigate();
     const [editions, setEditions] = useState<Edition[]>([]);
     const [loading, setLoading] = useState(true);
-    const [referenceTime, setReferenceTime] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEdition, setEditingEdition] = useState<Edition | null>(null);
     const [form, setForm] = useState<EditionForm>(emptyForm);
     const [feedback, setFeedback] = useState<Feedback>(null);
     const [modalError, setModalError] = useState("");
     const [saving, setSaving] = useState(false);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [actionId, setActionId] = useState<string | null>(null);
 
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiRequestResult<ApiEdition[]>(
-                `${EDITIONS_ENDPOINT}?${firstPage}&ShowActive=false`,
+            apiListRequestResult<ApiEdition>(
+                `${EDITIONS_ENDPOINT}?${firstPage}&States=CLOSED`,
                 null,
                 "GET",
                 navigate
             ),
-            apiRequestResult<ApiEdition[]>(
-                `${EDITIONS_ENDPOINT}?${firstPage}&ShowActive=true`,
+            apiListRequestResult<ApiEdition>(
+                `${EDITIONS_ENDPOINT}?${firstPage}&States=ACTIVE&States=INACTIVE`,
                 null,
                 "GET",
                 navigate
@@ -61,9 +69,8 @@ const EditEditionScreen = () => {
                 adaptEdition
             );
             setEditions(sortEditions(data));
-            if (!pastResult.data && pastResult.status !== 200)
+            if (!pastResult.data || !activeResult.data)
                 setFeedback({ tone: "error", message: "Nie udało się pobrać edycji." });
-            setReferenceTime(Date.now());
             setLoading(false);
         });
         return () => {
@@ -95,6 +102,8 @@ const EditEditionScreen = () => {
         setEditingEdition(edition);
         setForm({
             title: edition.title,
+            teamRegisterOpen: toDateTimeLocal(edition.startDate),
+            teamRegisterClose: toDateTimeLocal(edition.endDate),
         });
         setModalError("");
         setFeedback(null);
@@ -104,17 +113,33 @@ const EditEditionScreen = () => {
     const save = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const title = form.title.trim();
+        const registerOpen = new Date(form.teamRegisterOpen);
+        const registerClose = new Date(form.teamRegisterClose);
         setModalError("");
         if (!title || title.length > 200) {
             setModalError("Tytuł jest wymagany i może mieć maksymalnie 200 znaków.");
             return;
         }
+        if (
+            Number.isNaN(registerOpen.getTime()) ||
+            Number.isNaN(registerClose.getTime()) ||
+            registerClose <= registerOpen
+        ) {
+            setModalError(
+                "Podaj prawidłowy okres rejestracji; data zakończenia musi być późniejsza od daty otwarcia."
+            );
+            return;
+        }
+        const datesPayload = {
+            teamRegisterOpen: registerOpen.toISOString(),
+            teamRegisterClose: registerClose.toISOString(),
+        };
         setSaving(true);
 
         if (!editingEdition) {
             const { data: created } = await apiRequestResult<ApiEdition>(
                 EDITIONS_ENDPOINT,
-                { name: title },
+                { name: title, ...datesPayload },
                 "POST",
                 navigate
             );
@@ -125,22 +150,30 @@ const EditEditionScreen = () => {
             }
             const adapted = adaptEdition(created);
             setEditions((current) => sortEditions([...current, adapted]));
-            setReferenceTime(Date.now());
             setFeedback({ tone: "success", message: `Utworzono edycję „${adapted.title}”.` });
             setSaving(false);
             resetModal();
             return;
         }
 
-        if (title === editingEdition.title) {
+        if (
+            title === editingEdition.title &&
+            registerOpen.getTime() === new Date(editingEdition.startDate).getTime() &&
+            registerClose.getTime() === new Date(editingEdition.endDate).getTime()
+        ) {
             setModalError("Nie wprowadzono żadnych zmian.");
             setSaving(false);
             return;
         }
 
         const { data } = await apiRequestResult<ApiEdition>(
-            `${EDITIONS_ENDPOINT}/${editingEdition.id}/name`,
-            { name: title },
+            `${EDITIONS_ENDPOINT}/${editingEdition.id}`,
+            {
+                name: title,
+                teamRegisterOpen: datesPayload.teamRegisterOpen,
+                teamRegisterClose: datesPayload.teamRegisterClose,
+                version: editingEdition.version,
+            },
             "PUT",
             navigate
         );
@@ -153,7 +186,6 @@ const EditEditionScreen = () => {
         setEditions((current) =>
             sortEditions(current.map((edition) => (edition.id === latest.id ? latest : edition)))
         );
-        setReferenceTime(Date.now());
         setFeedback({ tone: "success", message: `Zapisano edycję „${latest.title}”.` });
         setSaving(false);
         resetModal();
@@ -162,15 +194,15 @@ const EditEditionScreen = () => {
     const endEdition = async (edition: Edition) => {
         if (
             !window.confirm(
-                `Czy na pewno chcesz zakończyć edycję „${edition.title}”? Tej operacji nie można cofnąć z poziomu panelu.`
+                `Czy na pewno chcesz zakończyć edycję „${edition.title}”?\n\nZakończenie edycji usuwa jej drużyny, dane uczestników i zgody RODO, konta kapitanów i opiekunów przypisane do edycji oraz zadania konkursowe, odpowiedzi i oceny. Zapisane rankingi pozostają.\n\nPrzed zakończeniem dokończ ocenianie i wygeneruj potrzebne rankingi — później nie będzie można ich ponownie wygenerować.\n\nTej operacji nie można cofnąć.`
             )
         )
             return;
 
-        setDeletingId(edition.id);
+        setActionId(edition.id);
         setFeedback(null);
         const { data } = await apiRequestResult<ApiEdition>(
-            `${EDITIONS_ENDPOINT}/${edition.id}/end`,
+            `${EDITIONS_ENDPOINT}/${edition.id}/close`,
             null,
             "PUT",
             navigate
@@ -187,27 +219,49 @@ const EditEditionScreen = () => {
             );
             setFeedback({ tone: "success", message: `Zakończono edycję „${edition.title}”.` });
         }
-        setDeletingId(null);
+        setActionId(null);
+    };
+
+    const activateEdition = async (edition: Edition) => {
+        setActionId(edition.id);
+        setFeedback(null);
+        const { data } = await apiRequestResult<ApiEdition>(
+            `${EDITIONS_ENDPOINT}/${edition.id}/activate`,
+            null,
+            "PUT",
+            navigate
+        );
+        if (!data) {
+            setFeedback({ tone: "error", message: "Nie udało się aktywować edycji." });
+        } else {
+            const activated = adaptEdition(data);
+            setEditions((current) =>
+                sortEditions(current.map((item) => (item.id === edition.id ? activated : item)))
+            );
+            setFeedback({ tone: "success", message: `Aktywowano edycję „${edition.title}”.` });
+        }
+        setActionId(null);
     };
 
     const statusFor = (edition: Edition) => {
-        const end = new Date(edition.endDate).getTime();
-        if (referenceTime <= end)
-            return { label: "Aktywna", className: "bg-emerald-50 text-emerald-700" };
-        return { label: "Zakończona", className: "bg-slate-100 text-slate-600" };
+        if (edition.state === "INACTIVE")
+            return { label: "Nieaktywna", className: "bg-warning-muted text-warning-text" };
+        if (edition.state === "ACTIVE")
+            return { label: "Aktywna", className: "bg-brand-soft text-brand-text" };
+        return { label: "Zakończona", className: "bg-surface-muted text-ink-secondary" };
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900">
+        <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                             Administracja
                         </p>
                         <h1 className="mt-1 text-3xl font-bold tracking-tight">Edycje konkursu</h1>
-                        <p className="mt-2 max-w-2xl text-sm text-slate-600">
+                        <p className="mt-2 max-w-2xl text-sm text-ink-secondary">
                             Zarządzaj okresami publikacji aktualności i materiałów konkursowych.
                         </p>
                     </div>
@@ -225,7 +279,7 @@ const EditEditionScreen = () => {
                 {feedback && (
                     <p
                         role={feedback.tone === "error" ? "alert" : "status"}
-                        className={`mt-6 rounded-xl border px-4 py-3 text-sm ${feedback.tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}
+                        className={`mt-6 rounded-xl border px-4 py-3 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
                     >
                         {feedback.message}
                     </p>
@@ -233,11 +287,11 @@ const EditEditionScreen = () => {
 
                 <section className="mt-8 space-y-4" aria-label="Lista edycji konkursu">
                     {loading ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
+                        <div className="rounded-2xl border border-line bg-surface p-10 text-center text-sm text-ink-muted shadow-sm">
                             Ładowanie edycji…
                         </div>
                     ) : editions.length === 0 ? (
-                        <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500">
+                        <p className="rounded-2xl border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-ink-muted">
                             Brak utworzonych edycji.
                         </p>
                     ) : (
@@ -246,7 +300,7 @@ const EditEditionScreen = () => {
                             return (
                                 <article
                                     key={edition.id}
-                                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+                                    className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6"
                                 >
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                         <div className="min-w-0">
@@ -260,7 +314,7 @@ const EditEditionScreen = () => {
                                                     {status.label}
                                                 </span>
                                             </div>
-                                            <p className="mt-2 text-sm text-slate-500">
+                                            <p className="mt-2 text-sm text-ink-muted">
                                                 <time dateTime={edition.startDate}>
                                                     {new Date(edition.startDate).toLocaleString(
                                                         "pl-PL"
@@ -291,6 +345,21 @@ const EditEditionScreen = () => {
                                                 onClick={() => openEdit(edition)}
                                                 className="px-3"
                                             />
+                                            {edition.state === "INACTIVE" && (
+                                                <Button
+                                                    text={
+                                                        <>
+                                                            <FaPlay />
+                                                            <span className="sr-only">
+                                                                Aktywuj {edition.title}
+                                                            </span>
+                                                        </>
+                                                    }
+                                                    disabled={actionId === edition.id}
+                                                    onClick={() => void activateEdition(edition)}
+                                                    className="px-3"
+                                                />
+                                            )}
                                             {status.label === "Aktywna" && (
                                                 <Button
                                                     text={
@@ -301,9 +370,9 @@ const EditEditionScreen = () => {
                                                             </span>
                                                         </>
                                                     }
-                                                    disabled={deletingId === edition.id}
+                                                    disabled={actionId === edition.id}
                                                     onClick={() => void endEdition(edition)}
-                                                    className="bg-amber-600 px-3 hover:bg-amber-700 focus:ring-amber-500"
+                                                    className="bg-warning px-3 hover:bg-warning-hover focus:ring-warning"
                                                 />
                                             )}
                                         </div>
@@ -323,14 +392,11 @@ const EditEditionScreen = () => {
             >
                 <form onSubmit={save} className="space-y-4">
                     {modalError && (
-                        <p
-                            role="alert"
-                            className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-                        >
+                        <p role="alert" className="rounded-xl border p-3 text-sm app-status-danger">
                             {modalError}
                         </p>
                     )}
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-ink">
                         Tytuł edycji
                         <input
                             value={form.title}
@@ -344,12 +410,44 @@ const EditEditionScreen = () => {
                             required
                         />
                     </label>
+                    <label className="block text-sm font-medium text-ink">
+                        Otwarcie rejestracji drużyn
+                        <input
+                            type="datetime-local"
+                            value={form.teamRegisterOpen}
+                            disabled={saving}
+                            onChange={(event) =>
+                                setForm((current) => ({
+                                    ...current,
+                                    teamRegisterOpen: event.target.value,
+                                }))
+                            }
+                            className={inputClass}
+                            required
+                        />
+                    </label>
+                    <label className="block text-sm font-medium text-ink">
+                        Zamknięcie rejestracji drużyn
+                        <input
+                            type="datetime-local"
+                            value={form.teamRegisterClose}
+                            disabled={saving}
+                            onChange={(event) =>
+                                setForm((current) => ({
+                                    ...current,
+                                    teamRegisterClose: event.target.value,
+                                }))
+                            }
+                            className={inputClass}
+                            required
+                        />
+                    </label>
                     <div className="flex justify-end gap-3 pt-2">
                         <button
                             type="button"
                             disabled={saving}
                             onClick={closeModal}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             Anuluj
                         </button>

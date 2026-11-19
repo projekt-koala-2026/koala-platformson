@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using koala.src.Modules.Cms.Data;
 using koala.src.Modules.Cms.Dtos;
+using koala.src.Modules.Cms.Entities;
 using koala.src.Shared;
+using koala.src.Shared.Account;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,51 +12,59 @@ namespace koala.src.Modules.Cms.Services
     public class KoalicjantService
     {
         private readonly CmsDbContext _db;
-        public KoalicjantService(CmsDbContext db)
+        private readonly IAccountModule _accountModule;
+        public KoalicjantService(CmsDbContext db, IAccountModule accountModule)
         {
             _db = db;
+            _accountModule = accountModule;
         }
-        public async Task<KoalicjantDto> UpdateKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpdateKoalicjantRequestDto requestDto)
+
+        public async Task<KoalicjantDto> AddKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpsertKoalicjantRequestDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            if(!isAuthenticated)
+            if (!isAuthenticated)
             {
-                throw new CmsException(CmsErrorCodes.Unauthenticated,"User is not logged in.");
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
+
+            bool isValidKoalicjantId = await _accountModule.Internal_IsOrganizationUser(id);
+
+            if (!isValidKoalicjantId)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Invalid id there is no koalicjant associeted with it");
+            }
+
+            bool isSelf = id == ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if (!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission.");
+            }
 
             var koalicjant = await _db.Koalicjants.FirstOrDefaultAsync(k => k.Id == id);
-
-            bool isNull = koalicjant == null;
-
-            bool isSelf = false;
-            
-            if(!isNull)
+            if (koalicjant != null)
             {
-                isSelf = koalicjant.UserId.Equals(ClaimsHelper.GetUserGuid(claimsPrincipal));
-            }
-
-            if(!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
-            {
-                throw new CmsException(CmsErrorCodes.Forbidden, "User does not have permission.");
-            }
-
-            if(isNull)
-            {
-                throw new CmsException(CmsErrorCodes.KoalicjantNotFound, "Could not find koalicjant with provided id");
+                throw new KoalaException(KoalaErrorCodes.KoalicjantAlreadyExists, "Koalicjant for this id already exists");
             }
 
             DateTime timeNow = DateTime.UtcNow;
 
-            koalicjant.NameFirst = requestDto.NameFirst;
-            koalicjant.NameLast = requestDto.NameLast;
-            koalicjant.Email = requestDto.Email;
-            koalicjant.ContentJson = requestDto.ContentJson;
-            koalicjant.IsVisible = requestDto.IsVisible;
-            koalicjant.UpdatedAt = timeNow;
-            koalicjant.Version = requestDto.Version;
+            koalicjant = new Koalicjant
+            {
+                Id = id,
+                NameFirst = requestDto.NameFirst,
+                NameLast = requestDto.NameLast,
+                Email = requestDto.Email,
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                IsVisible = requestDto.IsVisible,
+                ContentJson = requestDto.ContentJson,
+                Version = 1
+            };
 
+            await _db.Koalicjants.AddAsync(koalicjant);
             await _db.SaveChangesAsync();
 
             return new KoalicjantDto
@@ -65,6 +75,70 @@ namespace koala.src.Modules.Cms.Services
                 koalicjant.Email,
                 koalicjant.ContentJson,
                 koalicjant.IsVisible,
+                koalicjant.CreatedAt,
+                koalicjant.UpdatedAt,
+                koalicjant.Version
+            );
+        }
+        public async Task<KoalicjantDto> UpdateKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id, UpsertKoalicjantRequestDto requestDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
+
+            bool isValidKoalicjantId = await _accountModule.Internal_IsOrganizationUser(id);
+
+            if (!isValidKoalicjantId)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Invalid id there is no koalicjant associeted with it");
+            }
+
+            bool isSelf = id == ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if (!isSelf && !isOrganizationAdmin && !isOrganizationEditor)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission.");
+            }
+
+            var koalicjant = await _db.Koalicjants.FirstOrDefaultAsync(x => x.Id == id);
+            if (koalicjant == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Specified post does not exist");
+            }
+            if (koalicjant.Version != requestDto.Version)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
+            }
+
+            koalicjant.NameFirst = requestDto.NameFirst;
+            koalicjant.NameLast = requestDto.NameLast;
+            koalicjant.Email = requestDto.Email;
+            koalicjant.ContentJson = requestDto.ContentJson;
+            koalicjant.IsVisible = requestDto.IsVisible;
+            koalicjant.UpdatedAt = DateTime.UtcNow;
+            koalicjant.Version++;
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The resource has been modified. Please refresh your data.");
+            }
+
+            return new KoalicjantDto
+            (
+                koalicjant.Id,
+                koalicjant.NameFirst,
+                koalicjant.NameLast,
+                koalicjant.Email,
+                koalicjant.ContentJson,
+                koalicjant.IsVisible,
+                koalicjant.CreatedAt,
                 koalicjant.UpdatedAt,
                 koalicjant.Version
             );
@@ -72,12 +146,12 @@ namespace koala.src.Modules.Cms.Services
         }
         public async Task<(List<KoalicjantDto>, ApiPagination)> GetKoalicjantsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto)
         {
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
             var query = _db.Koalicjants.AsNoTracking().AsQueryable();
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 query = query.Where(k => k.IsVisible == true);
             }
@@ -94,27 +168,32 @@ namespace koala.src.Modules.Cms.Services
                         k.Email,
                         k.ContentJson,
                         k.IsVisible,
+                        k.CreatedAt,
                         k.UpdatedAt,
                         k.Version
                     )
                 ).Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber).Take(pageQueryDto.PageSize).ToList();
 
-            return (koalicjants , new ApiPagination(pageQueryDto.PageNumber,pageQueryDto.PageSize,queryResults.Count));
+            return (koalicjants, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
         }
 
         public async Task<KoalicjantDto> GetKoalicjantAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
-            bool isOrganizationAdmin = ClaimsHelper.IsOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationEditor = ClaimsHelper.IsOrganizationEditor(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
 
             var query = _db.Koalicjants.AsNoTracking().AsQueryable();
 
-            if(!isOrganizationAdmin && !isOrganizationEditor)
+            if (!isOrganizationAdmin && !isOrganizationEditor)
             {
                 query = query.Where(k => k.IsVisible == true);
             }
 
             var queryResult = await query.FirstOrDefaultAsync(k => k.Id == id);
+            if (queryResult == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.KoalicjantNotFound, "Koalicjant does not exist");
+            }
             var koalicjant = new KoalicjantDto
                 (
                     queryResult.Id,
@@ -123,6 +202,7 @@ namespace koala.src.Modules.Cms.Services
                     queryResult.Email,
                     queryResult.ContentJson,
                     queryResult.IsVisible,
+                    queryResult.CreatedAt,
                     queryResult.UpdatedAt,
                     queryResult.Version
                 );

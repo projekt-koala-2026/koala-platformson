@@ -26,11 +26,11 @@ export const getUserRoles = (): UserRoles => {
 };
 
 export const rolesToFlags = (roles: Role[]): UserRoles => ({
-    isAdmin: roles.includes("ORGANIZATION_ADMIN") || roles.includes("ADMIN"),
-    isEditor: roles.includes("ORGANIZATION_EDITOR") || roles.includes("EDITOR"),
-    isReviewer: roles.includes("ORGANIZATION_REVIEWER") || roles.includes("REVIEWER"),
-    isGuardian: roles.includes("TEAM_ADMIN") || roles.includes("GUARDIAN"),
-    isCaptain: roles.includes("TEAM_PLAYER") || roles.includes("CAPTAIN"),
+    isAdmin: roles.includes("ORGANIZATION_ADMIN"),
+    isEditor: roles.includes("ORGANIZATION_EDITOR"),
+    isReviewer: roles.includes("ORGANIZATION_REVIEWER"),
+    isGuardian: roles.includes("TEAM_GUARDIAN"),
+    isCaptain: roles.includes("TEAM_CAPTAIN"),
 });
 
 export const storeSession = (user: SessionUser) => {
@@ -65,7 +65,7 @@ export const isTeamUser = () => getAuthArea() === "team";
 export const getOrganizationHomePath = (roles = getUserRoles()) => {
     if (roles.isAdmin) return "/admin";
     if (roles.isEditor) return "/admin/posts";
-    // The reviewer module does not have a dedicated screen yet.
+    if (roles.isReviewer) return "/admin/reviews";
     return "/";
 };
 
@@ -80,16 +80,11 @@ export const getLoginPath = (roles = getUserRoles()) =>
     getAuthArea(roles) === "organization" ? "/admin/login" : "/login";
 
 const roleFlags: Record<Role, keyof UserRoles> = {
-    ADMIN: "isAdmin",
-    EDITOR: "isEditor",
-    REVIEWER: "isReviewer",
-    GUARDIAN: "isGuardian",
-    CAPTAIN: "isCaptain",
     ORGANIZATION_ADMIN: "isAdmin",
     ORGANIZATION_EDITOR: "isEditor",
     ORGANIZATION_REVIEWER: "isReviewer",
-    TEAM_ADMIN: "isGuardian",
-    TEAM_PLAYER: "isCaptain",
+    TEAM_GUARDIAN: "isGuardian",
+    TEAM_CAPTAIN: "isCaptain",
 };
 
 export const hasAnyRole = (roles: Role[]) => {

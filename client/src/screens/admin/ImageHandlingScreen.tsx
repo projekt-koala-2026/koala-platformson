@@ -6,16 +6,16 @@ import ImagePicker, { type ImagePickerHandle } from "../../components/ImagePicke
 import type { ManagedFile } from "../../types/models";
 import { apiEndpoints } from "../../utils/apiEndpoints";
 import { apiRequestResult, uploadFile } from "../../utils/apiFetcher";
-const MAX_IMAGE_SIZE = 16 * 1024 * 1024;
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 
 const validateImage = (file: File) => {
     if (file.size === 0) return "Wybrany plik jest pusty.";
-    if (file.size > MAX_IMAGE_SIZE) return "Obraz przekracza maksymalny rozmiar 16 MB.";
+    if (file.size > MAX_IMAGE_SIZE) return "Obraz przekracza maksymalny rozmiar 10 MB.";
     if (!allowedImageTypes.has(file.type)) {
-        return "Dozwolone formaty to JPG, PNG, WebP i GIF.";
+        return "Dozwolone formaty to JPG, PNG, WebP.";
     }
     return null;
 };
@@ -60,15 +60,17 @@ const ImageHandlingScreen = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900">
+        <div className="min-h-screen bg-canvas text-ink-heading">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+            <main className="app-admin-page">
                 <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
-                        Biblioteka plików
+                    <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                        Biblioteka zdjęć
                     </p>
-                    <h1 className="mt-1 text-3xl font-bold tracking-tight">Zarządzanie obrazami</h1>
-                    <p className="mt-2 max-w-3xl text-sm text-slate-600">
+                    <h1 className="mt-1 text-3xl font-bold tracking-tight">
+                        Zarządzanie zdjęciami
+                    </h1>
+                    <p className="mt-2 max-w-3xl text-sm text-ink-secondary">
                         Dodawaj obrazy używane we wpisach, historii, regulaminie i pozostałych
                         treściach.
                     </p>
@@ -78,24 +80,22 @@ const ImageHandlingScreen = () => {
                     <p
                         role="status"
                         className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
-                            feedback.tone === "success"
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                                : "border-red-200 bg-red-50 text-red-700"
+                            feedback.tone === "success" ? "app-status-success" : "app-status-danger"
                         }`}
                     >
                         {feedback.message}
                     </p>
                 )}
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6">
                     <h2 className="text-xl font-semibold">Dodaj obraz</h2>
-                    <p className="mb-5 mt-1 text-sm text-slate-500">
+                    <p className="mb-5 mt-1 text-sm text-ink-muted">
                         Plik zostanie zapisany w publicznej bibliotece obrazów.
                     </p>
                     <FileUploader
-                        accept="image/jpeg,image/png,image/webp,image/gif"
-                        label="Kliknij, aby wybrać obraz"
-                        hint="JPG, PNG, WebP lub GIF · maksymalnie 16 MB"
+                        accept="image/jpeg,image/png,image/webp"
+                        label="Kliknij lub przeciągnij obraz"
+                        hint="JPG, PNG, WebP · maksymalnie 10 MB"
                         disabled={uploading}
                         validateFile={validateImage}
                         onValidationError={(message) => setFeedback({ tone: "error", message })}
@@ -108,7 +108,7 @@ const ImageHandlingScreen = () => {
                         <h2 id="images-heading" className="text-xl font-semibold">
                             Biblioteka obrazów
                         </h2>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 text-sm text-ink-muted">
                             Użyj czerwonego przycisku na miniaturze, aby usunąć obraz.
                         </p>
                     </div>

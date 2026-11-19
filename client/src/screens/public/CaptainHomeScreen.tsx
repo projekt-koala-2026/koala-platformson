@@ -1,7 +1,18 @@
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import {
+    FaDownload,
+    FaEdit,
+    FaExchangeAlt,
+    FaPlus,
+    FaSyncAlt,
+    FaTrash,
+    FaUpload,
+} from "react-icons/fa";
+import { FaTrashCan } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import KoalaIllustration from "../../components/KoalaIllustration";
 import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
@@ -15,16 +26,17 @@ import type {
 } from "../../types/models";
 import { adaptSchool } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
+import { apiListRequestResult, apiRequestResult, apiUrl } from "../../utils/apiFetcher";
 import { getStoredUserId, getUserRoles } from "../../utils/authService";
 
 const inputClass =
-    "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:bg-slate-100";
+    "mt-1.5 w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-ink-heading outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:bg-surface-muted";
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 
 const CaptainHomeScreen = () => {
     const navigate = useNavigate();
+    const createTeamFormId = useId();
     const currentUserId = useMemo(() => getStoredUserId(), []);
     const roles = useMemo(() => getUserRoles(), []);
     const [teams, setTeams] = useState<ApiTeam[]>([]);
@@ -35,55 +47,177 @@ const CaptainHomeScreen = () => {
     const [joinCode, setJoinCode] = useState("");
     const [loading, setLoading] = useState(true);
     const [editingName, setEditingName] = useState(false);
+    const [addingMember, setAddingMember] = useState(false);
+    const [newMembers, setNewMembers] = useState([
+        { nameFirst: "", nameLast: "" },
+        { nameFirst: "", nameLast: "" },
+        { nameFirst: "", nameLast: "" },
+    ]);
+    const [memberError, setMemberError] = useState("");
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [rodoByMember, setRodoByMember] = useState<Record<string, boolean>>({});
+    const [rodoStateByMember, setRodoStateByMember] = useState<Record<string, string | null>>({});
+    const [rodoCapitan, setRodoCapitan] = useState(false);
+    const [captainRodoRequest, setCaptainRodoRequest] = useState<{
+        teamId: string;
+        ready: boolean;
+        error: boolean;
+    } | null>(null);
+    const [captainRodoRevision, setCaptainRodoRevision] = useState(0);
+    const [captainRodo, setCaptainRodo] = useState<ApiTeamMember | null>(null);
     const [createError, setCreateError] = useState("");
     const [saving, setSaving] = useState(false);
     const [feedback, setFeedback] = useState<Feedback>(null);
 
     useEffect(() => {
         let active = true;
-        void Promise.all([
-            apiRequestResult<ApiTeam[]>(
-                `${apiEndpoints.teams}/me?${firstPage}`,
-                null,
-                "GET",
-                navigate
-            ),
-            apiRequestResult<ApiSchool[]>(
-                `${apiEndpoints.schools}?${firstPage}`,
-                null,
-                "GET",
-                navigate
-            ),
-        ]).then(([teamResult, schoolResult]) => {
+
+        if (loading) {
+            void Promise.all([
+                apiListRequestResult<ApiTeam>(
+                    `${apiEndpoints.teams}/me?${firstPage}`,
+                    null,
+                    "GET",
+                    navigate
+                ),
+                apiListRequestResult<ApiSchool>(
+                    `${apiEndpoints.schools}?${firstPage}`,
+                    null,
+                    "GET",
+                    navigate
+                ),
+            ]).then(([teamResult, schoolResult]) => {
+                if (!active) return;
+
+                const loadedTeams = teamResult.data ?? [];
+                const loadedTeam = loadedTeams[0] ?? null;
+
+                setTeams(loadedTeams);
+                setTeam(loadedTeam);
+                setTeamName(loadedTeam?.name ?? "");
+                setSchoolId(loadedTeam?.schoolId ?? "");
+                setSchools((schoolResult.data ?? []).map(adaptSchool));
+
+                if (!teamResult.data || !schoolResult.data) {
+                    setFeedback({
+                        tone: "error",
+                        message: "Nie udało się pobrać wszystkich danych panelu drużyny.",
+                    });
+                }
+
+                setLoading(false);
+            });
+
+            return () => {
+                active = false;
+            };
+        }
+
+        if (!team) {
+            setRodoByMember({});
+            setRodoStateByMember({});
+            setRodoCapitan(false);
+            setCaptainRodo(null);
+            return () => {
+                active = false;
+            };
+        }
+
+        setRodoByMember(
+            Object.fromEntries(
+                team.teamMembers.map((member) => [
+                    member.teamMemberId,
+                    member.rodoState !== "RODO_NONE",
+                ])
+            )
+        );
+        setRodoStateByMember(
+            Object.fromEntries(
+                team.teamMembers.map((member) => [member.teamMemberId, member.rodoState])
+            )
+        );
+
+        return () => {
+            active = false;
+        };
+    }, [loading, navigate, team]);
+
+    const teamId = team?.id;
+    const captainId = team?.teamCaptain?.id;
+
+    useEffect(() => {
+        setRodoCapitan(false);
+        setCaptainRodo(null);
+        if (!teamId || !captainId || !roles.isGuardian) return;
+        let active = true;
+        setCaptainRodoRequest({ teamId, ready: false, error: false });
+        void apiListRequestResult<ApiTeamMember>(
+            `${apiEndpoints.teamRodos(teamId)}?${firstPage}`,
+            null,
+            "GET",
+            navigate
+        ).then(({ data }) => {
             if (!active) return;
-            const loadedTeams = teamResult.data ?? [];
-            const loadedTeam = loadedTeams[0] ?? null;
-            setTeams(loadedTeams);
-            setTeam(loadedTeam);
-            setTeamName(loadedTeam?.name ?? "");
-            setSchoolId(loadedTeam?.schoolId ?? "");
-            setSchools((schoolResult.data ?? []).map(adaptSchool));
-            if (!teamResult.data || !schoolResult.data) {
-                setFeedback({
-                    tone: "error",
-                    message: "Nie udało się pobrać wszystkich danych panelu drużyny.",
-                });
+            if (!data) {
+                setCaptainRodoRequest({ teamId, ready: false, error: true });
+                return;
             }
-            setLoading(false);
+            const captainRecord = data.find((record) => record.teamMemberId === captainId);
+            if (!captainRecord) {
+                setCaptainRodoRequest({ teamId, ready: false, error: true });
+                return;
+            }
+            setCaptainRodoRequest({ teamId, ready: true, error: false });
+            setCaptainRodo(captainRecord);
+            setRodoCapitan(captainRecord.rodoState !== "RODO_NONE");
+            setRodoStateByMember((current) => ({
+                ...current,
+                [captainRecord.teamMemberId]: captainRecord.rodoState,
+            }));
         });
         return () => {
             active = false;
         };
-    }, [navigate]);
+    }, [captainId, navigate, roles.isGuardian, teamId, captainRodoRevision]);
+
+    const captainRodoReady = captainRodoRequest?.teamId === teamId && captainRodoRequest?.ready;
+
+    const statusMeta: Record<
+        "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED",
+        { label: string; className: string }
+    > = {
+        RODO_UNVERIFIED: {
+            label: "Do weryfikacji",
+            className: "app-status-warning",
+        },
+        RODO_ACCEPTED: {
+            label: "Zatwierdzona",
+            className: "app-status-success",
+        },
+        RODO_REJECTED: {
+            label: "Odrzucona",
+            className: "app-status-danger",
+        },
+    };
+
+    const rodoStatusFor = (memberKey: string) => {
+        const state =
+            memberKey === captainId ? captainRodo?.rodoState : rodoStateByMember[memberKey];
+        if (!state || !(state in statusMeta)) {
+            return {
+                label: "Brak zgody",
+                className: "border-line bg-surface-muted text-ink-secondary",
+            };
+        }
+        return statusMeta[state as keyof typeof statusMeta];
+    };
 
     const selectedSchool = useMemo(
         () => schools.find((school) => school.id === schoolId),
         [schoolId, schools]
     );
-    const isCaptain = team?.teamMembers.some(
-        (member) => member.id === currentUserId && member.position === "CAPTAIN"
-    );
+
+    const isCaptain = team?.teamCaptain?.id === currentUserId;
 
     const submitTeam = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -104,7 +238,7 @@ const CaptainHomeScreen = () => {
         const result = team
             ? await apiRequestResult<ApiTeam>(
                   `${apiEndpoints.teams}/${team.id}/name`,
-                  { name: normalizedName },
+                  { name: normalizedName, version: team.version },
                   "PUT",
                   navigate
               )
@@ -131,8 +265,16 @@ const CaptainHomeScreen = () => {
                 tone: "success",
                 message: team ? "Nazwa drużyny została zapisana." : "Drużyna została utworzona.",
             });
-        } else if (team) setFeedback({ tone: "error", message: "Nie udało się zapisać drużyny." });
-        else setCreateError("Nie udało się utworzyć drużyny. Sprawdź dane i spróbuj ponownie.");
+        } else if (team)
+            setFeedback({
+                tone: "error",
+                message: result.error?.message ?? "Nie udało się zapisać drużyny.",
+            });
+        else
+            setCreateError(
+                result.error?.message ??
+                    "Nie udało się utworzyć drużyny. Sprawdź dane i spróbuj ponownie."
+            );
         setSaving(false);
     };
 
@@ -166,7 +308,7 @@ const CaptainHomeScreen = () => {
         if (!normalizedCode) return;
         setSaving(true);
         setFeedback(null);
-        const { data } = await apiRequestResult<ApiTeamMember[]>(
+        const { data, error } = await apiRequestResult<ApiTeam>(
             `${apiEndpoints.teams}/join/${encodeURIComponent(normalizedCode)}`,
             null,
             "POST",
@@ -175,12 +317,12 @@ const CaptainHomeScreen = () => {
         if (!data) {
             setFeedback({
                 tone: "error",
-                message: "Nie udało się dołączyć do drużyny. Sprawdź kod.",
+                message: error?.message ?? "Nie udało się dołączyć do drużyny. Sprawdź kod.",
             });
             setSaving(false);
             return;
         }
-        const refreshed = await apiRequestResult<ApiTeam[]>(
+        const refreshed = await apiListRequestResult<ApiTeam>(
             `${apiEndpoints.teams}/me?${firstPage}`,
             null,
             "GET",
@@ -237,7 +379,7 @@ const CaptainHomeScreen = () => {
         if (status === 200 || status === 204) {
             const updated = {
                 ...team,
-                teamMembers: team.teamMembers.filter((item) => item.id !== memberId),
+                teamMembers: team.teamMembers.filter((item) => item.teamMemberId !== memberId),
             };
             setTeam(updated);
             setTeams((items) => items.map((item) => (item.id === updated.id ? updated : item)));
@@ -269,21 +411,198 @@ const CaptainHomeScreen = () => {
         setSaving(false);
     };
 
+    const addMember = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!team) return;
+
+        const membersToAdd = newMembers
+            .map((member) => ({
+                nameFirst: member.nameFirst.trim(),
+                nameLast: member.nameLast.trim(),
+                version: null,
+            }))
+            .filter((member) => member.nameFirst || member.nameLast);
+
+        if (membersToAdd.length === 0) {
+            setMemberError("Wpisz imię i nazwisko przynajmniej jednej osoby.");
+            return;
+        }
+
+        if (membersToAdd.some((member) => !member.nameFirst || !member.nameLast)) {
+            setMemberError("Uzupełnij imię i nazwisko każdej rozpoczętej osoby.");
+            return;
+        }
+
+        setSaving(true);
+        setMemberError("");
+        setFeedback(null);
+        let addedCount = 0;
+        for (const member of membersToAdd) {
+            const result = await apiRequestResult<unknown>(
+                `${apiEndpoints.teams}/${team.id}/member`,
+                member,
+                "POST",
+                navigate
+            );
+            if (result.status !== 200 && result.status !== 201 && result.status !== 204) break;
+            addedCount += 1;
+        }
+
+        if (addedCount > 0) {
+            const refreshed = await apiListRequestResult<ApiTeam>(
+                `${apiEndpoints.teams}/me?${firstPage}`,
+                null,
+                "GET",
+                navigate
+            );
+            if (refreshed.data) {
+                setTeams(refreshed.data);
+                setTeam(refreshed.data.find((item) => item.id === team.id) ?? team);
+            }
+        }
+
+        if (addedCount === membersToAdd.length) {
+            setAddingMember(false);
+            setNewMembers([
+                { nameFirst: "", nameLast: "" },
+                { nameFirst: "", nameLast: "" },
+                { nameFirst: "", nameLast: "" },
+            ]);
+            setFeedback({
+                tone: "success",
+                message: `Dodano ${addedCount} ${addedCount === 1 ? "osobę" : "osoby"} do drużyny.`,
+            });
+        } else if (addedCount > 0) {
+            setAddingMember(false);
+            setFeedback({
+                tone: "error",
+                message: `Dodano ${addedCount} z ${membersToAdd.length} osób. Sprawdź limit miejsc przed ponowną próbą.`,
+            });
+        } else {
+            setMemberError("Nie udało się dodać osób do drużyny.");
+        }
+        setSaving(false);
+    };
+
+    const closeAddMember = () => {
+        if (saving) return;
+        setAddingMember(false);
+        setMemberError("");
+        setNewMembers([
+            { nameFirst: "", nameLast: "" },
+            { nameFirst: "", nameLast: "" },
+            { nameFirst: "", nameLast: "" },
+        ]);
+    };
+
+    const addRodo = async (memberId: string, file?: File) => {
+        if (!team || !file) return;
+        const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+        if (!allowedTypes.includes(file.type) || file.size > 4 * 1024 * 1024) {
+            setFeedback({
+                tone: "error",
+                message: "Wybierz plik PDF, JPG, PNG lub WebP o rozmiarze do 4 MB.",
+            });
+            return;
+        }
+
+        const member = team.teamMembers.find((item) => item.teamMemberId === memberId);
+        const isCaptainRodo = team.teamCaptain?.id === memberId;
+        const rodoVersion = isCaptainRodo ? captainRodo?.rodoVersion : member?.rodoVersion;
+        if (isCaptainRodo && !captainRodoReady) return;
+        if (!member && !isCaptainRodo) return;
+        const formData = new FormData();
+        formData.append("File", file);
+        setSaving(true);
+        setFeedback(null);
+
+        const hasRodo = isCaptainRodo ? rodoCapitan : rodoByMember[memberId] === true;
+        if (hasRodo && rodoVersion) {
+            formData.append("Version", String(rodoVersion));
+        }
+        const result = await apiRequestResult<ApiTeamMember>(
+            `${apiEndpoints.teams}/${team.id}/rodos/${memberId}${hasRodo ? "/file" : ""}`,
+            formData,
+            hasRodo ? "PUT" : "POST",
+            navigate
+        );
+
+        if (result.status === 200 || result.status === 204) {
+            setRodoByMember((current) => ({ ...current, [memberId]: true }));
+            if (isCaptainRodo) setRodoCapitan(true);
+            setRodoStateByMember((current) => ({
+                ...current,
+                [memberId]: result.data?.rodoState ?? "RODO_UNVERIFIED",
+            }));
+            if (result.data) {
+                if (isCaptainRodo) setCaptainRodo(result.data);
+                const updatedTeam = {
+                    ...team,
+                    teamMembers: team.teamMembers.map((item) =>
+                        item.teamMemberId === memberId ? result.data! : item
+                    ),
+                };
+                if (member) {
+                    setTeam(updatedTeam);
+                    setTeams((items) =>
+                        items.map((item) => (item.id === updatedTeam.id ? updatedTeam : item))
+                    );
+                }
+            }
+            setFeedback({ tone: "success", message: "Dokument RODO został zapisany." });
+        } else {
+            if (isCaptainRodo) setCaptainRodoRevision((value) => value + 1);
+            setFeedback({
+                tone: "error",
+                message: result.error?.message ?? "Nie udało się zapisać dokumentu RODO.",
+            });
+        }
+        setSaving(false);
+    };
+
+    const downloadRodo = async (memberId: string) => {
+        if (!team) return;
+        setSaving(true);
+        try {
+            const response = await fetch(
+                `${apiUrl}${apiEndpoints.teams}/${team.id}/rodos/${memberId}/file`,
+                { credentials: "include" }
+            );
+            if (!response.ok) throw new Error("RODO download failed");
+            const objectUrl = URL.createObjectURL(await response.blob());
+            const link = document.createElement("a");
+            link.href = objectUrl;
+            link.download = `rodo-${memberId}`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        } catch {
+            setFeedback({ tone: "error", message: "Nie udało się pobrać pliku RODO." });
+        }
+        setSaving(false);
+    };
+
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50">
+        <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
-                <header className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
-                        Panel drużyn
-                    </p>
-                    <h1 className="mt-2 text-3xl font-bold text-slate-900">Twoje drużyny</h1>
-                    <p className="mt-3 max-w-2xl text-slate-600">
-                        Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
-                    </p>
+            <main className="app-public-page flex-1">
+                <header className="mb-8 flex items-start justify-between gap-4 sm:gap-8">
+                    <div className="min-w-0">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
+                            Panel drużyn
+                        </p>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
+                        <p className="mt-3 max-w-2xl text-ink-secondary">
+                            Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
+                        </p>
+                    </div>
+                    <KoalaIllustration
+                        src={`${import.meta.env.BASE_URL}images/koala/koala_mis2b.png`}
+                    />
                 </header>
                 {teams.length > 1 && (
-                    <label className="mb-6 block max-w-xl text-sm font-medium text-slate-700">
+                    <label className="mb-6 block max-w-xl text-sm font-medium text-ink">
                         Wyświetlana drużyna
                         <select
                             value={team?.id ?? ""}
@@ -306,9 +625,11 @@ const CaptainHomeScreen = () => {
                 {team && roles.isGuardian && (
                     <form
                         onSubmit={joinTeam}
-                        className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+                        className="mb-6 rounded-2xl border border-line bg-surface p-5 shadow-sm"
                     >
-                        <h2 className="font-semibold text-slate-900">Dołącz do kolejnej drużyny</h2>
+                        <h2 className="font-semibold text-ink-heading">
+                            Dołącz do kolejnej drużyny
+                        </h2>
                         <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                             <input
                                 value={joinCode}
@@ -329,21 +650,21 @@ const CaptainHomeScreen = () => {
                 {feedback && (
                     <p
                         role={feedback.tone === "error" ? "alert" : "status"}
-                        className={`mb-6 rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}
+                        className={`mb-6 rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
                     >
                         {feedback.message}
                     </p>
                 )}
                 {loading ? (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-14 text-center text-sm text-slate-500 shadow-sm">
+                    <div className="rounded-2xl border border-line bg-surface p-14 text-center text-sm text-ink-muted shadow-sm">
                         Ładowanie danych drużyny…
                     </div>
                 ) : team ? (
                     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
                             {editingName ? (
                                 <form onSubmit={submitTeam} className="space-y-4">
-                                    <label className="block text-sm font-medium text-slate-700">
+                                    <label className="block text-sm font-medium text-ink">
                                         Nazwa drużyny
                                         <input
                                             className={inputClass}
@@ -361,7 +682,7 @@ const CaptainHomeScreen = () => {
                                         />
                                         <button
                                             type="button"
-                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted"
                                             onClick={() => {
                                                 setTeamName(team.name);
                                                 setEditingName(false);
@@ -373,126 +694,403 @@ const CaptainHomeScreen = () => {
                                 </form>
                             ) : (
                                 <>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
                                         Zarejestrowana drużyna
                                     </p>
-                                    <h2 className="mt-2 text-2xl font-bold text-slate-900">
+                                    <h2 className="mt-2 text-2xl font-bold text-ink-heading">
                                         {team.name}
                                     </h2>
-                                    <p className="mt-2 text-sm text-slate-500">
+                                    <p className="mt-2 text-sm text-ink-muted">
                                         {selectedSchool?.name ?? `Szkoła: ${team.schoolId}`}
                                     </p>
-                                    <p className="mt-1 text-sm text-slate-500">
+                                    <p className="mt-1 text-sm text-ink-muted">
                                         Status nazwy:{" "}
                                         {team.isCensored
                                             ? "oczekuje na akceptację"
                                             : "zaakceptowana"}
                                     </p>
                                     {isCaptain && (
-                                        <Button
-                                            text="Edytuj nazwę"
-                                            onClick={() => setEditingName(true)}
-                                            className="mt-5"
-                                        />
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                text="Edytuj nazwę"
+                                                icon={<FaEdit />}
+                                                onClick={() => setEditingName(true)}
+                                                className="mt-5"
+                                            />
+                                            <Button
+                                                text="Dodaj członka"
+                                                icon={<FaPlus />}
+                                                onClick={() => setAddingMember(true)}
+                                                disabled={
+                                                    saving || (team.teamMembers?.length ?? 0) >= 3
+                                                }
+                                                className="mt-5"
+                                            />
+                                        </div>
                                     )}
                                 </>
                             )}
                         </section>
-                        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Kod dołączenia</h2>
+                        <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
+                            <h2 className="text-lg font-semibold text-ink-heading">
+                                Kod dołączenia
+                            </h2>
                             {team.joinCode ? (
-                                <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-center">
-                                    <p className="font-mono text-2xl font-bold tracking-widest text-emerald-900">
+                                <div className="mt-4 rounded-xl bg-brand-soft p-4 text-center">
+                                    <p className="font-mono text-2xl font-bold tracking-widest text-brand-text-strong">
                                         {team.joinCode.joinCode}
                                     </p>
-                                    <p className="mt-2 text-xs text-emerald-700">
+                                    <p className="mt-2 text-xs text-brand-text">
                                         Ważny do{" "}
                                         {new Date(team.joinCode.expiresAt).toLocaleString("pl-PL")}
                                     </p>
                                 </div>
                             ) : (
-                                <p className="mt-3 text-sm text-slate-500">Brak aktywnego kodu.</p>
+                                <p className="mt-3 text-sm text-ink-muted">Brak aktywnego kodu.</p>
                             )}
                             {isCaptain && (
                                 <Button
                                     text={team.joinCode ? "Wygeneruj nowy kod" : "Wygeneruj kod"}
+                                    icon={<FaSyncAlt />}
                                     onClick={() => void generateJoinCode()}
                                     disabled={saving}
                                     className="mt-4"
                                 />
                             )}
                         </section>
-                        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-                            <h2 className="text-lg font-semibold text-slate-900">
+                        <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm lg:col-span-2">
+                            <h2 className="text-lg font-semibold text-ink-heading">
                                 Członkowie drużyny
                             </h2>
+                            {roles.isGuardian && (
+                                <p className="mt-2 text-sm text-ink-muted">
+                                    Usuwanie zgód jest chwilowo niedostępne. Dokument możesz
+                                    zastąpić nowym plikiem.
+                                </p>
+                            )}
                             <ul className="mt-4 divide-y divide-slate-100">
-                                {team.teamMembers.map((member) => (
-                                    <li
-                                        key={member.id}
-                                        className="flex flex-wrap items-center justify-between gap-3 py-3"
-                                    >
-                                        <div>
-                                            <p className="font-mono text-sm text-slate-700">
-                                                {member.id}
-                                            </p>
-                                            <p className="text-xs text-slate-500">
-                                                {member.position}
-                                            </p>
+                                <li className="relative flex flex-wrap items-center justify-between gap-3 py-3">
+                                    <div>
+                                        <p className="font-mono text-sm text-ink">
+                                            {team.teamCaptain?.nameFirst}{" "}
+                                            {team.teamCaptain?.nameLast}
+                                        </p>
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                            Kapitan drużyny
+                                        </p>
+                                    </div>
+                                    <div className="text-center">
+                                        {roles.isGuardian &&
+                                            captainRodoReady &&
+                                            rodoStatusFor(team.teamCaptain?.id ?? "") && (
+                                                <span
+                                                    className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor(team.teamCaptain?.id ?? "")!.className}`}
+                                                >
+                                                    {
+                                                        rodoStatusFor(team.teamCaptain?.id ?? "")!
+                                                            .label
+                                                    }
+                                                </span>
+                                            )}
+                                    </div>
+
+                                    {roles.isGuardian && !captainRodoReady && (
+                                        <div role="status" className="text-sm text-ink-secondary">
+                                            {captainRodoRequest?.teamId === teamId &&
+                                            captainRodoRequest?.error ? (
+                                                <>
+                                                    Nie udało się pobrać stanu zgody kapitana.
+                                                    <button
+                                                        type="button"
+                                                        className="ml-2 underline"
+                                                        onClick={() =>
+                                                            setCaptainRodoRevision(
+                                                                (value) => value + 1
+                                                            )
+                                                        }
+                                                    >
+                                                        Spróbuj ponownie
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                "Ładowanie zgody kapitana…"
+                                            )}
                                         </div>
-                                        {isCaptain && member.position !== "CAPTAIN" && (
+                                    )}
+                                    {roles.isGuardian && captainRodoReady && !rodoCapitan && (
+                                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
+                                            <FaUpload />
+                                            <span>Zgoda RODO</span>
+                                            <input
+                                                type="file"
+                                                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                                className="sr-only"
+                                                disabled={saving}
+                                                onChange={(event) => {
+                                                    const file = event.currentTarget.files?.[0];
+                                                    if (file)
+                                                        void addRodo(
+                                                            team.teamCaptain?.id ?? "",
+                                                            file
+                                                        );
+                                                    event.currentTarget.value = "";
+                                                }}
+                                            />
+                                        </label>
+                                    )}
+                                    {roles.isGuardian && captainRodoReady && rodoCapitan && (
+                                        <div className="flex items-center gap-1">
                                             <button
                                                 type="button"
                                                 disabled={saving}
-                                                onClick={() => void removeMember(member.id)}
-                                                className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                                                onClick={() =>
+                                                    void downloadRodo(team.teamCaptain?.id ?? "")
+                                                }
+                                                className="inline-flex items-center gap-2 rounded-lg bg-success-soft px-4 py-2 text-xs font-semibold text-success-text hover:brightness-95 disabled:opacity-50"
                                             >
-                                                Usuń z drużyny
+                                                <FaDownload />
+                                                <span>Zgoda RODO</span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled
+                                                title="Usuwanie zgód jest chwilowo niedostępne. Możesz zastąpić dokument."
+                                                className="rounded-lg bg-danger-soft px-2 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                aria-label={`Usuń zgodę RODO ${team.teamCaptain?.nameFirst} ${team.teamCaptain?.nameLast}`}
+                                            >
+                                                <FaTrashCan />
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled={saving}
+                                                onClick={() =>
+                                                    document
+                                                        .getElementById(
+                                                            `rodo-replace-${team.teamCaptain?.id ?? ""}`
+                                                        )
+                                                        ?.click()
+                                                }
+                                                aria-label={`Zastąp zgodę RODO ${team.teamCaptain?.nameFirst} ${team.teamCaptain?.nameLast}`}
+                                                className="rounded-lg bg-brand-soft px-2 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted disabled:opacity-50"
+                                            >
+                                                <FaExchangeAlt />
+                                            </button>
+                                            <input
+                                                id={`rodo-replace-${team.teamCaptain?.id ?? ""}`}
+                                                type="file"
+                                                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                                className="sr-only"
+                                                disabled={saving}
+                                                onChange={(event) => {
+                                                    const file = event.currentTarget.files?.[0];
+                                                    if (file)
+                                                        void addRodo(
+                                                            team.teamCaptain?.id ?? "",
+                                                            file
+                                                        );
+                                                    event.currentTarget.value = "";
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </li>
+                                {team.teamMembers?.map((member) => (
+                                    <li
+                                        key={member.teamMemberId}
+                                        className="relative flex flex-wrap items-center justify-between gap-3 py-3"
+                                    >
+                                        <div>
+                                            <p className="font-mono text-sm text-ink">
+                                                {member.nameFist} {member.nameLast}
+                                            </p>
+                                            <p className="text-xs text-ink-muted">Uczestnik</p>
+                                        </div>
+                                        <div className="text-center">
+                                            {roles.isGuardian &&
+                                                rodoStatusFor(member.teamMemberId) && (
+                                                    <span
+                                                        className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor(member.teamMemberId)!.className}`}
+                                                    >
+                                                        {rodoStatusFor(member.teamMemberId)!.label}
+                                                    </span>
+                                                )}
+                                        </div>
+                                        {isCaptain && (
+                                            <button
+                                                type="button"
+                                                disabled={saving}
+                                                onClick={() =>
+                                                    void removeMember(member.teamMemberId)
+                                                }
+                                                className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                            >
+                                                <FaTrash aria-hidden="true" /> Usuń z drużyny
                                             </button>
                                         )}
+                                        {roles.isGuardian &&
+                                            rodoByMember[member.teamMemberId] === false && (
+                                                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
+                                                    <FaUpload />
+                                                    <span>Zgoda RODO</span>
+                                                    <input
+                                                        type="file"
+                                                        accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                                        className="sr-only"
+                                                        disabled={saving}
+                                                        onChange={(event) => {
+                                                            const file =
+                                                                event.currentTarget.files?.[0];
+                                                            if (file)
+                                                                void addRodo(
+                                                                    member.teamMemberId,
+                                                                    file
+                                                                );
+                                                            event.currentTarget.value = "";
+                                                        }}
+                                                    />
+                                                </label>
+                                            )}
+                                        {roles.isGuardian &&
+                                            rodoByMember[member.teamMemberId] === true && (
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving}
+                                                        onClick={() =>
+                                                            void downloadRodo(member.teamMemberId)
+                                                        }
+                                                        className="inline-flex items-center gap-2 rounded-lg bg-success-soft px-4 py-2 text-xs font-semibold text-success-text hover:brightness-95 disabled:opacity-50"
+                                                    >
+                                                        <FaDownload />
+                                                        <span>Zgoda RODO</span>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled
+                                                        title="Usuwanie zgód jest chwilowo niedostępne. Możesz zastąpić dokument."
+                                                        className="rounded-lg bg-danger-soft px-2 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                        aria-label={`Usuń zgodę RODO ${member.nameFist} ${member.nameLast}`}
+                                                    >
+                                                        <FaTrashCan />
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving}
+                                                        onClick={() =>
+                                                            document
+                                                                .getElementById(
+                                                                    `rodo-replace-${member.teamMemberId}`
+                                                                )
+                                                                ?.click()
+                                                        }
+                                                        aria-label={`Zastąp zgodę RODO ${member.nameFist} ${member.nameLast}`}
+                                                        className="rounded-lg bg-brand-soft px-2 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted disabled:opacity-50"
+                                                    >
+                                                        <FaExchangeAlt />
+                                                    </button>
+                                                    <input
+                                                        id={`rodo-replace-${member.teamMemberId}`}
+                                                        type="file"
+                                                        accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                                                        className="sr-only"
+                                                        disabled={saving}
+                                                        onChange={(event) => {
+                                                            const file =
+                                                                event.currentTarget.files?.[0];
+                                                            if (file)
+                                                                void addRodo(
+                                                                    member.teamMemberId,
+                                                                    file
+                                                                );
+                                                            event.currentTarget.value = "";
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
                                     </li>
                                 ))}
+                                {team.teamGuardian &&
+                                    team.teamGuardian.id !== team.teamCaptain?.id && (
+                                        <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+                                            <div>
+                                                <p className="font-mono text-sm text-ink">
+                                                    {team.teamGuardian?.nameFirst}{" "}
+                                                    {team.teamGuardian?.nameLast}
+                                                </p>
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                                    Opiekun drużyny
+                                                </p>
+                                            </div>
+                                            {isCaptain && (
+                                                <button
+                                                    type="button"
+                                                    // Brakuje endpointu do usuwania opiekuna drużyny, więc przycisk jest disabled
+                                                    disabled
+                                                    onClick={() =>
+                                                        void removeMember(
+                                                            team.teamGuardian?.id ?? ""
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
+                                                >
+                                                    <FaTrash aria-hidden="true" /> Usuń z drużyny
+                                                </button>
+                                            )}
+                                        </li>
+                                    )}
                             </ul>
                             {isCaptain && (
                                 <Button
                                     text={saving ? "Usuwanie…" : "Usuń drużynę"}
+                                    icon={<FaTrash />}
                                     onClick={() => void deleteTeam()}
                                     disabled={saving}
-                                    className="mt-6 bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                                    className="mt-6 bg-danger hover:bg-danger-hover focus:ring-danger-emphasis"
                                 />
                             )}
                         </section>
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        <form
-                            onSubmit={joinTeam}
-                            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-                        >
-                            <h2 className="text-xl font-semibold text-slate-900">
-                                Dołącz do drużyny
-                            </h2>
-                            <p className="mt-1 text-sm text-slate-500">
-                                Wpisz kod otrzymany od kapitana.
-                            </p>
-                            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                                <input
-                                    value={joinCode}
-                                    onChange={(event) => setJoinCode(event.target.value)}
-                                    className={`${inputClass} mt-0 font-mono uppercase`}
-                                    placeholder="Kod dołączenia"
-                                    disabled={saving}
-                                    required
-                                />
-                                <Button
-                                    type="submit"
-                                    text={saving ? "Dołączanie…" : "Dołącz"}
-                                    disabled={saving}
-                                />
-                            </div>
-                        </form>
+                        {roles.isGuardian && (
+                            <form
+                                onSubmit={joinTeam}
+                                className="rounded-2xl border border-line bg-surface p-6 shadow-sm"
+                            >
+                                <h2 className="text-xl font-semibold text-ink-heading">
+                                    Dołącz do drużyny
+                                </h2>
+                                <p className="mt-1 text-sm text-ink-muted">
+                                    Wpisz kod otrzymany od kapitana.
+                                </p>
+                                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                                    <input
+                                        value={joinCode}
+                                        onChange={(event) => setJoinCode(event.target.value)}
+                                        className={`${inputClass} mt-0 font-mono uppercase`}
+                                        placeholder="Kod dołączenia"
+                                        disabled={saving}
+                                        required
+                                    />
+                                    <Button
+                                        type="submit"
+                                        text={saving ? "Dołączanie…" : "Dołącz"}
+                                        disabled={saving}
+                                    />
+                                </div>
+                            </form>
+                        )}
                         {roles.isCaptain && (
-                            <Button text="Utwórz nową drużynę" onClick={openCreateTeam} />
+                            <Button
+                                text="Utwórz nową drużynę"
+                                icon={<FaPlus />}
+                                onClick={openCreateTeam}
+                            />
                         )}
                     </div>
                 )}
@@ -502,9 +1100,28 @@ const CaptainHomeScreen = () => {
                 onClose={closeCreateTeam}
                 title="Utwórz drużynę"
                 maxWidth="xl"
+                footer={
+                    <div className="flex flex-wrap justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={closeCreateTeam}
+                            disabled={saving}
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
+                        >
+                            Anuluj
+                        </button>
+                        <Button
+                            type="submit"
+                            form={createTeamFormId}
+                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
+                            icon={<FaPlus />}
+                            disabled={saving}
+                        />
+                    </div>
+                }
             >
-                <form onSubmit={submitTeam} className="space-y-6">
-                    <label className="block text-sm font-medium text-slate-700">
+                <form id={createTeamFormId} onSubmit={submitTeam} className="space-y-4">
+                    <label className="block text-sm font-medium text-ink">
                         Nazwa drużyny
                         <input
                             className={inputClass}
@@ -520,20 +1137,21 @@ const CaptainHomeScreen = () => {
                         <div className="mb-4">
                             <h3
                                 id="create-team-school-heading"
-                                className="font-semibold text-slate-900"
+                                className="font-semibold text-ink-heading"
                             >
                                 Wybierz szkołę
                             </h3>
-                            <p className="mt-1 text-sm text-slate-500">
+                            <p className="mt-1 text-sm text-ink-muted">
                                 Kliknij odpowiedni wiersz w tabeli.
                             </p>
                             {selectedSchool && (
-                                <p className="mt-2 text-sm font-semibold text-emerald-700">
+                                <p className="mt-2 text-sm font-semibold text-brand-text">
                                     Wybrano: {selectedSchool.name}
                                 </p>
                             )}
                         </div>
                         <SchoolsTable
+                            compact
                             schools={schools}
                             selectedRspo={selectedSchool?.rspo ?? null}
                             onRowClick={(school) => {
@@ -544,26 +1162,85 @@ const CaptainHomeScreen = () => {
                     </section>
 
                     {createError && (
-                        <p
-                            role="alert"
-                            className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-                        >
+                        <p role="alert" className="rounded-xl border p-3 text-sm app-status-danger">
                             {createError}
                         </p>
                     )}
-
-                    <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                </form>
+            </Modal>
+            <Modal
+                isOpen={addingMember}
+                onClose={closeAddMember}
+                title="Dodaj członków drużyny"
+                maxWidth="lg"
+            >
+                <form onSubmit={addMember} className="space-y-5">
+                    <p className="text-sm text-ink-muted">
+                        Podaj imię i nazwisko osób, które chcesz dodać do drużyny.
+                    </p>
+                    {newMembers.map((member, index) => (
+                        <fieldset
+                            key={index}
+                            className="grid gap-4 rounded-xl border border-line-subtle p-4 sm:grid-cols-2"
+                        >
+                            <legend className="px-1 text-sm font-semibold text-ink-heading">
+                                Osoba {index + 1}
+                            </legend>
+                            <label className="block text-sm font-medium text-ink">
+                                Imię
+                                <input
+                                    className={inputClass}
+                                    value={member.nameFirst}
+                                    onChange={(event) =>
+                                        setNewMembers((current) =>
+                                            current.map((item, itemIndex) =>
+                                                itemIndex === index
+                                                    ? { ...item, nameFirst: event.target.value }
+                                                    : item
+                                            )
+                                        )
+                                    }
+                                    disabled={saving}
+                                    autoFocus={index === 0}
+                                />
+                            </label>
+                            <label className="block text-sm font-medium text-ink">
+                                Nazwisko
+                                <input
+                                    className={inputClass}
+                                    value={member.nameLast}
+                                    onChange={(event) =>
+                                        setNewMembers((current) =>
+                                            current.map((item, itemIndex) =>
+                                                itemIndex === index
+                                                    ? { ...item, nameLast: event.target.value }
+                                                    : item
+                                            )
+                                        )
+                                    }
+                                    disabled={saving}
+                                />
+                            </label>
+                        </fieldset>
+                    ))}
+                    {memberError && (
+                        <p role="alert" className="rounded-xl border p-3 text-sm app-status-danger">
+                            {memberError}
+                        </p>
+                    )}
+                    <div className="flex flex-col-reverse gap-3 border-t border-line-subtle pt-5 sm:flex-row sm:justify-end">
                         <button
                             type="button"
-                            onClick={closeCreateTeam}
+                            onClick={closeAddMember}
                             disabled={saving}
-                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                            className="rounded-xl px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface-muted disabled:opacity-50"
                         >
                             Anuluj
                         </button>
                         <Button
                             type="submit"
-                            text={saving ? "Tworzenie…" : "Utwórz drużynę"}
+                            text={saving ? "Dodawanie…" : "Dodaj osoby"}
+                            icon={<FaPlus />}
                             disabled={saving}
                         />
                     </div>

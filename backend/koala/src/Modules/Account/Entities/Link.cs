@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Account.Entities
-{    
+{
     public class Link
     {
         [Column("id")]
@@ -12,10 +12,12 @@ namespace koala.src.Modules.Account.Entities
         public Guid UserId { get; set; }
         [Column("type")]
         public string Type { get; set; }
-        [Column("active")]
-        public bool Active { get; set; }
+        [Column("state")]
+        public string State { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
         [Column("expires_at")]
         public DateTime ExpiresAt { get; set; }
         public User User { get; set; } = null!;
