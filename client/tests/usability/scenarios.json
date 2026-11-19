@@ -1,0 +1,262 @@
+[
+  {
+    "id": "A01",
+    "role": "admin",
+    "instruction": "Zaloguj się do panelu organizatorów i sprawdź, na jakim koncie pracujesz."
+  },
+  {
+    "id": "A02",
+    "role": "admin",
+    "instruction": "Sprawdź, na jakim etapie jest ocenianie odpowiedzi w bieżącym konkursie."
+  },
+  {
+    "id": "A03",
+    "role": "admin",
+    "instruction": "Sprawdź, czy jakieś oceny wymagają uzgodnienia, i opisz swoje dalsze działania w takiej sytuacji."
+  },
+  {
+    "id": "A04",
+    "role": "admin",
+    "instruction": "Znajdź ustawienie pozwalające zmienić hasło do swojego konta."
+  },
+  {
+    "id": "A05",
+    "role": "admin",
+    "instruction": "Zaproś nową osobę, która ma pomagać w redagowaniu treści konkursu jako edytor."
+  },
+  {
+    "id": "A06",
+    "role": "admin",
+    "instruction": "Znajdź wskazaną osobę i zmień jej uprawnienia zgodnie z kartą danych."
+  },
+  {
+    "id": "A07",
+    "role": "admin",
+    "instruction": "Usuń wskazane konto, które nie powinno już mieć dostępu do panelu."
+  },
+  {
+    "id": "A08",
+    "role": "admin",
+    "instruction": "Przygotuj nową edycję konkursu na podstawie karty danych."
+  },
+  {
+    "id": "A09",
+    "role": "admin",
+    "instruction": "Zmień wskazane dane przygotowanej edycji."
+  },
+  {
+    "id": "A10",
+    "role": "admin",
+    "instruction": "Rozpocznij wskazaną edycję konkursu."
+  },
+  {
+    "id": "A11",
+    "role": "admin",
+    "instruction": "W przygotowanej edycji dodaj etap konkursu z terminem przesyłania odpowiedzi określonym na karcie danych."
+  },
+  {
+    "id": "A12",
+    "role": "admin",
+    "instruction": "Zmień termin wskazanego etapu zgodnie z kartą danych."
+  },
+  {
+    "id": "A13",
+    "role": "admin",
+    "instruction": "Dodaj do wskazanego etapu zadanie jednokrotnego wyboru zgodnie z kartą danych."
+  },
+  {
+    "id": "A14",
+    "role": "admin",
+    "instruction": "Dodaj do wskazanego etapu zadanie wielokrotnego wyboru zgodnie z kartą danych."
+  },
+  {
+    "id": "A15",
+    "role": "admin",
+    "instruction": "Popraw treść i warianty odpowiedzi wskazanego zadania."
+  },
+  {
+    "id": "A16",
+    "role": "admin",
+    "instruction": "Usuń wskazane zadanie próbne, którego nie należy wykorzystywać."
+  },
+  {
+    "id": "A17",
+    "role": "admin",
+    "instruction": "Aktywuj wskazany etap konkursu."
+  },
+  {
+    "id": "A18",
+    "role": "admin",
+    "instruction": "Uruchom automatyczne sprawdzenie odpowiedzi dla wskazanego etapu."
+  },
+  {
+    "id": "A19",
+    "role": "admin",
+    "instruction": "Sprawdź, ile odpowiedzi przesłano do wskazanego zadania, czy wszystkie mają przydzielonych recenzentów i ile ocen pozostało do wykonania."
+  },
+  {
+    "id": "A20",
+    "role": "admin",
+    "instruction": "Wyznacz dwie wskazane osoby do oceny odpowiedzi na podane zadanie."
+  },
+  {
+    "id": "A21",
+    "role": "admin",
+    "instruction": "Jedna osoba nie może kontynuować pracy. Przekaż jej nieocenione odpowiedzi wskazanej osobie zastępującej."
+  },
+  {
+    "id": "A22",
+    "role": "admin",
+    "instruction": "Sprawdź, dlaczego wskazanego etapu nie można jeszcze zakończyć."
+  },
+  {
+    "id": "A23",
+    "role": "admin",
+    "instruction": "Sprawdź, czy wskazany etap można już zakończyć, a jeśli tak, zakończ go."
+  },
+  {
+    "id": "A24",
+    "role": "admin",
+    "instruction": "Przygotuj ranking dla wskazanego etapu konkursu i sprawdź jego wyniki przed publikacją."
+  },
+  {
+    "id": "A25",
+    "role": "admin",
+    "instruction": "Udostępnij przygotowany ranking uczestnikom konkursu."
+  },
+  {
+    "id": "A26",
+    "role": "admin",
+    "instruction": "Znajdź zgodę RODO wskazanego uczestnika ze wskazanej drużyny i sprawdź jej status."
+  },
+  {
+    "id": "A27",
+    "role": "admin",
+    "instruction": "Otwórz dokument wskazanej zgody RODO i zatwierdź go albo odrzuć zgodnie z kartą danych."
+  },
+  {
+    "id": "A28",
+    "role": "admin",
+    "instruction": "Znajdź wskazaną drużynę i sprawdź dostępne informacje o jej zgłoszeniu."
+  },
+  {
+    "id": "A29",
+    "role": "admin",
+    "instruction": "Znajdź wskazaną szkołę i popraw jej dane zgodnie z kartą danych."
+  },
+  {
+    "id": "A30",
+    "role": "admin",
+    "instruction": "Dodaj do systemu nową szkołę zgodnie z kartą danych."
+  },
+  {
+    "id": "A31",
+    "role": "admin",
+    "instruction": "Dodaj przygotowany wykaz szkół do systemu."
+  },
+  {
+    "id": "A32",
+    "role": "admin",
+    "instruction": "Zakończ pracę w panelu i wyloguj się."
+  },
+  {
+    "id": "R01",
+    "role": "reviewer",
+    "instruction": "Zaloguj się do panelu organizatorów i sprawdź, na jakim koncie pracujesz."
+  },
+  {
+    "id": "R02",
+    "role": "reviewer",
+    "instruction": "Zapoznaj się z treścią wskazanego zadania otwartego i odpowiedzią drużyny, a następnie oceń jej poprawność zgodnie z przygotowanym przykładem."
+  },
+  {
+    "id": "R03",
+    "role": "reviewer",
+    "instruction": "Zapoznaj się z treścią wskazanego zadania typu prawda/fałsz i odpowiedzią drużyny, a następnie oceń jej poprawność zgodnie z przygotowanym przykładem."
+  },
+  {
+    "id": "R04",
+    "role": "reviewer",
+    "instruction": "Zapoznaj się z treścią wskazanego zadania jednokrotnego wyboru i odpowiedzią drużyny, a następnie oceń jej poprawność zgodnie z przygotowanym przykładem."
+  },
+  {
+    "id": "R05",
+    "role": "reviewer",
+    "instruction": "Zapoznaj się z treścią wskazanego zadania wielokrotnego wyboru i odpowiedzią drużyny, a następnie oceń jej poprawność zgodnie z przygotowanym przykładem."
+  },
+  {
+    "id": "R06",
+    "role": "reviewer",
+    "instruction": "Po konsultacji z drugim recenzentem zmień swoją ocenę wskazanej odpowiedzi."
+  },
+  {
+    "id": "R07",
+    "role": "reviewer",
+    "instruction": "Zakończ pracę w panelu i wyloguj się."
+  },
+  {
+    "id": "E01",
+    "role": "editor",
+    "instruction": "Zaloguj się do panelu organizatorów i sprawdź, na jakim koncie pracujesz."
+  },
+  {
+    "id": "E02",
+    "role": "editor",
+    "instruction": "Dodaj przygotowany obraz, który będzie potrzebny przy publikacji informacji."
+  },
+  {
+    "id": "E03",
+    "role": "editor",
+    "instruction": "Przygotuj wpis o zbliżającym się terminie konkursu na podstawie karty danych."
+  },
+  {
+    "id": "E04",
+    "role": "editor",
+    "instruction": "Znajdź wskazany wpis i popraw podaną informację."
+  },
+  {
+    "id": "E05",
+    "role": "editor",
+    "instruction": "Zaktualizuj fragment regulaminu zgodnie z kartą danych."
+  },
+  {
+    "id": "E06",
+    "role": "editor",
+    "instruction": "Uzupełnij opis historii konkursu wskazaną informacją."
+  },
+  {
+    "id": "E07",
+    "role": "editor",
+    "instruction": "Dodaj przygotowany dokument konkursowy do wskazanej edycji, w sekcji określonej na karcie danych."
+  },
+  {
+    "id": "E08",
+    "role": "editor",
+    "instruction": "Usuń wskazany nieaktualny dokument testowy."
+  },
+  {
+    "id": "E09",
+    "role": "editor",
+    "instruction": "Usuń wskazany obraz testowy."
+  },
+  {
+    "id": "E10",
+    "role": "editor",
+    "instruction": "Dodaj fikcyjnego sponsora i przygotuj jego prezentację na stronie zgodnie z kartą danych."
+  },
+  {
+    "id": "E11",
+    "role": "editor",
+    "instruction": "Popraw dane wskazanego sponsora lub zmień jego widoczność zgodnie z kartą danych."
+  },
+  {
+    "id": "E12",
+    "role": "editor",
+    "instruction": "Znajdź wskazaną osobę z zespołu konkursu i popraw opis jej publicznego profilu zgodnie z kartą danych."
+  },
+  {
+    "id": "E13",
+    "role": "editor",
+    "instruction": "Zakończ pracę w panelu i wyloguj się."
+  }
+]

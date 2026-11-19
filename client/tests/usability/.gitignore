@@ -1,0 +1,15 @@
+*.local.json
+*.local.md
+.env
+.env.*
+!.env.example
+assets/
+administrator.md
+edytor.md
+recenzent.md
+administrator-stacjonarnie.md
+administrator-zdalnie.md
+edytor-stacjonarnie.md
+recenzent-stacjonarnie.md
+recenzent-zdalnie.md
+dane-zapasowe.md
