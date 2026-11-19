@@ -16,7 +16,7 @@ const editableRoles = [
 ] as const satisfies readonly Role[];
 const roleLabels: Partial<Record<Role, string>> = {
     ORGANIZATION_ADMIN: "administrator",
-    ORGANIZATION_EDITOR: "redaktor",
+    ORGANIZATION_EDITOR: "edytor",
     ORGANIZATION_REVIEWER: "recenzent",
 };
 const organizationUsersQuery = new URLSearchParams({

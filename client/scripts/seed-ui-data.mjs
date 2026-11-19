@@ -229,7 +229,7 @@ async function main() {
     });
     console.log("1/7 Konta i role");
     await account("admin@koala.test", ["ORGANIZATION_ADMIN"], "Adam", "Administrator");
-    await account("edytor@koala.test", ["ORGANIZATION_EDITOR"], "Ewa", "Redaktorka");
+    await account("edytor@koala.test", ["ORGANIZATION_EDITOR"], "Ewa", "Edytorka");
     await account("recenzent@koala.test", ["ORGANIZATION_REVIEWER"], "Roman", "Recenzent");
     await account("kapitan.pusty@koala.test", ["TEAM_CAPTAIN"], "Kamil", "Bez Drużyny");
     await account("guardian.pusty@koala.test", ["TEAM_GUARDIAN"], "Olga", "Bez Drużyny");

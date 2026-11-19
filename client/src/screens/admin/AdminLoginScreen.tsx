@@ -75,7 +75,7 @@ const AdminLoginScreen = () => {
                 </p>
                 <h1 className="mt-2 text-2xl font-bold text-ink-heading">Zaloguj się</h1>
                 <p className="mt-2 text-sm text-ink-muted">
-                    Użyj konta administratora, redaktora lub recenzenta.
+                    Użyj konta administratora, edytora lub recenzenta.
                 </p>
 
                 {error && (

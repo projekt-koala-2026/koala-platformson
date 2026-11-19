@@ -181,7 +181,7 @@ export default function SubeditionsScreen() {
     return (
         <div className="min-h-screen bg-canvas">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+            <main className="app-admin-page">
                 <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                     Konkurs
                 </p>

@@ -43,7 +43,7 @@ const ProfileButton = ({ options }: ProfileButtonProps) => {
     };
     const roleLabels: Partial<Record<Role, string>> = {
         ORGANIZATION_ADMIN: "Administrator",
-        ORGANIZATION_EDITOR: "Redaktor",
+        ORGANIZATION_EDITOR: "Edytor",
         ORGANIZATION_REVIEWER: "Recenzent",
         TEAM_CAPTAIN: "Kapitan",
         TEAM_GUARDIAN: "Opiekun",

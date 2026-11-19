@@ -276,7 +276,7 @@ export default function RankingsScreen() {
     return (
         <div className="min-h-screen bg-canvas">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+            <main className="app-admin-page">
                 <header className="mb-8">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Panel administracyjny
