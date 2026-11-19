@@ -38,11 +38,13 @@ namespace koala.src.Modules.Cms.Services
                 NameLast = NameLast,
                 Email = Email,
                 IsVisible = false,
-                ContentJson = "",
+                ContentJson = "{}",
                 CreatedAt = timeNow,
                 UpdatedAt= timeNow,
                 Version = 1
             };
+            _db.Koalicjants.Add(koalicjant);
+            await _db.SaveChangesAsync();
         }
     }
 }

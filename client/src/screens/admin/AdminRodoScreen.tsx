@@ -202,7 +202,11 @@ const AdminRodoScreen = () => {
         const memberPath = application.rodo.teamMemberId;
         const { data } = await apiRequestResult<ApiTeamMember>(
             `${apiEndpoints.teamRodos(application.team.id)}/${memberPath}/state`,
-            { state, version: application.rodo.version },
+            {
+                state,
+                version: application.rodo.version,
+                rodoVersion: application.rodo.rodoVersion,
+            },
             "PUT",
             navigate
         );

@@ -501,7 +501,10 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
             }
 
-            User? user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
+            User? user = await _db.Users
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .Include(u => u.CaptainTeam)
+                .FirstOrDefaultAsync(u => u.Id == id && u.Verified == true);
             if (user == null)
             {
                 throw new KoalaException(KoalaErrorCodes.UserNotFound, "User does not exist");
@@ -512,12 +515,9 @@ namespace koala.src.Modules.Account.Services
                 await _cmsModule.Internal_DeleteKoalicjantIfExistsAsync(user.Id);
             }
 
-            if(user.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_TEAM_CAPTAIN))
+            if(user.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_TEAM_CAPTAIN) && user.CaptainTeam != null)
             {
-                try
-                {
-                    await _teamService.INTERNAL_DeleteTeamAsync(user.Id);
-                }catch{}
+                await _teamService.INTERNAL_DeleteTeamAsync(user.Id);
             }
 
             _db.Users.Remove(user);

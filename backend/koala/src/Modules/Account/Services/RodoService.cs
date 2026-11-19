@@ -357,6 +357,10 @@ namespace koala.src.Modules.Account.Services
             }
 
             _db.Rodos.Remove(teamMember.Rodo);
+            teamMember.RodoId = null;
+            teamMember.RodoState = TeamMemberRodoState.RODOSTATE_NONE;
+            teamMember.UpdatedAt = DateTime.UtcNow;
+            teamMember.Version += 1;
             await _db.SaveChangesAsync();
         }
 
