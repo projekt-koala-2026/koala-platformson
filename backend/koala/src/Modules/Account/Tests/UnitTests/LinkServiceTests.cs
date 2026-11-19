@@ -4,6 +4,7 @@ using koala.src.Modules.Account.Dtos;
 using koala.src.Modules.Account.Entities;
 using koala.src.Modules.Account.Services;
 using koala.src.Shared;
+using koala.src.Shared.Core;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
@@ -21,7 +22,11 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             email.Setup(service => service.SendPasswordResetEmailAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
-            return (new LinkService(db, email.Object), db, email);
+            var cms = new Mock<ICmsModule>();
+            cms.Setup(module => module.Internal_CreateKoalicjantIfNotExistsAsync(
+                    It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
+            return (new LinkService(db, email.Object, cms.Object), db, email);
         }
 
         private static ClaimsPrincipal User(Guid? id, params string[] roles)

@@ -97,6 +97,7 @@ const EditSponsorInfo = () => {
 
     const submit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (saving) return;
         setFeedback(null);
         const normalized: SponsorForm = {
             name: form.name.trim(),
@@ -109,10 +110,10 @@ const EditSponsorInfo = () => {
             setFeedback({ tone: "error", message: "Nazwa sponsora jest wymagana." });
             return;
         }
-        if (normalized.name.length > 100) {
+        if (normalized.name.length > 50 || !/^[\p{L}\s-]+$/u.test(normalized.name)) {
             setFeedback({
                 tone: "error",
-                message: "Nazwa sponsora może mieć maksymalnie 100 znaków.",
+                message: "Nazwa sponsora: do 50 znaków, wyłącznie litery, spacje i myślniki.",
             });
             return;
         }
@@ -130,12 +131,17 @@ const EditSponsorInfo = () => {
             });
             return;
         }
+        if (!normalized.description) {
+            setFeedback({ tone: "error", message: "Opis sponsora jest wymagany." });
+            return;
+        }
         const payload = {
             name: normalized.name,
             contentJson: JSON.stringify({
-                websiteUrl: normalized.websiteUrl,
-                logoUrl: normalized.logoUrl,
-                description: normalized.description,
+                version: "1",
+                sponsor_web_url: normalized.websiteUrl,
+                sponsor_logo_image_url: normalized.logoUrl,
+                body_pl: normalized.description,
             }),
             isVisible: normalized.isVisible,
             version: modal !== "create" && modal ? (versions[modal.id] ?? 0) : 0,
@@ -219,7 +225,7 @@ const EditSponsorInfo = () => {
                         onClick={openCreate}
                     />
                 </header>
-                {feedback && (
+                {feedback && !modal && (
                     <div
                         role={feedback.tone === "error" ? "alert" : "status"}
                         className={`rounded-xl border p-4 text-sm ${feedback.tone === "success" ? "app-status-success" : "app-status-danger"}`}
@@ -317,11 +323,16 @@ const EditSponsorInfo = () => {
                 maxWidth="lg"
             >
                 <form onSubmit={submit} className="space-y-4">
+                    {feedback?.tone === "error" && (
+                        <p role="alert" className="app-status-danger rounded-xl border p-3 text-sm">
+                            {feedback.message}
+                        </p>
+                    )}
                     <label className="block text-sm font-medium text-ink">
                         Nazwa *
                         <input
                             value={form.name}
-                            maxLength={100}
+                            maxLength={50}
                             onChange={(event) =>
                                 setForm((value) => ({ ...value, name: event.target.value }))
                             }

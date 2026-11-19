@@ -92,7 +92,7 @@ const LoginScreen = () => {
         setSubmitting(true);
         startLoading();
         try {
-            const { status } = await apiRequestResult<null>(
+            const { status, error: registrationError } = await apiRequestResult<null>(
                 REGISTER_ENDPOINT,
                 {
                     email: normalizedEmail,
@@ -102,7 +102,13 @@ const LoginScreen = () => {
                 navigate
             );
             if (status !== 201) {
-                setError("Nie udało się wysłać zaproszenia. Adres może być już zajęty.");
+                setError(
+                    registrationError?.code === "KOALA_ACTIVE_EDITION_NOT_FOUND"
+                        ? "Rejestracja jest obecnie niedostępna — nie trwa żadna aktywna edycja konkursu. Spróbuj ponownie po rozpoczęciu kolejnej edycji."
+                        : registrationError?.code === "KOALA_USER_ALREADY_EXISTS"
+                          ? "Konto z tym adresem e-mail już istnieje. Zaloguj się na swoje konto."
+                          : "Nie udało się wysłać wiadomości rejestracyjnej. Spróbuj ponownie później."
+                );
                 return;
             }
 
@@ -131,7 +137,7 @@ const LoginScreen = () => {
                     </h1>
                     <p className="mt-2 text-sm text-ink-muted">
                         {mode === "register"
-                            ? "Rejestracja jest dostępna dla kapitanów i opiekunów drużyn."
+                            ? "Rejestracja jest dostępna dla kapitanów i opiekunów drużyn podczas aktywnej edycji konkursu."
                             : "Użyj loginu lub adresu e-mail przypisanego do konta."}
                     </p>
 

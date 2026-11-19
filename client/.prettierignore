@@ -1,5 +1,11 @@
 build
+dist/
+coverage/
 package.json
 package-lock.json
 .env
 .env.*
+tests/usability/*.md
+tests/usability/*.local.json
+tests/usability/*.pdf
+tests/usability/assets/

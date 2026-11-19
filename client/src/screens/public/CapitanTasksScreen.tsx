@@ -41,14 +41,14 @@ export default function CapitanTasksScreen() {
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="app-public-page flex-1">
-                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                <header className="mb-8 flex items-start justify-between gap-4 sm:gap-8">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                             Panel kapitana
                         </p>
                         <h1 className="mt-2 text-3xl font-bold text-ink-heading">Zadania</h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Wybierz podedycję i odpowiadaj na zadania w imieniu swojej drużyny.
+                            Wybierz etap i odpowiadaj na zadania w imieniu swojej drużyny.
                         </p>
                     </div>
                     <KoalaIllustration

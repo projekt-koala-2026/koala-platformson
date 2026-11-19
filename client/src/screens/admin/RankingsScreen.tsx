@@ -3,7 +3,14 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import SelectListbox from "../../components/SelectListbox";
-import type { ApiEdition, ApiRanking, ApiSubedition } from "../../types/models";
+import type {
+    ApiCompetitionTask,
+    ApiEdition,
+    ApiRanking,
+    ApiSubedition,
+    ApiTaskSubmission,
+    ApiTeam,
+} from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
 
@@ -13,7 +20,10 @@ export default function RankingsScreen() {
     const navigate = useNavigate();
     const [editions, setEditions] = useState<ApiEdition[]>([]);
     const [editionId, setEditionId] = useState("");
-    const [subeditions, setSubeditions] = useState<ApiSubedition[]>([]);
+    const [stagesByEdition, setStagesByEdition] = useState<Record<string, ApiSubedition[]>>({});
+    const [readiness, setReadiness] = useState<{ id: string; reason: string } | null>(null);
+    const [revision, setRevision] = useState(0);
+    const subeditions = stagesByEdition[editionId] ?? [];
     const [subeditionId, setSubeditionId] = useState("");
     const [rankings, setRankings] = useState<ApiRanking[]>([]);
     const [loading, setLoading] = useState(true);
@@ -30,50 +40,50 @@ export default function RankingsScreen() {
             null,
             "GET",
             navigate
-        ).then(({ data }) => {
+        ).then(async ({ data }) => {
             if (!active) return;
-            const items = [...(data ?? [])].sort((a, b) => {
-                const createdDifference = Date.parse(b.createdAt) - Date.parse(a.createdAt);
-                if (Number.isFinite(createdDifference) && createdDifference !== 0)
-                    return createdDifference;
-                return Date.parse(b.teamRegisterClose) - Date.parse(a.teamRegisterClose);
-            });
+            if (!data) {
+                setError("Nie uda\u0142o si\u0119 pobra\u0107 edycji.");
+                setLoading(false);
+                return;
+            }
+            const results = await Promise.all(
+                data.map(async (edition) => ({
+                    edition,
+                    result: await apiListRequestResult<ApiSubedition>(
+                        `${apiEndpoints.subeditions(edition.id)}?${firstPage}`,
+                        null,
+                        "GET",
+                        navigate
+                    ),
+                }))
+            );
+            if (!active) return;
+            if (results.some(({ result }) => !result.data)) {
+                setError(
+                    "Nie uda\u0142o si\u0119 pobra\u0107 wszystkich etap\u00f3w. Od\u015bwie\u017c stron\u0119."
+                );
+                setLoading(false);
+                return;
+            }
+            const eligible = results.filter(({ result }) => result.data!.length > 0);
+            const items = eligible
+                .map(({ edition }) => edition)
+                .sort((a, b) => Date.parse(b.teamRegisterClose) - Date.parse(a.teamRegisterClose));
+            const stages = Object.fromEntries(
+                eligible.map(({ edition, result }) => [edition.id, result.data!])
+            );
+            const selected = items.find((edition) => edition.state === "ACTIVE") ?? items[0];
+            setStagesByEdition(stages);
             setEditions(items);
-            setEditionId(items[0]?.id ?? "");
-            if (!data) setError("Nie udało się pobrać edycji.");
+            setEditionId(selected?.id ?? "");
+            setSubeditionId(selected ? stages[selected.id][0].id : "");
             setLoading(false);
         });
         return () => {
             active = false;
         };
     }, [navigate]);
-
-    useEffect(() => {
-        if (!editionId) {
-            setSubeditions([]);
-            setSubeditionId("");
-            return;
-        }
-        let active = true;
-        setSubeditions([]);
-        setSubeditionId("");
-        setRankings([]);
-        void apiListRequestResult<ApiSubedition>(
-            `${apiEndpoints.subeditions(editionId)}?${firstPage}`,
-            null,
-            "GET",
-            navigate
-        ).then(({ data }) => {
-            if (!active) return;
-            const items = data ?? [];
-            setSubeditions(items);
-            setSubeditionId(items[0]?.id ?? "");
-            if (!data) setError("Nie udało się pobrać podedycji.");
-        });
-        return () => {
-            active = false;
-        };
-    }, [editionId, navigate]);
 
     useEffect(() => {
         if (!subeditionId) {
@@ -84,33 +94,136 @@ export default function RankingsScreen() {
         let active = true;
         setLoadingRanking(true);
         setRankings([]);
+        setPublished(false);
+        setReadiness(null);
         setNotice("");
-        void Promise.all([
-            apiListRequestResult<ApiRanking>(
-                `${apiEndpoints.rankingDraft(subeditionId)}?${rankingsQuery}`,
-                null,
-                "GET",
-                navigate
-            ),
-            apiListRequestResult<ApiRanking>(
-                `${apiEndpoints.rankings}?subeditionId=${encodeURIComponent(subeditionId)}&${rankingsQuery}`,
-                null,
-                "GET",
-                navigate
-            ),
-        ]).then(([draft, publicRanking]) => {
+        setError("");
+        const load = async () => {
+            const [draft, publicRanking, tasks, teams] = await Promise.all([
+                apiListRequestResult<ApiRanking>(
+                    `${apiEndpoints.rankingDraft(subeditionId)}?${rankingsQuery}`,
+                    null,
+                    "GET",
+                    navigate
+                ),
+                apiListRequestResult<ApiRanking>(
+                    `${apiEndpoints.rankings}?subeditionId=${encodeURIComponent(subeditionId)}&${rankingsQuery}`,
+                    null,
+                    "GET",
+                    navigate
+                ),
+                apiListRequestResult<ApiCompetitionTask>(
+                    `${apiEndpoints.competitionTasks(editionId, subeditionId)}?${firstPage}`,
+                    null,
+                    "GET",
+                    navigate
+                ),
+                apiListRequestResult<ApiTeam>(
+                    `${apiEndpoints.teams}?EditionId=${editionId}&${firstPage}`,
+                    null,
+                    "GET",
+                    navigate
+                ),
+            ]);
             if (!active) return;
-            setRankings(draft.data ?? []);
-            setPublished(Boolean(publicRanking.data?.length));
+            if (!draft.data || !publicRanking.data) {
+                setError("Nie udało się pobrać rankingu. Spróbuj ponownie.");
+                setLoadingRanking(false);
+                return;
+            }
+            setRankings(draft.data);
+            setPublished(Boolean(publicRanking.data.length));
+            if (editions.find((item) => item.id === editionId)?.state === "CLOSED") {
+                setReadiness({
+                    id: subeditionId,
+                    reason: "Edycja jest zakończona. Dane konkursowe zostały usunięte, więc nie można ponownie wygenerować rankingu. Zapisany ranking można nadal przeglądać i opublikować.",
+                });
+                setLoadingRanking(false);
+                return;
+            }
+            if (!tasks.data || !teams.data) {
+                setError(
+                    "Nie uda\u0142o si\u0119 sprawdzi\u0107 gotowo\u015bci rankingu. Spr\u00f3buj ponownie."
+                );
+                setLoadingRanking(false);
+                return;
+            }
+            const results = await Promise.all(
+                tasks.data.map((task) =>
+                    apiListRequestResult<ApiTaskSubmission>(
+                        `${apiEndpoints.taskSubmissions(task.id)}?${firstPage}`,
+                        null,
+                        "GET",
+                        navigate
+                    )
+                )
+            );
+            if (!active) return;
+            if (results.some((result) => !result.data)) {
+                setError(
+                    "Nie uda\u0142o si\u0119 pobra\u0107 wszystkich ocen. Spr\u00f3buj ponownie."
+                );
+                setLoadingRanking(false);
+                return;
+            }
+            const submissions = results.flatMap((result) => result.data!);
+            const selected = stagesByEdition[editionId]?.find((stage) => stage.id === subeditionId);
+            const edition = editions.find((item) => item.id === editionId);
+            const unfinished = submissions.filter(
+                (row) =>
+                    !row.reviewer1Id ||
+                    !row.reviewer2Id ||
+                    row.reviewer1Id === row.reviewer2Id ||
+                    row.review1Score === null ||
+                    row.review2Score === null ||
+                    row.review1Score !== row.review2Score ||
+                    row.autoReviewState === null
+            ).length;
+            let reason = "";
+            if (!selected || !edition) reason = "Wybierz etap konkursu.";
+            else if (
+                edition.state !== "CLOSED" &&
+                (!Number.isFinite(Date.parse(selected.answerClose)) ||
+                    Date.now() <= Date.parse(selected.answerClose))
+            )
+                reason =
+                    "Najpierw musi up\u0142yn\u0105\u0107 termin nadsy\u0142ania odpowiedzi tego etapu.";
+            else if (!teams.data.length)
+                reason = "Do edycji nie zg\u0142oszono jeszcze dru\u017cyn.";
+            else if (teams.data.some((team) => !["TIER_1", "TIER_2"].includes(team.tier)))
+                reason = "Najpierw popraw poziomy dru\u017cyn w edycji.";
+            else if (unfinished)
+                reason = `Najpierw doko\u0144cz ocenianie: ${unfinished} odpowiedzi wymaga uzupe\u0142nienia przydzia\u0142u, dw\u00f3ch zgodnych ocen lub wyniku sprawdzarki.`;
+            setReadiness({ id: subeditionId, reason });
+            setRankings(draft.data);
+            setPublished(Boolean(publicRanking.data.length));
             setLoadingRanking(false);
-        });
+        };
+        void load();
         return () => {
             active = false;
         };
-    }, [subeditionId, navigate]);
+    }, [subeditionId, editionId, editions, stagesByEdition, navigate, revision]);
+
+    const canGenerate =
+        readiness?.id === subeditionId && readiness.reason === "" && !loadingRanking;
+    const canPublish =
+        readiness?.id === subeditionId &&
+        !loadingRanking &&
+        (editions.find((item) => item.id === editionId)?.state === "CLOSED" || canGenerate) &&
+        rankings.length > 0 &&
+        !published;
+    const changeEdition = (id: string) => {
+        if (busy) return;
+        setEditionId(id);
+        setSubeditionId(stagesByEdition[id]?.[0]?.id ?? "");
+    };
+    const changeStage = (id: string) => {
+        if (!busy) setSubeditionId(id);
+    };
 
     const generate = async () => {
-        if (!subeditionId || busy) return;
+        if (!subeditionId || busy || !canGenerate) return;
         setBusy(true);
         setError("");
         setNotice("");
@@ -127,15 +240,22 @@ export default function RankingsScreen() {
                 "GET",
                 navigate
             );
-            setRankings(data.data ?? []);
-            setPublished(false);
-            setNotice("Ranking został wygenerowany. Możesz go teraz opublikować.");
+            if (data.data) {
+                setRankings(data.data);
+                setPublished(false);
+                setNotice("Ranking został wygenerowany. Możesz go teraz opublikować.");
+            } else {
+                setReadiness(null);
+                setError(
+                    "Ranking wygenerowano, ale nie udało się pobrać jego podglądu. Odśwież stan rankingu."
+                );
+            }
         } else setError(result.error?.message ?? "Nie udało się wygenerować rankingu.");
         setBusy(false);
     };
 
     const publish = async () => {
-        if (!subeditionId || busy || !rankings.length) return;
+        if (!subeditionId || busy || !canPublish) return;
         setBusy(true);
         setError("");
         setNotice("");
@@ -156,7 +276,7 @@ export default function RankingsScreen() {
     return (
         <div className="min-h-screen bg-canvas">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+            <main className="app-admin-page">
                 <header className="mb-8">
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Panel administracyjny
@@ -181,7 +301,11 @@ export default function RankingsScreen() {
                     {loading ? (
                         <p className="text-sm text-ink-muted">Ładowanie edycji…</p>
                     ) : editions.length === 0 ? (
-                        <p className="text-sm text-ink-muted">Nie znaleziono edycji.</p>
+                        <p className="text-sm text-ink-muted">
+                            {error
+                                ? "Wybór etapów jest niedostępny do czasu poprawnego pobrania danych."
+                                : "Obecnie żadna edycja nie ma etapu."}
+                        </p>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div>
@@ -198,7 +322,7 @@ export default function RankingsScreen() {
                                         value: item.id,
                                         label: item.name,
                                     }))}
-                                    onChange={setEditionId}
+                                    onChange={changeEdition}
                                 />
                             </div>
                             <div>
@@ -206,7 +330,7 @@ export default function RankingsScreen() {
                                     id="ranking-subedition-label"
                                     className="mb-2 block text-sm font-medium text-ink"
                                 >
-                                    Podedycja
+                                    Etap
                                 </span>
                                 <SelectListbox
                                     ariaLabelledBy="ranking-subedition-label"
@@ -215,7 +339,7 @@ export default function RankingsScreen() {
                                         value: item.id,
                                         label: item.name,
                                     }))}
-                                    onChange={setSubeditionId}
+                                    onChange={changeStage}
                                 />
                             </div>
                         </div>
@@ -223,17 +347,17 @@ export default function RankingsScreen() {
                     {selectedSubedition && (
                         <>
                             <p className="mt-4 text-sm text-ink-secondary">
-                                Ranking dla podedycji{" "}
+                                Ranking dla etapu{" "}
                                 <strong className="text-ink-heading">
                                     {selectedSubedition.name}
                                 </strong>
-                                . Ranking podedycji można wygenerować po zakończeniu czasu
-                                odpowiedzi i rozstrzygnięciu wszystkich ocen, nawet gdy edycja trwa.
+                                . Ranking etapu można wygenerować po zakończeniu czasu odpowiedzi i
+                                rozstrzygnięciu wszystkich ocen, nawet gdy edycja trwa.
                             </p>
                             <div className="mt-5 flex flex-wrap gap-3">
                                 <Button
                                     text={busy ? "Przetwarzanie…" : "Generuj ranking"}
-                                    disabled={busy || loadingRanking}
+                                    disabled={busy || !canGenerate}
                                     onClick={() => void generate()}
                                 />
                                 <Button
@@ -244,12 +368,30 @@ export default function RankingsScreen() {
                                               ? "Opublikowano"
                                               : "Opublikuj ranking"
                                     }
-                                    disabled={
-                                        busy || loadingRanking || !rankings.length || published
-                                    }
+                                    disabled={busy || !canPublish}
                                     onClick={() => void publish()}
                                 />
                             </div>
+                            {loadingRanking ? (
+                                <p role="status" className="mt-3 text-sm text-ink-secondary">
+                                    Sprawdzanie gotowości rankingu…
+                                </p>
+                            ) : readiness?.id === subeditionId && readiness.reason ? (
+                                <p
+                                    role="status"
+                                    className="app-status-warning mt-3 rounded-xl border p-3 text-sm"
+                                >
+                                    {readiness.reason}
+                                </p>
+                            ) : null}
+                            <button
+                                type="button"
+                                disabled={busy || loadingRanking}
+                                onClick={() => setRevision((value) => value + 1)}
+                                className="mt-3 text-sm text-brand-text underline disabled:opacity-50"
+                            >
+                                Odśwież stan ocen i rankingu
+                            </button>
                         </>
                     )}
                 </section>
@@ -277,7 +419,9 @@ export default function RankingsScreen() {
                             </p>
                         ) : rankings.length === 0 ? (
                             <p className="rounded-xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
-                                Brak rankingu. Wygeneruj go po zakończeniu oceniania tej podedycji.
+                                {editions.find((item) => item.id === editionId)?.state === "CLOSED"
+                                    ? "Brak zapisanego rankingu dla tego etapu. Po zakończeniu edycji nie można go już wygenerować."
+                                    : "Brak rankingu. Wygeneruj go po zakończeniu oceniania tego etapu."}
                             </p>
                         ) : (
                             <div className="overflow-x-auto rounded-2xl border border-line bg-surface">

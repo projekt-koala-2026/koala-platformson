@@ -68,7 +68,7 @@ export default function AssignReviewersScreen() {
                 });
                 setSubeditions(eligible);
                 setSubeditionId(eligible[0]?.id ?? "");
-            } else setError("Nie udało się pobrać podedycji.");
+            } else setError("Nie udało się pobrać etapów.");
         });
         return () => {
             active = false;
@@ -102,8 +102,8 @@ export default function AssignReviewersScreen() {
                 </p>
                 <h1 className="mt-2 text-3xl font-bold text-ink-heading">Przydzielanie recenzji</h1>
                 <p className="mt-3 text-ink-secondary">
-                    Wybierz zadanie i utwórz pary recenzentów. Odpowiedzi zostaną rozdzielone
-                    pomiędzy pary.
+                    Wybierz zadanie i przydziel mu parę recenzentów. Późniejsza zmiana recenzenta
+                    przenosi tylko jego nieocenione odpowiedzi, zachowując dotychczasowe oceny.
                 </p>
                 {error && (
                     <p role="alert" className="app-status-danger mt-6 rounded-xl border p-3">
@@ -147,7 +147,7 @@ export default function AssignReviewersScreen() {
                                     id="assign-subedition"
                                     className="mb-2 block text-sm text-ink"
                                 >
-                                    Podedycja
+                                    Etap
                                 </span>
                                 {subeditionId ? (
                                     <SelectListbox
@@ -168,7 +168,7 @@ export default function AssignReviewersScreen() {
                                     />
                                 ) : (
                                     <p className="py-3 text-sm text-ink-secondary">
-                                        Brak podedycji po terminie odpowiadania.
+                                        Brak etapów po terminie odpowiadania.
                                     </p>
                                 )}
                             </div>

@@ -22,7 +22,7 @@ import {
 } from "../../utils/apiFetcher";
 import { isAdmin, isEditor } from "../../utils/authService";
 
-const MAX_PDF_SIZE = 64 * 1024 * 1024;
+const MAX_PDF_SIZE = 10 * 1024 * 1024;
 
 type Feedback = { tone: "success" | "warning" | "error"; message: string } | null;
 
@@ -31,7 +31,7 @@ const validatePdf = (file: File) => {
     const hasPdfExtension = file.name.toLowerCase().endsWith(".pdf");
     const hasPdfMime = !file.type || file.type === "application/pdf";
     if (!hasPdfExtension || !hasPdfMime) return "Dozwolone są wyłącznie pliki PDF.";
-    if (file.size > MAX_PDF_SIZE) return "Plik przekracza maksymalny rozmiar 64 MB.";
+    if (file.size > MAX_PDF_SIZE) return "Plik przekracza maksymalny rozmiar 10 MB.";
     return null;
 };
 
@@ -92,7 +92,7 @@ const EditProblemsScreen = () => {
         const { data: response } = await apiRequestResult<ApiStaticPage>(
             `${apiEndpoints.staticPages}/${taskPage.id}`,
             {
-                contentJson: JSON.stringify({ markdownBody: JSON.stringify(data) }),
+                contentJson: JSON.stringify({ version: "1", body_pl: JSON.stringify(data) }),
                 version: taskPage.version,
             },
             "PUT",
@@ -251,9 +251,7 @@ const EditProblemsScreen = () => {
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Materiały konkursowe
                     </p>
-                    <h1 className="mt-1 text-3xl font-bold tracking-tight">
-                        Zadania i dokumenty PDF
-                    </h1>
+                    <h1 className="mt-1 text-3xl font-bold tracking-tight">Pliki archiwalne</h1>
                     <p className="mt-2 max-w-3xl text-sm text-ink-secondary">
                         Porządkuj pliki w sekcje osobno dla każdej edycji konkursu.
                     </p>
@@ -431,7 +429,7 @@ const EditProblemsScreen = () => {
                                     ? selectedFile.name
                                     : "Kliknij lub przeciągnij plik PDF"
                             }
-                            hint="PDF · maksymalnie 64 MB"
+                            hint="PDF · maksymalnie 10 MB"
                             disabled={uploading}
                             validateFile={validatePdf}
                             onValidationError={(message) => setFeedback({ tone: "error", message })}

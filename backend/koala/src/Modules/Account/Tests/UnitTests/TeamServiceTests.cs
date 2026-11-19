@@ -63,7 +63,10 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             var core = CreateCoreMock();
 
-            var service = new TeamService(_db, core.Object);
+            var rodo = new Mock<IRodoService>();
+            rodo.Setup(service => service.INTERNAL_DeleteRodoPhysicalFile(It.IsAny<Guid>(), It.IsAny<Guid>()))
+                .Returns(Task.CompletedTask);
+            var service = new TeamService(_db, core.Object, rodo.Object);
             return (service, _db, core);
         }
 

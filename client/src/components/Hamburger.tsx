@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { NavigationOption } from "../types/ui";
 
 interface HamburgerProps {
-    options: (NavigationOption & { active?: boolean })[];
+    options: (NavigationOption & { active?: boolean; separatorBefore?: boolean })[];
 }
 
 const desktopMenuKey = "koala-desktop-navigation-open";
@@ -155,20 +155,24 @@ const Hamburger = ({ options }: HamburgerProps) => {
                                 aria-label="Nawigacja"
                                 className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3"
                             >
-                                {options.map((option) => (
-                                    <button
-                                        type="button"
-                                        key={option.label}
-                                        disabled={option.disabled}
-                                        aria-current={option.active ? "page" : undefined}
-                                        onClick={() => {
-                                            if (!isWide) changeOpen(false);
-                                            void option.onClick();
-                                        }}
-                                        className={`block w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50 ${option.active ? "bg-brand-soft text-brand-text-strong" : "text-ink-strong hover:bg-brand-soft hover:text-brand-text-strong active:bg-brand-muted"}`}
-                                    >
-                                        {option.label}
-                                    </button>
+                                {options.map((option, index) => (
+                                    <Fragment key={option.label}>
+                                        {option.separatorBefore && index > 0 && (
+                                            <hr className="my-3 border-0 border-t border-line" />
+                                        )}
+                                        <button
+                                            type="button"
+                                            disabled={option.disabled}
+                                            aria-current={option.active ? "page" : undefined}
+                                            onClick={() => {
+                                                if (!isWide) changeOpen(false);
+                                                void option.onClick();
+                                            }}
+                                            className={`block w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50 ${option.active ? "bg-brand-soft text-brand-text-strong" : "text-ink-strong hover:bg-brand-soft hover:text-brand-text-strong active:bg-brand-muted"}`}
+                                        >
+                                            {option.label}
+                                        </button>
+                                    </Fragment>
                                 ))}
                             </nav>
                         </section>

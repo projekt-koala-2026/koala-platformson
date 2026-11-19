@@ -144,6 +144,13 @@ namespace koala.src.Modules.Account.Controllers
             provider.TryGetContentType(physicalPath, out var contentType);
             return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
         }
+        [Authorize]
+        [HttpGet("{id}/rodos/{team_member_id}")]
+        public async Task<IActionResult> GetTeamMemberRodo([FromRoute] Guid id, [FromRoute] Guid team_member_id)
+        {
+            var result = await _rodoService.GetRodoAsync(User, id, team_member_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamMemberDto>(true, DateTime.UtcNow, null, null, result));
+        }
 
         //ONLY FOR ORGANIZATION ADMINS
         [Authorize]

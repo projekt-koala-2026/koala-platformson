@@ -58,6 +58,12 @@ const CaptainHomeScreen = () => {
     const [rodoByMember, setRodoByMember] = useState<Record<string, boolean>>({});
     const [rodoStateByMember, setRodoStateByMember] = useState<Record<string, string | null>>({});
     const [rodoCapitan, setRodoCapitan] = useState(false);
+    const [captainRodoRequest, setCaptainRodoRequest] = useState<{
+        teamId: string;
+        ready: boolean;
+        error: boolean;
+    } | null>(null);
+    const [captainRodoRevision, setCaptainRodoRevision] = useState(0);
     const [captainRodo, setCaptainRodo] = useState<ApiTeamMember | null>(null);
     const [createError, setCreateError] = useState("");
     const [saving, setSaving] = useState(false);
@@ -144,15 +150,24 @@ const CaptainHomeScreen = () => {
         setCaptainRodo(null);
         if (!teamId || !captainId || !roles.isGuardian) return;
         let active = true;
+        setCaptainRodoRequest({ teamId, ready: false, error: false });
         void apiListRequestResult<ApiTeamMember>(
             `${apiEndpoints.teamRodos(teamId)}?${firstPage}`,
             null,
             "GET",
             navigate
         ).then(({ data }) => {
-            if (!active || !data) return;
+            if (!active) return;
+            if (!data) {
+                setCaptainRodoRequest({ teamId, ready: false, error: true });
+                return;
+            }
             const captainRecord = data.find((record) => record.teamMemberId === captainId);
-            if (!captainRecord) return;
+            if (!captainRecord) {
+                setCaptainRodoRequest({ teamId, ready: false, error: true });
+                return;
+            }
+            setCaptainRodoRequest({ teamId, ready: true, error: false });
             setCaptainRodo(captainRecord);
             setRodoCapitan(captainRecord.rodoState !== "RODO_NONE");
             setRodoStateByMember((current) => ({
@@ -163,7 +178,9 @@ const CaptainHomeScreen = () => {
         return () => {
             active = false;
         };
-    }, [captainId, navigate, roles.isGuardian, teamId]);
+    }, [captainId, navigate, roles.isGuardian, teamId, captainRodoRevision]);
+
+    const captainRodoReady = captainRodoRequest?.teamId === teamId && captainRodoRequest?.ready;
 
     const statusMeta: Record<
         "RODO_UNVERIFIED" | "RODO_ACCEPTED" | "RODO_REJECTED",
@@ -184,7 +201,8 @@ const CaptainHomeScreen = () => {
     };
 
     const rodoStatusFor = (memberKey: string) => {
-        const state = rodoStateByMember[memberKey];
+        const state =
+            memberKey === captainId ? captainRodo?.rodoState : rodoStateByMember[memberKey];
         if (!state || !(state in statusMeta)) {
             return {
                 label: "Brak zgody",
@@ -480,17 +498,18 @@ const CaptainHomeScreen = () => {
     const addRodo = async (memberId: string, file?: File) => {
         if (!team || !file) return;
         const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
-        if (!allowedTypes.includes(file.type) || file.size > 2 * 1024 * 1024) {
+        if (!allowedTypes.includes(file.type) || file.size > 4 * 1024 * 1024) {
             setFeedback({
                 tone: "error",
-                message: "Wybierz plik PDF, JPG, PNG lub WebP o rozmiarze do 2 MB.",
+                message: "Wybierz plik PDF, JPG, PNG lub WebP o rozmiarze do 4 MB.",
             });
             return;
         }
 
         const member = team.teamMembers.find((item) => item.teamMemberId === memberId);
         const isCaptainRodo = team.teamCaptain?.id === memberId;
-        const rodoVersion = member?.rodoVersion ?? captainRodo?.rodoVersion;
+        const rodoVersion = isCaptainRodo ? captainRodo?.rodoVersion : member?.rodoVersion;
+        if (isCaptainRodo && !captainRodoReady) return;
         if (!member && !isCaptainRodo) return;
         const formData = new FormData();
         formData.append("File", file);
@@ -531,11 +550,13 @@ const CaptainHomeScreen = () => {
                 }
             }
             setFeedback({ tone: "success", message: "Dokument RODO został zapisany." });
-        } else
+        } else {
+            if (isCaptainRodo) setCaptainRodoRevision((value) => value + 1);
             setFeedback({
                 tone: "error",
                 message: result.error?.message ?? "Nie udało się zapisać dokumentu RODO.",
             });
+        }
         setSaving(false);
     };
 
@@ -566,7 +587,7 @@ const CaptainHomeScreen = () => {
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="app-public-page flex-1">
-                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                <header className="mb-8 flex items-start justify-between gap-4 sm:gap-8">
                     <div className="min-w-0">
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                             Panel drużyn
@@ -759,8 +780,9 @@ const CaptainHomeScreen = () => {
                                             Kapitan drużyny
                                         </p>
                                     </div>
-                                    <div className="absolute left-1/2 -translate-x-1/2 text-center">
+                                    <div className="text-center">
                                         {roles.isGuardian &&
+                                            captainRodoReady &&
                                             rodoStatusFor(team.teamCaptain?.id ?? "") && (
                                                 <span
                                                     className={`mt-1 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${rodoStatusFor(team.teamCaptain?.id ?? "")!.className}`}
@@ -773,7 +795,30 @@ const CaptainHomeScreen = () => {
                                             )}
                                     </div>
 
-                                    {roles.isGuardian && !rodoCapitan && (
+                                    {roles.isGuardian && !captainRodoReady && (
+                                        <div role="status" className="text-sm text-ink-secondary">
+                                            {captainRodoRequest?.teamId === teamId &&
+                                            captainRodoRequest?.error ? (
+                                                <>
+                                                    Nie udało się pobrać stanu zgody kapitana.
+                                                    <button
+                                                        type="button"
+                                                        className="ml-2 underline"
+                                                        onClick={() =>
+                                                            setCaptainRodoRevision(
+                                                                (value) => value + 1
+                                                            )
+                                                        }
+                                                    >
+                                                        Spróbuj ponownie
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                "Ładowanie zgody kapitana…"
+                                            )}
+                                        </div>
+                                    )}
+                                    {roles.isGuardian && captainRodoReady && !rodoCapitan && (
                                         <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-brand-soft px-4 py-2 text-xs font-semibold text-brand-text hover:bg-brand-muted">
                                             <FaUpload />
                                             <span>Zgoda RODO</span>
@@ -794,7 +839,7 @@ const CaptainHomeScreen = () => {
                                             />
                                         </label>
                                     )}
-                                    {roles.isGuardian && rodoCapitan && (
+                                    {roles.isGuardian && captainRodoReady && rodoCapitan && (
                                         <div className="flex items-center gap-1">
                                             <button
                                                 type="button"
@@ -863,7 +908,7 @@ const CaptainHomeScreen = () => {
                                             </p>
                                             <p className="text-xs text-ink-muted">Uczestnik</p>
                                         </div>
-                                        <div className="absolute left-1/2 -translate-x-1/2 text-center">
+                                        <div className="text-center">
                                             {roles.isGuardian &&
                                                 rodoStatusFor(member.teamMemberId) && (
                                                     <span

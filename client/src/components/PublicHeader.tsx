@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import type { NavigationLink } from "../types/ui";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
 import { clearStoredSession, getOrganizationHomePath, getUserRoles } from "../utils/authService";
@@ -13,9 +14,9 @@ interface PublicHeaderProps {
     navigate: NavigateFunction;
 }
 
-const baseLinks = [
+const baseLinks: NavigationLink[] = [
     { label: "Aktualności", path: "/" },
-    { label: "Zadania", path: "/problems" },
+    { label: "Pliki archiwalne", path: "/problems" },
     { label: "Regulamin", path: "/rules" },
     { label: "Historia", path: "/history" },
     { label: "Rankingi", path: "/rankings" },
@@ -32,15 +33,16 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const isCaptain = roles.isCaptain;
     const isLoggedIn = isOrganizationUser || isTeamAccount;
     const organizationHomePath = getOrganizationHomePath(roles);
-    const links = isTeamAccount
+    const links: NavigationLink[] = isTeamAccount
         ? [
               ...baseLinks,
-              { label: "Drużyny", path: "/captain" },
+              { label: "Drużyny", path: "/captain", separatorBefore: true },
               ...(isCaptain ? [{ label: "Zadania", path: "/captain/tasks" }] : []),
           ]
         : baseLinks;
     const navigationOptions = links.map((link) => ({
         label: link.label,
+        separatorBefore: link.separatorBefore,
         active: location.pathname === link.path,
         onClick: () => navigate(link.path),
     }));

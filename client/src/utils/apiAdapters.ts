@@ -31,7 +31,11 @@ const stringField = (value: unknown) => (typeof value === "string" ? value : "")
 export const staticPageMarkdown = (page: ApiStaticPage | undefined) => {
     if (!page) return "";
     const content = parseContent(page.contentJson);
-    return stringField(content.markdownBody) || stringField(content.content);
+    return (
+        stringField(content.body_pl) ||
+        stringField(content.markdownBody) ||
+        stringField(content.content)
+    );
 };
 
 export const adaptPublicFile = (file: ApiPublicFile): ManagedFile => ({
@@ -45,7 +49,10 @@ export const staticPageProblems = (page: ApiStaticPage | undefined): ProblemsByE
     const content = parseContent(page.contentJson);
     const nested = content.problemsByEdition;
     if (typeof nested === "object" && nested !== null) return nested as ProblemsByEdition;
-    const serialized = stringField(content.markdownBody) || stringField(content.content);
+    const serialized =
+        stringField(content.body_pl) ||
+        stringField(content.markdownBody) ||
+        stringField(content.content);
     if (!serialized) return {};
     try {
         const parsed: unknown = JSON.parse(serialized);
@@ -80,9 +87,12 @@ export const adaptPost = (post: ApiPost): Post => {
     return {
         id: post.id,
         editionId: post.editionId,
-        title: post.name,
+        title: stringField(content.title_pl) || post.name,
         markdownBody:
-            stringField(content.markdownBody) || stringField(content.content) || post.contentJson,
+            stringField(content.body_pl) ||
+            stringField(content.markdownBody) ||
+            stringField(content.content) ||
+            post.contentJson,
         createdAt: post.createdAt,
         isVisible: post.isVisible,
     };
@@ -93,9 +103,12 @@ export const adaptSponsor = (sponsor: ApiSponsor): Sponsor => {
     return {
         id: sponsor.id,
         name: sponsor.name,
-        websiteUrl: stringField(content.websiteUrl) || "#",
-        logoUrl: stringField(content.logoUrl) || undefined,
-        description: stringField(content.description) || undefined,
+        websiteUrl: stringField(content.sponsor_web_url) || stringField(content.websiteUrl) || "#",
+        logoUrl:
+            stringField(content.sponsor_logo_image_url) ||
+            stringField(content.logoUrl) ||
+            undefined,
+        description: stringField(content.body_pl) || stringField(content.description) || undefined,
         isVisible: sponsor.isVisible,
     };
 };
@@ -105,8 +118,13 @@ export const adaptKoalicjant = (person: ApiKoalicjant): Koalicjant => {
     return {
         id: person.id,
         name: `${person.nameFirst} ${person.nameLast}`.trim(),
-        profilePicture: stringField(content.profilePicture),
-        description: stringField(content.description) || stringField(content.markdownBody),
+        profilePicture:
+            stringField(content.koalicjant_profile_image_url) ||
+            stringField(content.profilePicture),
+        description:
+            stringField(content.body_pl) ||
+            stringField(content.description) ||
+            stringField(content.markdownBody),
         isVisible: person.isVisible,
     };
 };

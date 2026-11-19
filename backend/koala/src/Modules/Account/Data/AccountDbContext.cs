@@ -182,6 +182,9 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<TeamMember>()
                 .HasKey(tm => tm.Id);
             modelBuilder.Entity<TeamMember>()
+                .Property(tm => tm.Version)
+                .IsConcurrencyToken();
+            modelBuilder.Entity<TeamMember>()
                 .HasOne(tm => tm.Team)
                 .WithMany(t => t.TeamMembers)
                 .HasForeignKey(tm => tm.TeamId)
@@ -190,7 +193,7 @@ namespace koala.src.Modules.Account.Data
                 .HasOne(tm => tm.Rodo)
                 .WithOne(r => r.TeamMember)
                 .HasForeignKey<TeamMember>(tm => tm.RodoId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull);
 
             // TEAM_JOIN_CODE CONFIG
             modelBuilder.Entity<TeamJoinCode>()
@@ -226,6 +229,9 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<Rodo>()
                 .HasOne(r => r.TeamMember)
                 .WithOne(tm => tm.Rodo);
+            modelBuilder.Entity<Rodo>()
+                .Property(r => r.Version)
+                .IsConcurrencyToken();
         }
     };
 }

@@ -35,7 +35,7 @@ const RuleScreen = () => {
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="app-public-page">
-                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                <header className="mb-8 flex items-start justify-between gap-4 sm:gap-8">
                     <div className="min-w-0">
                         <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
                             Dokumentacja konkursu

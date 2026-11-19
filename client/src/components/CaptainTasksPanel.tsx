@@ -40,7 +40,7 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
             const available = (data ?? []).filter((item) => item.state === "ACTIVE");
             setSubeditions(available);
             setSubeditionId(available[0]?.id ?? "");
-            if (!data) setMessage("Nie udało się pobrać podedycji.");
+            if (!data) setMessage("Nie udało się pobrać etapów.");
             setLoading(false);
         });
         return () => {
@@ -188,18 +188,18 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
                         Zadania drużyny
                     </h2>
                     <p className="mt-2 text-sm text-ink-secondary">
-                        Wybierz podedycję, aby zobaczyć zadania dostępne dla drużyny {team.name}.
+                        Wybierz etap, aby zobaczyć zadania dostępne dla drużyny {team.name}.
                     </p>
                 </div>
                 <label className="min-w-56 text-sm font-medium text-ink">
-                    Podedycja
+                    Etap
                     <select
                         className={inputClass}
                         value={subeditionId}
                         onChange={(e) => setSubeditionId(e.target.value)}
                         disabled={loading || !subeditions.length}
                     >
-                        <option value="">{loading ? "Ładowanie…" : "Wybierz podedycję"}</option>
+                        <option value="">{loading ? "Ładowanie…" : "Wybierz etap"}</option>
                         {subeditions.map((s) => (
                             <option value={s.id} key={s.id}>
                                 {s.name}
@@ -231,7 +231,7 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
                                             {item.name}
                                         </span>
                                         <span className="mt-1 block text-xs text-ink-muted">
-                                            {item.tier === "TIER_2" ? "Poziom II" : "Poziom I"}
+                                            {item.tier === "TIER_2" ? "Średnia" : "Podstawowa"}
                                         </span>
                                     </button>
                                 </li>

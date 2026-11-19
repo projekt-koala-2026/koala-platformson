@@ -4,6 +4,7 @@ using koala.src.Modules.Account.Dtos;
 using koala.src.Modules.Account.Entities;
 using koala.src.Shared;
 using koala.src.Shared.Account;
+using koala.src.Shared.Core;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Ocsp;
@@ -25,10 +26,12 @@ namespace koala.src.Modules.Account.Services
     {
         private readonly AccountDbContext _db;
         private readonly IEmailService _emailService;
-        public LinkService(AccountDbContext db, IEmailService emailService)
+        private readonly ICmsModule _cmsModule;
+        public LinkService(AccountDbContext db, IEmailService emailService, ICmsModule cmsModule)
         {
             _db = db;
             _emailService = emailService;
+            _cmsModule = cmsModule;
         }
         public async Task ConsumeRegisterLinkAsync(Guid token, LinkConsumeRegisterRequestDto requestDto)
         {
@@ -53,6 +56,7 @@ namespace koala.src.Modules.Account.Services
             }
 
             var rolesRequiring18 = new[] { RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_ORGANIZATION_REVIEWER, RoleNames.NAME_TEAM_GUARDIAN };
+            var orgRoles = new []{ RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_ORGANIZATION_REVIEWER};
 
             bool requires18 = user.UserRoles.Any(r => rolesRequiring18.Contains(r.Role.Name));
             if (requires18 && !requestDto.DeclaredAtLeast18)
@@ -77,6 +81,11 @@ namespace koala.src.Modules.Account.Services
             user.DeclaredAtLeast18 = requestDto.DeclaredAtLeast18;
             user.Verified = true;
             user.VerifiedAt = timeNow;
+
+            if(user.UserRoles.Any(r => orgRoles.Contains(r.Role.Name)))
+            {
+                await _cmsModule.Internal_CreateKoalicjantIfNotExistsAsync(user.Id, user.NameFirst, user.NameLast, user.Email);
+            }
 
             await _db.SaveChangesAsync();
         }

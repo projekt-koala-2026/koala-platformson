@@ -57,12 +57,14 @@ const ProblemsPublicScreen = () => {
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
             <main className="app-public-page">
-                <header className="mb-8 flex items-center justify-between gap-4 sm:gap-8">
+                <header className="mb-8 flex items-start justify-between gap-4 sm:gap-8">
                     <div className="min-w-0">
                         <p className="text-sm font-semibold uppercase tracking-wider text-brand-text">
                             Materiały konkursowe
                         </p>
-                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Archiwum zadań</h1>
+                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">
+                            Pliki archiwalne
+                        </h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
                             Wybierz edycję i pobierz oficjalne zestawy zadań oraz dokumentację.
                         </p>

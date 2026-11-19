@@ -40,7 +40,10 @@ namespace koala.src.Modules.Account.Tests.UnitTests
                         1
                     )
                 );
-            return (new UserService(db, email.Object, cms.Object, core.Object), db, email);
+            var team = new Mock<ITeamService>();
+            team.Setup(service => service.INTERNAL_DeleteTeamAsync(It.IsAny<Guid>()))
+                .Returns(Task.CompletedTask);
+            return (new UserService(db, email.Object, cms.Object, core.Object, team.Object), db, email);
         }
 
         private static ClaimsPrincipal Principal(Guid? userId, params string[] roles)

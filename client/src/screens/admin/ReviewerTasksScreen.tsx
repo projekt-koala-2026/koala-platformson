@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { FaEdit, FaExclamationTriangle } from "react-icons/fa";
+import { useEffect, useRef, useState } from "react";
+import { FaEdit, FaExclamationTriangle, FaRedo } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -87,6 +87,8 @@ export default function ReviewerTasksScreen() {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
+    const [revision, setRevision] = useState(0);
+    const selectedStageRef = useRef("");
     useEffect(() => {
         let active = true;
         const load = async () => {
@@ -163,10 +165,15 @@ export default function ReviewerTasksScreen() {
                             task.subEditionId === subedition.id && assignedTaskIds.has(task.id)
                     )
                 );
-            if (initial) {
-                setEditionId(initial.edition.id);
-                setSubeditionId(initial.subedition.id);
-            }
+            // Keep edition and stage together when refreshing or losing an assignment.
+            const selection =
+                flatTasks.find(
+                    ({ task, subedition }) =>
+                        subedition.id === selectedStageRef.current && assignedTaskIds.has(task.id)
+                ) ?? initial;
+            setEditionId(selection?.edition.id ?? "");
+            setSubeditionId(selection?.subedition.id ?? "");
+            selectedStageRef.current = selection?.subedition.id ?? "";
         };
         void load()
             .catch(() => {
@@ -179,7 +186,7 @@ export default function ReviewerTasksScreen() {
         return () => {
             active = false;
         };
-    }, [navigate]);
+    }, [navigate, revision]);
     const ownScore = (item: ApiTaskSubmission) =>
         item.reviewer1Id === userId
             ? item.review1Score
@@ -190,8 +197,16 @@ export default function ReviewerTasksScreen() {
         item.review1Score !== null &&
         item.review2Score !== null &&
         item.review1Score !== item.review2Score;
+    const assignedTaskIds = new Set(submissions.map((item) => item.taskId));
+    const assignedContexts = Object.values(taskMap).filter(({ task }) =>
+        assignedTaskIds.has(task.id)
+    );
+    const visibleEditions = editions.filter((edition) =>
+        assignedContexts.some((context) => context.edition.id === edition.id)
+    );
     const visibleSubeditions = subeditions
         .filter((item) => item.editionId === editionId)
+        .filter((item) => assignedContexts.some((context) => context.subedition.id === item.id))
         .sort((a, b) => Date.parse(b.answerClose) - Date.parse(a.answerClose));
     const visibleSubmissions = submissions
         .filter((item) => {
@@ -211,6 +226,7 @@ export default function ReviewerTasksScreen() {
         setNotice("");
     };
     const save = async () => {
+        if (busy) return;
         if (!selected || !score) {
             setError("Wybierz ocenę odpowiedzi.");
             return;
@@ -258,6 +274,19 @@ export default function ReviewerTasksScreen() {
                     Sprawdź przydzielone odpowiedzi. W razie konfliktu uzgodnij ocenę z drugim
                     recenzentem.
                 </p>
+                <div className="mt-4">
+                    <Button
+                        text="Odśwież odpowiedzi i oceny"
+                        icon={<FaRedo />}
+                        disabled={loading || busy}
+                        onClick={() => {
+                            setLoading(true);
+                            setError("");
+                            setNotice("");
+                            setRevision((current) => current + 1);
+                        }}
+                    />
+                </div>
                 {notice && (
                     <p role="status" className="app-status-success mt-6 rounded-xl border p-3">
                         {notice}
@@ -284,6 +313,11 @@ export default function ReviewerTasksScreen() {
                                         const nextEdition = event.target.value;
                                         const nextSubedition = subeditions
                                             .filter((item) => item.editionId === nextEdition)
+                                            .filter((item) =>
+                                                assignedContexts.some(
+                                                    (context) => context.subedition.id === item.id
+                                                )
+                                            )
                                             .sort(
                                                 (a, b) =>
                                                     Date.parse(b.answerClose) -
@@ -291,9 +325,10 @@ export default function ReviewerTasksScreen() {
                                             )[0];
                                         setEditionId(nextEdition);
                                         setSubeditionId(nextSubedition?.id ?? "");
+                                        selectedStageRef.current = nextSubedition?.id ?? "";
                                     }}
                                 >
-                                    {editions.map((item) => (
+                                    {visibleEditions.map((item) => (
                                         <option key={item.id} value={item.id}>
                                             {item.name}
                                         </option>
@@ -301,11 +336,14 @@ export default function ReviewerTasksScreen() {
                                 </select>
                             </label>
                             <label className="text-sm font-medium text-ink">
-                                Podedycja
+                                Etap
                                 <select
                                     className="mt-2 w-full rounded-xl border border-line bg-surface px-3 py-2.5"
                                     value={subeditionId}
-                                    onChange={(event) => setSubeditionId(event.target.value)}
+                                    onChange={(event) => {
+                                        setSubeditionId(event.target.value);
+                                        selectedStageRef.current = event.target.value;
+                                    }}
                                 >
                                     {visibleSubeditions.map((item) => (
                                         <option key={item.id} value={item.id}>
@@ -317,7 +355,7 @@ export default function ReviewerTasksScreen() {
                         </div>
                         {visibleSubmissions.length === 0 ? (
                             <p className="mt-6 text-ink-secondary">
-                                Brak przydzielonych odpowiedzi w tej podedycji.
+                                Brak przydzielonych odpowiedzi w tym etapie.
                             </p>
                         ) : (
                             <div className="mt-4 space-y-3">
@@ -418,7 +456,7 @@ export default function ReviewerTasksScreen() {
                                 {error}
                             </p>
                         )}
-                        <fieldset>
+                        <fieldset disabled={busy}>
                             <legend className="font-semibold text-ink-heading">Twoja ocena</legend>
                             <div className="mt-3 flex flex-wrap gap-6 text-ink">
                                 <label className="flex items-center gap-2">

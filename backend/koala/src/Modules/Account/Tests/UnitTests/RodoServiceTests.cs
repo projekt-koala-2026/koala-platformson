@@ -486,6 +486,11 @@ public class RodoServiceTests
         await Service(db, files).DeleteRodoAsync(TeamGuardian(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1);
 
         Assert.Empty(db.Rodos);
+        db.ChangeTracker.Clear();
+        var member = await db.TeamMembers.SingleAsync(item => item.Id == TestDataSeeder.ID_TEAM_MEMBER_1);
+        Assert.Null(member.RodoId);
+        Assert.Equal(TeamMemberRodoState.RODOSTATE_NONE, member.RodoState);
+        Assert.Equal(2, member.Version);
         files.Verify(file => file.Exists(Path.Combine(FilesPath, $"{rodo.Id}.pdf")), Times.Once);
         files.Verify(file => file.Delete(Path.Combine(FilesPath, $"{rodo.Id}.pdf")), Times.Once);
     }
@@ -816,7 +821,7 @@ public class RodoServiceTests
     {
         await using var db = await SeededDb();
         var files = FileOperations();
-        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(Principal(TestDataSeeder.ID_USER_1, role), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_ACCEPETED, 1)));
+        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(Principal(TestDataSeeder.ID_USER_1, role), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_ACCEPETED, RodoVersion: 1, Version: 1)));
         Assert.Equal(KoalaErrorCodes.Forbidden, error.ErrorCode);
         files.VerifyNoOtherCalls();
     }
@@ -826,7 +831,7 @@ public class RodoServiceTests
     {
         await using var db = await SeededDb();
         var files = FileOperations();
-        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(null, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_ACCEPETED, 1)));
+        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(null, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_ACCEPETED, RodoVersion: 1, Version: 1)));
         Assert.Equal(KoalaErrorCodes.Unauthenticated, error.ErrorCode);
         files.VerifyNoOtherCalls();
     }
@@ -837,14 +842,16 @@ public class RodoServiceTests
     public async Task SetRodoState_OrganizationAdminUpdatesStateAndIncrementsMemberVersion(string state)
     {
         await using var db = await SeededDb();
+        var rodo = await AddRodoAsync(db, TestDataSeeder.ID_TEAM_MEMBER_1, version: 3);
         var files = FileOperations();
-        var result = await Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(state, 1));
+        var result = await Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(state, RodoVersion: rodo.Version, Version: 1));
         var saved = await db.TeamMembers.FindAsync(TestDataSeeder.ID_TEAM_MEMBER_1);
         Assert.Equal(state, result.RodoState);
         Assert.Equal(state, saved!.RodoState);
         Assert.Equal(2, result.Version);
         Assert.Equal(2, saved.Version);
-        Assert.Null(result.RodoVersion);
+        Assert.Equal(3, result.RodoVersion);
+        Assert.Equal(3, rodo.Version);
         files.VerifyNoOtherCalls();
     }
 
@@ -853,7 +860,7 @@ public class RodoServiceTests
     {
         await using var db = await SeededDb();
         var files = FileOperations();
-        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, Guid.NewGuid(), new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_ACCEPETED, 1)));
+        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, Guid.NewGuid(), new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_ACCEPETED, RodoVersion: 1, Version: 1)));
         Assert.Equal(KoalaErrorCodes.TeamMemberNotFound, error.ErrorCode);
         files.VerifyNoOtherCalls();
     }
@@ -865,8 +872,9 @@ public class RodoServiceTests
     public async Task SetRodoState_StaleVersionReturnsConflict(int version)
     {
         await using var db = await SeededDb();
+        var rodo = await AddRodoAsync(db, TestDataSeeder.ID_TEAM_MEMBER_1);
         var files = FileOperations();
-        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_REJECTED, version)));
+        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_REJECTED, RodoVersion: rodo.Version, Version: version)));
         Assert.Equal(KoalaErrorCodes.ResourceVersionConflict, error.ErrorCode);
         Assert.Equal(1, (await db.TeamMembers.FindAsync(TestDataSeeder.ID_TEAM_MEMBER_1))!.Version);
         files.VerifyNoOtherCalls();
@@ -876,10 +884,38 @@ public class RodoServiceTests
     public async Task SetRodoState_DatabaseFailurePropagates()
     {
         await using var db = await SeededDb();
+        var rodo = await AddRodoAsync(db, TestDataSeeder.ID_TEAM_MEMBER_1);
         db.FailSaveChanges = true;
         var files = FileOperations();
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_REJECTED, 1)));
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_REJECTED, RodoVersion: rodo.Version, Version: 1)));
         Assert.Equal("simulated save failure", error.Message);
+        files.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task SetRodoState_MemberWithoutDocumentReturnsNotFound()
+    {
+        await using var db = await SeededDb();
+        var files = FileOperations();
+        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_ACCEPETED, RodoVersion: 1, Version: 1)));
+        Assert.Equal(KoalaErrorCodes.TeamMemberNotFound, error.ErrorCode);
+        Assert.Equal(1, (await db.TeamMembers.FindAsync(TestDataSeeder.ID_TEAM_MEMBER_1))!.Version);
+        files.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(4)]
+    public async Task SetRodoState_StaleDocumentVersionDoesNotChangeMember(int rodoVersion)
+    {
+        await using var db = await SeededDb();
+        await AddRodoAsync(db, TestDataSeeder.ID_TEAM_MEMBER_1, version: 3);
+        var files = FileOperations();
+        var error = await Assert.ThrowsAsync<KoalaException>(() => Service(db, files).SetRodoStateAsync(OrganizationAdmin(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1, new RodoStateUpdateDto(TeamMemberRodoState.RODOSTATE_REJECTED, RodoVersion: rodoVersion, Version: 1)));
+        Assert.Equal(KoalaErrorCodes.ResourceVersionConflict, error.ErrorCode);
+        var member = (await db.TeamMembers.FindAsync(TestDataSeeder.ID_TEAM_MEMBER_1))!;
+        Assert.Equal(1, member.Version);
+        Assert.Equal(TeamMemberRodoState.RODOSTATE_ACCEPETED, member.RodoState);
         files.VerifyNoOtherCalls();
     }
 

@@ -7,6 +7,7 @@ namespace koala.src.Modules.Account.Dtos
     public record RodoStateUpdateDto
     (
         string State,
+        int RodoVersion,
         int Version
     );
 
@@ -26,6 +27,11 @@ namespace koala.src.Modules.Account.Dtos
                 .Must(state => state is TeamMemberRodoState.RODOSTATE_ACCEPETED or TeamMemberRodoState.RODOSTATE_REJECTED)
                 .WithErrorCode(KoalaValidationErrorCodes.RodoStateInvalid)
                 .WithMessage($"State field must be either {TeamMemberRodoState.RODOSTATE_ACCEPETED} or {TeamMemberRodoState.RODOSTATE_REJECTED}!");
+
+            RuleFor(x => x.RodoVersion)
+                .GreaterThan(0)
+                .WithErrorCode(KoalaValidationErrorCodes.ResourceVersionInvalid)
+                .WithMessage("RodoVersion field must be greater than 0");
 
             RuleFor(x => x.Version)
                 .GreaterThan(0)

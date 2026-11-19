@@ -131,7 +131,7 @@ export default function CompetitionTasksScreen() {
                         eligible[0]?.id ??
                         ""
                 );
-            } else setError("Nie udało się pobrać podedycji.");
+            } else setError("Nie udało się pobrać etapów.");
             setLoadingTasks(false);
         });
         return () => {
@@ -390,14 +390,12 @@ export default function CompetitionTasksScreen() {
     return (
         <div className="min-h-screen bg-canvas">
             <AdminHeader navigate={navigate} />
-            <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+            <main className="app-admin-page">
                 <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                     Konkurs
                 </p>
                 <h1 className="mt-2 text-3xl font-bold text-ink-heading">Zadania konkursowe</h1>
-                <p className="mt-3 text-ink-secondary">
-                    Zarządzaj zadaniami w podedycjach konkursu.
-                </p>
+                <p className="mt-3 text-ink-secondary">Zarządzaj zadaniami w etapach konkursu.</p>
                 {feedback && (
                     <p role="status" className="app-status-success mt-6 rounded-xl border p-3">
                         {feedback}
@@ -438,7 +436,7 @@ export default function CompetitionTasksScreen() {
                                     id="task-subedition"
                                     className="mb-2 block text-sm font-medium text-ink"
                                 >
-                                    Podedycja
+                                    Etap
                                 </span>
                                 {subeditions.length ? (
                                     <SelectListbox
@@ -456,7 +454,7 @@ export default function CompetitionTasksScreen() {
                                     />
                                 ) : (
                                     <p className="py-2 text-sm text-ink-secondary">
-                                        Brak podedycji, do których można dodawać zadania.
+                                        Brak etapów, do których można dodawać zadania.
                                     </p>
                                 )}
                             </div>
@@ -476,7 +474,8 @@ export default function CompetitionTasksScreen() {
                                 </div>
                                 {locked && (
                                     <p className="mt-2 text-sm text-ink-secondary">
-                                        Zakończona edycja lub podedycja nie przyjmuje nowych zadań.
+                                        Zakończona edycja lub zakończony etap nie przyjmuje nowych
+                                        zadań.
                                     </p>
                                 )}
                             </>
@@ -486,9 +485,7 @@ export default function CompetitionTasksScreen() {
                         ) : (
                             subeditionId &&
                             (tasks.length === 0 ? (
-                                <p className="mt-5 text-ink-secondary">
-                                    Brak zadań w tej podedycji.
-                                </p>
+                                <p className="mt-5 text-ink-secondary">Brak zadań w tego etapu.</p>
                             ) : (
                                 <div className="mt-5 space-y-3">
                                     {tasks.map((task) => (
