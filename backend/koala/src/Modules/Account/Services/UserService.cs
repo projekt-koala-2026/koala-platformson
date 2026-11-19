@@ -28,12 +28,14 @@ namespace koala.src.Modules.Account.Services
         private readonly IEmailService _emailService;
         private readonly ICmsModule _cmsModule;
         private readonly ICoreModule _coreModule;
-        public UserService(AccountDbContext db, IEmailService emailService, ICmsModule cmsModule, ICoreModule coreModule)
+        private readonly ITeamService _teamService;
+        public UserService(AccountDbContext db, IEmailService emailService, ICmsModule cmsModule, ICoreModule coreModule, ITeamService teamService)
         {
             _db = db;
             _emailService = emailService;
             _cmsModule = cmsModule;
             _coreModule = coreModule;
+            _teamService = teamService;
         }
         public async Task RegisterUserAsync(ClaimsPrincipal? claimsPrincipal, UserRegisterRequestDto requestDto)
         {
@@ -508,6 +510,14 @@ namespace koala.src.Modules.Account.Services
             if (user.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_ORGANIZATION_ADMIN || ur.Role.Name == RoleNames.NAME_ORGANIZATION_EDITOR || ur.Role.Name == RoleNames.NAME_ORGANIZATION_REVIEWER))
             {
                 await _cmsModule.Internal_DeleteKoalicjantIfExistsAsync(user.Id);
+            }
+
+            if(user.UserRoles.Any(ur => ur.Role.Name == RoleNames.NAME_TEAM_CAPTAIN))
+            {
+                try
+                {
+                    await _teamService.INTERNAL_DeleteTeamAsync(user.Id);
+                }catch{}
             }
 
             _db.Users.Remove(user);

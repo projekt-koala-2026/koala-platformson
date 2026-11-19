@@ -14,6 +14,7 @@ namespace koala.src.Modules.Account.Services
     public interface ITeamService
     {
         public Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, TeamCreateRequestDto requestDto);
+        public Task INTERNAL_DeleteTeamAsync(Guid userId);
         public Task DeleteTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
         public Task DeleteTeamGuardianAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
         public Task<List<TeamMemberDto>> AddTeamMemberAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId, TeamMemberUpsertRequestDto requestDto);
@@ -30,6 +31,7 @@ namespace koala.src.Modules.Account.Services
     {
         private readonly ICoreModule _coreService;
         private readonly AccountDbContext _db;
+        private readonly IRodoService _rodoService;
 
         private const string CAPTAIN = "CAPTAIN";
         private const string ADMIN = "ADMIN";
@@ -56,10 +58,11 @@ namespace koala.src.Modules.Account.Services
             }
         }
 
-        public TeamService(AccountDbContext db, ICoreModule coreService)
+        public TeamService(AccountDbContext db, ICoreModule coreService, IRodoService rodoService)
         {
             _db = db;
             _coreService = coreService;
+            _rodoService = rodoService;
         }
 
         public async Task<TeamDto> CreateTeamAsync(ClaimsPrincipal? claimsPrincipal, TeamCreateRequestDto requestDto)
@@ -173,6 +176,45 @@ namespace koala.src.Modules.Account.Services
             );
         }
 
+        public async Task INTERNAL_DeleteTeamAsync(Guid userId)
+        {
+            var captain = await _db.Users.Include(u => u.CaptainTeam).FirstOrDefaultAsync(u => u.Id == userId && u.Verified);
+            if (captain == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotFound, "This user does not exist");
+            }
+
+            bool isCaptain = captain.CaptainTeam != null ? true : false;
+            if (!isCaptain)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotCaptainOfThisTeam, "User is not a captain");
+            }
+
+            if (captain.CaptainTeam == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.UserNotPartOfThisTeam, "User is not a captain of this team");
+            }
+
+            var teamMembers = await _db.TeamMembers.Include(tm=> tm.Rodo).Where(tm => tm.TeamId == captain.CaptainTeam.Id).ToListAsync();
+
+            foreach(var tm in teamMembers)
+            {
+                if(tm.RodoId != null && tm.Rodo!=null)
+                {
+                    try{
+                        await _rodoService.INTERNAL_DeleteRodoPhysicalFile(tm.TeamId, tm.Id);
+                    }catch{}
+                    _db.Rodos.Remove(tm.Rodo);
+                }
+            }
+
+            _db.Teams.Remove(captain.CaptainTeam);
+            _db.TeamMembers.RemoveRange(teamMembers);
+            await _db.SaveChangesAsync();
+
+            return;
+        }
+
         public async Task DeleteTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
@@ -214,7 +256,18 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.UserNotPartOfThisTeam, "User is not a captain of this team");
             }
 
-            var teamMembers = await _db.TeamMembers.Where(tm => tm.TeamId == teamId).ToListAsync();
+            var teamMembers = await _db.TeamMembers.Include(tm=> tm.Rodo).Where(tm => tm.TeamId == teamId).ToListAsync();
+
+            foreach(var tm in teamMembers)
+            {
+                if(tm.RodoId != null && tm.Rodo!=null)
+                {
+                    try{
+                        await _rodoService.INTERNAL_DeleteRodoPhysicalFile(tm.TeamId, tm.Id);
+                    }catch{}
+                    _db.Rodos.Remove(tm.Rodo);
+                }
+            }
 
             _db.Teams.Remove(captain.CaptainTeam);
             _db.TeamMembers.RemoveRange(teamMembers);
@@ -504,11 +557,20 @@ namespace koala.src.Modules.Account.Services
                 throw new KoalaException(KoalaErrorCodes.TeamNotFound, "User is not a captain of this team");
             }
 
-            var teamMemberToDelete = await _db.TeamMembers.FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.Id != userId);
+            var teamMemberToDelete = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.Id != userId);
 
             if (teamMemberToDelete == null)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamMemberNotFound, "Could not find the member relation like this");
+            }
+
+
+            if (teamMemberToDelete.RodoId != null && teamMemberToDelete.Rodo!=null)
+            {
+                try{
+                    await _rodoService.INTERNAL_DeleteRodoPhysicalFile(teamMemberToDelete.TeamId, teamMemberToDelete.Id);
+                }catch{}
+                _db.Rodos.Remove(teamMemberToDelete.Rodo);
             }
 
             _db.TeamMembers.Remove(teamMemberToDelete);

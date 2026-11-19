@@ -193,7 +193,7 @@ namespace koala.src.Modules.Account.Data
                 .HasOne(tm => tm.Rodo)
                 .WithOne(r => r.TeamMember)
                 .HasForeignKey<TeamMember>(tm => tm.RodoId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull);
 
             // TEAM_JOIN_CODE CONFIG
             modelBuilder.Entity<TeamJoinCode>()
@@ -229,6 +229,9 @@ namespace koala.src.Modules.Account.Data
             modelBuilder.Entity<Rodo>()
                 .HasOne(r => r.TeamMember)
                 .WithOne(tm => tm.Rodo);
+            modelBuilder.Entity<Rodo>()
+                .Property(r => r.Version)
+                .IsConcurrencyToken();
         }
     };
 }
