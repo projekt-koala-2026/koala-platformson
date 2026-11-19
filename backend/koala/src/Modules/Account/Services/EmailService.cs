@@ -59,7 +59,7 @@ namespace koala.src.Modules.Account.Services
             string host = _configuration["EmailSettings:SmtpHost"] ?? "localhost";
             int port = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "1025");
 
-            await client.ConnectAsync(host, port, MailKit.Security.SecureSocketOptions.None);
+            await client.ConnectAsync(host, port, MailKit.Security.SecureSocketOptions.SslOnConnect);
 
             string? user = _configuration["EmailSettings:SmtpUser"];
             string? pass = _configuration["EmailSettings:SmtpPass"];
