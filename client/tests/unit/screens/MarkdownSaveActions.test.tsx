@@ -68,69 +68,69 @@ describe("zapisywanie treści Markdown", () => {
         expect(await screen.findByRole("status")).toHaveTextContent("Treść została zapisana");
     });
 
-    it.each(["ACTIVE", "INACTIVE"])("tworzy wpis zgodny z CMS dla edycji %s", async (state) => {
-        const edition = {
-            id: "edition-1",
-            name: "Test",
-            state,
-            teamRegisterOpen: "2026-01-01T00:00:00Z",
-            teamRegisterClose: "2027-01-01T00:00:00Z",
-            version: 1,
-        };
-        const requests: unknown[] = [];
-        server.use(
-            http.get(`${apiUrl}${apiEndpoints.posts}`, () => HttpResponse.json({ data: [] })),
-            http.get(`${apiUrl}${apiEndpoints.editions}`, ({ request }) =>
-                HttpResponse.json({
-                    data: new URL(request.url).searchParams.getAll("States").includes("ACTIVE")
-                        ? [edition]
-                        : [],
+    it.each(["ACTIVE", "INACTIVE"])(
+        "tworzy wpis z nazwą z tytułu i widocznością zgodną ze stanem edycji %s",
+        async (state) => {
+            const edition = {
+                id: "edition-1",
+                name: "Test",
+                state,
+                teamRegisterOpen: "2026-01-01T00:00:00Z",
+                teamRegisterClose: "2027-01-01T00:00:00Z",
+                version: 1,
+            };
+            const requests: unknown[] = [];
+            server.use(
+                http.get(`${apiUrl}${apiEndpoints.posts}`, () => HttpResponse.json({ data: [] })),
+                http.get(`${apiUrl}${apiEndpoints.editions}`, ({ request }) =>
+                    HttpResponse.json({
+                        data: new URL(request.url).searchParams.getAll("States").includes("ACTIVE")
+                            ? [edition]
+                            : [],
+                    })
+                ),
+                http.post(`${apiUrl}${apiEndpoints.posts}`, async ({ request }) => {
+                    const body = (await request.json()) as Record<string, unknown>;
+                    requests.push(body);
+                    return HttpResponse.json({
+                        data: {
+                            ...body,
+                            id: "post-1",
+                            createdAt: "2026-01-01T00:00:00Z",
+                            updatedAt: "2026-01-01T00:00:00Z",
+                            version: 1,
+                        },
+                    });
                 })
-            ),
-            http.post(`${apiUrl}${apiEndpoints.posts}`, async ({ request }) => {
-                const body = (await request.json()) as Record<string, unknown>;
-                requests.push(body);
-                return HttpResponse.json({
-                    data: {
-                        ...body,
-                        id: "post-1",
-                        createdAt: "2026-01-01T00:00:00Z",
-                        updatedAt: "2026-01-01T00:00:00Z",
-                        version: 1,
+            );
+            const { user } = renderWithRouter(<EditPostScreen />);
+            const input = await screen.findByRole("textbox", { name: "Treść Markdown" });
+            const save = screen.getByRole("button", { name: "Utwórz wpis" });
+            expect(
+                save.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING
+            ).toBeTruthy();
+            await user.type(screen.getByPlaceholderText("Tytuł wpisu"), "Przykładowy wpis");
+            await user.type(input, "Treść testowa");
+            const visibility = screen.getByRole("checkbox");
+            if (!visibility.hasAttribute("disabled")) {
+                await user.click(visibility);
+            }
+            await user.click(save);
+            await waitFor(() =>
+                expect(requests).toEqual([
+                    {
+                        name: "Przykładowy wpis",
+                        contentJson: JSON.stringify({
+                            version: "1",
+                            title_pl: "Przykładowy wpis",
+                            body_pl: "Treść testowa",
+                        }),
+                        editionId: "edition-1",
+                        isVisible: state === "ACTIVE",
                     },
-                });
-            })
-        );
-        const { user } = renderWithRouter(<EditPostScreen />);
-        const input = await screen.findByRole("textbox", { name: "Treść Markdown" });
-        const save = screen.getByRole("button", { name: "Utwórz wpis" });
-        expect(save.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-        await user.type(screen.getByRole("textbox", { name: /Nazwa robocza/ }), "Komunikat");
-        await user.type(screen.getByPlaceholderText("Tytuł wpisu"), "Przykładowy wpis");
-        await user.type(input, "Treść testowa");
-        const visibility = screen.getByRole("checkbox");
-        if (state === "ACTIVE") {
-            await user.click(visibility);
-        } else {
-            expect(visibility).toBeDisabled();
-            expect(visibility).not.toBeChecked();
+                ])
+            );
+            expect(await screen.findByRole("status")).toHaveTextContent("Wpis został utworzony");
         }
-        await user.click(save);
-        await waitFor(() =>
-            expect(requests).toEqual([
-                {
-                    name: "Komunikat",
-                    contentJson: JSON.stringify({
-                        version: "1",
-                        title_pl: "Przykładowy wpis",
-                        body_pl: "Treść testowa",
-                    }),
-                    editionId: "edition-1",
-                    isVisible: state === "ACTIVE",
-                    version: 0,
-                },
-            ])
-        );
-        expect(await screen.findByRole("status")).toHaveTextContent("Wpis został utworzony");
-    });
+    );
 });

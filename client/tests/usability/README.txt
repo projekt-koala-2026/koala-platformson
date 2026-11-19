@@ -57,19 +57,38 @@ tylko właściwe dla tej osoby dane w punktorach. Kartki nie zawierają wstępu,
 osobnych sekcji sesji ani wzmianki o rezerwie. Zapas jest w osobnym pliku dla nas.
 Nie ma rzeczywistych danych osobowych, adresów ani dokumentów zgód.
 
+MATERIAŁY DO PRZEKAZANIA UCZESTNIKOM
+
+Nie przekazuj wszystkim całego katalogu assets. Każda osoba dostaje własną kartkę
+oraz wyłącznie potrzebne pliki, w podfolderze assets z zachowaniem nazw z kartki:
+
+- Administrator stacjonarny: assets/szkoly-lokalna.csv.
+- Edytor stacjonarny: assets/Ilustracja-lokalna.png i assets/Informator-lokalna.pdf.
+- Recenzent stacjonarny: bez plików pomocniczych.
+- Administrator zdalny: assets/szkoly-zdalna.csv.
+- Recenzent zdalny: bez plików pomocniczych.
+
+szkoly-rezerwa.csv, Ilustracja-rezerwa.png i Informator-rezerwa.pdf zostają u
+moderatora wraz z dane-zapasowe.md. Udostępnij je tylko przy użyciu rezerwy.
+Obrazy/dokumenty do usunięcia, dokumenty RODO i Ilustracja pokazowa.png używana
+przy sponsorze są już na serwerze. Nie potrzeba ich kopii lokalnych.
+
 4. KONTA
 
 Adresy pięciu uczestników odczytywane są z .env w tym folderze. Skopiuj
 .env.example do .env i wpisz prywatne adresy w pięciu zmiennych. Bez wpisu
 skrypt używa fikcyjnego adresu @koala.test. Nie wpisuj prywatnych adresów
 do plików .mjs, scenarios.json ani tego README.
+Każda osoba ma także pola *_FIRST_NAME i *_LAST_NAME. Są używane przy tworzeniu
+konta i synchronizacji już istniejącego konta oraz jego profilu koalicjanta.
+Nie są dopisywane do polecenia logowania na kartce.
 
 Przy nowym seedzie konta od razu powstaną z adresami z .env. Aby podmienić
 adresy już istniejących kont bez resetowania danych, po edycji .env uruchom:
 
 node client/tests/usability/prepare.mjs --sync-emails
 
-To zachowuje ID, role, hasła i przydziały; aktualizuje maile kont i profili,
+To zachowuje ID, role, hasła i przydziały; aktualizuje maile, imiona i nazwiska kont i profili,
 manifest, powiązania w kartach oraz sprawdza logowanie każdej z pięciu osób.
 Nie wysyła zaproszeń. Po zmianie adresów zaloguj się w przeglądarce ponownie.
 --docs-only odrzuci niezgodność konfiguracji z manifestem zamiast drukować
@@ -127,7 +146,24 @@ To jedyny scenariusz wymagający przełączenia kontekstu przez moderatora.
 Odseparowanie nie oznacza automatycznego odtwarzania obiektu po udanej operacji.
 Jeśli uczestnik zmieni/usunie niewłaściwy obiekt, użyj odpowiedniej karty zapasowej.
 
+A03 dotyczy zbiorczego komunikatu o konfliktach ocen na stronie Start, nie
+odszukiwania konkretnej odpowiedzi drużyny. Dlatego kartka podaje tylko edycję.
+Konkretny konflikt w a.blocked jest naszym punktem kontrolnym dla API, a nie
+dodatkowym celem uczestnika. A18 dotyczy sprawdzarki dla całego etapu, a A22
+możliwości zakończenia etapu — ich kartki również nie wskazują konkretnego zadania.
+A19 dotyczy widocznych liczników odpowiedzi i braku przydziału, bez wymagania
+obliczania niewyświetlanej liczby pozostałych ocen.
+A09/A11 dotyczą gotowych, wskazanych obiektów, niezależnych od utworzenia edycji
+w A08. Ranking publikowany w A25 jest gotowy niezależnie od wykonania A24.
+
 6. WERYFIKACJA
+
+node client/tests/usability/check-fixtures.mjs
+
+Odczytowa kontrola zgodności aktualnej bazy z manifestem, tekstem pięciu kartek,
+rezerwą i .env, a także stanów scenariuszy, kluczy odpowiedzi, plików na serwerze
+i lokalnych CSV/PDF/PNG. Nie zmienia danych konkursowych; sprawdzenie logowania
+tworzy tylko sesje. Wynik: fixture-consistency.local.md oraz .local.json.
 
 node client/tests/usability/check-scenarios.mjs
 

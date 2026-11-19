@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import SubeditionsScreen from "../../../src/screens/admin/SubeditionsScreen";
 import { apiEndpoints } from "../../../src/utils/apiEndpoints";
 import { apiUrl } from "../../../src/utils/apiFetcher";
@@ -23,6 +23,21 @@ const editionsUrl = `${apiUrl}${apiEndpoints.editions}`;
 const subsUrl = `${apiUrl}${apiEndpoints.subeditions(edition.id)}`;
 
 describe("zarządzanie etapami", () => {
+    beforeEach(() => {
+        server.use(
+            http.get(`${apiUrl}${apiEndpoints.autoCheckProgress(subedition.id)}`, () =>
+                HttpResponse.json({
+                    data: {
+                        total: 0,
+                        readyToCheck: 0,
+                        missingKey: 0,
+                        alreadyReviewedWithoutResult: 0,
+                    },
+                })
+            )
+        );
+    });
+
     it("tworzy etap z terminami i pokazuje wynik", async () => {
         const requests: unknown[] = [];
         server.use(
