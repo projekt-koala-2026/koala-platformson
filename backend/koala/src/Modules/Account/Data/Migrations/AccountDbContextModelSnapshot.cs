@@ -88,6 +88,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -306,6 +307,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer")
                         .HasColumnName("version");
 
@@ -465,7 +467,7 @@ namespace koala.src.Modules.Account.Data.Migrations
                     b.HasOne("koala.src.Modules.Account.Entities.Rodo", "Rodo")
                         .WithOne("TeamMember")
                         .HasForeignKey("koala.src.Modules.Account.Entities.TeamMember", "RodoId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("koala.src.Modules.Account.Entities.Team", "Team")
                         .WithMany("TeamMembers")
