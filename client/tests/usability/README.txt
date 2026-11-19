@@ -72,13 +72,32 @@ szkoly-rezerwa.csv, Ilustracja-rezerwa.png i Informator-rezerwa.pdf zostają u
 moderatora wraz z dane-zapasowe.md. Udostępnij je tylko przy użyciu rezerwy.
 Obrazy/dokumenty do usunięcia, dokumenty RODO i Ilustracja pokazowa.png używana
 przy sponsorze są już na serwerze. Nie potrzeba ich kopii lokalnych.
+Formularz sponsora wymaga pełnego adresu URL logo, nie wyboru obrazu z biblioteki.
+E10 podaje bezpośrednio pole „Adres logo”. Przy zmianie hosta testów ustaw
+PUBLIC_API_URL w lokalnym .env na docelowy adres API (np. https://test.example.org)
+i uruchom przed eksportem PDF:
+
+node client/tests/usability/prepare.mjs --sync-assets
+
+Aktualizuje adresy logo przygotowanych sponsorów i kartki bez resetowania bazy.
+E11 zachowuje wtedy działający adres logo w formularzu edycji sponsora.
+E03 nie podaje osobnej nazwy roboczej: formularz tworzy ją automatycznie z tytułu.
+Karty recenzenta identyfikują odpowiedź przez etap i zadanie. Nazwy drużyn nie
+są widoczne w tym panelu, więc pozostają tylko w naszym manifeście kontrolnym.
 
 4. KONTA
 
-Adresy pięciu uczestników odczytywane są z .env w tym folderze. Skopiuj
-.env.example do .env i wpisz prywatne adresy w pięciu zmiennych. Bez wpisu
-skrypt używa fikcyjnego adresu @koala.test. Nie wpisuj prywatnych adresów
-do plików .mjs, scenarios.json ani tego README.
+Prywatna konfiguracja obejmuje tylko siedem adresów: pięć kont uczestników
+(np. do resetu hasła) oraz dwa nowe adresy zaproszeń A05, po jednym dla każdego
+administratora: INVITE_LOCAL_EMAIL i INVITE_REMOTE_EMAIL. Skopiuj brakujące
+pola z .env.example i uzupełnij rzeczywiste adresy. Brak wpisu
+lub domena fikcyjna .test/.invalid/.example blokuje generowanie i seed PRZED
+jakąkolwiek zmianą bazy. Nie wpisuj prywatnych adresów do kodu ani README.
+Siedem adresów musi być odrębnych. INVITE_* to NOWE osoby, nie adresy kont
+już istniejących w bazie. Rezerwowe A05 używa INVITE_LOCAL_EMAIL: jeśli pierwszy
+test został pomyślnie ukończony i zaproszone konto aktywowano, moderator musi
+usunąć to konto przed powtórzeniem zaproszenia. Nie potrzeba trzeciego adresu.
+Konta pomocnicze i rezerwowe, profile oraz szkoły/CSV zachowują fikcyjne adresy.
 Każda osoba ma także pola *_FIRST_NAME i *_LAST_NAME. Są używane przy tworzeniu
 konta i synchronizacji już istniejącego konta oraz jego profilu koalicjanta.
 Nie są dopisywane do polecenia logowania na kartce.
@@ -88,21 +107,14 @@ adresy już istniejących kont bez resetowania danych, po edycji .env uruchom:
 
 node client/tests/usability/prepare.mjs --sync-emails
 
-To zachowuje ID, role, hasła i przydziały; aktualizuje maile, imiona i nazwiska kont i profili,
-manifest, powiązania w kartach oraz sprawdza logowanie każdej z pięciu osób.
+To zachowuje ID, role, hasła i przydziały; aktualizuje pięć kont testerów i ich
+profili, imiona/nazwiska z konfiguracji, dwa adresy zaproszeń i kartki.
+Sprawdza logowanie pięciu osób. Nie zmienia szkół, CSV ani kont pomocniczych.
 Nie wysyła zaproszeń. Po zmianie adresów zaloguj się w przeglądarce ponownie.
 --docs-only odrzuci niezgodność konfiguracji z manifestem zamiast drukować
 adres, którym nie da się zalogować. Krok logowania ma wyłącznie e-mail i hasło.
 .env, kartki, manifest i raporty są ignorowane przez Git; .env.example zawiera
-wyłącznie fikcyjne przykłady i może być wersjonowany.
-
-Domyślne, fikcyjne adresy przed uzupełnieniem .env:
-
-Stacjonarnie: admin.lokalna@koala.test, edytor.lokalna@koala.test,
-              recenzent.lokalna@koala.test.
-Zdalnie:      admin.zdalna@koala.test, recenzent.zdalna@koala.test.
-Rezerwa:      admin.rezerwa@koala.test, edytor.rezerwa@koala.test,
-              recenzent.rezerwa@koala.test.
+wyłącznie nazwy zmiennych, puste pola adresów i przykładowe imiona/nazwiska.
 Hasło dla wszystkich kont tej próby: KoalaProba2026!
 Techniczne konto moderatora: moderator@koala.test (to samo hasło).
 

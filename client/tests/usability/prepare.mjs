@@ -18,7 +18,47 @@ const emailVariables = {
     "admin.zdalna": "ADMIN_REMOTE_EMAIL",
     "recenzent.zdalna": "REVIEWER_REMOTE_EMAIL",
 };
-const participantEmail = (key) => localEnv[emailVariables[key]]?.trim() || `${key}@koala.test`;
+const configuredEmail = (variable, configuration = localEnv) => {
+    const value = configuration[variable]?.trim();
+    assert(
+        value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+        `Uzupełnij poprawny adres w .env: ${variable}`
+    );
+    assert(
+        !/@[^@]*\.(test|invalid|example)$/i.test(value) && !/@example\.(com|org|net)$/i.test(value),
+        `Zastąp fikcyjny adres w .env: ${variable}`
+    );
+    return value;
+};
+const participantEmail = (key) =>
+    emailVariables[key] ? configuredEmail(emailVariables[key]) : `${key}@koala.test`;
+const invitationEmail = (key) =>
+    configuredEmail(key === "zdalna" ? "INVITE_REMOTE_EMAIL" : "INVITE_LOCAL_EMAIL");
+function validateEmailConfiguration(configuration = localEnv) {
+    const variables = [
+        ...Object.values(emailVariables),
+        "INVITE_LOCAL_EMAIL",
+        "INVITE_REMOTE_EMAIL",
+    ];
+    const invalid = variables.filter((variable) => {
+        try {
+            configuredEmail(variable, configuration);
+            return false;
+        } catch {
+            return true;
+        }
+    });
+    assert(
+        !invalid.length,
+        `Przed generowaniem kartek lub zmianą danych uzupełnij .env (bez fikcyjnych adresów): ${invalid.join(", ")}`
+    );
+    const accountAndInvites = variables.map((v) => configuredEmail(v, configuration).toLowerCase());
+    assert.equal(
+        new Set(accountAndInvites).size,
+        accountAndInvites.length,
+        "Adresy kont i zaproszeń muszą być różne, aby scenariusze nie kolidowały."
+    );
+}
 const participantNames = (key, first, last) => {
     const prefix = emailVariables[key]?.replace(/_EMAIL$/, "");
     const nameFirst = prefix ? localEnv[`${prefix}_FIRST_NAME`]?.trim() || first : first;
@@ -33,16 +73,6 @@ const participantNames = (key, first, last) => {
         );
     return { nameFirst, nameLast };
 };
-for (const key of Object.keys(emailVariables))
-    assert(
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(participantEmail(key)),
-        `Invalid email in .env variable ${emailVariables[key]}`
-    );
-assert(
-    new Set(Object.keys(emailVariables).map((key) => participantEmail(key).toLowerCase())).size ===
-        5,
-    "The five participant email addresses in .env must be different."
-);
 const catalog = JSON.parse(readFileSync(join(folder, "scenarios.json"), "utf8"));
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 const args = isMain ? process.argv.slice(2) : [];
@@ -54,6 +84,7 @@ const allowedFlags = new Set([
     "--reset",
     "--docs-only",
     "--sync-emails",
+    "--sync-assets",
     "--verify",
     "--exercise",
     "--prepare",
@@ -73,6 +104,7 @@ assert(
             "--reset",
             "--docs-only",
             "--sync-emails",
+            "--sync-assets",
             "--verify",
             "--exercise",
             "--prepare",
@@ -86,6 +118,12 @@ assert(
     "--variant is only used with --prepare."
 );
 const base = (process.env.KOALA_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
+const publicBase = (localEnv.PUBLIC_API_URL || base).replace(/\/$/, "");
+assert(
+    ["http:", "https:"].includes(new URL(publicBase).protocol),
+    "PUBLIC_API_URL must be HTTP(S)."
+);
+const publicAssetUrl = (path) => new URL(new URL(path, base).pathname, publicBase).href;
 assert(["localhost", "127.0.0.1"].includes(new URL(base).hostname), "Only a local API is allowed.");
 const containerNames = [
     "koala_postgres_container",
@@ -526,7 +564,7 @@ async function seed() {
         a.user = await account(`admin.${key}`, "ORGANIZATION_ADMIN", "Alicja", label);
         a.roleTarget = await account(`redakcja.${key}`, "ORGANIZATION_EDITOR", "Eliza", label);
         a.deleteTarget = await account(`konto.${key}`, "ORGANIZATION_EDITOR", "Tomasz", label);
-        a.inviteEmail = `zaproszenie.${key}@koala.test`;
+        a.inviteEmail = invitationEmail(key);
         a.editEdition = await edition(`KOALA — plan ${label.toLowerCase()}`);
         a.startEdition = await edition(`KOALA — inauguracja ${label.toLowerCase()}`);
         a.workEdition = await edition(`KOALA — warsztat ${label.toLowerCase()}`);
@@ -721,7 +759,7 @@ async function seed() {
             contentJson: json({
                 version: "1",
                 sponsor_web_url: "https://example.org",
-                sponsor_logo_image_url: imageUrl,
+                sponsor_logo_image_url: publicAssetUrl(imageUrl),
                 body_pl: "Fikcyjna pracownia wspierająca próbę konkursową.",
             }),
             isVisible: true,
@@ -789,8 +827,20 @@ async function seed() {
 }
 
 function bindCards(m) {
+    validateEmailConfiguration();
+    for (const user of configuredActors(m))
+        assert.equal(
+            user.email,
+            participantEmail(user.key),
+            `Zmieniono ${emailVariables[user.key]}; uruchom --sync-emails przed generowaniem kartek.`
+        );
     const d = m.dates;
     for (const a of m.admins) {
+        assert.equal(
+            a.inviteEmail,
+            invitationEmail(a.key),
+            "Zmieniono adres zaproszenia; uruchom --sync-emails."
+        );
         const basics = { Edycja: m.baseline.name };
         const contest = (f) => ({ ...basics, Etap: f.stage.name, Zadanie: f.task.name });
         a.cards = {
@@ -906,7 +956,7 @@ function bindCards(m) {
         };
     }
     for (const r of m.reviewers) {
-        const common = { Edycja: m.baseline.name, Etap: r.stage.name, Drużyna: r.team.name };
+        const common = { Edycja: m.baseline.name, Etap: r.stage.name };
         r.cards = { R01: { "E-mail": r.user.email, Hasło: password }, R07: {} };
         r.tasks.forEach(
             (t, i) =>
@@ -929,7 +979,6 @@ function bindCards(m) {
             E01: { "E-mail": e.user.email, Hasło: password },
             E02: { Plik: e.image },
             E03: {
-                "Nazwa robocza": `Termin ${e.label.toLowerCase()}`,
                 Tytuł: `Zbliża się termin - próba ${e.key}`,
                 Edycja: m.baseline.name,
                 Treść: `Przypominamy, że termin przesłania odpowiedzi upływa ${date(m.dates.futureClose)}. Życzymy powodzenia wszystkim drużynom.`,
@@ -959,7 +1008,9 @@ function bindCards(m) {
                 "Nazwa sponsora": `Fundacja ${e.label.toLowerCase()}`,
                 "Strona internetowa": "https://example.org",
                 Opis: "Fikcyjna fundacja wspierająca edukację matematyczną i pracę zespołową.",
-                Obraz: "Ilustracja pokazowa.png (jest już w bibliotece)",
+                "Adres logo": publicAssetUrl(
+                    JSON.parse(e.sponsor.contentJson).sponsor_logo_image_url
+                ),
                 Widoczność: "Widoczny",
             },
             E11: {
@@ -989,6 +1040,7 @@ function bindCards(m) {
 }
 
 function generateDocs(m) {
+    validateEmailConfiguration();
     assert(
         m.status === "ready",
         "Seed did not finish; generate instructions only after successful setup."
@@ -1027,12 +1079,17 @@ function generateDocs(m) {
     writeFileSync(join(folder, "dane-zapasowe.md"), reserve.join("\n") + "\n");
 }
 
-async function syncEmails(m) {
-    assert(m.status === "ready", "Seed did not finish.");
-    const users = [...m.admins, ...m.editors, ...m.reviewers]
+function configuredActors(m) {
+    return [...m.admins, ...m.editors, ...m.reviewers]
         .map((v) => v.user)
         .filter((u) => emailVariables[u.key]);
-    assert.equal(users.length, 5);
+}
+
+async function syncEmails(m) {
+    validateEmailConfiguration();
+    assert(m.status === "ready", "Seed did not finish.");
+    const users = configuredActors(m);
+    assert.equal(users.length, Object.keys(emailVariables).length);
     const desired = new Map(
         users.map((u) => {
             const parts = u.name.split(" ");
@@ -1054,6 +1111,14 @@ async function syncEmails(m) {
         return u.email !== value.email || u.name !== `${value.nameFirst} ${value.nameLast}`;
     });
     const ids = users.map((u) => q(u.id)).join(",");
+    for (const a of m.admins)
+        assert.equal(
+            sql(
+                `SELECT count(*) FROM account.users WHERE lower(email)=lower(${q(invitationEmail(a.key))});`
+            ),
+            "0",
+            "Adres zaproszenia jest już używany przez istniejące konto."
+        );
     for (const u of changes) {
         assert.equal(
             sql(
@@ -1077,7 +1142,8 @@ async function syncEmails(m) {
               const fields = `email=${q(v.email)},name_first=${q(v.nameFirst)},name_last=${q(v.nameLast)},updated_at=now(),version=version+1`;
               return `UPDATE account.users SET ${fields} WHERE id=${q(u.id)}; UPDATE cms.koalicjants SET ${fields} WHERE id=${q(u.id)};`;
           })
-          .join("\n")} COMMIT;`);
+          .join("\n")}
+      COMMIT;`);
         const update = (value) => {
             if (!value || typeof value !== "object") return;
             if (desired.has(value.id) && "email" in value) {
@@ -1090,6 +1156,9 @@ async function syncEmails(m) {
             for (const child of Object.values(value)) update(child);
         };
         update(m);
+    }
+    for (const a of m.admins) {
+        a.inviteEmail = invitationEmail(a.key);
     }
     bindCards(m);
     save(m);
@@ -1113,7 +1182,34 @@ async function syncEmails(m) {
         );
     }
     console.log(
-        `Zsynchronizowano dane (${changes.length} zmian) i sprawdzono logowanie pięciu osób. Prywatne dane nie są wypisywane w logu.`
+        `Zsynchronizowano dane pięciu testerów (${changes.length} zmian) i dwa adresy zaproszeń. Prywatne dane nie są wypisywane w logu.`
+    );
+}
+
+async function syncAssets(m) {
+    assert.equal(m.status, "ready");
+    await login("asset-sync", m.support.email, m.support.password);
+    const sponsors = await list("asset-sync", "/cms/sponsors");
+    let changes = 0;
+    for (const e of m.editors) {
+        const current = sponsors.find((s) => s.id === e.sponsor.id);
+        assert(current, "Fixture sponsor missing.");
+        const content = JSON.parse(current.contentJson);
+        const nextUrl = publicAssetUrl(content.sponsor_logo_image_url);
+        if (content.sponsor_logo_image_url !== nextUrl) {
+            content.sponsor_logo_image_url = nextUrl;
+            e.sponsor = await api("asset-sync", "PUT", `/cms/sponsors/${current.id}`, {
+                ...current,
+                contentJson: json(content),
+            });
+            changes++;
+        } else e.sponsor = current;
+    }
+    bindCards(m);
+    generateDocs(m);
+    save(m);
+    console.log(
+        `Zaktualizowano adresy logo (${changes} zmian) i odświeżono kartki bez resetu danych.`
     );
 }
 
@@ -1382,7 +1478,7 @@ async function exercise(m) {
         e.user.key
     );
     await api(e.user.key, "POST", "/cms/posts", {
-        name: e.cards.E03["Nazwa robocza"],
+        name: e.cards.E03["Tytuł"],
         editionId: m.baseline.id,
         contentJson: json({
             version: "1",
@@ -1436,7 +1532,7 @@ async function exercise(m) {
     });
     await api(e.user.key, "DELETE", "/cms/public-files/" + e.removePdf.id);
     await api(e.user.key, "DELETE", "/cms/public-files/" + e.removeImage.id);
-    const logo = JSON.parse(e.sponsor.contentJson).sponsor_logo_image_url;
+    const logo = e.cards.E10["Adres logo"];
     await api(e.user.key, "POST", "/cms/sponsors", {
         name: e.cards.E10["Nazwa sponsora"],
         contentJson: json({
@@ -1481,6 +1577,7 @@ export {
     base,
     catalog,
     docker,
+    emailVariables,
     folder,
     getSessionCookie,
     json,
@@ -1491,12 +1588,14 @@ export {
     q,
     sql,
     upload,
+    validateEmailConfiguration,
 };
 
 if (isMain) {
+    if (!args.includes("--help") && !args.includes("--prepare")) validateEmailConfiguration();
     if (args.includes("--help")) {
         console.log(
-            "node client/tests/usability/prepare.mjs [--reset | --docs-only | --sync-emails | --verify | --exercise | --prepare A10 --variant lokalna]"
+            "node client/tests/usability/prepare.mjs [--reset | --docs-only | --sync-emails | --sync-assets | --verify | --exercise | --prepare A10 --variant lokalna]"
         );
     } else if (args.includes("--docs-only")) {
         const m = load();
@@ -1508,6 +1607,8 @@ if (isMain) {
         );
     } else if (args.includes("--sync-emails")) {
         await syncEmails(load());
+    } else if (args.includes("--sync-assets")) {
+        await syncAssets(load());
     } else if (args.includes("--prepare")) {
         await prepare(load(), option("--prepare"), option("--variant") ?? "lokalna");
     } else if (args.includes("--exercise")) {

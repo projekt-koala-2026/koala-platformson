@@ -3,7 +3,20 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseEnv } from "node:util";
-import { base, catalog, folder, getSessionCookie, json, load, login, sql } from "./prepare.mjs";
+import {
+    base,
+    catalog,
+    emailVariables,
+    folder,
+    getSessionCookie,
+    json,
+    load,
+    login,
+    sql,
+    validateEmailConfiguration,
+} from "./prepare.mjs";
+
+validateEmailConfiguration();
 
 const m = load(),
     checks = [],
@@ -67,13 +80,9 @@ const fixtureRoles = [
     ["editor", "edytor", m.editors],
     ["reviewer", "recenzent", m.reviewers],
 ];
-const emailKeys = {
-    "admin.lokalna": "ADMIN_LOCAL",
-    "edytor.lokalna": "EDITOR_LOCAL",
-    "recenzent.lokalna": "REVIEWER_LOCAL",
-    "admin.zdalna": "ADMIN_REMOTE",
-    "recenzent.zdalna": "REVIEWER_REMOTE",
-};
+const emailKeys = Object.fromEntries(
+    Object.entries(emailVariables).map(([key, variable]) => [key, variable.replace(/_EMAIL$/, "")])
+);
 const env = existsSync(join(folder, ".env"))
     ? parseEnv(readFileSync(join(folder, ".env"), "utf8"))
     : {};
@@ -265,12 +274,23 @@ for (const a of m.admins) {
                 equal(row[0], String(991000 + (m.admins.indexOf(a) + 1) * 10 + i + 1));
                 equal(row[1], `Szkoła Próbna ${i + 1} — ${a.label}`);
                 equal(row[6], "Szkoła podstawowa");
+                equal(row[7], `import.${a.key}.${i + 1}@koala.test`);
                 assert(!tables["core.schools"].some((s) => s.rspo === row[0]));
             }
         }
     );
 }
 for (const r of m.reviewers) {
+    check(
+        `reviewer/${r.key}/visible-identifiers`,
+        "Kartka wskazuje identyfikatory widoczne w panelu recenzenta",
+        () => {
+            for (const id of ["R02", "R03", "R04", "R05", "R06"]) {
+                assert(!Object.hasOwn(r.cards[id], "Drużyna"));
+                assert(r.cards[id].Etap && r.cards[id].Zadanie);
+            }
+        }
+    );
     checkStage(r.stage, `reviewer/${r.key}`);
     for (const t of [...r.tasks, r.conflict]) {
         checkTask(t, `reviewer/${r.key}/${t.id}`);
@@ -310,7 +330,14 @@ for (const e of m.editors) {
             const profile = byId("cms.koalicjants", e.profile.id);
             equal(`${profile.name_first} ${profile.name_last}`, e.cards.E12.Osoba);
             equal(profile.email, e.cards.E12["E-mail"]);
-            assert(!tables["cms.posts"].some((p) => p.name === e.cards.E03["Nazwa robocza"]));
+            assert(!tables["cms.posts"].some((p) => p.name === e.cards.E03["Tytuł"]));
+            assert(!Object.hasOwn(e.cards.E03, "Nazwa robocza"));
+            assert(
+                e.cards.E03["Tytuł"].length <= 50 && /^[\p{L}\s-]+$/u.test(e.cards.E03["Tytuł"])
+            );
+            assert(!Object.hasOwn(e.cards.E10, "Obraz"));
+            for (const url of [p.content_json.sponsor_logo_image_url, e.cards.E10["Adres logo"]])
+                assert(["http:", "https:"].includes(new URL(url).protocol));
             assert(!tables["cms.sponsors"].some((p) => p.name === e.cards.E10["Nazwa sponsora"]));
         }
     );

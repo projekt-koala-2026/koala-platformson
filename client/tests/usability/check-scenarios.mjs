@@ -19,11 +19,13 @@ import {
     q,
     sql,
     upload,
+    validateEmailConfiguration,
 } from "./prepare.mjs";
 
 const m = load();
 assert.equal(m.status, "ready");
 const recoverOnly = process.argv.slice(2).includes("--restore");
+if (!recoverOnly) validateEmailConfiguration();
 assert(
     process.argv.length === 2 || (process.argv.length === 3 && recoverOnly),
     "Use no arguments, or --restore to recover a saved snapshot."
@@ -735,7 +737,7 @@ async function checkEditor(e) {
     await run(e.key, "E03", async () => {
         const card = c.E03;
         const p = await api(who, "POST", "/cms/posts", {
-            name: card["Nazwa robocza"],
+            name: card["Tytuł"],
             editionId: m.baseline.id,
             contentJson: json({ version: "1", title_pl: card["Tytuł"], body_pl: card["Treść"] }),
             isVisible: true,
@@ -843,7 +845,7 @@ async function checkEditor(e) {
                 version: "1",
                 body_pl: c.E10.Opis,
                 sponsor_web_url: c.E10["Strona internetowa"],
-                sponsor_logo_image_url: `/api/koala/content/${logo.id}.png`,
+                sponsor_logo_image_url: c.E10["Adres logo"],
             }),
             isVisible: true,
         });
