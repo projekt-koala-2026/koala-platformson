@@ -15,6 +15,13 @@
   </PropertyGroup>
 
 	<ItemGroup>
+  		<Content Include="src/**/Assets/*">
+  		  	<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  		  	<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+  		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
 		<Compile Remove="src/**/Tests/**/*.cs" />
     </ItemGroup>
 
