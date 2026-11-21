@@ -45,6 +45,7 @@ namespace koala.src.Shared
         public const string InvalidJson = "KOALA_INVALID_JSON";
         public const string BadRequest = "KOALA_BAD_REQUEST";
         public const string Conflict = "KOALA_CONFLICT";
+        public const string AlreadyTaken = "KOALA_ALREADY_TAKEN";
 
         // ==========================================
         // ACCOUNT MODULE
@@ -111,6 +112,12 @@ namespace koala.src.Shared
         public const string TaskAnswerNotFound = "KOALA_TASK_ANSWER_NOT_FOUND";
         public const string TaskAnswerAlreadyExists = "KOALA_TASK_ANSWER_ALREADY_EXISTS";
         public const string TaskSubmissionNotFound = "KOALA_TASK_SUBMISSION_NOT_FOUND";
+
+        public const string RankingNotFound = "KOALA_RANKING_NOT_FOUND";
+        public const string RankingCannotMergeTheSameRanking = "KOALA_RANKING_CANNOT_MERGE_THE_SAME_RANKING";
+        public const string RankingsTierConflict = "KOALA_RANKINGS_TIER_CONFLICT";
+        public const string RankingAlreadyExists = "KOALA_RANKING_ALREADY_EXISTS";
+
     }
 
     public static class KoalaValidationErrorCodes

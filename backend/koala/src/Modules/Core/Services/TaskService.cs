@@ -33,13 +33,6 @@ namespace koala.src.Modules.Core.Services
             }
         }
 
-        private async Task InvalidateRankingAsync(SubEdition subedition)
-        {
-            subedition.RankingPublished = false;
-            var rankings = await _db.Rankings.Where(r => r.SubeditionId == subedition.Id).ToListAsync();
-            _db.Rankings.RemoveRange(rankings);
-        }
-
         private async Task InvalidateAnswersAsync(TaskItem task)
         {
             var submissions = await _db.TaskSubmissions
@@ -53,7 +46,6 @@ namespace koala.src.Modules.Core.Services
             }
 
             var subedition = await _db.SubEditions.FirstAsync(s => s.Id == task.SubEditionId);
-            await InvalidateRankingAsync(subedition);
         }
 
         public async Task<TaskAnswerDto> CreateTaskAnswerAsync(ClaimsPrincipal? claimsPrincipal, Guid task_item_id, TaskAnswerCreateDto createTaskAnswerDto)
@@ -324,11 +316,11 @@ namespace koala.src.Modules.Core.Services
             }
 
             TaskSubmission? submission = null;
-            if(teamInfo.Tier == CompetitionTiers.TIER_1)
+            if (teamInfo.Tier == CompetitionTiers.TIER_1)
             {
                 submission = await _db.TaskSubmissions.Include(e => e.TaskItem).FirstOrDefaultAsync(e => e.TaskId == task_id && e.TaskItem.Tier == CompetitionTiers.TIER_1 && e.TeamId == team_id);
             }
-            if(teamInfo.Tier == CompetitionTiers.TIER_2)
+            if (teamInfo.Tier == CompetitionTiers.TIER_2)
             {
                 submission = await _db.TaskSubmissions.Include(e => e.TaskItem).FirstOrDefaultAsync(e => e.TaskId == task_id && (e.TaskItem.Tier == CompetitionTiers.TIER_1 || e.TaskItem.Tier == CompetitionTiers.TIER_2) && e.TeamId == team_id);
             }
@@ -516,8 +508,7 @@ namespace koala.src.Modules.Core.Services
             {
                 submission.AutoReviewState = null;
             }
-            if (previousScore != upsertReviewDto.Score)
-                await InvalidateRankingAsync(subedition);
+
             submission.UpdatedAt = DateTime.UtcNow;
             submission.Version++;
 
@@ -661,7 +652,6 @@ namespace koala.src.Modules.Core.Services
             var correctAnswerMap = tasksWithAnswers.GroupBy(x => x.Task.Id)
                 .ToDictionary(group => group.Key, group => group.Select(x => x.Answer.Answer).ToList());
 
-            bool hasChanges = false;
             foreach (var submission in submissions)
             {
                 if (correctAnswerMap.TryGetValue(submission.TaskId, out var correctAnswers))
@@ -673,12 +663,9 @@ namespace koala.src.Modules.Core.Services
                         submission.AutoReviewState = isCorrect;
                         submission.UpdatedAt = DateTime.UtcNow;
                         submission.Version++;
-                        hasChanges = true;
                     }
                 }
             }
-
-            if (hasChanges) await InvalidateRankingAsync(subedition);
             await SaveSubmissionsAsync();
         }
 
@@ -847,7 +834,6 @@ namespace koala.src.Modules.Core.Services
                 sub.Version++;
             }
 
-            await InvalidateRankingAsync(subedition);
             await SaveSubmissionsAsync();
             await transaction.CommitAsync();
         }
@@ -924,7 +910,6 @@ namespace koala.src.Modules.Core.Services
                 sub.Version++;
             }
 
-            await InvalidateRankingAsync(subedition);
             await SaveSubmissionsAsync();
             await transaction.CommitAsync();
         }

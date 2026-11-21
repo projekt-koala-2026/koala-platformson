@@ -1,11 +1,13 @@
 namespace koala.src.Modules.Core.Dtos
 {
     public record RankingDto(
-        string TeamName,
-        Guid SubeditionId,
-        int TotalScore,
-        int MaxScore,
+        Guid RankingId,
+        Guid EditionId,
+        bool IsPublic,
+        string Name,
         string Tier,
-        DateTime? LatestUpdatedAt
+        DateTime CreatedAt,
+        DateTime UpdatedAt,
+        int Version
     );
 }

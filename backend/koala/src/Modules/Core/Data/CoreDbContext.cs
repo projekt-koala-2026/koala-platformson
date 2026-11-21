@@ -18,6 +18,8 @@ namespace koala.src.Modules.Core.Data
         public DbSet<TaskSubmission> TaskSubmissions => Set<TaskSubmission>();
         public DbSet<School> Schools => Set<School>();
         public DbSet<Ranking> Rankings => Set<Ranking>();
+        public DbSet<Winner> Winners => Set<Winner>();
+        public DbSet<RankingData> RankingDatas => Set<RankingData>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("core");
@@ -30,9 +32,22 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<School>().ToTable("schools");
             modelBuilder.Entity<Ranking>().ToTable("rankings");
 
+            modelBuilder.Entity<RankingData>().ToTable("ranking_datas");
+            modelBuilder.Entity<Winner>().ToTable("winners");
+
             // EDITIONS CONFIG
             modelBuilder.Entity<Edition>()
                 .HasKey(e => e.Id);
+            modelBuilder.Entity<Edition>()
+                .HasOne(e => e.WinnerTier1)
+                .WithOne()
+                .HasForeignKey<Edition>(e => e.WinnerTier1Id)
+                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<Edition>()
+                .HasOne(e => e.WinnerTier2)
+                .WithOne()
+                .HasForeignKey<Edition>(e => e.WinnerTier2Id)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // SUBEDITIONS CONFIG
             modelBuilder.Entity<SubEdition>()
@@ -85,11 +100,33 @@ namespace koala.src.Modules.Core.Data
 
             // RANKING CONFIG
             modelBuilder.Entity<Ranking>()
-                .HasKey(r => r.Id);
+                .HasKey(r => r.RankingId);
             modelBuilder.Entity<Ranking>()
-                .HasOne(r => r.SubEdition)
-                .WithMany(se => se.Rankings)
-                .HasForeignKey(r => r.SubeditionId)
+                .Property(rd => rd.Version)
+                .IsConcurrencyToken();
+            modelBuilder.Entity<Ranking>()
+                .HasOne(r => r.Edition)
+                .WithMany(e => e.Rankings)
+                .HasForeignKey(r => r.EditionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // WINNER CONFIG
+            modelBuilder.Entity<Winner>()
+                .HasKey(w => w.Id);
+            modelBuilder.Entity<Winner>()
+                .Property(w => w.Version)
+                .IsConcurrencyToken();
+
+            // RANKING DATA CONFIG
+            modelBuilder.Entity<RankingData>()
+                .HasKey(rd => rd.Id);
+            modelBuilder.Entity<RankingData>()
+                .Property(rd => rd.Version)
+                .IsConcurrencyToken();
+            modelBuilder.Entity<RankingData>()
+                .HasOne(rd => rd.Ranking)
+                .WithMany(r => r.RankingDatas)
+                .HasForeignKey(rd => rd.RankingId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     };
