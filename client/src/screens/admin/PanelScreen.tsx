@@ -251,9 +251,15 @@ const PanelScreen = () => {
                         <h1 className="mt-1 text-2xl font-bold">{editionOverview.edition.name}</h1>
                         <div className="mt-5 grid gap-5 lg:grid-cols-2">
                             <div className="rounded-xl bg-canvas p-4">
-                                <h2 className="font-semibold">Etapy</h2>
+                                <h2 className="font-semibold">
+                                    Etapy ({editionOverview.subeditions.length})
+                                </h2>
                                 {editionOverview.subeditions.length ? (
-                                    <ul className="mt-2 flex flex-wrap gap-2">
+                                    <ul
+                                        aria-label="Etapy aktywnej edycji"
+                                        tabIndex={0}
+                                        className="mt-2 flex max-h-48 flex-wrap gap-2 overflow-y-auto overscroll-contain pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus"
+                                    >
                                         {editionOverview.subeditions.map((item) => (
                                             <li
                                                 key={item.id}
@@ -325,7 +331,11 @@ const PanelScreen = () => {
                                     <h2 className="font-semibold">
                                         Termin odsyłania zadań już się rozpoczął
                                     </h2>
-                                    <ul className="mt-2 list-inside list-disc">
+                                    <ul
+                                        aria-label="Etapy wymagające aktywacji"
+                                        tabIndex={0}
+                                        className="mt-2 max-h-40 list-inside list-disc overflow-y-auto overscroll-contain pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus"
+                                    >
                                         {editionOverview.inactiveSubeditionsPastStart.map(
                                             (item) => (
                                                 <li key={item.id}>

@@ -13,6 +13,7 @@ import { apiListRequest, apiRequestResult } from "../../utils/apiFetcher";
 import { isAdmin } from "../../utils/authService";
 
 const POSTS_ENDPOINT = apiEndpoints.posts;
+const POSTS_PAGE_SIZE = 10;
 
 type Feedback = { tone: "success" | "error"; message: string } | null;
 type SidePanel = "preview" | "posts";
@@ -31,6 +32,11 @@ const EditPostScreen = () => {
     const navigate = useNavigate();
     const isAdminUser = useMemo(() => isAdmin(), []);
     const [posts, setPosts] = useState<Post[]>([]);
+    const [postsPage, setPostsPage] = useState(0);
+    const [postsTotal, setPostsTotal] = useState(0);
+    const [postsLoading, setPostsLoading] = useState(true);
+    const [postsError, setPostsError] = useState(false);
+    const [postsRevision, setPostsRevision] = useState(0);
     const [postNames, setPostNames] = useState<Record<string, string>>({});
     const [postVersions, setPostVersions] = useState<Record<string, number>>({});
     const [editions, setEditions] = useState<Edition[]>([]);
@@ -49,7 +55,6 @@ const EditPostScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiListRequest<ApiPost>(`${POSTS_ENDPOINT}?${firstPage}`, null, "GET", navigate),
             apiListRequest<ApiEdition>(
                 `${apiEndpoints.editions}?${firstPage}&States=CLOSED`,
                 null,
@@ -62,22 +67,17 @@ const EditPostScreen = () => {
                 "GET",
                 navigate
             ),
-        ]).then(([postsData, pastEditionsData, activeEditionData]) => {
+        ]).then(([pastEditionsData, activeEditionData]) => {
             if (!active) return;
             const editionsData = [...(activeEditionData ?? []), ...(pastEditionsData ?? [])].map(
                 adaptEdition
-            );
-            setPosts((postsData ?? []).map(adaptPost));
-            setPostNames(Object.fromEntries((postsData ?? []).map((post) => [post.id, post.name])));
-            setPostVersions(
-                Object.fromEntries((postsData ?? []).map((post) => [post.id, post.version]))
             );
             setEditions(editionsData);
             setForm((current) => ({
                 ...current,
                 editionId: current.editionId || pickDefaultEdition(editionsData ?? []),
             }));
-            if (!postsData || !pastEditionsData || !activeEditionData) {
+            if (!pastEditionsData || !activeEditionData) {
                 setFeedback({ tone: "error", message: "Nie udało się pobrać wszystkich danych." });
             }
             setLoading(false);
@@ -86,6 +86,45 @@ const EditPostScreen = () => {
             active = false;
         };
     }, [navigate]);
+
+    useEffect(() => {
+        let active = true;
+        void apiRequestResult<ApiPost[]>(
+            `${POSTS_ENDPOINT}?PageNumber=${postsPage}&PageSize=${POSTS_PAGE_SIZE}`,
+            null,
+            "GET",
+            navigate
+        ).then((result) => {
+            if (!active) return;
+            if (result.data) {
+                const total = result.pagination?.totalNumber ?? result.data.length;
+                const lastPage = Math.max(0, Math.ceil(total / POSTS_PAGE_SIZE) - 1);
+                if (postsPage > lastPage) {
+                    setPostsPage(lastPage);
+                    return;
+                }
+                setPosts(result.data.map(adaptPost));
+                setPostsTotal(total);
+                setPostNames(Object.fromEntries(result.data.map((post) => [post.id, post.name])));
+                setPostVersions(
+                    Object.fromEntries(result.data.map((post) => [post.id, post.version]))
+                );
+                setExpandedPosts(new Set());
+            } else setPosts([]);
+            setPostsError(!result.data);
+            setPostsLoading(false);
+        });
+        return () => {
+            active = false;
+        };
+    }, [navigate, postsPage, postsRevision]);
+
+    const refreshPosts = (page = postsPage) => {
+        setPostsLoading(true);
+        setPostsError(false);
+        setPostsPage(page);
+        setPostsRevision((revision) => revision + 1);
+    };
 
     const resetForm = () => {
         setEditingPostId(null);
@@ -209,6 +248,7 @@ const EditPostScreen = () => {
         });
         if (editing) setEditingPostId(null);
         else resetForm();
+        refreshPosts(postId ? postsPage : 0);
         setSaving(false);
     };
 
@@ -490,9 +530,7 @@ const EditPostScreen = () => {
                                         onClick={() => setSidePanel(panel)}
                                         className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition ${sidePanel === panel ? "bg-surface text-ink-heading shadow-sm" : "text-ink-secondary hover:text-ink-heading"}`}
                                     >
-                                        {panel === "preview"
-                                            ? "Podgląd"
-                                            : `Wpisy (${posts.length})`}
+                                        {panel === "preview" ? "Podgląd" : `Wpisy (${postsTotal})`}
                                     </button>
                                 ))}
                             </div>
@@ -521,6 +559,21 @@ const EditPostScreen = () => {
                                         )}
                                     </div>
                                 </article>
+                            ) : postsLoading ? (
+                                <p role="status" className="p-4 text-ink-secondary">
+                                    Ładowanie wpisów…
+                                </p>
+                            ) : postsError ? (
+                                <div
+                                    role="alert"
+                                    className="app-status-danger rounded-xl border p-4"
+                                >
+                                    Nie udało się pobrać wpisów.
+                                    <Button
+                                        text="Spróbuj ponownie"
+                                        onClick={() => refreshPosts()}
+                                    />
+                                </div>
                             ) : posts.length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
                                     Brak wpisów.
@@ -620,6 +673,39 @@ const EditPostScreen = () => {
                                         </article>
                                     ))}
                                 </div>
+                            )}
+                            {sidePanel === "posts" && (
+                                <nav
+                                    aria-label="Strony wpisów"
+                                    className="mt-4 flex flex-wrap items-center justify-between gap-3"
+                                >
+                                    <Button
+                                        text="Poprzednia"
+                                        disabled={
+                                            postsLoading ||
+                                            saving ||
+                                            deletingId !== null ||
+                                            postsPage === 0
+                                        }
+                                        onClick={() => refreshPosts(postsPage - 1)}
+                                    />
+                                    <p aria-live="polite" className="text-sm text-ink-secondary">
+                                        Strona {postsPage + 1} z{" "}
+                                        {Math.max(1, Math.ceil(postsTotal / POSTS_PAGE_SIZE))} ·{" "}
+                                        {postsTotal} wpisów
+                                    </p>
+                                    <Button
+                                        text="Następna"
+                                        disabled={
+                                            postsLoading ||
+                                            saving ||
+                                            deletingId !== null ||
+                                            postsError ||
+                                            (postsPage + 1) * POSTS_PAGE_SIZE >= postsTotal
+                                        }
+                                        onClick={() => refreshPosts(postsPage + 1)}
+                                    />
+                                </nav>
                             )}
                         </section>
                     </div>

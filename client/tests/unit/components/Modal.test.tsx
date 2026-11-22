@@ -101,7 +101,7 @@ describe("Modal", () => {
         expect(lastButton).toHaveFocus();
     });
 
-    it("closes only when the backdrop itself is pressed", () => {
+    it("does not close when the backdrop or dialog is pressed", () => {
         const onClose = vi.fn();
         render(<ModalHarness onClose={onClose} />);
         const dialog = screen.getByRole("dialog");
@@ -111,6 +111,16 @@ describe("Modal", () => {
         expect(onClose).not.toHaveBeenCalled();
 
         fireEvent.mouseDown(backdrop!);
+        fireEvent.click(backdrop!);
+        expect(onClose).not.toHaveBeenCalled();
+        expect(dialog).toBeInTheDocument();
+    });
+
+    it("still closes using the explicit close button", async () => {
+        const user = userEvent.setup();
+        const onClose = vi.fn();
+        render(<ModalHarness onClose={onClose} />);
+        await user.click(screen.getByRole("button", { name: "Zamknij" }));
         expect(onClose).toHaveBeenCalledOnce();
     });
 });
