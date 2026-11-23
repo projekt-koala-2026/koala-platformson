@@ -30,6 +30,18 @@ namespace koala.src.Shared
             }
             return true;
         }
+        public static bool IsRoleOrganizationRodoModerator(ClaimsPrincipal? claimsPrincipal)
+        {
+            if (!IsAuthenticated(claimsPrincipal))
+            {
+                return false;
+            }
+            if (!claimsPrincipal.IsInRole(RoleNames.NAME_ORGANIZATION_RODO_MODERATOR))
+            {
+                return false;
+            }
+            return true;
+        }
         public static bool IsRoleOrganizationEditor(ClaimsPrincipal? claimsPrincipal)
         {
             if (!IsAuthenticated(claimsPrincipal))

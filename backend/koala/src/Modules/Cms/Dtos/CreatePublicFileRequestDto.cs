@@ -6,6 +6,7 @@ namespace koala.src.Modules.Cms.Dtos
     public record CreatePublicFileRequestDto
     (
         string Name,
+        string? Description,
         IFormFile File
     );
 
@@ -15,6 +16,18 @@ namespace koala.src.Modules.Cms.Dtos
 
         public CreatePublicFileRequestDtoValidator()
         {
+            RuleFor(x => x.Name)
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.PublicFileNameEmpty)
+                .WithMessage("Name field cannot be empty!");
+
+            RuleFor(x => x.Description)
+                .Cascade(CascadeMode.Stop)
+                .NotEmpty()
+                .WithErrorCode(KoalaValidationErrorCodes.PublicFileDescriptionEmpty)
+                .WithMessage("Description field cannot be empty when not null!")
+                .When(x => x.Description != null);
+
             RuleFor(x => x.File)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty()

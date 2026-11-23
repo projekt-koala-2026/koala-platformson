@@ -4,9 +4,11 @@ namespace koala.src.Modules.Cms.Dtos
     (
         Guid Id,
         string Name,
+        string? Description,
         string Path,
         string Type,
         DateTime CreatedAt,
+        DateTime UpdatedAt,
         int Version
     );
 }

@@ -85,7 +85,7 @@ namespace koala.src.Shared
         public const string KoalicjantAlreadyExists = "KOALA_KOALICJANT_ALREADY_EXISTS";
         public const string SponsorNotFound = "KOALA_SPONSOR_NOT_FOUND";
         public const string PostNotFound = "KOALA_POST_NOT_FOUND";
-
+        public const string PublicFileNotFound = "KOALA_PUBLIC_FILE_NOT_FOUND";
         // ==========================================
         // CORE MODULE
         // ==========================================
@@ -187,6 +187,8 @@ namespace koala.src.Shared
         public const string SponsorNameEmpty = "KOALA_VALIDATION_SPONSOR_NAME_EMPTY";
         public const string SponsorNameTooLong = "KOALA_VALIDATION_SPONSOR_NAME_TOO_LONG";
         public const string SponsorNameInvalidCharacter = "KOALA_VALIDATION_SPONSOR_NAME_INVALID_CHARACTER";
+        public const string PublicFileDescriptionEmpty = "KOALA_VALIDATION_PUBLIC_FILE_DESCRIPTION_EMPTY";
+        public const string PublicFileNameEmpty = "KOALA_VALIDATION_PUBLIC_FILE_NAME_EMPTY";
     }
 
     public class KoalaProblems : ProblemDetails

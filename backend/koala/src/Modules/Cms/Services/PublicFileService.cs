@@ -10,7 +10,9 @@ namespace koala.src.Modules.Cms.Services
     public interface IPublicFileOperations
     {
         void CreateDirectory(string path);
-        Task WriteAsync(string path, Microsoft.AspNetCore.Http.IFormFile file);
+        void Move(string source_path, string destination_path, bool overwrite);
+        Task WriteAsync(string path, IFormFile file, bool overwrite);
+        Task<byte[]> ReadAllBytesAsync(string path);
         bool Exists(string path);
         void Delete(string path);
     }
@@ -19,14 +21,16 @@ namespace koala.src.Modules.Cms.Services
     {
         public void CreateDirectory(string path) => Directory.CreateDirectory(path);
 
-        public async Task WriteAsync(string path, Microsoft.AspNetCore.Http.IFormFile file)
+        public async Task WriteAsync(string path, IFormFile file, bool overwrite)
         {
-            await using var stream = new FileStream(path, FileMode.CreateNew);
+            await using var stream = new FileStream(path, overwrite ? FileMode.Create : FileMode.CreateNew);
             await file.CopyToAsync(stream);
         }
 
+        public Task<byte[]> ReadAllBytesAsync(string path) => File.ReadAllBytesAsync(path);
         public bool Exists(string path) => File.Exists(path);
         public void Delete(string path) => File.Delete(path);
+        public void Move(string source_path, string destination_path, bool overwrite) => File.Move(source_path, destination_path, overwrite);
     }
 
     public class PublicFileService
@@ -37,6 +41,21 @@ namespace koala.src.Modules.Cms.Services
         public PublicFileService(CmsDbContext db, string publicFilesPath)
             : this(db, publicFilesPath, new PhysicalPublicFileOperations())
         {
+        }
+
+        private void TryDeletePhysicalFile(string path)
+        {
+            try
+            {
+                if (_fileOperations.Exists(path))
+                {
+                    _fileOperations.Delete(path);
+                }
+            }
+            catch
+            {
+                // Preserve the original database error if best-effort file cleanup also fails.
+            }
         }
 
         public PublicFileService(CmsDbContext db, string publicFilesPath, IPublicFileOperations fileOperations)
@@ -76,7 +95,7 @@ namespace koala.src.Modules.Cms.Services
             var physicalPath = Path.Combine(_publicFilesPath, path);
             try
             {
-                await _fileOperations.WriteAsync(physicalPath, createPublicFileRequestDto.File);
+                await _fileOperations.WriteAsync(physicalPath, createPublicFileRequestDto.File, overwrite: true);
             }
             catch
             {
@@ -89,6 +108,7 @@ namespace koala.src.Modules.Cms.Services
                 DateTime timeNow = DateTime.UtcNow;
                 publicFile.Id = id;
                 publicFile.Name = createPublicFileRequestDto.Name;
+                publicFile.Description = createPublicFileRequestDto.Description; 
                 publicFile.Path = path;
                 publicFile.Type = extension;
                 publicFile.CreatedAt = timeNow;
@@ -108,7 +128,151 @@ namespace koala.src.Modules.Cms.Services
                 throw new KoalaException(KoalaErrorCodes.DatabaseError, "Error saving public file record to database");
             }
 
-            return new PublicFileDto(publicFile.Id, publicFile.Name, publicFile.Path, publicFile.Type, publicFile.CreatedAt, publicFile.Version);
+            return new PublicFileDto(publicFile.Id, publicFile.Name, publicFile.Description, publicFile.Path, publicFile.Type, publicFile.CreatedAt, publicFile.UpdatedAt, publicFile.Version);
+        }
+
+        public async Task<PublicFileDto> UpdateFileMetaDataAsync(ClaimsPrincipal? claimsPrincipal, Guid file_id, UpdatePublicFileRequestDto requestDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
+
+            if (!isOrganizationAdmin && !isOrganizationEditor)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+            }
+
+            var file = await _db.PublicFiles.FirstOrDefaultAsync(pf => pf.Id == file_id);
+
+            if(file == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.PublicFileNotFound, "Public file does not exist");
+            }
+
+            file.Name = requestDto.Name;
+            file.Description = requestDto.Description;
+            file.UpdatedAt = DateTime.UtcNow;
+            file.Version++;
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }catch
+            {
+                
+            }
+
+            return new PublicFileDto
+                (
+                    file.Id,
+                    file.Name,
+                    file.Description,
+                    file.Path,
+                    file.Type,
+                    file.CreatedAt,
+                    file.UpdatedAt,
+                    file.Version
+                );
+        }
+
+        public async Task<PublicFileDto> UpdateFileAsync(ClaimsPrincipal? claimsPrincipal, Guid file_id, CreatePublicFileRequestDto requestDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationEditor = ClaimsHelper.IsRoleOrganizationEditor(claimsPrincipal);
+
+            if (!isOrganizationAdmin && !isOrganizationEditor)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation.");
+            }
+
+            try
+            {
+                _fileOperations.CreateDirectory(_publicFilesPath);
+            }
+            catch
+            {
+                throw new KoalaException(KoalaErrorCodes.FolderCreationFailure, "Error when creating a folder holding public files");
+            }
+
+            var file = await _db.PublicFiles.FirstOrDefaultAsync(pf => pf.Id == file_id);
+
+            if(file == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.PublicFileNotFound, "Public file does not exist");
+            }
+
+            var temp_id = Guid.CreateVersion7();
+            var id = file.Id;
+            var oldExtension = file.Type;
+            var newExtension = Path.GetExtension(requestDto.File.FileName);
+
+            var oldPhysicalPath = Path.Combine(_publicFilesPath, $"{id}{oldExtension}");
+            var newPath = $"{id}{newExtension}";
+            var newPhysicalPath = Path.Combine(_publicFilesPath, $"{id}{newExtension}");
+            var tempPhysicalPath = Path.Combine(_publicFilesPath, $"{id}_{temp_id}.tmp");
+
+            try
+            {
+                await _fileOperations.WriteAsync(tempPhysicalPath, requestDto.File, overwrite: true);
+            }
+            catch
+            {
+                TryDeletePhysicalFile(tempPhysicalPath);
+                throw new KoalaException(KoalaErrorCodes.FileCreationFailure, "Error creating a private file");
+            }
+
+            try
+            {
+                DateTime timeNow = DateTime.UtcNow;
+                file.Name = requestDto.Name;
+                file.Description = requestDto.Description;
+                file.Path = newPath;
+                file.Type = newExtension;
+                file.UpdatedAt = timeNow;
+                file.Version++;
+
+                await _db.SaveChangesAsync();
+            }
+            catch
+            {
+                TryDeletePhysicalFile(tempPhysicalPath);
+                throw new KoalaException(KoalaErrorCodes.DatabaseError, "Error saving private file record to database");
+            }
+
+            try
+            {
+                _fileOperations.Move(tempPhysicalPath, newPhysicalPath, overwrite: true);
+            }
+            catch
+            {
+                throw new KoalaException(KoalaErrorCodes.FileCreationFailure, "Error finalizing private file update");
+            }
+
+            if (!string.Equals(oldExtension, newExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                TryDeletePhysicalFile(oldPhysicalPath);
+            }
+
+            return new PublicFileDto
+                (
+                    file.Id,
+                    file.Name,
+                    file.Description,
+                    file.Path,
+                    file.Type,
+                    file.CreatedAt,
+                    file.UpdatedAt,
+                    file.Version
+                );
         }
 
         public async Task DeleteFileAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
@@ -183,9 +347,11 @@ namespace koala.src.Modules.Cms.Services
                 (
                     pf.Id,
                     pf.Name,
+                    pf.Description,
                     pf.Path,
                     pf.Type,
                     pf.CreatedAt,
+                    pf.UpdatedAt,
                     pf.Version
                 ))
                 .ToList();

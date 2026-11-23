@@ -402,17 +402,17 @@ namespace koala.src.Modules.Account.Services
             }
 
             bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-            if (!isTeamAdmin && !isOrganizationAdmin)
+            if (!isTeamAdmin && !isOrganizationRodoModerator)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
-            if (!isUserTeamAdmin && !isOrganizationAdmin)
+            if (!isUserTeamAdmin && !isOrganizationRodoModerator)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
@@ -453,17 +453,17 @@ namespace koala.src.Modules.Account.Services
             }
 
             bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-            if (!isTeamAdmin && !isOrganizationAdmin)
+            if (!isTeamAdmin && !isOrganizationRodoModerator)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
-            if (!isUserTeamAdmin && !isOrganizationAdmin)
+            if (!isUserTeamAdmin && !isOrganizationRodoModerator)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
@@ -491,17 +491,17 @@ namespace koala.src.Modules.Account.Services
             }
 
             bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-            if (!isTeamAdmin && !isOrganizationAdmin)
+            if (!isTeamAdmin && !isOrganizationRodoModerator)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
-            if (!isUserTeamAdmin && !isOrganizationAdmin)
+            if (!isUserTeamAdmin && !isOrganizationRodoModerator)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
             }
@@ -543,9 +543,9 @@ namespace koala.src.Modules.Account.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
 
-            if (!isOrganizationAdmin)
+            if (!isOrganizationRodoModerator)
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
             }

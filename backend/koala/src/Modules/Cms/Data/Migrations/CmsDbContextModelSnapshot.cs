@@ -63,9 +63,9 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer")
-                        .HasColumnName("version")
-                        .IsConcurrencyToken();
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 
@@ -106,9 +106,9 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer")
-                        .HasColumnName("version")
-                        .IsConcurrencyToken();
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 
@@ -125,6 +125,10 @@ namespace koala.src.Modules.Cms.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -146,6 +150,7 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer")
                         .HasColumnName("version");
 
@@ -184,9 +189,9 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer")
-                        .HasColumnName("version")
-                        .IsConcurrencyToken();
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 
@@ -215,9 +220,9 @@ namespace koala.src.Modules.Cms.Data.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
+                        .IsConcurrencyToken()
                         .HasColumnType("integer")
-                        .HasColumnName("version")
-                        .IsConcurrencyToken();
+                        .HasColumnName("version");
 
                     b.HasKey("Id");
 
