@@ -30,6 +30,25 @@ const SCHOOL_TYPES = [
     "Technikum uzupełniające dla absolwentów zasadniczych szkół zawodowych",
 ] as const;
 
+const POLISH_VOIVODESHIPS = [
+    "Dolnośląskie",
+    "Kujawsko-pomorskie",
+    "Lubelskie",
+    "Lubuskie",
+    "Łódzkie",
+    "Małopolskie",
+    "Mazowieckie",
+    "Opolskie",
+    "Podkarpackie",
+    "Podlaskie",
+    "Pomorskie",
+    "Śląskie",
+    "Świętokrzyskie",
+    "Warmińsko-mazurskie",
+    "Wielkopolskie",
+    "Zachodniopomorskie",
+] as const;
+
 interface SchoolForm {
     rspo: string;
     name: string;
@@ -92,36 +111,6 @@ const SchoolFields = ({ value, disabled, onChange }: SchoolFieldsProps) => (
             />
         </label>
         <label className="text-sm font-medium text-ink sm:col-span-2">
-            Pełna nazwa *
-            <input
-                value={value.name}
-                onChange={(event) => onChange("name", event.target.value)}
-                className={inputClass}
-                disabled={disabled}
-                required
-            />
-        </label>
-        <label className="text-sm font-medium text-ink">
-            Województwo *
-            <input
-                value={value.state}
-                onChange={(event) => onChange("state", event.target.value)}
-                className={inputClass}
-                disabled={disabled}
-                required
-            />
-        </label>
-        <label className="text-sm font-medium text-ink">
-            Miejscowość *
-            <input
-                value={value.city}
-                onChange={(event) => onChange("city", event.target.value)}
-                className={inputClass}
-                disabled={disabled}
-                required
-            />
-        </label>
-        <label className="text-sm font-medium text-ink sm:col-span-2">
             Typ placówki *
             <select
                 value={value.type}
@@ -139,6 +128,45 @@ const SchoolFields = ({ value, disabled, onChange }: SchoolFieldsProps) => (
                     </option>
                 ))}
             </select>
+        </label>
+        <label className="text-sm font-medium text-ink sm:col-span-2">
+            Pełna nazwa *
+            <input
+                value={value.name}
+                onChange={(event) => onChange("name", event.target.value)}
+                className={inputClass}
+                disabled={disabled}
+                required
+            />
+        </label>
+        <label className="text-sm font-medium text-ink">
+            Województwo *
+            <select
+                value={value.state}
+                onChange={(event) => onChange("state", event.target.value)}
+                className={`app-select ${inputClass}`}
+                disabled={disabled}
+                required
+            >
+                <option value="" disabled>
+                    Wybierz województwo
+                </option>
+                {POLISH_VOIVODESHIPS.map((voivodeship) => (
+                    <option key={voivodeship} value={voivodeship}>
+                        {voivodeship}
+                    </option>
+                ))}
+            </select>
+        </label>
+        <label className="text-sm font-medium text-ink">
+            Miejscowość *
+            <input
+                value={value.city}
+                onChange={(event) => onChange("city", event.target.value)}
+                className={inputClass}
+                disabled={disabled}
+                required
+            />
         </label>
         <label className="text-sm font-medium text-ink">
             Ulica *

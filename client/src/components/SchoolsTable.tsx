@@ -8,9 +8,9 @@ const columns = [
     { key: "rspo", label: "RSPO", width: "w-28" },
     { key: "name", label: "Pełna nazwa szkoły", width: "min-w-72" },
     { key: "nameShort", label: "Nazwa skrócona", width: "min-w-48" },
+    { key: "type", label: "Typ placówki", width: "min-w-44" },
     { key: "state", label: "Województwo", width: "min-w-40" },
     { key: "city", label: "Miejscowość", width: "min-w-40" },
-    { key: "type", label: "Typ placówki", width: "min-w-44" },
     { key: "addres", label: "Adres", width: "min-w-56" },
 ] as const;
 
@@ -21,9 +21,9 @@ const emptyFilters: SchoolFilters = {
     rspo: "",
     name: "",
     nameShort: "",
+    type: "",
     state: "",
     city: "",
-    type: "",
     addres: "",
 };
 
@@ -196,13 +196,13 @@ const SchoolsTable = ({
                                             {school.nameShort || "—"}
                                         </td>
                                         <td className="px-3 py-3 text-ink-secondary">
+                                            {school.type}
+                                        </td>
+                                        <td className="px-3 py-3 text-ink-secondary">
                                             {school.state}
                                         </td>
                                         <td className="px-3 py-3 text-ink-secondary">
                                             {school.city}
-                                        </td>
-                                        <td className="px-3 py-3 text-ink-secondary">
-                                            {school.type}
                                         </td>
                                         <td className="px-3 py-3 text-ink-secondary">
                                             {school.addres}
