@@ -4,7 +4,14 @@ import { useLocation } from "react-router-dom";
 import type { NavigationLink } from "../types/ui";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
-import { clearStoredSession, isAdmin, isEditor, isReviewer } from "../utils/authService";
+import {
+    clearStoredSession,
+    getOrganizationHomePath,
+    isAdmin,
+    isEditor,
+    isReviewer,
+    isRodoModerator,
+} from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
@@ -36,7 +43,6 @@ const administratorLinks: NavigationLink[] = [
     ...editorLinks,
     { label: "Szkoły", path: "/admin/schools", separatorBefore: true },
     { label: "Drużyny", path: "/admin/teams" },
-    { label: "RODO", path: "/admin/rodos" },
 ];
 
 // Top header order, independent of the sidebar. Only links permitted for the role appear.
@@ -59,11 +65,18 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
     const isAdminUser = useMemo(() => isAdmin(), []);
     const isEditorUser = useMemo(() => isEditor(), []);
     const isReviewerUser = useMemo(() => isReviewer(), []);
-    const homePath = isAdminUser ? "/admin" : isEditorUser ? "/admin/posts" : "/admin/reviews";
+    const isModeratorUser = useMemo(() => isRodoModerator(), []);
+    const homePath = getOrganizationHomePath();
     const links = [
         ...(isAdminUser ? administratorLinks : isEditorUser ? editorLinks : []),
         ...(isReviewerUser ? [{ label: "Moje recenzje", path: "/admin/reviews" }] : []),
-    ];
+        ...(isModeratorUser
+            ? [
+                  { label: "Drużyny", path: "/admin/teams" },
+                  { label: "RODO", path: "/admin/rodos" },
+              ]
+            : []),
+    ].filter((link, index, links) => links.findIndex((item) => item.path === link.path) === index);
     const desktopLinks = desktopPaths.flatMap((path) => links.filter((link) => link.path === path));
 
     const logout = async () => {

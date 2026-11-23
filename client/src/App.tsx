@@ -40,6 +40,8 @@ const RuleScreen = lazy(() => import("./screens/public/RuleScreen"));
 const PublicRankingsScreen = lazy(() => import("./screens/public/RankingsPublicScreen"));
 
 const adminOnly: Role[] = ["ORGANIZATION_ADMIN"];
+const teamViewers: Role[] = ["ORGANIZATION_ADMIN", "ORGANIZATION_RODO_MODERATOR"];
+const rodoModerators: Role[] = ["ORGANIZATION_RODO_MODERATOR"];
 const reviewersOnly: Role[] = ["ORGANIZATION_REVIEWER"];
 const contentEditors: Role[] = ["ORGANIZATION_ADMIN", "ORGANIZATION_EDITOR"];
 const teamMembers: Role[] = ["TEAM_CAPTAIN", "TEAM_GUARDIAN"];
@@ -234,7 +236,10 @@ export default function App() {
                         <Route
                             path="/admin/teams"
                             element={
-                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                <ProtectedRoute
+                                    allowedRoles={teamViewers}
+                                    redirectTo="/admin/login"
+                                >
                                     <AdminTeamsScreen />
                                 </ProtectedRoute>
                             }
@@ -242,7 +247,10 @@ export default function App() {
                         <Route
                             path="/admin/rodos"
                             element={
-                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                <ProtectedRoute
+                                    allowedRoles={rodoModerators}
+                                    redirectTo="/admin/login"
+                                >
                                     <AdminRodoScreen />
                                 </ProtectedRoute>
                             }

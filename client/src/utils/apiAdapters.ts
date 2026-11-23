@@ -110,6 +110,10 @@ export const adaptSponsor = (sponsor: ApiSponsor): Sponsor => {
             undefined,
         description: stringField(content.body_pl) || stringField(content.description) || undefined,
         isVisible: sponsor.isVisible,
+        type:
+            content.sponsor_type === "organizer" || content.sponsor_type === "patron"
+                ? content.sponsor_type
+                : "sponsor",
     };
 };
 

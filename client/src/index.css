@@ -178,6 +178,29 @@
     .app-admin-page {
         @apply max-w-7xl lg:px-8;
     }
+    .app-footer-logos {
+        scrollbar-color: rgb(var(--color-ink-muted) / 0.5) transparent;
+        scrollbar-width: thin;
+    }
+    .app-footer-logos::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    .app-footer-logos::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .app-footer-logos::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgb(var(--color-ink-muted) / 0.5);
+    }
+    .app-footer-logos::-webkit-scrollbar-thumb:hover {
+        background: rgb(var(--color-ink-muted) / 0.8);
+    }
+    .app-footer-logos::-webkit-scrollbar-button {
+        display: none;
+        width: 0;
+        height: 0;
+    }
     .app-select {
         @apply appearance-none bg-no-repeat pr-10;
         background-image:

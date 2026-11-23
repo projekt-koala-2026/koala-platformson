@@ -49,7 +49,7 @@ const AdminLoginScreen = () => {
             }
 
             const roles = rolesToFlags(data.roles);
-            if (!roles.isAdmin && !roles.isEditor && !roles.isReviewer) {
+            if (!roles.isAdmin && !roles.isEditor && !roles.isReviewer && !roles.isRodoModerator) {
                 await apiRequestResult<boolean>(LOGIN_ENDPOINT, null, "DELETE", navigate);
                 clearStoredSession();
                 setError("To konto nie ma dostępu do panelu administracyjnego.");
@@ -75,7 +75,7 @@ const AdminLoginScreen = () => {
                 </p>
                 <h1 className="mt-2 text-2xl font-bold text-ink-heading">Zaloguj się</h1>
                 <p className="mt-2 text-sm text-ink-muted">
-                    Użyj konta administratora, edytora lub recenzenta.
+                    Użyj konta administratora, edytora, recenzenta lub moderatora RODO.
                 </p>
 
                 {error && (

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
-import type { ApiEdition, ApiSchool, ApiTeam } from "../../types/models";
+import type { ApiAdminTeam, ApiEdition, ApiSchool, ApiTeam } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult } from "../../utils/apiFetcher";
+import { isRodoModerator } from "../../utils/authService";
 
 const AdminTeamsScreen = () => {
     const navigate = useNavigate();
-    const [teams, setTeams] = useState<ApiTeam[]>([]);
+    const canViewMembers = useMemo(() => isRodoModerator(), []);
+    const [teams, setTeams] = useState<(ApiAdminTeam | ApiTeam)[]>([]);
     const [schoolNames, setSchoolNames] = useState<Record<string, string>>({});
     const [editionNames, setEditionNames] = useState<Record<string, string>>({});
     const [query, setQuery] = useState("");
@@ -18,8 +20,8 @@ const AdminTeamsScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiListRequestResult<ApiTeam>(
-                `${apiEndpoints.teams}?${firstPage}`,
+            apiListRequestResult<ApiAdminTeam | ApiTeam>(
+                `${canViewMembers ? apiEndpoints.teams : apiEndpoints.adminTeams}?${firstPage}`,
                 null,
                 "GET",
                 navigate
@@ -56,7 +58,7 @@ const AdminTeamsScreen = () => {
         return () => {
             active = false;
         };
-    }, [navigate]);
+    }, [navigate, canViewMembers]);
 
     const visibleTeams = useMemo(() => {
         const normalized = query.trim().toLocaleLowerCase("pl-PL");
@@ -68,7 +70,9 @@ const AdminTeamsScreen = () => {
                 editionNames[team.editionId],
                 team.schoolId,
                 team.editionId,
-                ...team.teamMembers.map((member) => member.teamMemberId),
+                ...("teamMembers" in team
+                    ? team.teamMembers.map((member) => member.teamMemberId)
+                    : []),
             ]
                 .join(" ")
                 .toLocaleLowerCase("pl-PL")
@@ -88,9 +92,9 @@ const AdminTeamsScreen = () => {
                         Zarejestrowane drużyny
                     </h1>
                     <p className="mt-3 text-ink-secondary">
-                        Lista korzysta z nowego modelu członkostwa. Edycja, zatwierdzanie i
-                        administracyjne usuwanie pozostają niedostępne do czasu dodania endpointów
-                        backendu.
+                        Przeglądaj drużyny, szkoły i edycje konkursu. Dane członków są dostępne
+                        wyłącznie dla moderatora RODO. Cenzurowanie nazw drużyn nie jest jeszcze
+                        dostępne.
                     </p>
                 </header>
 
@@ -136,8 +140,12 @@ const AdminTeamsScreen = () => {
                                 <thead className="bg-surface-muted text-ink">
                                     <tr>
                                         <th className="px-4 py-3">Nazwa</th>
-                                        <th className="px-4 py-3">Status</th>
-                                        <th className="px-4 py-3">Członkowie</th>
+                                        {canViewMembers && (
+                                            <th className="px-4 py-3">Nazwa drużyny</th>
+                                        )}
+                                        {canViewMembers && (
+                                            <th className="px-4 py-3">Członkowie</th>
+                                        )}
                                         <th className="px-4 py-3">Szkoła</th>
                                         <th className="px-4 py-3">Edycja</th>
                                         <th className="px-4 py-3">Utworzono</th>
@@ -149,16 +157,24 @@ const AdminTeamsScreen = () => {
                                             <td className="px-4 py-4 font-semibold text-ink-heading">
                                                 {team.name}
                                             </td>
-                                            <td className="px-4 py-4">
-                                                <span
-                                                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${team.isCensored ? "bg-warning-muted text-warning-text" : "bg-brand-muted text-brand-text-strong"}`}
-                                                >
-                                                    {team.isCensored ? "oczekuje" : "zaakceptowana"}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-4 text-ink-secondary">
-                                                {team.teamMembers.length}
-                                            </td>
+                                            {canViewMembers && (
+                                                <td className="px-4 py-4">
+                                                    <span
+                                                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${team.isCensored ? "bg-warning-muted text-warning-text" : "bg-brand-muted text-brand-text-strong"}`}
+                                                    >
+                                                        {team.isCensored
+                                                            ? "do weryfikacji"
+                                                            : "zaakceptowana"}
+                                                    </span>
+                                                </td>
+                                            )}
+                                            {canViewMembers && (
+                                                <td className="px-4 py-4 text-ink-secondary">
+                                                    {"teamMembers" in team
+                                                        ? team.teamMembers.length
+                                                        : "—"}
+                                                </td>
+                                            )}
                                             <td className="px-4 py-4 text-ink-secondary">
                                                 {schoolNames[team.schoolId] ?? "Nieznana szkoła"}
                                             </td>

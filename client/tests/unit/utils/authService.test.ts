@@ -16,6 +16,7 @@ const noRoles: UserRoles = {
     isAdmin: false,
     isEditor: false,
     isReviewer: false,
+    isRodoModerator: false,
     isGuardian: false,
     isCaptain: false,
 };
@@ -39,6 +40,7 @@ describe("authService", () => {
                 "ORGANIZATION_ADMIN",
                 "ORGANIZATION_EDITOR",
                 "ORGANIZATION_REVIEWER",
+                "ORGANIZATION_RODO_MODERATOR",
                 "TEAM_GUARDIAN",
                 "TEAM_CAPTAIN",
             ])
@@ -46,6 +48,7 @@ describe("authService", () => {
             isAdmin: true,
             isEditor: true,
             isReviewer: true,
+            isRodoModerator: true,
             isGuardian: true,
             isCaptain: true,
         });
@@ -73,6 +76,9 @@ describe("authService", () => {
         expect(getAuthenticatedHomePath({ ...noRoles, isAdmin: true })).toBe("/admin");
         expect(getAuthenticatedHomePath({ ...noRoles, isEditor: true })).toBe("/admin/posts");
         expect(getAuthenticatedHomePath({ ...noRoles, isReviewer: true })).toBe("/admin/reviews");
+        expect(getAuthenticatedHomePath({ ...noRoles, isRodoModerator: true })).toBe(
+            "/admin/rodos"
+        );
         expect(getAuthenticatedHomePath({ ...noRoles, isGuardian: true })).toBe("/captain");
         expect(getAuthenticatedHomePath(noRoles)).toBeNull();
     });
