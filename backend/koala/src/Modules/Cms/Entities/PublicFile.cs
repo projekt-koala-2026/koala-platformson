@@ -8,6 +8,8 @@ namespace koala.src.Modules.Cms.Entities
         public Guid Id { get; set; }
         [Column("name")]
         public string Name { get; set; }
+        [Column("description")]
+        public string? Description { get; set; }
         [Column("path")]
         public string Path { get; set; }
         [Column("type")]

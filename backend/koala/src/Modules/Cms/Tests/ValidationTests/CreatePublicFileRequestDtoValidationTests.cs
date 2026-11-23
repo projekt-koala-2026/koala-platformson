@@ -22,7 +22,7 @@ public class CreatePublicFileRequestDtoValidationTests
         };
     }
 
-    private static CreatePublicFileRequestDto Model(IFormFile? file = null) => new("Public resource", file ?? FormFile());
+    private static CreatePublicFileRequestDto Model(IFormFile? file = null, string? description = null) => new("Public resource", description, file ?? FormFile());
 
     [Fact]
     public void AcceptsValidTextFile() => ValidationAssertions.IsValid(Validator, Model());
@@ -56,9 +56,23 @@ public class CreatePublicFileRequestDtoValidationTests
     [Fact]
     public void RejectsNullFileWithFileEmptyCode()
     {
-        ValidationAssertions.HasError(Validator, new CreatePublicFileRequestDto("Public resource", null!),
+        ValidationAssertions.HasError(Validator, new CreatePublicFileRequestDto("Public resource", null, null!),
             KoalaValidationErrorCodes.FileEmpty, "File cannot be empty!");
     }
+
+    [Fact]
+    public void AcceptsMissingOrNonEmptyDescription()
+    {
+        ValidationAssertions.IsValid(Validator, Model());
+        ValidationAssertions.IsValid(Validator, Model(description: "Reference material"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void RejectsEmptyProvidedDescription(string description) =>
+        ValidationAssertions.HasError(Validator, Model(description: description),
+            KoalaValidationErrorCodes.PublicFileDescriptionEmpty, "Description field cannot be empty when not null!");
 
     [Fact]
     public void RejectsZeroLengthFileWithFileEmptyCode()
