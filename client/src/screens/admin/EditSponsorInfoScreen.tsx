@@ -123,14 +123,15 @@ const EditSponsorInfo = () => {
             });
             return;
         }
-        if (!isHttpUrl(normalized.websiteUrl)) {
+        const editing = modal !== "create";
+        if ((editing || normalized.websiteUrl) && !isHttpUrl(normalized.websiteUrl)) {
             setFeedback({
                 tone: "error",
                 message: "Adres strony musi być poprawnym URL-em HTTP lub HTTPS.",
             });
             return;
         }
-        if (!isHttpUrl(normalized.logoUrl)) {
+        if ((editing || normalized.logoUrl) && !isHttpUrl(normalized.logoUrl)) {
             setFeedback({
                 tone: "error",
                 message: "Adres logo musi być poprawnym URL-em HTTP lub HTTPS.",
@@ -145,8 +146,8 @@ const EditSponsorInfo = () => {
             name: normalized.name,
             contentJson: JSON.stringify({
                 version: "1",
-                sponsor_web_url: normalized.websiteUrl,
-                sponsor_logo_image_url: normalized.logoUrl,
+                sponsor_web_url: normalized.websiteUrl || null,
+                sponsor_logo_image_url: normalized.logoUrl || null,
                 sponsor_type: normalized.type,
                 body_pl: normalized.description,
             }),
@@ -289,15 +290,19 @@ const EditSponsorInfo = () => {
                                         >
                                             {sponsor.isVisible ? "Widoczny" : "Ukryty"}
                                         </span>
-                                        <a
-                                            href={sponsor.websiteUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-sm font-medium text-brand-text hover:underline"
-                                        >
-                                            <span className="truncate">{sponsor.websiteUrl}</span>
-                                            <FaExternalLinkAlt className="shrink-0 text-xs" />
-                                        </a>
+                                        {sponsor.websiteUrl && (
+                                            <a
+                                                href={sponsor.websiteUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-sm font-medium text-brand-text hover:underline"
+                                            >
+                                                <span className="truncate">
+                                                    {sponsor.websiteUrl}
+                                                </span>
+                                                <FaExternalLinkAlt className="shrink-0 text-xs" />
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                                 <p className="mt-4 flex-1 text-sm leading-6 text-ink-secondary">
@@ -367,7 +372,7 @@ const EditSponsorInfo = () => {
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
-                        Adres strony *
+                        Adres strony{modal !== "create" ? " *" : " (opcjonalnie)"}
                         <input
                             type="url"
                             value={form.websiteUrl}
@@ -376,11 +381,11 @@ const EditSponsorInfo = () => {
                             }
                             className={inputClass}
                             placeholder="https://…"
-                            required
+                            required={modal !== "create"}
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
-                        Adres logo *
+                        Adres logo{modal !== "create" ? " *" : " (opcjonalnie)"}
                         <input
                             type="url"
                             value={form.logoUrl}
@@ -389,9 +394,14 @@ const EditSponsorInfo = () => {
                             }
                             className={inputClass}
                             placeholder="https://…"
-                            required
+                            required={modal !== "create"}
                         />
                     </label>
+                    <p className="text-xs text-ink-muted">
+                        {modal === "create"
+                            ? "Bez logo wyświetlimy nazwę. Bez adresu strony wpis nie będzie odnośnikiem."
+                            : "Przy edycji adres strony i logo są wymagane."}
+                    </p>
                     {form.logoUrl && isHttpUrl(form.logoUrl) && (
                         <div className="grid min-h-28 place-items-center rounded-xl border border-line bg-canvas p-4">
                             <img

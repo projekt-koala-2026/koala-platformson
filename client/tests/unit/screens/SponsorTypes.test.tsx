@@ -80,3 +80,56 @@ it("wczytuje i zapisuje zmianę typu w formularzu edycji", async () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByText("Patron")).toBeInTheDocument();
 });
+
+it("tworzy wpis bez opcjonalnego adresu strony i logo, wysyłając jawne null", async () => {
+    let payload: Record<string, unknown> | undefined;
+    server.use(
+        http.get(`${apiUrl}${apiEndpoints.sponsors}`, () => HttpResponse.json({ data: [] })),
+        http.post(`${apiUrl}${apiEndpoints.sponsors}`, async ({ request }) => {
+            payload = (await request.json()) as Record<string, unknown>;
+            return HttpResponse.json(
+                { data: { id: "new", ...payload, version: 1 } },
+                { status: 201 }
+            );
+        })
+    );
+    const { user } = renderWithRouter(<EditSponsorInfo />);
+    await user.click(await screen.findByRole("button", { name: "Dodaj sponsora" }));
+    await user.type(screen.getByRole("textbox", { name: "Nazwa *" }), "Nowy sponsor");
+    await user.type(screen.getByRole("textbox", { name: "Opis" }), "Opis testowy");
+    expect(screen.getByRole("textbox", { name: "Adres strony (opcjonalnie)" })).not.toBeRequired();
+    expect(screen.getByRole("textbox", { name: "Adres logo (opcjonalnie)" })).not.toBeRequired();
+    await user.click(screen.getByRole("button", { name: "Zapisz" }));
+    await waitFor(() => expect(payload).toBeDefined());
+    expect(JSON.parse(payload!.contentJson as string)).toMatchObject({
+        sponsor_web_url: null,
+        sponsor_logo_image_url: null,
+        sponsor_type: "sponsor",
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+});
+
+it("brak strony i logo wyświetla jako nazwę bez pustego odnośnika", async () => {
+    server.use(
+        http.get(`${apiUrl}${apiEndpoints.sponsors}`, () =>
+            HttpResponse.json({
+                data: [
+                    {
+                        ...sponsor("Bez strony"),
+                        contentJson: JSON.stringify({
+                            version: "1",
+                            sponsor_type: "sponsor",
+                            sponsor_web_url: null,
+                            sponsor_logo_image_url: null,
+                            body_pl: "Opis",
+                        }),
+                    },
+                ],
+            })
+        )
+    );
+    renderWithRouter(<PublicFooter />);
+    expect(await screen.findByText("Firma Bez strony")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+});
