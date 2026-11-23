@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+import { FaEdit, FaSave, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
@@ -399,12 +399,6 @@ const EditPostScreen = () => {
                                         Pola oznaczone gwiazdką są wymagane.
                                     </p>
                                 </div>
-                                <Button
-                                    text={saving ? "Zapisywanie…" : "Utwórz wpis"}
-                                    icon={<FaPlus />}
-                                    onClick={() => void savePost(form.markdownBody)}
-                                    disabled={saving}
-                                />
                             </div>
 
                             <div className="space-y-5">
@@ -466,9 +460,17 @@ const EditPostScreen = () => {
                                     </span>
                                 </label>
                                 <div>
-                                    <span className="mb-2 block text-sm font-medium text-ink">
-                                        Treść *
-                                    </span>
+                                    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                                        <span className="mb-2 block text-sm font-medium text-ink">
+                                            Treść *
+                                        </span>
+                                        <Button
+                                            text={saving ? "Zapisywanie…" : "Zapisz zmiany"}
+                                            icon={<FaSave />}
+                                            onClick={() => void savePost(form.markdownBody)}
+                                            disabled={saving}
+                                        />
+                                    </div>
                                     <MarkdownEditor
                                         key={`${editingPostId ?? "new"}-${editorRevision}`}
                                         initialValue={form.markdownBody}
