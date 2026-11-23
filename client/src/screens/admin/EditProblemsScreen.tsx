@@ -43,6 +43,7 @@ const EditProblemsScreen = () => {
     const [allProblemsData, setAllProblemsData] = useState<ProblemsByEdition>({});
     const [taskPage, setTaskPage] = useState<ApiStaticPage | null>(null);
     const [subpointInputValue, setSubpointInputValue] = useState("");
+    const [descriptionInputValue, setDescriptionInputValue] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
@@ -251,9 +252,9 @@ const EditProblemsScreen = () => {
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Materiały konkursowe
                     </p>
-                    <h1 className="mt-1 text-3xl font-bold tracking-tight">Pliki archiwalne</h1>
+                    <h1 className="mt-1 text-3xl font-bold tracking-tight">Poprzednie zadania</h1>
                     <p className="mt-2 max-w-3xl text-sm text-ink-secondary">
-                        Porządkuj pliki w sekcje osobno dla każdej edycji konkursu.
+                        Porządkuj pliki dla każdej edycji konkursu.
                     </p>
                 </div>
 
@@ -280,7 +281,7 @@ const EditProblemsScreen = () => {
                     <div className="space-y-6">
                         <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:flex sm:items-end sm:justify-between sm:gap-6 sm:p-6">
                             <label className="flex min-w-0 flex-1 flex-col gap-2 text-sm font-medium text-ink">
-                                <span>Dokumenty dla edycji</span>
+                                <h2 className="text-xl font-semibold">Dokumenty dla edycji</h2>
                                 <select
                                     value={selectedEditionId}
                                     disabled={uploading || deletingId !== null}
@@ -300,7 +301,11 @@ const EditProblemsScreen = () => {
                             <div className="mt-4 flex shrink-0 items-center justify-between gap-4 sm:mt-0 sm:justify-end">
                                 <p className="text-sm text-ink-muted">
                                     {documentCount}{" "}
-                                    {documentCount === 1 ? "dokument" : "dokumentów"}
+                                    {documentCount === 1
+                                        ? "dokument"
+                                        : documentCount < 5 && documentCount > 0
+                                          ? "dokumenty"
+                                          : "dokumentów"}
                                 </p>
                                 <Button
                                     text="Dodaj dokument"
@@ -312,15 +317,6 @@ const EditProblemsScreen = () => {
                         </section>
 
                         <section>
-                            <div className="mb-4 flex items-end justify-between gap-4">
-                                <div>
-                                    <h2 className="text-xl font-semibold">Dokumentacja edycji</h2>
-                                    <p className="mt-1 text-sm text-ink-muted">
-                                        {selectedEdition?.title ?? "Nie wybrano edycji"}
-                                    </p>
-                                </div>
-                            </div>
-
                             {Object.keys(currentEditionData).length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
                                     Brak dokumentów dla wybranej edycji.
@@ -335,8 +331,8 @@ const EditProblemsScreen = () => {
                                             <div className="border-b border-line-subtle bg-canvas px-5 py-4">
                                                 <h3 className="font-semibold">{subpoint}</h3>
                                                 <p className="mt-0.5 text-xs text-ink-muted">
-                                                    {files.length}{" "}
-                                                    {files.length === 1 ? "plik" : "plików"}
+                                                    {descriptionInputValue || "Brak opisu"} Przyszły
+                                                    opis pliku, oczekiwanie na edycje endpointu
                                                 </p>
                                             </div>
                                             <ul className="divide-y divide-line-subtle">
@@ -408,7 +404,7 @@ const EditProblemsScreen = () => {
                     )}
 
                     <label className="block text-sm font-medium text-ink">
-                        Nazwa sekcji
+                        Nazwa pliku
                         <input
                             type="text"
                             value={subpointInputValue}
@@ -419,7 +415,18 @@ const EditProblemsScreen = () => {
                             className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted"
                         />
                     </label>
-
+                    <label className="block text-sm font-medium text-ink">
+                        Opis pliku (opcjonalnie)
+                        <input
+                            type="text"
+                            value={descriptionInputValue}
+                            onChange={(event) => setDescriptionInputValue(event.target.value)}
+                            placeholder="np. Zadania z etapu zdalnego dla szkół ponadpodstawowych"
+                            autoFocus
+                            disabled={uploading}
+                            className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted"
+                        />
+                    </label>
                     <div className="mt-5">
                         <p className="mb-2 text-sm font-medium text-ink">Plik PDF</p>
                         <FileUploader

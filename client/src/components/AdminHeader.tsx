@@ -21,7 +21,7 @@ const editorLinks: NavigationLink[] = [
     { label: "Regulamin", path: "/admin/rules" },
     { label: "Sponsorzy", path: "/admin/sponsors" },
     { label: "Koalicjanci", path: "/admin/koalicjants" },
-    { label: "Pliki archiwalne", path: "/admin/problems", separatorBefore: true },
+    { label: "Poprzednie zadania", path: "/admin/problems", separatorBefore: true },
     { label: "Zdjęcia", path: "/admin/images" },
 ];
 

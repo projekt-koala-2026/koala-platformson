@@ -16,7 +16,7 @@ interface PublicHeaderProps {
 
 const baseLinks: NavigationLink[] = [
     { label: "Aktualności", path: "/" },
-    { label: "Pliki archiwalne", path: "/problems" },
+    { label: "Poprzednie zadania", path: "/problems" },
     { label: "Regulamin", path: "/rules" },
     { label: "Historia", path: "/history" },
     { label: "Rankingi", path: "/rankings" },
