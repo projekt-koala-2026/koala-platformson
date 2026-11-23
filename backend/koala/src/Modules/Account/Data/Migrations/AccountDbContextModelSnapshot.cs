@@ -137,6 +137,11 @@ namespace koala.src.Modules.Account.Data.Migrations
                         {
                             Id = new Guid("01a027c5-d599-73de-bd5c-2068e28b6cf3"),
                             Name = "TEAM_CAPTAIN"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a027c5-d599-73de-bd5c-2597ff8e14e5"),
+                            Name = "ORGANIZATION_RODO_MODERATOR"
                         });
                 });
 

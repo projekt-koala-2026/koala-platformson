@@ -29,7 +29,6 @@ namespace koala.src.Modules.Account.Services
         private readonly ICoreModule _coreModule;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly AccountDbContext _db;
-        private readonly byte[] _headerImageBytes;
         private readonly string _emailSender;
         private readonly string _smtpHost;
         private readonly int _smtpPort;         
@@ -81,20 +80,6 @@ namespace koala.src.Modules.Account.Services
             _backgroundJobClient = backgroundJobClient;
             _db = db;
 
-            var headerImagePath = Path.Combine(
-                AppContext.BaseDirectory,
-                "src",
-                "Modules",
-                "Account",
-                "Assets",
-                "header_image.png"
-            );
-
-            if (!File.Exists(headerImagePath))
-                throw new KoalaException(KoalaErrorCodes.FileNotFound ,$"Email header image {headerImagePath} not found.");
-
-            _headerImageBytes = File.ReadAllBytes(headerImagePath);
-
             _frontEndUrl = _configuration["Urls:Frontend"] ?? "http://localhost:5173";
             _emailSender = _configuration["EmailSettings:SenderEmail"] ?? "noreply-koala@project.local";
             _smtpUser = _configuration["EmailSettings:SmtpUser"] ?? "localUser";
@@ -127,13 +112,6 @@ namespace koala.src.Modules.Account.Services
                                                         <div style=""margin-top:5px; font-size:12px; font-weight:bold; color:#047857;"">
                                                             Kombinatoryka · Algorytmika · Logika
                                                         </div>
-                                                    </td>
-                                                    <td align=""right"" valign=""middle"" width=""64"" style=""width:64px;"">
-                                                        <img src=""cid:header-image-png@proj-koala.projektstudencki.pl""
-                                                             alt=""Koala""
-                                                             width=""56""
-                                                             height=""80""
-                                                             style=""display:block; width:80px; height:80px; max-width:56px; border-radius:12px;"" />
                                                     </td>
                                                 </tr>
                                             </table>
@@ -176,17 +154,6 @@ namespace koala.src.Modules.Account.Services
                 HtmlBody = _htmlHeader+htmlMessage+_htmlFooter,
                 TextBody = txtMessage
             };
-
-            if (_headerImageBytes.Length > 0)
-            {
-                var image = builder.LinkedResources.Add("avatar.png", _headerImageBytes, ContentType.Parse("image/png"));
-                image.ContentId = "header-image-png@proj-koala.projektstudencki.pl";
-                image.ContentDisposition = new ContentDisposition(ContentDisposition.Inline)
-                {
-                    Size = _headerImageBytes.Length
-                };
-                image.IsAttachment = false;
-            }
 
             message.Body = builder.ToMessageBody();
 

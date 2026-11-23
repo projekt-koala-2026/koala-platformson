@@ -12,7 +12,7 @@ namespace koala.src.Modules.Account.Data
         public const string static_id_guid_role_organization_reviewer = "01a027c5-d599-73de-bd5c-18c05fc3fa53";
         public const string static_id_guid_role_team_admin = "01a027c5-d599-73de-bd5c-1f8e68687e51";
         public const string static_id_guid_role_team_player = "01a027c5-d599-73de-bd5c-2068e28b6cf3";
-        // private const string static_id_guid_ = "01a027c5-d599-73de-bd5c-2597ff8e14e5";
+        private const string static_id_guid_role_organization_rodo_moderator = "01a027c5-d599-73de-bd5c-2597ff8e14e5";
         // private const string static_id_guid_ = "01a027c5-d599-73de-bd5c-285bbc57be72";
         // private const string static_id_guid_ = "01a027c5-d599-73de-bd5c-2d755bf35dd9";
         // private const string static_id_guid_ = "01a027c5-d599-73de-bd5c-31f9adea6147";
@@ -143,7 +143,8 @@ namespace koala.src.Modules.Account.Data
                     new Role { Id = Guid.Parse(static_id_guid_role_organization_editor), Name = RoleNames.NAME_ORGANIZATION_EDITOR },
                     new Role { Id = Guid.Parse(static_id_guid_role_organization_reviewer), Name = RoleNames.NAME_ORGANIZATION_REVIEWER },
                     new Role { Id = Guid.Parse(static_id_guid_role_team_admin), Name = RoleNames.NAME_TEAM_GUARDIAN },
-                    new Role { Id = Guid.Parse(static_id_guid_role_team_player), Name = RoleNames.NAME_TEAM_CAPTAIN }
+                    new Role { Id = Guid.Parse(static_id_guid_role_team_player), Name = RoleNames.NAME_TEAM_CAPTAIN },
+                    new Role { Id = Guid.Parse(static_id_guid_role_organization_rodo_moderator), Name = RoleNames.NAME_ORGANIZATION_RODO_MODERATOR}
                 );
 
             // USER CONFIG

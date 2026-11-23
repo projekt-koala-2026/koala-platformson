@@ -80,6 +80,9 @@ namespace koala.src.Modules.Cms.Data
             // PUBLIC_FILE CONFIG
             modelBuilder.Entity<PublicFile>()
                 .HasKey(pf=> pf.Id);
+            modelBuilder.Entity<PublicFile>()
+                .Property(pf => pf.Version)
+                .IsConcurrencyToken();
 
             // STATIC_PAGE CONFIG
             modelBuilder.Entity<StaticPage>()

@@ -17,6 +17,7 @@ public class RodoServiceTests
     private static readonly string[] AllRoles =
     [
         RoleNames.NAME_ORGANIZATION_ADMIN,
+        RoleNames.NAME_ORGANIZATION_RODO_MODERATOR,
         RoleNames.NAME_ORGANIZATION_EDITOR,
         RoleNames.NAME_ORGANIZATION_REVIEWER,
         RoleNames.NAME_TEAM_GUARDIAN,
@@ -38,16 +39,16 @@ public class RodoServiceTests
     }
 
     private static ClaimsPrincipal TeamGuardian() => Principal(TestDataSeeder.ID_USER_8, RoleNames.NAME_TEAM_GUARDIAN);
-    private static ClaimsPrincipal OrganizationAdmin() => Principal(TestDataSeeder.ID_USER_1, RoleNames.NAME_ORGANIZATION_ADMIN);
+    private static ClaimsPrincipal OrganizationAdmin() => Principal(TestDataSeeder.ID_USER_1, RoleNames.NAME_ORGANIZATION_RODO_MODERATOR);
     private static ClaimsPrincipal NonMemberGuardian() => Principal(TestDataSeeder.ID_USER_9, RoleNames.NAME_TEAM_GUARDIAN);
 
     public static IEnumerable<object[]> AllRoleCases => AllRoles.Select(role => new object[] { role });
     public static IEnumerable<object[]> NonGuardianRoleCases => AllRoles.Where(role => role != RoleNames.NAME_TEAM_GUARDIAN).Select(role => new object[] { role });
-    public static IEnumerable<object[]> NonOrganizationAdminRoleCases => AllRoles.Where(role => role != RoleNames.NAME_ORGANIZATION_ADMIN).Select(role => new object[] { role });
+    public static IEnumerable<object[]> NonOrganizationAdminRoleCases => AllRoles.Where(role => role != RoleNames.NAME_ORGANIZATION_RODO_MODERATOR).Select(role => new object[] { role });
     public static IEnumerable<object[]> SeededReadRoleCases => new object[][]
     {
-        [TestDataSeeder.ID_USER_1, new[] { RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_ORGANIZATION_REVIEWER }, true],
-        [TestDataSeeder.ID_USER_2, new[] { RoleNames.NAME_ORGANIZATION_ADMIN }, true],
+        [TestDataSeeder.ID_USER_1, new[] { RoleNames.NAME_ORGANIZATION_RODO_MODERATOR }, true],
+        [TestDataSeeder.ID_USER_2, new[] { RoleNames.NAME_ORGANIZATION_ADMIN }, false],
         [TestDataSeeder.ID_USER_3, new[] { RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_ORGANIZATION_REVIEWER }, false],
         [TestDataSeeder.ID_USER_4, new[] { RoleNames.NAME_ORGANIZATION_EDITOR }, false],
         [TestDataSeeder.ID_USER_5, new[] { RoleNames.NAME_ORGANIZATION_EDITOR }, false],
@@ -616,7 +617,7 @@ public class RodoServiceTests
         var files = FileOperations();
         var principal = role == RoleNames.NAME_TEAM_GUARDIAN ? TeamGuardian() : Principal(TestDataSeeder.ID_USER_1, role);
 
-        if (role is RoleNames.NAME_TEAM_GUARDIAN or RoleNames.NAME_ORGANIZATION_ADMIN)
+        if (role is RoleNames.NAME_TEAM_GUARDIAN or RoleNames.NAME_ORGANIZATION_RODO_MODERATOR)
         {
             var result = await Service(db, files).GetRodoAsync(principal, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1);
             Assert.Equal(TestDataSeeder.ID_TEAM_MEMBER_1, result.TeamMemberId);
@@ -686,7 +687,7 @@ public class RodoServiceTests
         var files = FileOperations();
         var principal = role == RoleNames.NAME_TEAM_GUARDIAN ? TeamGuardian() : Principal(TestDataSeeder.ID_USER_1, role);
 
-        if (role is RoleNames.NAME_TEAM_GUARDIAN or RoleNames.NAME_ORGANIZATION_ADMIN)
+        if (role is RoleNames.NAME_TEAM_GUARDIAN or RoleNames.NAME_ORGANIZATION_RODO_MODERATOR)
         {
             var result = await Service(db, files).GetRodoFileAsync(principal, TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1);
             Assert.Equal(Path.Combine(FilesPath, $"{rodo.Id}.webp"), result);
@@ -754,7 +755,7 @@ public class RodoServiceTests
         var files = FileOperations();
         var principal = role == RoleNames.NAME_TEAM_GUARDIAN ? TeamGuardian() : Principal(TestDataSeeder.ID_USER_1, role);
 
-        if (role is RoleNames.NAME_TEAM_GUARDIAN or RoleNames.NAME_ORGANIZATION_ADMIN)
+        if (role is RoleNames.NAME_TEAM_GUARDIAN or RoleNames.NAME_ORGANIZATION_RODO_MODERATOR)
         {
             var (members, page) = await Service(db, files).GetRodosAsync(principal, TestDataSeeder.ID_TEAM_1, new PageQueryDto(0, 10));
             Assert.Equal(3, members.Count);
@@ -995,4 +996,25 @@ public class RodoServiceTests
         files.Verify(file => file.Exists(It.IsAny<string>()), Times.Never);
     }
 
+    [Theory]
+    [MemberData(nameof(AllowedRodoUploads))]
+    public async Task UpdateRodo_ReplacesFileForEverySupportedExtension(string extension, string contentType)
+    {
+        await using var db = await SeededDb();
+        var rodo = await AddRodoAsync(db, TestDataSeeder.ID_TEAM_MEMBER_1, ".pdf", version: 4);
+        var files = FileOperations();
+        files.Setup(file => file.Exists(It.IsAny<string>())).Returns(true);
+        var result = await Service(db, files).UpdateRodoAsync(
+            TeamGuardian(), TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_MEMBER_1,
+            UploadDto($"updated{extension}", version: 4, contentType));
+
+        Assert.Equal(extension, (await db.Rodos.SingleAsync()).Type);
+        Assert.Equal(5, rodo.Version);
+        Assert.Equal(TeamMemberRodoState.RODOSTATE_UNVERIFIED, result.RodoState);
+        files.Verify(file => file.WriteAsync(It.Is<string>(path => path.EndsWith(".tmp")), It.IsAny<IFormFile>(), true), Times.Once);
+        files.Verify(file => file.Move(It.Is<string>(path => path.EndsWith(".tmp")), It.Is<string>(path => path.EndsWith($"{rodo.Id}{extension}")), true), Times.Once);
+        files.Verify(file => file.Delete(It.Is<string>(path => path.EndsWith($"{rodo.Id}.pdf"))), extension == ".pdf" ? Times.Never : Times.Once);
+    }
+
 }
+

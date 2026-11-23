@@ -125,7 +125,7 @@ namespace koala.src.Modules.Account.Controllers
             var response = await _teamService.GetTeamAsync(User, id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamDto>(true, DateTime.UtcNow, null, null, response));
         }
-        //ONLY FOR TEAM GUARDIANS AND ORGANIZATION ADMINS
+        //ONLY FOR TEAM GUARDIANS AND ORGANIZATION RODO MODERATORS
 
         [Authorize]
         [HttpGet("{id}/rodos")]
@@ -152,7 +152,6 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamMemberDto>(true, DateTime.UtcNow, null, null, result));
         }
 
-        //ONLY FOR ORGANIZATION ADMINS
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetTeams([FromQuery] PageQueryDto pageQueryDto, [FromQuery] TeamQueryDto teamQueryDto, [FromQuery] TeamMemberQueryDto teamMemberQueryDto)
@@ -161,12 +160,23 @@ namespace koala.src.Modules.Account.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
+        //ONLY FOR ORGANIZATION RODO MODERATOR
+
         [Authorize]
         [HttpPut("{id}/rodos/{team_member_id}/state")]
         public async Task<IActionResult> SetTeamMemberRodoState([FromRoute] Guid id, [FromRoute] Guid team_member_id, [FromBody] RodoStateUpdateDto rodoStateUpdateDto)
         {
             var response = await _rodoService.SetRodoStateAsync(User, id, team_member_id, rodoStateUpdateDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TeamMemberDto>(true, DateTime.UtcNow, null, null, response));
+        }
+
+        //ONLY FOR ORGANIZATION ADMINS
+        [Authorize]
+        [HttpGet("as-admin")]
+        public async Task<IActionResult> AdminGetTeams([FromQuery] PageQueryDto pageQueryDto, [FromQuery] AdminTeamQueryDto teamQueryDto)
+        {
+            (var responseData, var responsePagination) = await _teamService.AdminGetTeamNamesAsync(User, pageQueryDto, teamQueryDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<AdminTeamDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
     }
 }
