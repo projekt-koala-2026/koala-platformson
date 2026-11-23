@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from "react";
 import { useMemo, useState } from "react";
 import type { School } from "../types/models";
+import RecordDates from "./RecordDates";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -190,7 +191,12 @@ const SchoolsTable = ({
                                             {school.rspo}
                                         </td>
                                         <td className="px-3 py-3 font-medium text-ink-heading">
-                                            {school.name}
+                                            <div>{school.name}</div>
+                                            <RecordDates
+                                                createdAt={school.createdAt}
+                                                updatedAt={school.updatedAt}
+                                                className="mt-1"
+                                            />
                                         </td>
                                         <td className="px-3 py-3 text-ink-secondary">
                                             {school.nameShort || "—"}

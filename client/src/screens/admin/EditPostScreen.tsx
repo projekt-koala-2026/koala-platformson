@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type { ApiEdition, ApiPost, Edition, Post } from "../../types/models";
 import { adaptEdition, adaptPost } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -552,11 +553,11 @@ const EditPostScreen = () => {
                                                     >
                                                         {post.isVisible ? "Widoczny" : "Ukryty"}
                                                     </span>
-                                                    <p className="mt-1 text-xs text-ink-muted">
-                                                        {new Date(post.createdAt).toLocaleString(
-                                                            "pl-PL"
-                                                        )}
-                                                    </p>
+                                                    <RecordDates
+                                                        createdAt={post.createdAt}
+                                                        updatedAt={post.updatedAt}
+                                                        className="mt-1"
+                                                    />
                                                 </div>
                                                 <div className="flex shrink-0 gap-2">
                                                     <Button

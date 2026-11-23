@@ -5,6 +5,7 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import FileUploader from "../../components/FileUploader";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type {
     ApiEdition,
     ApiStaticPage,
@@ -256,6 +257,8 @@ const EditProblemsScreen = () => {
                     <p className="mt-2 max-w-3xl text-sm text-ink-secondary">
                         Porządkuj pliki dla każdej edycji konkursu.
                     </p>
+                    <br />
+                    <RecordDates updatedAt={taskPage?.updatedAt} />
                 </div>
 
                 {feedback && (

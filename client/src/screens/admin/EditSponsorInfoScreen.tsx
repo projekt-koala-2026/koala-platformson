@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type { ApiSponsor, Sponsor } from "../../types/models";
 import { adaptSponsor } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -274,6 +275,11 @@ const EditSponsorInfo = () => {
                                         >
                                             {sponsor.isVisible ? "Widoczny" : "Ukryty"}
                                         </span>
+                                        <RecordDates
+                                            createdAt={sponsor.createdAt}
+                                            updatedAt={sponsor.updatedAt}
+                                            className="mt-2"
+                                        />
                                         <a
                                             href={sponsor.websiteUrl}
                                             target="_blank"

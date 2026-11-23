@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
+import RecordDates from "../../components/RecordDates";
 import type { ApiEdition, ApiSchool, ApiTeam } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult } from "../../utils/apiFetcher";
@@ -140,7 +141,7 @@ const AdminTeamsScreen = () => {
                                         <th className="px-4 py-3">Członkowie</th>
                                         <th className="px-4 py-3">Szkoła</th>
                                         <th className="px-4 py-3">Edycja</th>
-                                        <th className="px-4 py-3">Utworzono</th>
+                                        <th className="px-4 py-3">Daty</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-line-subtle">
@@ -166,9 +167,10 @@ const AdminTeamsScreen = () => {
                                                 {editionNames[team.editionId] ?? "Nieznana edycja"}
                                             </td>
                                             <td className="px-4 py-4 text-ink-secondary">
-                                                {new Date(team.createdAt).toLocaleDateString(
-                                                    "pl-PL"
-                                                )}
+                                                <RecordDates
+                                                    createdAt={team.createdAt}
+                                                    updatedAt={team.updatedAt}
+                                                />
                                             </td>
                                         </tr>
                                     ))}

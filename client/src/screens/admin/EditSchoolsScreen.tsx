@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import SchoolsTable from "../../components/SchoolsTable";
 import type { ApiSchool, School } from "../../types/models";
 import { adaptSchool } from "../../utils/apiAdapters";
@@ -660,6 +661,11 @@ const AdminSchoolsScreen = () => {
                 {modalError}
                 {selectedSchool && (
                     <form onSubmit={handleUpdateSchool}>
+                        <RecordDates
+                            createdAt={selectedSchool.createdAt}
+                            updatedAt={selectedSchool.updatedAt}
+                            className="mb-4"
+                        />
                         <SchoolFields
                             value={editSchool}
                             disabled={isBusy}

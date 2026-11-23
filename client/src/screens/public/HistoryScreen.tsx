@@ -4,6 +4,7 @@ import KoalaIllustration from "../../components/KoalaIllustration";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import RecordDates from "../../components/RecordDates";
 import type { ApiEdition, ApiPost, ApiStaticPage, Edition, Post } from "../../types/models";
 import { adaptEdition, adaptPost, staticPageMarkdown } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -12,6 +13,7 @@ import { apiListRequest } from "../../utils/apiFetcher";
 const HistoryScreen = () => {
     const navigate = useNavigate();
     const [history, setHistory] = useState("");
+    const [historyUpdatedAt, setHistoryUpdatedAt] = useState<string | null>(null);
     const [editions, setEditions] = useState<Edition[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
     const [selectedEditionId, setSelectedEditionId] = useState("");
@@ -45,6 +47,7 @@ const HistoryScreen = () => {
                         new Date(second.endDate).getTime() - new Date(first.endDate).getTime()
                 );
             setHistory(staticPageMarkdown(historyPage));
+            setHistoryUpdatedAt(historyPage?.updatedAt ?? null);
             setEditions(pastEditions);
             setPosts((postData ?? []).map(adaptPost));
             setSelectedEditionId(pastEditions[0]?.id ?? "");
@@ -81,6 +84,7 @@ const HistoryScreen = () => {
                             Poznaj początki konkursu i najważniejsze wydarzenia z poprzednich
                             edycji.
                         </p>
+                        <RecordDates updatedAt={historyUpdatedAt} className="mb-4" dateOnly />
                     </div>
                     <KoalaIllustration
                         src={`${import.meta.env.BASE_URL}images/koala/koala_mis2d.png`}
@@ -101,7 +105,9 @@ const HistoryScreen = () => {
                         {loading ? (
                             <p className="text-sm text-ink-muted">Ładowanie historii…</p>
                         ) : history.trim() ? (
-                            <MarkdownRenderer content={history} />
+                            <>
+                                <MarkdownRenderer content={history} />
+                            </>
                         ) : (
                             <p className="text-sm text-ink-muted">
                                 Historia konkursu nie została jeszcze opublikowana.
@@ -158,21 +164,15 @@ const HistoryScreen = () => {
                                             key={post.id}
                                             className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-6"
                                         >
-                                            <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
-                                                <time dateTime={post.createdAt}>
-                                                    {new Date(post.createdAt).toLocaleDateString(
-                                                        "pl-PL",
-                                                        {
-                                                            year: "numeric",
-                                                            month: "long",
-                                                            day: "numeric",
-                                                        }
-                                                    )}
-                                                </time>
-                                            </p>
                                             <h3 className="mt-2 break-words text-xl font-semibold text-ink-heading">
                                                 {post.title}
                                             </h3>
+                                            <RecordDates
+                                                createdAt={post.createdAt}
+                                                updatedAt={post.updatedAt}
+                                                className="mt-1"
+                                                dateOnly
+                                            />
                                             <div className="mt-4">
                                                 <MarkdownRenderer content={post.markdownBody} />
                                             </div>

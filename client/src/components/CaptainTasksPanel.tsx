@@ -5,6 +5,7 @@ import { apiEndpoints, firstPage } from "../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../utils/apiFetcher";
 import { decodeMultipleChoice, encodeMultipleChoice } from "../utils/competitionAnswers";
 import MarkdownRenderer from "./MarkdownRenderer";
+import RecordDates from "./RecordDates";
 
 type Submission = { submission: string; version: number };
 type TaskContent = { body_pl?: string; answer_type?: string; [key: string]: unknown };
@@ -233,6 +234,11 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
                                         <span className="mt-1 block text-xs text-ink-muted">
                                             {item.tier === "TIER_2" ? "Średnia" : "Podstawowa"}
                                         </span>
+                                        <RecordDates
+                                            createdAt={item.createdAt}
+                                            updatedAt={item.updatedAt}
+                                            className="mt-2"
+                                        />
                                     </button>
                                 </li>
                             ))}

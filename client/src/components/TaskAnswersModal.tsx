@@ -7,6 +7,7 @@ import { apiListRequestResult, apiRequestResult } from "../utils/apiFetcher";
 import { decodeMultipleChoice, encodeMultipleChoice } from "../utils/competitionAnswers";
 import Button from "./Button";
 import Modal from "./Modal";
+import RecordDates from "./RecordDates";
 
 export default function TaskAnswersModal({
     task,
@@ -255,6 +256,10 @@ export default function TaskAnswersModal({
                                             : "Fałsz"
                                         : answer.answer}
                             </span>
+                            <RecordDates
+                                createdAt={answer.createdAt}
+                                updatedAt={answer.updatedAt}
+                            />
                             <div className="flex gap-2">
                                 <Button
                                     text="Edytuj"

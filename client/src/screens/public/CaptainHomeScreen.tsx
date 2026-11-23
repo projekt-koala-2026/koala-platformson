@@ -16,6 +16,7 @@ import KoalaIllustration from "../../components/KoalaIllustration";
 import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import RecordDates from "../../components/RecordDates";
 import SchoolsTable from "../../components/SchoolsTable";
 import type {
     ApiSchool,
@@ -907,6 +908,12 @@ const CaptainHomeScreen = () => {
                                                 {member.nameFist} {member.nameLast}
                                             </p>
                                             <p className="text-xs text-ink-muted">Uczestnik</p>
+                                            <RecordDates
+                                                createdAt={member.createdAt}
+                                                updatedAt={member.updatedAt}
+                                                className="mt-1"
+                                                dateOnly
+                                            />
                                         </div>
                                         <div className="text-center">
                                             {roles.isGuardian &&

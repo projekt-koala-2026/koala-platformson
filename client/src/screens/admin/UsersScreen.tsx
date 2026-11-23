@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type { Role, User } from "../../types/models";
 import { apiEndpoints } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
@@ -264,6 +265,11 @@ const UsersScreen = () => {
                                                     </span>
                                                 )}
                                             </div>
+                                            <RecordDates
+                                                createdAt={user.createdAt}
+                                                updatedAt={user.updatedAt}
+                                                className="mt-3"
+                                            />
                                             <div className="mt-3 flex flex-wrap gap-2">
                                                 {user.roles.map((role) => (
                                                     <span

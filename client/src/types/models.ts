@@ -46,6 +46,8 @@ export interface ApiSubedition {
     answerOpen: string;
     answerClose: string;
     state: "ACTIVE" | "INACTIVE" | "CLOSED";
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -55,6 +57,8 @@ export interface ApiCompetitionTask {
     name: string;
     tier: "TIER_1" | "TIER_2";
     contentJson: string;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -62,6 +66,8 @@ export interface ApiTaskAnswer {
     id: string;
     taskItemId: string;
     answer: string;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -83,6 +89,8 @@ export interface ApiTaskSubmission {
     review1Score: boolean | null;
     review2Score: boolean | null;
     submission: string;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -102,6 +110,8 @@ export interface ApiSponsor {
     name: string;
     contentJson: string;
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -112,6 +122,8 @@ export interface ApiKoalicjant {
     email: string;
     contentJson: string;
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -260,6 +272,8 @@ export interface School {
     city: string;
     type: string;
     addres: string;
+    createdAt: string;
+    updatedAt: string;
 }
 export interface Edition {
     id: string;
@@ -267,6 +281,8 @@ export interface Edition {
     startDate: string;
     endDate: string;
     state: ApiEdition["state"];
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 export interface Post {
@@ -275,6 +291,7 @@ export interface Post {
     markdownBody: string;
     editionId: string;
     createdAt: string;
+    updatedAt: string;
     isVisible: boolean;
 }
 export interface Sponsor {
@@ -284,6 +301,8 @@ export interface Sponsor {
     logoUrl?: string;
     description?: string;
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 export interface Koalicjant {
     id: string;
@@ -291,12 +310,15 @@ export interface Koalicjant {
     profilePicture: string;
     description?: string;
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 export interface ManagedFile {
     id: string;
     title: string;
     filePath: string;
     url?: string;
+    createdAt?: string;
 }
 export interface ApiPublicFile {
     id: string;

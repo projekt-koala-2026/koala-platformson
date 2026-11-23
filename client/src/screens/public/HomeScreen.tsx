@@ -4,6 +4,7 @@ import KoalaIllustration from "../../components/KoalaIllustration";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import RecordDates from "../../components/RecordDates";
 import type { ApiEdition, ApiPost, Edition, Post } from "../../types/models";
 import { adaptEdition, adaptPost } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -114,20 +115,18 @@ const HomeScreen = () => {
                                 className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-8"
                             >
                                 <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
-                                    <time dateTime={post.createdAt}>
-                                        {new Date(post.createdAt).toLocaleDateString("pl-PL", {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                        })}
-                                    </time>
-                                    {editionNames.get(post.editionId)
-                                        ? ` · ${editionNames.get(post.editionId)}`
-                                        : ""}
+                                    {editionNames.get(post.editionId) ?? "Aktualność"}
                                 </p>
+
                                 <h2 className="mt-2 break-words text-xl font-semibold text-ink-heading">
                                     {post.title}
                                 </h2>
+                                <RecordDates
+                                    createdAt={post.createdAt}
+                                    updatedAt={post.updatedAt}
+                                    className="mt-1"
+                                    dateOnly
+                                />
                                 <div className="mt-5">
                                     <MarkdownRenderer content={post.markdownBody} />
                                 </div>
