@@ -7,8 +7,6 @@ import type {
     ApiEdition,
     ApiSubedition,
     ApiTaskSubmission,
-    ApiTeam,
-    ApiTeamMember,
 } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
@@ -21,7 +19,7 @@ type ReviewProgress = {
 };
 type ReviewOverview = {
     submissions: number;
-    expectedSubmissions: number;
+    // expectedSubmissions: number; // Requires access to the full teams endpoint.
     requiredSlots: number;
     unassigned: number;
     reviewedSlots: number;
@@ -32,10 +30,10 @@ type EditionOverview = {
     edition: ApiEdition;
     subeditions: ApiSubedition[];
     inactiveSubeditionsPastStart: ApiSubedition[];
-    tier1Teams: number;
-    tier2Teams: number;
-    teamsWithoutGuardians: number;
-    rodo: { submitted: number; accepted: number; rejected: number; missing: number };
+    // tier1Teams: number; // Requires access to the full teams endpoint.
+    // tier2Teams: number;
+    // teamsWithoutGuardians: number;
+    // rodo: { submitted: number; accepted: number; rejected: number; missing: number };
 };
 
 const PanelScreen = () => {
@@ -61,7 +59,7 @@ const PanelScreen = () => {
                 );
                 if (!editions.data) throw new Error("Editions unavailable");
                 let submissions = 0,
-                    expectedSubmissions = 0,
+                    // expectedSubmissions = 0, // Requires access to the full teams endpoint.
                     requiredSlots = 0,
                     unassigned = 0,
                     reviewedSlots = 0,
@@ -70,24 +68,27 @@ const PanelScreen = () => {
                 let activeSubeditionFound = false;
                 let overview: EditionOverview | null = null;
                 for (const edition of editions.data) {
+                    /* Admins cannot use this full team endpoint; its dependent panel widgets are commented out below.
                     const teams = await apiListRequestResult<ApiTeam>(
                         `${apiEndpoints.teams}?${firstPage}&EditionId=${edition.id}`,
                         null,
                         "GET",
                         navigate
                     );
+                    const editionTeams = teams.data ?? [];
+                    */
                     const subeditions = await apiListRequestResult<ApiSubedition>(
                         `${apiEndpoints.subeditions(edition.id)}?${firstPage}`,
                         null,
                         "GET",
                         navigate
                     );
-                    if (!teams.data || !subeditions.data)
-                        throw new Error("Edition details unavailable");
+                    if (!subeditions.data) throw new Error("Edition details unavailable");
                     if (!overview) {
-                        const editionTeams = teams.data ?? [];
+                        //const editionTeams = teams.data ?? [];
                         const editionSubeditions = subeditions.data ?? [];
                         const now = Date.now();
+                        /* RODO endpoints require a moderator role; keep this calculation commented for future access.
                         const rodoResults = await Promise.all(
                             editionTeams.map((team) =>
                                 apiListRequestResult<ApiTeamMember>(
@@ -110,6 +111,7 @@ const PanelScreen = () => {
                         const submitted = rodoDocuments.filter(
                             (member) => member.rodoState === "RODO_UNVERIFIED"
                         ).length;
+                        */
                         overview = {
                             edition,
                             subeditions: editionSubeditions,
@@ -121,7 +123,7 @@ const PanelScreen = () => {
                                     deadline <= now
                                 );
                             }),
-                            tier1Teams: editionTeams.filter((team) => team.tier === "TIER_1")
+                            /* tier1Teams: editionTeams.filter((team) => team.tier === "TIER_1")
                                 .length,
                             tier2Teams: editionTeams.filter((team) => team.tier === "TIER_2")
                                 .length,
@@ -134,7 +136,7 @@ const PanelScreen = () => {
                                 missing: rodoDocuments.filter(
                                     (member) => member.rodoState === "RODO_NONE"
                                 ).length,
-                            },
+                            }, */
                         };
                     }
                     for (const subedition of (subeditions.data ?? []).filter(
@@ -149,11 +151,11 @@ const PanelScreen = () => {
                         );
                         if (!taskList.data) throw new Error("Tasks unavailable");
                         for (const task of taskList.data) {
-                            expectedSubmissions += (teams.data ?? []).filter(
+                            /* expectedSubmissions += (teams.data ?? []).filter(
                                 (team) =>
                                     team.tier === "TIER_2" ||
                                     (team.tier === "TIER_1" && task.tier === "TIER_1")
-                            ).length;
+                            ).length; */
                             const result = await apiRequestResult<ReviewProgress>(
                                 apiEndpoints.taskReviewProgress(task.id),
                                 null,
@@ -194,7 +196,7 @@ const PanelScreen = () => {
                     setEditionOverview(overview);
                     setReviewOverview({
                         submissions,
-                        expectedSubmissions,
+                        // expectedSubmissions,
                         requiredSlots,
                         unassigned,
                         reviewedSlots,
@@ -268,6 +270,7 @@ const PanelScreen = () => {
                                     <p className="mt-2 text-sm text-ink-secondary">Brak etapów.</p>
                                 )}
                             </div>
+                            {/* Team counts need the full team endpoint, which is restricted to RODO moderators.
                             <div className="rounded-xl bg-canvas p-4">
                                 <h2 className="font-semibold">Zespoły według szkół</h2>
                                 {(() => {
@@ -306,6 +309,8 @@ const PanelScreen = () => {
                                     );
                                 })()}
                             </div>
+                            */}
+                            {/* Guardian counts also depend on the restricted full-team endpoint.
                             {editionOverview.teamsWithoutGuardians > 0 && (
                                 <div className="rounded-xl bg-canvas p-4">
                                     <h2 className="font-semibold">Opieka drużyn</h2>
@@ -317,6 +322,7 @@ const PanelScreen = () => {
                                     </p>
                                 </div>
                             )}
+                            */}
                             {editionOverview.inactiveSubeditionsPastStart.length > 0 && (
                                 <div
                                     role="status"
@@ -336,6 +342,7 @@ const PanelScreen = () => {
                                     </ul>
                                 </div>
                             )}
+                            {/* RODO summary is disabled because admins cannot access consent endpoints.
                             {editionOverview.rodo.submitted +
                                 editionOverview.rodo.rejected +
                                 editionOverview.rodo.missing >
@@ -405,6 +412,7 @@ const PanelScreen = () => {
                                     })()}
                                 </div>
                             )}
+                            */}
                             {hasActiveSubedition && (
                                 <div className="rounded-xl bg-canvas p-4 lg:col-span-2">
                                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
@@ -433,13 +441,15 @@ const PanelScreen = () => {
                                                 {reviewOverview.reviewedSlots} z{" "}
                                                 {reviewOverview.requiredSlots} wymaganych ocen
                                                 uzupełnionych · {reviewOverview.submissions}{" "}
-                                                nadesłanych odpowiedzi ·{" "}
-                                                {Math.max(
+                                                nadesłanych odpowiedzi
+                                                {/* Missing submission totals require full team access.
+                                                ·{" "}{Math.max(
                                                     0,
                                                     reviewOverview.expectedSubmissions -
                                                         reviewOverview.submissions
                                                 )}{" "}
                                                 odpowiedzi brakuje
+                                                */}
                                             </p>
                                             {reviewOverview.unassigned > 0 && (
                                                 <p className="mt-2 text-warning-text">

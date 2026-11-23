@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import RecordDates from "../../components/RecordDates";
-import type { ApiEdition, ApiSchool, ApiTeam } from "../../types/models";
+import type { ApiAdminTeam, ApiEdition, ApiSchool } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult } from "../../utils/apiFetcher";
 
 const AdminTeamsScreen = () => {
     const navigate = useNavigate();
-    const [teams, setTeams] = useState<ApiTeam[]>([]);
+    const [teams, setTeams] = useState<ApiAdminTeam[]>([]);
     const [schoolNames, setSchoolNames] = useState<Record<string, string>>({});
     const [editionNames, setEditionNames] = useState<Record<string, string>>({});
     const [query, setQuery] = useState("");
@@ -19,8 +19,8 @@ const AdminTeamsScreen = () => {
     useEffect(() => {
         let active = true;
         void Promise.all([
-            apiListRequestResult<ApiTeam>(
-                `${apiEndpoints.teams}?${firstPage}`,
+            apiListRequestResult<ApiAdminTeam>(
+                `${apiEndpoints.adminTeams}?${firstPage}`,
                 null,
                 "GET",
                 navigate
@@ -69,7 +69,6 @@ const AdminTeamsScreen = () => {
                 editionNames[team.editionId],
                 team.schoolId,
                 team.editionId,
-                ...team.teamMembers.map((member) => member.teamMemberId),
             ]
                 .join(" ")
                 .toLocaleLowerCase("pl-PL")
@@ -89,14 +88,12 @@ const AdminTeamsScreen = () => {
                         Zarejestrowane drużyny
                     </h1>
                     <p className="mt-3 text-ink-secondary">
-                        Lista korzysta z nowego modelu członkostwa. Edycja, zatwierdzanie i
-                        administracyjne usuwanie pozostają niedostępne do czasu dodania endpointów
-                        backendu.
+                        Widok pokazuje podstawowe informacje o drużynach.
                     </p>
                 </header>
 
                 <label className="mt-6 block max-w-xl text-sm font-medium text-ink">
-                    Szukaj po nazwie, identyfikatorze szkoły, edycji lub członka
+                    Szukaj po nazwie drużyny, szkole lub edycji
                     <input
                         type="search"
                         value={query}
@@ -138,7 +135,7 @@ const AdminTeamsScreen = () => {
                                     <tr>
                                         <th className="px-4 py-3">Nazwa</th>
                                         <th className="px-4 py-3">Status</th>
-                                        <th className="px-4 py-3">Członkowie</th>
+                                        <th className="px-4 py-3">Poziom</th>
                                         <th className="px-4 py-3">Szkoła</th>
                                         <th className="px-4 py-3">Edycja</th>
                                         <th className="px-4 py-3">Daty</th>
@@ -158,7 +155,7 @@ const AdminTeamsScreen = () => {
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4 text-ink-secondary">
-                                                {team.teamMembers.length}
+                                                {team.tier === "TIER_2" ? "Średnia" : "Podstawowa"}
                                             </td>
                                             <td className="px-4 py-4 text-ink-secondary">
                                                 {schoolNames[team.schoolId] ?? "Nieznana szkoła"}

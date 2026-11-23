@@ -184,6 +184,18 @@ export type ApiTeam = {
     joinCode: ApiTeamJoinCode | null;
 };
 
+export interface ApiAdminTeam {
+    id: string;
+    editionId: string;
+    schoolId: string;
+    name: string;
+    tier: string;
+    isCensored: boolean;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
+}
+
 export interface ApiTeamUser {
     id: string;
     nameFirst: string;

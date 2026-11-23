@@ -43,7 +43,7 @@ const EditProblemsScreen = () => {
     const [selectedEditionId, setSelectedEditionId] = useState("");
     const [allProblemsData, setAllProblemsData] = useState<ProblemsByEdition>({});
     const [taskPage, setTaskPage] = useState<ApiStaticPage | null>(null);
-    const [subpointInputValue, setSubpointInputValue] = useState("");
+    const [titleInputValue, setTitleInputValue] = useState("");
     const [descriptionInputValue, setDescriptionInputValue] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(true);
@@ -105,7 +105,7 @@ const EditProblemsScreen = () => {
     };
 
     const resetUploadForm = () => {
-        setSubpointInputValue("");
+        setTitleInputValue("");
         setSelectedFile(null);
     };
 
@@ -124,13 +124,13 @@ const EditProblemsScreen = () => {
 
     const addEntry = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const subpoint = subpointInputValue.trim();
+        const subpoint = titleInputValue.trim();
         if (!selectedEditionId) {
             setFeedback({ tone: "error", message: "Wybierz edycję konkursu." });
             return;
         }
         if (!subpoint) {
-            setFeedback({ tone: "error", message: "Wpisz nazwę sekcji dokumentów." });
+            setFeedback({ tone: "error", message: "Wpisz nazwę dokumentu." });
             return;
         }
         if (!selectedFile) {
@@ -410,8 +410,8 @@ const EditProblemsScreen = () => {
                         Nazwa pliku
                         <input
                             type="text"
-                            value={subpointInputValue}
-                            onChange={(event) => setSubpointInputValue(event.target.value)}
+                            value={titleInputValue}
+                            onChange={(event) => setTitleInputValue(event.target.value)}
                             placeholder="np. Etap szkolny"
                             autoFocus
                             disabled={uploading}
