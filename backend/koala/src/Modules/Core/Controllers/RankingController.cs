@@ -129,7 +129,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpPut("edition/{edition_id}/winner_tier2")]
         public async Task<IActionResult> UpsertEditionWinnerTier2([FromRoute] Guid edition_id, [FromBody] WinnerUpserDto requestDto)
         {
-            var result = await _rankingService.UpsertEditionWinnerTier1Async(User, edition_id, requestDto);
+            var result = await _rankingService.UpsertEditionWinnerTier2Async(User, edition_id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<WinnerDto>(true, DateTime.UtcNow, null, null, result));
         }
 
@@ -137,7 +137,7 @@ namespace koala.src.Modules.Core.Controllers
         [HttpPut("edition/{edition_id}/winner_tier1")]
         public async Task<IActionResult> UpsertEditionWinnerTier1([FromRoute] Guid edition_id, [FromBody] WinnerUpserDto requestDto)
         {
-            var result = await _rankingService.UpsertEditionWinnerTier2Async(User, edition_id, requestDto);
+            var result = await _rankingService.UpsertEditionWinnerTier1Async(User, edition_id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<WinnerDto>(true, DateTime.UtcNow, null, null, result));
         }
 

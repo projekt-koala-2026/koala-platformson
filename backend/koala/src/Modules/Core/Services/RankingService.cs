@@ -177,7 +177,7 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.RankingNotFound, "One of the rankings that u try to merge does not exist");
             }
 
-            if (ranking1.Tier == ranking2.Tier)
+            if (ranking1.Tier != ranking2.Tier)
             {
                 throw new KoalaException(KoalaErrorCodes.RankingsTierConflict, "Ranking tiers do not match");
             }
@@ -594,9 +594,12 @@ namespace koala.src.Modules.Core.Services
             {
                 return [];
             }
-            return
-            [
-                new WinnerDto
+            var winners = new List<WinnerDto>();
+            
+            if(edition.WinnerTier1!= null && edition.WinnerTier1Id != null)
+            {
+                
+                winners.Add(new WinnerDto
                 (
                     edition.WinnerTier1.Id,
                     edition.Id,
@@ -605,8 +608,10 @@ namespace koala.src.Modules.Core.Services
                     edition.WinnerTier1.CreatedAt,
                     edition.WinnerTier1.UpdatedAt,
                     edition.WinnerTier1.Version
-                ),
-                new WinnerDto
+                ));
+            }
+            if(edition.WinnerTier2!= null && edition.WinnerTier2Id != null){
+                winners.Add(new WinnerDto
                 (
                     edition.WinnerTier2.Id,
                     edition.Id,
@@ -615,9 +620,11 @@ namespace koala.src.Modules.Core.Services
                     edition.WinnerTier2.CreatedAt,
                     edition.WinnerTier2.UpdatedAt,
                     edition.WinnerTier2.Version
-                ),
-            ];
+                ));
+            }
+            return winners;
         }
+            
         public async Task MakeEditionWinnersPublicAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);

@@ -90,6 +90,7 @@ namespace koala.src.Modules.Core.Services
                 Id = Guid.CreateVersion7(),
                 Name = createEditionDto.Name,
                 State = LifecycleStates.STATE_INACTIVE,
+                AreWinnersPublic = false,
                 TeamRegisterOpen = createEditionDto.TeamRegisterOpen,
                 TeamRegisterClose = createEditionDto.TeamRegisterClose,
                 CreatedAt = timeNow,
@@ -100,7 +101,7 @@ namespace koala.src.Modules.Core.Services
             _db.Editions.Add(edition);
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.AreWinnersPublic, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
 
         public async Task<EditionDto> UpdateEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, EditionUpdateDto editionUpdateDto)
@@ -149,7 +150,7 @@ namespace koala.src.Modules.Core.Services
             edition.Version++;
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.AreWinnersPublic, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
         public async Task<EditionDto> EditionActivateAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id)
         {
@@ -185,7 +186,7 @@ namespace koala.src.Modules.Core.Services
             edition.UpdatedAt = timeNow;
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.AreWinnersPublic, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
         public async Task<EditionDto> EditionCloseAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
@@ -261,7 +262,7 @@ namespace koala.src.Modules.Core.Services
             await _db.SaveChangesAsync();
             await _accountModule.Internal_DeleteUserAndTeamDataAfterEditionCloses(id);
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.AreWinnersPublic, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
 
         public async Task<(List<EditionDto>, ApiPagination)> GetEditionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, EditionQueryDto editionQueryDto)
@@ -295,6 +296,7 @@ namespace koala.src.Modules.Core.Services
                     e.Id,
                     e.Name,
                     e.State,
+                    e.AreWinnersPublic,
                     e.TeamRegisterOpen,
                     e.TeamRegisterClose,
                     e.CreatedAt,
@@ -315,7 +317,7 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.EditionNotFound, "There is no current active edition at the moment");
             }
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(edition.Id, edition.Name, edition.State, edition.AreWinnersPublic, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
         }
 
         public async Task<SubEditionDto> CreateSubEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, SubEditionCreateDto createSubEditionDto)
