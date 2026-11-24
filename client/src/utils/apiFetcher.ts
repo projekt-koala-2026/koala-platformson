@@ -148,11 +148,13 @@ export const uploadFile = async (
     file: File,
     title: string,
     _folder: string,
-    navigate?: NavigateFunction
+    navigate?: NavigateFunction,
+    description?: string
 ): Promise<ManagedFile | null> => {
     const formData = new FormData();
     formData.append("File", file);
     formData.append("Name", title);
+    if (description?.trim()) formData.append("Description", description.trim());
 
     try {
         const response = await fetch(apiUrl + apiEndpoints.publicFiles, {

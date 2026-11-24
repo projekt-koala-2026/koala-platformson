@@ -238,6 +238,7 @@ export default function CaptainTasksPanel({ team }: { team: ApiTeam }) {
                                             createdAt={item.createdAt}
                                             updatedAt={item.updatedAt}
                                             className="mt-2"
+                                            dateOnly
                                         />
                                     </button>
                                 </li>

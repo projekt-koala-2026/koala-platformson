@@ -42,6 +42,7 @@ export const adaptPublicFile = (file: ApiPublicFile): ManagedFile => ({
     id: file.id,
     title: file.name,
     filePath: `/api/koala/content/${file.path}`,
+    description: file.description ?? undefined,
     createdAt: file.createdAt,
 });
 

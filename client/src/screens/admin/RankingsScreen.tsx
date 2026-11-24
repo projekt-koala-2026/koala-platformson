@@ -4,12 +4,12 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import SelectListbox from "../../components/SelectListbox";
 import type {
+    ApiAdminTeam,
     ApiCompetitionTask,
     ApiEdition,
     ApiRanking,
     ApiSubedition,
     ApiTaskSubmission,
-    ApiTeam,
 } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
@@ -118,8 +118,8 @@ export default function RankingsScreen() {
                     "GET",
                     navigate
                 ),
-                apiListRequestResult<ApiTeam>(
-                    `${apiEndpoints.teams}?EditionId=${editionId}&${firstPage}`,
+                apiListRequestResult<ApiAdminTeam>(
+                    `${apiEndpoints.adminTeams}?EditionId=${encodeURIComponent(editionId)}&${firstPage}`,
                     null,
                     "GET",
                     navigate
@@ -448,8 +448,8 @@ export default function RankingsScreen() {
                                                 </td>
                                                 <td className="px-4 py-3 text-ink-secondary">
                                                     {item.tier === "TIER_2"
-                                                        ? "Poziom II"
-                                                        : "Poziom I"}
+                                                        ? "Średnia"
+                                                        : "Podstawowa"}
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-semibold text-ink-heading">
                                                     {item.totalScore} / {item.maxScore}

@@ -130,19 +130,6 @@ const ProblemsPublicScreen = () => {
                                         key={stage}
                                         aria-labelledby={`stage-${selectedEditionId}-${stageIndex}`}
                                     >
-                                        <div className="mb-3 flex flex-wrap items-center gap-3">
-                                            <h2
-                                                id={`stage-${selectedEditionId}-${stageIndex}`}
-                                                className="text-xl font-semibold text-ink-heading"
-                                            >
-                                                {stage}
-                                            </h2>
-                                            {selectedEdition && (
-                                                <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-text-strong">
-                                                    {selectedEdition.title}
-                                                </span>
-                                            )}
-                                        </div>
                                         <div className="space-y-3">
                                             {files.map((file) => (
                                                 <a
@@ -159,7 +146,7 @@ const ProblemsPublicScreen = () => {
                                                                 {file.title}
                                                             </span>
                                                             <span className="mt-1 block text-sm text-ink-muted">
-                                                                Dokument PDF
+                                                                {file.description || "Dokument PDF"}
                                                             </span>
                                                         </span>
                                                     </span>

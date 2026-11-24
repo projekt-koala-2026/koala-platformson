@@ -30,7 +30,7 @@ type Feedback = { tone: "success" | "warning" | "error"; message: string } | nul
 const validatePdf = (file: File) => {
     if (file.size === 0) return "Wybrany plik jest pusty.";
     const hasPdfExtension = file.name.toLowerCase().endsWith(".pdf");
-    const hasPdfMime = !file.type || file.type === "application/pdf";
+    const hasPdfMime = file.type === "application/pdf";
     if (!hasPdfExtension || !hasPdfMime) return "Dozwolone są wyłącznie pliki PDF.";
     if (file.size > MAX_PDF_SIZE) return "Plik przekracza maksymalny rozmiar 10 MB.";
     return null;
@@ -106,6 +106,7 @@ const EditProblemsScreen = () => {
 
     const resetUploadForm = () => {
         setTitleInputValue("");
+        setDescriptionInputValue("");
         setSelectedFile(null);
     };
 
@@ -137,6 +138,7 @@ const EditProblemsScreen = () => {
             setFeedback({ tone: "error", message: "Wybierz plik PDF." });
             return;
         }
+        const description = descriptionInputValue.trim();
         const validationError = validatePdf(selectedFile);
         if (validationError) {
             setFeedback({ tone: "error", message: validationError });
@@ -147,9 +149,10 @@ const EditProblemsScreen = () => {
         setFeedback(null);
         const uploadedFile = await uploadFile(
             selectedFile,
-            selectedFile.name,
+            subpoint,
             "problems",
-            navigate
+            navigate,
+            description || undefined
         );
         if (!uploadedFile) {
             setFeedback({ tone: "error", message: "Nie udało się wysłać pliku na serwer." });
@@ -163,9 +166,10 @@ const EditProblemsScreen = () => {
             `/api/koala/content/${uploadedFile.id}.pdf`;
         const newProblem: ProblemFile = {
             id: uploadedFile.id,
-            title: selectedFile.name,
+            title: uploadedFile.title,
             fileName: fileUrl.split("/").pop() || selectedFile.name,
             url: fileUrl,
+            description: uploadedFile.description || description || undefined,
         };
         const editionData = allProblemsData[selectedEditionId] ?? {};
         const updatedData: ProblemsByEdition = {
@@ -333,10 +337,6 @@ const EditProblemsScreen = () => {
                                         >
                                             <div className="border-b border-line-subtle bg-canvas px-5 py-4">
                                                 <h3 className="font-semibold">{subpoint}</h3>
-                                                <p className="mt-0.5 text-xs text-ink-muted">
-                                                    {descriptionInputValue || "Brak opisu"} Przyszły
-                                                    opis pliku, oczekiwanie na edycje endpointu
-                                                </p>
                                             </div>
                                             <ul className="divide-y divide-line-subtle">
                                                 {files.map((pdf) => (
@@ -351,8 +351,15 @@ const EditProblemsScreen = () => {
                                                             className="group flex min-w-0 items-center gap-3 text-sm font-medium text-ink hover:text-brand-text"
                                                         >
                                                             <FaFilePdf className="shrink-0 text-xl text-danger-icon" />
-                                                            <span className="truncate group-hover:underline">
-                                                                {pdf.title}
+                                                            <span className="min-w-0">
+                                                                <span className="block truncate group-hover:underline">
+                                                                    {pdf.title || pdf.fileName}
+                                                                </span>
+                                                                {pdf.description && (
+                                                                    <span className="mt-1 block truncate text-xs font-normal text-ink-muted">
+                                                                        {pdf.description}
+                                                                    </span>
+                                                                )}
                                                             </span>
                                                         </a>
                                                         <Button
@@ -416,6 +423,7 @@ const EditProblemsScreen = () => {
                             autoFocus
                             disabled={uploading}
                             className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted"
+                            required
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
@@ -425,7 +433,6 @@ const EditProblemsScreen = () => {
                             value={descriptionInputValue}
                             onChange={(event) => setDescriptionInputValue(event.target.value)}
                             placeholder="np. Zadania z etapu zdalnego dla szkół ponadpodstawowych"
-                            autoFocus
                             disabled={uploading}
                             className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted"
                         />

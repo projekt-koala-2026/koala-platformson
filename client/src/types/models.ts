@@ -330,11 +330,13 @@ export interface ManagedFile {
     title: string;
     filePath: string;
     url?: string;
+    description?: string;
     createdAt?: string;
 }
 export interface ApiPublicFile {
     id: string;
     name: string;
+    description?: string | null;
     path: string;
     type: string;
     createdAt: string;
@@ -345,6 +347,7 @@ export interface ProblemFile {
     title: string;
     fileName: string;
     url: string;
+    description?: string;
 }
 export type ProblemsByEdition = Record<string, Record<string, ProblemFile[]>>;
 export interface MarkdownStaticPage {
