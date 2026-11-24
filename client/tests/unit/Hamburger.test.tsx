@@ -42,7 +42,7 @@ describe("nawigacja boczna", () => {
         expect(screen.getByRole("dialog", { name: "Nawigacja" })).toBeInTheDocument();
     });
 
-    it("na szerokim ekranie otwiera panel bez blokowania strony", async () => {
+    it("na szerokim ekranie domyślnie otwiera panel i pamięta jego zamknięcie", async () => {
         const user = userEvent.setup();
         vi.stubGlobal(
             "matchMedia",
@@ -55,7 +55,6 @@ describe("nawigacja boczna", () => {
         try {
             const navigate = vi.fn();
             const view = render(<Hamburger options={[{ label: "Wpisy", onClick: navigate }]} />);
-            await user.click(screen.getByRole("button", { name: "Otwórz nawigację" }));
             expect(screen.getByRole("region", { name: "Nawigacja" })).toBeInTheDocument();
             expect(document.body).toHaveClass("navigation-panel-open");
             expect(document.body.style.overflow).toBe("");
@@ -63,10 +62,15 @@ describe("nawigacja boczna", () => {
             expect(navigate).toHaveBeenCalledOnce();
             expect(screen.getByRole("region", { name: "Nawigacja" })).toBeInTheDocument();
             view.unmount();
-            render(<Hamburger options={[]} />);
+            const secondView = render(<Hamburger options={[]} />);
             expect(screen.getByRole("region", { name: "Nawigacja" })).toBeInTheDocument();
             await user.keyboard("{Escape}");
             expect(document.body).not.toHaveClass("navigation-panel-open");
+            expect(sessionStorage.getItem("koala-desktop-navigation-open")).toBe("false");
+            secondView.unmount();
+            const { unmount } = render(<Hamburger options={[]} />);
+            expect(screen.queryByRole("region", { name: "Nawigacja" })).not.toBeInTheDocument();
+            unmount();
         } finally {
             vi.unstubAllGlobals();
         }
@@ -85,7 +89,7 @@ describe("nawigacja boczna", () => {
         vi.stubGlobal("matchMedia", vi.fn().mockReturnValue(query));
         try {
             render(<Hamburger options={[{ label: "Wpisy", onClick: vi.fn() }]} />);
-            await user.click(screen.getByRole("button", { name: "Otwórz nawigację" }));
+            expect(screen.getByRole("region", { name: "Nawigacja" })).toBeInTheDocument();
             query.matches = false;
             act(() => onChange?.());
             expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

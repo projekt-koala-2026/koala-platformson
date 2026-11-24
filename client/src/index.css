@@ -178,6 +178,12 @@
     .app-admin-page {
         @apply max-w-7xl lg:px-8;
     }
+    .app-footer-logos {
+        scrollbar-width: none;
+    }
+    .app-footer-logos::-webkit-scrollbar {
+        display: none;
+    }
     .app-select {
         @apply appearance-none bg-no-repeat pr-10;
         background-image:

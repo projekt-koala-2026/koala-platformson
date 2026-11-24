@@ -2,6 +2,7 @@ export type Role =
     | "ORGANIZATION_ADMIN"
     | "ORGANIZATION_EDITOR"
     | "ORGANIZATION_REVIEWER"
+    | "ORGANIZATION_RODO_MODERATOR"
     | "TEAM_CAPTAIN"
     | "TEAM_GUARDIAN";
 
@@ -183,6 +184,10 @@ export type ApiTeam = {
     teamMembers: ApiTeamMember[];
     joinCode: ApiTeamJoinCode | null;
 };
+/*export type ApiAdminTeam = Omit<
+    ApiTeam,
+    "teamCaptain" | "teamGuardian" | "teamMembers" | "joinCode"
+>;*/
 
 export interface ApiAdminTeam {
     id: string;
@@ -306,6 +311,7 @@ export interface Post {
     updatedAt: string;
     isVisible: boolean;
 }
+export type SponsorType = "organizer" | "sponsor" | "patron";
 export interface Sponsor {
     id: string;
     name: string;
@@ -315,6 +321,7 @@ export interface Sponsor {
     isVisible: boolean;
     createdAt: string;
     updatedAt: string;
+    type: SponsorType;
 }
 export interface Koalicjant {
     id: string;
@@ -357,6 +364,7 @@ export interface UserRoles {
     isAdmin: boolean;
     isEditor: boolean;
     isReviewer: boolean;
+    isRodoModerator: boolean;
     isGuardian: boolean;
     isCaptain: boolean;
 }

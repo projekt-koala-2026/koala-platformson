@@ -6,12 +6,15 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import RecordDates from "../../components/RecordDates";
-import type { ApiSponsor, Sponsor } from "../../types/models";
+import SelectListbox from "../../components/SelectListbox";
+import type { ApiSponsor, Sponsor, SponsorType } from "../../types/models";
 import { adaptSponsor } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
+import { sponsorTypeOptions } from "../../utils/sponsorTypes";
 
 interface SponsorForm {
+    type: SponsorType;
     name: string;
     websiteUrl: string;
     logoUrl: string;
@@ -19,6 +22,7 @@ interface SponsorForm {
     isVisible: boolean;
 }
 const emptyForm: SponsorForm = {
+    type: "sponsor",
     name: "",
     websiteUrl: "",
     logoUrl: "",
@@ -80,6 +84,7 @@ const EditSponsorInfo = () => {
     };
     const openEdit = (sponsor: Sponsor) => {
         setForm({
+            type: sponsor.type,
             name: sponsor.name,
             websiteUrl: sponsor.websiteUrl,
             logoUrl: sponsor.logoUrl ?? "",
@@ -101,6 +106,7 @@ const EditSponsorInfo = () => {
         if (saving) return;
         setFeedback(null);
         const normalized: SponsorForm = {
+            type: form.type,
             name: form.name.trim(),
             websiteUrl: form.websiteUrl.trim(),
             logoUrl: form.logoUrl.trim(),
@@ -118,14 +124,15 @@ const EditSponsorInfo = () => {
             });
             return;
         }
-        if (!isHttpUrl(normalized.websiteUrl)) {
+        const editing = modal !== "create";
+        if ((editing || normalized.websiteUrl) && !isHttpUrl(normalized.websiteUrl)) {
             setFeedback({
                 tone: "error",
                 message: "Adres strony musi być poprawnym URL-em HTTP lub HTTPS.",
             });
             return;
         }
-        if (!isHttpUrl(normalized.logoUrl)) {
+        if ((editing || normalized.logoUrl) && !isHttpUrl(normalized.logoUrl)) {
             setFeedback({
                 tone: "error",
                 message: "Adres logo musi być poprawnym URL-em HTTP lub HTTPS.",
@@ -140,8 +147,9 @@ const EditSponsorInfo = () => {
             name: normalized.name,
             contentJson: JSON.stringify({
                 version: "1",
-                sponsor_web_url: normalized.websiteUrl,
-                sponsor_logo_image_url: normalized.logoUrl,
+                sponsor_web_url: normalized.websiteUrl || null,
+                sponsor_logo_image_url: normalized.logoUrl || null,
+                sponsor_type: normalized.type,
                 body_pl: normalized.description,
             }),
             isVisible: normalized.isVisible,
@@ -213,7 +221,8 @@ const EditSponsorInfo = () => {
                         </p>
                         <h1 className="mt-1 text-3xl font-bold tracking-tight">Sponsorzy</h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Zarządzaj logotypami i odnośnikami wyświetlanymi w stopce strony.
+                            Zarządzaj organizatorami, sponsorami i patronami wyświetlanymi w stopce
+                            strony.
                         </p>
                     </div>
                     <Button
@@ -270,6 +279,13 @@ const EditSponsorInfo = () => {
                                         <h2 className="text-lg font-semibold text-ink-heading">
                                             {sponsor.name}
                                         </h2>
+                                        <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-brand-text">
+                                            {
+                                                sponsorTypeOptions.find(
+                                                    (option) => option.value === sponsor.type
+                                                )?.label
+                                            }
+                                        </p>
                                         <span
                                             className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${sponsor.isVisible ? "bg-brand-soft text-brand-text" : "bg-surface-muted text-ink-secondary"}`}
                                         >
@@ -289,6 +305,19 @@ const EditSponsorInfo = () => {
                                             <span className="truncate">{sponsor.websiteUrl}</span>
                                             <FaExternalLinkAlt className="shrink-0 text-xs" />
                                         </a>
+                                        {sponsor.websiteUrl && (
+                                            <a
+                                                href={sponsor.websiteUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-sm font-medium text-brand-text hover:underline"
+                                            >
+                                                <span className="truncate">
+                                                    {sponsor.websiteUrl}
+                                                </span>
+                                                <FaExternalLinkAlt className="shrink-0 text-xs" />
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                                 <p className="mt-4 flex-1 text-sm leading-6 text-ink-secondary">
@@ -334,6 +363,17 @@ const EditSponsorInfo = () => {
                             {feedback.message}
                         </p>
                     )}
+                    <div>
+                        <p id="sponsor-type-label" className="mb-1.5 text-sm font-medium text-ink">
+                            Typ wpisu
+                        </p>
+                        <SelectListbox
+                            value={form.type}
+                            options={sponsorTypeOptions}
+                            onChange={(type) => setForm((value) => ({ ...value, type }))}
+                            ariaLabelledBy="sponsor-type-label"
+                        />
+                    </div>
                     <label className="block text-sm font-medium text-ink">
                         Nazwa *
                         <input
@@ -347,7 +387,7 @@ const EditSponsorInfo = () => {
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
-                        Adres strony *
+                        Adres strony{modal !== "create" ? " *" : " (opcjonalnie)"}
                         <input
                             type="url"
                             value={form.websiteUrl}
@@ -356,11 +396,11 @@ const EditSponsorInfo = () => {
                             }
                             className={inputClass}
                             placeholder="https://…"
-                            required
+                            required={modal !== "create"}
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
-                        Adres logo *
+                        Adres logo{modal !== "create" ? " *" : " (opcjonalnie)"}
                         <input
                             type="url"
                             value={form.logoUrl}
@@ -369,9 +409,14 @@ const EditSponsorInfo = () => {
                             }
                             className={inputClass}
                             placeholder="https://…"
-                            required
+                            required={modal !== "create"}
                         />
                     </label>
+                    <p className="text-xs text-ink-muted">
+                        {modal === "create"
+                            ? "Bez logo wyświetlimy nazwę. Bez adresu strony wpis nie będzie odnośnikiem."
+                            : "Przy edycji adres strony i logo są wymagane."}
+                    </p>
                     {form.logoUrl && isHttpUrl(form.logoUrl) && (
                         <div className="grid min-h-28 place-items-center rounded-xl border border-line bg-canvas p-4">
                             <img

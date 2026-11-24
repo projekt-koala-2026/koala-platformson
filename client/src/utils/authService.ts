@@ -4,6 +4,7 @@ const emptyRoles: UserRoles = {
     isAdmin: false,
     isEditor: false,
     isReviewer: false,
+    isRodoModerator: false,
     isGuardian: false,
     isCaptain: false,
 };
@@ -17,6 +18,7 @@ export const getUserRoles = (): UserRoles => {
             isAdmin: parsed.isAdmin === true,
             isEditor: parsed.isEditor === true,
             isReviewer: parsed.isReviewer === true,
+            isRodoModerator: parsed.isRodoModerator === true,
             isGuardian: parsed.isGuardian === true,
             isCaptain: parsed.isCaptain === true,
         };
@@ -29,6 +31,7 @@ export const rolesToFlags = (roles: Role[]): UserRoles => ({
     isAdmin: roles.includes("ORGANIZATION_ADMIN"),
     isEditor: roles.includes("ORGANIZATION_EDITOR"),
     isReviewer: roles.includes("ORGANIZATION_REVIEWER"),
+    isRodoModerator: roles.includes("ORGANIZATION_RODO_MODERATOR"),
     isGuardian: roles.includes("TEAM_GUARDIAN"),
     isCaptain: roles.includes("TEAM_CAPTAIN"),
 });
@@ -48,13 +51,15 @@ export const getStoredUserId = () => localStorage.getItem("userId");
 export const isAdmin = () => getUserRoles().isAdmin || false;
 export const isEditor = () => getUserRoles().isEditor || false;
 export const isReviewer = () => getUserRoles().isReviewer || false;
+export const isRodoModerator = () => getUserRoles().isRodoModerator || false;
 export const isGuardian = () => getUserRoles().isGuardian || false;
 export const isCaptain = () => getUserRoles().isCaptain || false;
 
 export type AuthArea = "organization" | "team";
 
 export const getAuthArea = (roles = getUserRoles()): AuthArea | null => {
-    if (roles.isAdmin || roles.isEditor || roles.isReviewer) return "organization";
+    if (roles.isAdmin || roles.isEditor || roles.isReviewer || roles.isRodoModerator)
+        return "organization";
     if (roles.isCaptain || roles.isGuardian) return "team";
     return null;
 };
@@ -66,6 +71,7 @@ export const getOrganizationHomePath = (roles = getUserRoles()) => {
     if (roles.isAdmin) return "/admin";
     if (roles.isEditor) return "/admin/posts";
     if (roles.isReviewer) return "/admin/reviews";
+    if (roles.isRodoModerator) return "/admin/rodos";
     return "/";
 };
 
@@ -83,6 +89,7 @@ const roleFlags: Record<Role, keyof UserRoles> = {
     ORGANIZATION_ADMIN: "isAdmin",
     ORGANIZATION_EDITOR: "isEditor",
     ORGANIZATION_REVIEWER: "isReviewer",
+    ORGANIZATION_RODO_MODERATOR: "isRodoModerator",
     TEAM_GUARDIAN: "isGuardian",
     TEAM_CAPTAIN: "isCaptain",
 };

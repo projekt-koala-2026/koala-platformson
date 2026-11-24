@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import type {
+    ApiAdminTeam,
     ApiCompetitionTask,
     ApiEdition,
     ApiSubedition,
     ApiTaskSubmission,
+    ApiTeam,
 } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
+import { isRodoModerator } from "../../utils/authService";
 
 type ReviewProgress = {
     totalSubmissions: number;
@@ -30,14 +33,15 @@ type EditionOverview = {
     edition: ApiEdition;
     subeditions: ApiSubedition[];
     inactiveSubeditionsPastStart: ApiSubedition[];
-    // tier1Teams: number; // Requires access to the full teams endpoint.
-    // tier2Teams: number;
-    // teamsWithoutGuardians: number;
-    // rodo: { submitted: number; accepted: number; rejected: number; missing: number };
+    tier1Teams: number;
+    tier2Teams: number;
+    teamsWithoutGuardians: number | null;
+    rodo: { submitted: number; accepted: number; rejected: number; missing: number };
 };
 
 const PanelScreen = () => {
     const navigate = useNavigate();
+    const canViewRodo = useMemo(() => isRodoModerator(), []);
     const [reviewOverview, setReviewOverview] = useState<ReviewOverview | null>(null);
     const [reviewOverviewLoading, setReviewOverviewLoading] = useState(true);
     const [summaryError, setSummaryError] = useState(false);
@@ -59,7 +63,7 @@ const PanelScreen = () => {
                 );
                 if (!editions.data) throw new Error("Editions unavailable");
                 let submissions = 0,
-                    // expectedSubmissions = 0, // Requires access to the full teams endpoint.
+                    expectedSubmissions = 0,
                     requiredSlots = 0,
                     unassigned = 0,
                     reviewedSlots = 0,
@@ -68,15 +72,14 @@ const PanelScreen = () => {
                 let activeSubeditionFound = false;
                 let overview: EditionOverview | null = null;
                 for (const edition of editions.data) {
-                    /* Admins cannot use this full team endpoint; its dependent panel widgets are commented out below.
-                    const teams = await apiListRequestResult<ApiTeam>(
-                        `${apiEndpoints.teams}?${firstPage}&EditionId=${edition.id}`,
+                    const teams = await apiListRequestResult<ApiTeam | ApiAdminTeam>(
+                        `${canViewRodo ? apiEndpoints.teams : apiEndpoints.adminTeams}?${firstPage}&EditionId=${edition.id}`,
                         null,
                         "GET",
                         navigate
                     );
                     const editionTeams = teams.data ?? [];
-                    */
+
                     const subeditions = await apiListRequestResult<ApiSubedition>(
                         `${apiEndpoints.subeditions(edition.id)}?${firstPage}`,
                         null,
@@ -85,13 +88,12 @@ const PanelScreen = () => {
                     );
                     if (!subeditions.data) throw new Error("Edition details unavailable");
                     if (!overview) {
-                        //const editionTeams = teams.data ?? [];
+                        const editionTeams = teams.data ?? [];
                         const editionSubeditions = subeditions.data ?? [];
                         const now = Date.now();
-                        /* RODO endpoints require a moderator role; keep this calculation commented for future access.
                         const rodoResults = await Promise.all(
-                            editionTeams.map((team) =>
-                                apiListRequestResult<ApiTeamMember>(
+                            (canViewRodo ? editionTeams : []).map((team) =>
+                                apiListRequestResult<{ rodoState: string }>(
                                     `${apiEndpoints.teamRodos(team.id)}?${firstPage}`,
                                     null,
                                     "GET",
@@ -111,7 +113,6 @@ const PanelScreen = () => {
                         const submitted = rodoDocuments.filter(
                             (member) => member.rodoState === "RODO_UNVERIFIED"
                         ).length;
-                        */
                         overview = {
                             edition,
                             subeditions: editionSubeditions,
@@ -123,12 +124,15 @@ const PanelScreen = () => {
                                     deadline <= now
                                 );
                             }),
-                            /* tier1Teams: editionTeams.filter((team) => team.tier === "TIER_1")
+                            tier1Teams: editionTeams.filter((team) => team.tier === "TIER_1")
                                 .length,
                             tier2Teams: editionTeams.filter((team) => team.tier === "TIER_2")
                                 .length,
-                            teamsWithoutGuardians: editionTeams.filter((team) => !team.teamGuardian)
-                                .length,
+                            teamsWithoutGuardians: canViewRodo
+                                ? editionTeams.filter(
+                                      (team) => "teamGuardian" in team && !team.teamGuardian
+                                  ).length
+                                : null,
                             rodo: {
                                 submitted,
                                 accepted,
@@ -136,7 +140,7 @@ const PanelScreen = () => {
                                 missing: rodoDocuments.filter(
                                     (member) => member.rodoState === "RODO_NONE"
                                 ).length,
-                            }, */
+                            },
                         };
                     }
                     for (const subedition of (subeditions.data ?? []).filter(
@@ -151,11 +155,11 @@ const PanelScreen = () => {
                         );
                         if (!taskList.data) throw new Error("Tasks unavailable");
                         for (const task of taskList.data) {
-                            /* expectedSubmissions += (teams.data ?? []).filter(
+                            expectedSubmissions += (teams.data ?? []).filter(
                                 (team) =>
                                     team.tier === "TIER_2" ||
                                     (team.tier === "TIER_1" && task.tier === "TIER_1")
-                            ).length; */
+                            ).length;
                             const result = await apiRequestResult<ReviewProgress>(
                                 apiEndpoints.taskReviewProgress(task.id),
                                 null,
@@ -219,7 +223,7 @@ const PanelScreen = () => {
         return () => {
             active = false;
         };
-    }, [navigate, summaryRevision]);
+    }, [navigate, summaryRevision, canViewRodo]);
 
     return (
         <div className="min-h-screen bg-canvas text-ink-heading">
@@ -253,9 +257,15 @@ const PanelScreen = () => {
                         <h1 className="mt-1 text-2xl font-bold">{editionOverview.edition.name}</h1>
                         <div className="mt-5 grid gap-5 lg:grid-cols-2">
                             <div className="rounded-xl bg-canvas p-4">
-                                <h2 className="font-semibold">Etapy</h2>
+                                <h2 className="font-semibold">
+                                    Etapy ({editionOverview.subeditions.length})
+                                </h2>
                                 {editionOverview.subeditions.length ? (
-                                    <ul className="mt-2 flex flex-wrap gap-2">
+                                    <ul
+                                        aria-label="Etapy aktywnej edycji"
+                                        tabIndex={0}
+                                        className="mt-2 flex max-h-48 flex-wrap gap-2 overflow-y-auto overscroll-contain pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus"
+                                    >
                                         {editionOverview.subeditions.map((item) => (
                                             <li
                                                 key={item.id}
@@ -270,7 +280,6 @@ const PanelScreen = () => {
                                     <p className="mt-2 text-sm text-ink-secondary">Brak etapów.</p>
                                 )}
                             </div>
-                            {/* Team counts need the full team endpoint, which is restricted to RODO moderators.
                             <div className="rounded-xl bg-canvas p-4">
                                 <h2 className="font-semibold">Zespoły według szkół</h2>
                                 {(() => {
@@ -309,20 +318,18 @@ const PanelScreen = () => {
                                     );
                                 })()}
                             </div>
-                            */}
-                            {/* Guardian counts also depend on the restricted full-team endpoint.
-                            {editionOverview.teamsWithoutGuardians > 0 && (
-                                <div className="rounded-xl bg-canvas p-4">
-                                    <h2 className="font-semibold">Opieka drużyn</h2>
-                                    <p className="mt-2 text-sm text-ink-secondary">
-                                        Drużyny bez opiekunów:{" "}
-                                        <b className="text-ink-heading">
-                                            {editionOverview.teamsWithoutGuardians}
-                                        </b>
-                                    </p>
-                                </div>
-                            )}
-                            */}
+                            {editionOverview.teamsWithoutGuardians !== null &&
+                                editionOverview.teamsWithoutGuardians > 0 && (
+                                    <div className="rounded-xl bg-canvas p-4">
+                                        <h2 className="font-semibold">Opieka drużyn</h2>
+                                        <p className="mt-2 text-sm text-ink-secondary">
+                                            Drużyny bez opiekunów:{" "}
+                                            <b className="text-ink-heading">
+                                                {editionOverview.teamsWithoutGuardians}
+                                            </b>
+                                        </p>
+                                    </div>
+                                )}
                             {editionOverview.inactiveSubeditionsPastStart.length > 0 && (
                                 <div
                                     role="status"
@@ -331,7 +338,11 @@ const PanelScreen = () => {
                                     <h2 className="font-semibold">
                                         Termin odsyłania zadań już się rozpoczął
                                     </h2>
-                                    <ul className="mt-2 list-inside list-disc">
+                                    <ul
+                                        aria-label="Etapy wymagające aktywacji"
+                                        tabIndex={0}
+                                        className="mt-2 max-h-40 list-inside list-disc overflow-y-auto overscroll-contain pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-focus"
+                                    >
                                         {editionOverview.inactiveSubeditionsPastStart.map(
                                             (item) => (
                                                 <li key={item.id}>
@@ -342,77 +353,76 @@ const PanelScreen = () => {
                                     </ul>
                                 </div>
                             )}
-                            {/* RODO summary is disabled because admins cannot access consent endpoints.
-                            {editionOverview.rodo.submitted +
-                                editionOverview.rodo.rejected +
-                                editionOverview.rodo.missing >
-                                0 && (
-                                <div className="rounded-xl bg-canvas p-4 lg:col-span-2">
-                                    <h2 className="font-semibold">Zgody RODO</h2>
-                                    {(() => {
-                                        const { submitted, accepted, rejected, missing } =
-                                            editionOverview.rodo;
-                                        const total = submitted + accepted + rejected + missing;
-                                        const width = (count: number) =>
-                                            `${total ? (count / total) * 100 : 0}%`;
-                                        return (
-                                            <>
-                                                <div
-                                                    className="mt-3 flex h-4 overflow-hidden rounded-full bg-surface-muted"
-                                                    role="img"
-                                                    aria-label={`Złożone: ${submitted}, potwierdzone: ${accepted}, odrzucone: ${rejected}, brakujące: ${missing}`}
-                                                >
+                            {canViewRodo &&
+                                editionOverview.rodo.submitted +
+                                    editionOverview.rodo.rejected +
+                                    editionOverview.rodo.missing >
+                                    0 && (
+                                    <div className="rounded-xl bg-canvas p-4 lg:col-span-2">
+                                        <h2 className="font-semibold">Zgody RODO</h2>
+                                        {(() => {
+                                            const { submitted, accepted, rejected, missing } =
+                                                editionOverview.rodo;
+                                            const total = submitted + accepted + rejected + missing;
+                                            const width = (count: number) =>
+                                                `${total ? (count / total) * 100 : 0}%`;
+                                            return (
+                                                <>
                                                     <div
-                                                        className="bg-warning"
-                                                        style={{ width: width(submitted) }}
-                                                        title="Złożone, do weryfikacji"
-                                                    />
-                                                    <div
-                                                        className="bg-brand"
-                                                        style={{ width: width(accepted) }}
-                                                        title="Potwierdzone"
-                                                    />
-                                                    <div
-                                                        className="bg-danger"
-                                                        style={{ width: width(rejected) }}
-                                                        title="Odrzucone"
-                                                    />
-                                                    <div
-                                                        className="bg-surface-muted"
-                                                        style={{ width: width(missing) }}
-                                                        title="Brak zgody"
-                                                    />
-                                                </div>
+                                                        className="mt-3 flex h-4 overflow-hidden rounded-full bg-surface-muted"
+                                                        role="img"
+                                                        aria-label={`Złożone: ${submitted}, potwierdzone: ${accepted}, odrzucone: ${rejected}, brakujące: ${missing}`}
+                                                    >
+                                                        <div
+                                                            className="bg-warning"
+                                                            style={{ width: width(submitted) }}
+                                                            title="Złożone, do weryfikacji"
+                                                        />
+                                                        <div
+                                                            className="bg-brand"
+                                                            style={{ width: width(accepted) }}
+                                                            title="Potwierdzone"
+                                                        />
+                                                        <div
+                                                            className="bg-danger"
+                                                            style={{ width: width(rejected) }}
+                                                            title="Odrzucone"
+                                                        />
+                                                        <div
+                                                            className="bg-surface-muted"
+                                                            style={{ width: width(missing) }}
+                                                            title="Brak zgody"
+                                                        />
+                                                    </div>
 
-                                                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-secondary">
-                                                    <span>
-                                                        <b className="text-warning-text">
-                                                            {submitted}
-                                                        </b>{" "}
-                                                        złożone
-                                                    </span>
-                                                    <span>
-                                                        <b className="text-success-text">
-                                                            {accepted}
-                                                        </b>{" "}
-                                                        potwierdzone
-                                                    </span>
-                                                    <span>
-                                                        <b className="text-danger-text">
-                                                            {rejected}
-                                                        </b>{" "}
-                                                        odrzucone
-                                                    </span>
-                                                    <span>
-                                                        <b>{missing}</b> brakuje
-                                                    </span>
-                                                </div>
-                                            </>
-                                        );
-                                    })()}
-                                </div>
-                            )}
-                            */}
+                                                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-secondary">
+                                                        <span>
+                                                            <b className="text-warning-text">
+                                                                {submitted}
+                                                            </b>{" "}
+                                                            złożone
+                                                        </span>
+                                                        <span>
+                                                            <b className="text-success-text">
+                                                                {accepted}
+                                                            </b>{" "}
+                                                            potwierdzone
+                                                        </span>
+                                                        <span>
+                                                            <b className="text-danger-text">
+                                                                {rejected}
+                                                            </b>{" "}
+                                                            odrzucone
+                                                        </span>
+                                                        <span>
+                                                            <b>{missing}</b> brakuje
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
                             {hasActiveSubedition && (
                                 <div className="rounded-xl bg-canvas p-4 lg:col-span-2">
                                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
@@ -442,14 +452,6 @@ const PanelScreen = () => {
                                                 {reviewOverview.requiredSlots} wymaganych ocen
                                                 uzupełnionych · {reviewOverview.submissions}{" "}
                                                 nadesłanych odpowiedzi
-                                                {/* Missing submission totals require full team access.
-                                                ·{" "}{Math.max(
-                                                    0,
-                                                    reviewOverview.expectedSubmissions -
-                                                        reviewOverview.submissions
-                                                )}{" "}
-                                                odpowiedzi brakuje
-                                                */}
                                             </p>
                                             {reviewOverview.unassigned > 0 && (
                                                 <p className="mt-2 text-warning-text">

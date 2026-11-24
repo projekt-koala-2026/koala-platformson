@@ -20,6 +20,7 @@ namespace koala.src.Modules.Account.Dtos
             RoleNames.NAME_ORGANIZATION_ADMIN,
             RoleNames.NAME_ORGANIZATION_EDITOR,
             RoleNames.NAME_ORGANIZATION_REVIEWER,
+            RoleNames.NAME_ORGANIZATION_RODO_MODERATOR,
             RoleNames.NAME_TEAM_CAPTAIN,
             RoleNames.NAME_TEAM_GUARDIAN
         };

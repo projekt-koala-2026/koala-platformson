@@ -11,9 +11,9 @@ const desktopQuery = "(min-width: 1280px)";
 
 const desktopMenuIsOpen = () => {
     try {
-        return sessionStorage.getItem(desktopMenuKey) === "true";
+        return sessionStorage.getItem(desktopMenuKey) !== "false";
     } catch {
-        return false;
+        return true;
     }
 };
 
