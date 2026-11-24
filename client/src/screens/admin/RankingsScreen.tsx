@@ -3,6 +3,7 @@ import { FaEdit, FaEye, FaEyeSlash, FaLayerGroup, FaPlus, FaRedo, FaTrash } from
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
+import EditionWinners from "../../components/EditionWinners";
 import Modal from "../../components/Modal";
 import RankingResults from "../../components/RankingResults";
 import SelectListbox from "../../components/SelectListbox";
@@ -312,6 +313,9 @@ export default function RankingsScreen() {
                         </p>
                     )}
                 </section>
+                {browser.edition && (
+                    <EditionWinners key={browser.edition.id} edition={browser.edition} />
+                )}
                 {browser.loading ? (
                     <p role="status" className="py-8 text-ink-secondary">
                         Ładowanie rankingów…
