@@ -56,6 +56,26 @@ namespace koala.src.Modules.Cms.Dtos
                 }
             };
         }
+        private static Func<string?, bool> HasStringOrNullProperty(string propertyName)
+        {
+            return content =>
+            {
+                if (string.IsNullOrWhiteSpace(content))
+                    return false;
+
+                try
+                {
+                    using var doc = JsonDocument.Parse(content);
+                    return doc.RootElement.TryGetProperty(propertyName, out var property)
+                        && (property.ValueKind == JsonValueKind.String
+                            || property.ValueKind == JsonValueKind.Null);
+                }
+                catch
+                {
+                    return false;
+                }
+            };
+        }
         public UpdateSponsorRequestDtoValidator()
         {
             RuleFor(x => x.Name)
@@ -80,13 +100,13 @@ namespace koala.src.Modules.Cms.Dtos
                 .WithErrorCode(KoalaValidationErrorCodes.ContentJsonInvalid)
                 .WithMessage("ContentJson field must be a valid json!")
 
-                .Must(HasNonEmptyStringProperty("sponsor_web_url"))
+                .Must(HasStringOrNullProperty("sponsor_web_url"))
                 .WithErrorCode(KoalaValidationErrorCodes.ContentJsonSponsorWebUrlFieldInvalid)
-                .WithMessage("ContentJson filed must contain valid 'sponsor_web_url' field!")
+                .WithMessage("ContentJson filed must contain valid string or null for 'sponsor_web_url'!")
 
-                .Must(HasNonEmptyStringProperty("sponsor_logo_image_url"))
+                .Must(HasStringOrNullProperty("sponsor_logo_image_url"))
                 .WithErrorCode(KoalaValidationErrorCodes.ContentJsonSponsorLogoImageUrlFieldInvalid)
-                .WithMessage("ContentJson filed must contain valid 'sponsor_logo_image_url' field!")
+                .WithMessage("ContentJson filed must contain valid string or null for 'sponsor_logo_image_url'!")
 
                 .Must(HasNonEmptyStringProperty("body_pl"))
                 .WithErrorCode(KoalaValidationErrorCodes.ContentJsonBodyPLFieldInvalid)

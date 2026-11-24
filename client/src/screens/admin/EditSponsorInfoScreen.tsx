@@ -124,15 +124,14 @@ const EditSponsorInfo = () => {
             });
             return;
         }
-        const editing = modal !== "create";
-        if ((editing || normalized.websiteUrl) && !isHttpUrl(normalized.websiteUrl)) {
+        if (normalized.websiteUrl && !isHttpUrl(normalized.websiteUrl)) {
             setFeedback({
                 tone: "error",
                 message: "Adres strony musi być poprawnym URL-em HTTP lub HTTPS.",
             });
             return;
         }
-        if ((editing || normalized.logoUrl) && !isHttpUrl(normalized.logoUrl)) {
+        if (normalized.logoUrl && !isHttpUrl(normalized.logoUrl)) {
             setFeedback({
                 tone: "error",
                 message: "Adres logo musi być poprawnym URL-em HTTP lub HTTPS.",
@@ -387,7 +386,7 @@ const EditSponsorInfo = () => {
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
-                        Adres strony{modal !== "create" ? " *" : " (opcjonalnie)"}
+                        Adres strony (opcjonalnie)
                         <input
                             type="url"
                             value={form.websiteUrl}
@@ -396,11 +395,10 @@ const EditSponsorInfo = () => {
                             }
                             className={inputClass}
                             placeholder="https://…"
-                            required={modal !== "create"}
                         />
                     </label>
                     <label className="block text-sm font-medium text-ink">
-                        Adres logo{modal !== "create" ? " *" : " (opcjonalnie)"}
+                        Adres logo (opcjonalnie)
                         <input
                             type="url"
                             value={form.logoUrl}
@@ -409,13 +407,10 @@ const EditSponsorInfo = () => {
                             }
                             className={inputClass}
                             placeholder="https://…"
-                            required={modal !== "create"}
                         />
                     </label>
                     <p className="text-xs text-ink-muted">
-                        {modal === "create"
-                            ? "Bez logo wyświetlimy nazwę. Bez adresu strony wpis nie będzie odnośnikiem."
-                            : "Przy edycji adres strony i logo są wymagane."}
+                        Bez logo wyświetlimy nazwę. Bez adresu strony wpis nie będzie odnośnikiem.
                     </p>
                     {form.logoUrl && isHttpUrl(form.logoUrl) && (
                         <div className="grid min-h-28 place-items-center rounded-xl border border-line bg-canvas p-4">
