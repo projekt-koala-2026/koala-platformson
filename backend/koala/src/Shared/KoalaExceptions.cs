@@ -117,6 +117,7 @@ namespace koala.src.Shared
         public const string RankingCannotMergeTheSameRanking = "KOALA_RANKING_CANNOT_MERGE_THE_SAME_RANKING";
         public const string RankingsTierConflict = "KOALA_RANKINGS_TIER_CONFLICT";
         public const string RankingAlreadyExists = "KOALA_RANKING_ALREADY_EXISTS";
+        public const string RankingDataNotFound = "KOALA_RANKING_DATA_NOT_FOUND";
 
     }
 

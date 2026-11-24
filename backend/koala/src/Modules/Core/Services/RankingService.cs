@@ -464,6 +464,38 @@ namespace koala.src.Modules.Core.Services
             );
         }
 
+        public async Task DeleteRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid ranking_id, Guid ranking_data_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id && r.EditionId == edition_id);
+            if (ranking == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+            var rankingData = await _db.RankingDatas.FirstOrDefaultAsync(rd => rd.RankingId == ranking_id && rd.Id == ranking_data_id);
+
+            if(rankingData == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.RankingDataNotFound, "Could not found this ranking data");
+            }
+
+            _db.RankingDatas.Remove(rankingData);
+            await _db.SaveChangesAsync();
+        }
         public async Task MakeRankingPublicAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid ranking_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);

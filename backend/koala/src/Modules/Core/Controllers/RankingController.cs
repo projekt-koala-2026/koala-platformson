@@ -84,6 +84,14 @@ namespace koala.src.Modules.Core.Controllers
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<RankingDataDto>(true, DateTime.UtcNow, null, null, result));
         }
 
+        [Authorize]
+        [HttpDelete("edition/{edition_id}/ranking/{ranking_id}/ranking-data/{ranking_data_id}")]
+        public async Task<IActionResult> DeleteRankingData([FromRoute] Guid edition_id, [FromRoute] Guid ranking_id, [FromRoute] Guid ranking_data_id)
+        {
+            await _rankingService.DeleteRankingDataAsync(User, edition_id, ranking_id, ranking_data_id);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
+        }
+
         [AllowAnonymous]
         [HttpGet("edition/{edition_id}")]
         public async Task<IActionResult> GetEditionRankings([FromRoute] Guid edition_id)
