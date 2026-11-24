@@ -170,7 +170,7 @@ namespace koala.src.Modules.Core.Services
             }
 
             var ranking1 = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == requestDto.Ranking1Id && r.EditionId == edition_id);
-            var ranking2 = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == requestDto.Ranking1Id && r.EditionId == edition_id);
+            var ranking2 = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == requestDto.Ranking2Id && r.EditionId == edition_id);
 
             if (ranking1 == null || ranking2 == null)
             {
@@ -358,11 +358,12 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
             }
 
-            if (await _db.Rankings.AnyAsync(r => r.Name == requestDto.Name && r.RankingId != ranking.RankingId))
+            if (await _db.Rankings.AnyAsync(r => r.Name == requestDto.Name && r.EditionId == edition_id && r.RankingId != ranking.RankingId))
             {
                 throw new KoalaException(KoalaErrorCodes.AlreadyTaken, "The ranking name is already in use");
             }
             DateTime timeNow = DateTime.UtcNow;
+            if (ranking.Version != requestDto.Version) throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The ranking changed; refresh before saving.");
             ranking.Name = requestDto.Name;
             ranking.Tier = requestDto.Tier;
             ranking.UpdatedAt = timeNow;
@@ -419,6 +420,7 @@ namespace koala.src.Modules.Core.Services
                 {
                     throw new KoalaException(KoalaErrorCodes.BadRequest, "Version field is missing or is null");
                 }
+                if (rankingData.Version != requestDto.Version) throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The ranking row changed; refresh before saving.");
                 rankingData.TeamName = requestDto.TeamName;
                 rankingData.PointsAchived = requestDto.PointsAchived;
                 rankingData.PointsMax = requestDto.PointsMax;
@@ -589,7 +591,7 @@ namespace koala.src.Modules.Core.Services
             }
 
             return (await _db.RankingDatas.Where(r => r.RankingId == ranking.RankingId)
-            .OrderBy(rd => rd.PointsAchived)
+            .OrderByDescending(rd => rd.PointsAchived).ThenBy(rd => rd.TeamName).ThenBy(rd => rd.Id)
             .Skip(queryDto.PageSize * queryDto.PageNumber)
             .Take(queryDto.PageSize)
             .Select(rd => new RankingDataDto
@@ -734,6 +736,7 @@ namespace koala.src.Modules.Core.Services
                 Winner newWinner = new Winner
                 {
                     Id = Guid.CreateVersion7(),
+                    Edition = edition,
                     TeamName = requestDto.TeamName,
                     CreatedAt = timeNow,
                     UpdatedAt = timeNow,
@@ -745,6 +748,7 @@ namespace koala.src.Modules.Core.Services
             }
             else
             {
+                if (edition.WinnerTier1.Version != requestDto.Version) throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The winner changed; refresh before saving.");
                 edition.WinnerTier1.TeamName = requestDto.TeamName;
                 edition.WinnerTier1.UpdatedAt = timeNow;
                 edition.WinnerTier1.Version++;
@@ -798,6 +802,7 @@ namespace koala.src.Modules.Core.Services
                 Winner newWinner = new Winner
                 {
                     Id = Guid.CreateVersion7(),
+                    Edition = edition,
                     TeamName = requestDto.TeamName,
                     CreatedAt = timeNow,
                     UpdatedAt = timeNow,
@@ -809,6 +814,7 @@ namespace koala.src.Modules.Core.Services
             }
             else
             {
+                if (edition.WinnerTier2.Version != requestDto.Version) throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The winner changed; refresh before saving.");
                 edition.WinnerTier2.TeamName = requestDto.TeamName;
                 edition.WinnerTier2.UpdatedAt = timeNow;
                 edition.WinnerTier2.Version++;

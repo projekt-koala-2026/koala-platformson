@@ -26,12 +26,22 @@ export const apiEndpoints = {
     teamTaskSubmission: (taskId: string, teamId: string, subeditionId: string) =>
         `${API_ROOT}/core/tasks/${taskId}/team/${teamId}/subedition/${subeditionId}`,
     rankings: `${API_ROOT}/core/ranking`,
-    rankingDraft: (subeditionId: string) =>
-        `${API_ROOT}/core/ranking/subedition/${subeditionId}/draft`,
-    generateRanking: (subeditionId: string) =>
-        `${API_ROOT}/core/ranking/generate/subedition/${subeditionId}`,
-    publishRanking: (subeditionId: string) =>
-        `${API_ROOT}/core/ranking/subedition/${subeditionId}/publish`,
+    editionRankings: (editionId: string) => `${API_ROOT}/core/ranking/edition/${editionId}`,
+    ranking: (editionId: string, rankingId: string) =>
+        `${API_ROOT}/core/ranking/edition/${editionId}/ranking/${rankingId}`,
+    createRanking: (editionId: string) => `${API_ROOT}/core/ranking/edition/${editionId}/new`,
+    mergeRankings: (editionId: string) => `${API_ROOT}/core/ranking/edition/${editionId}/merge`,
+    generateRanking: (editionId: string, stageId: string) =>
+        `${API_ROOT}/core/ranking/edition/${editionId}/generete/${stageId}`,
+    rankingPublication: (editionId: string, rankingId: string, visible: boolean) =>
+        `${API_ROOT}/core/ranking/edition/${editionId}/ranking/${rankingId}/${visible ? "make-public" : "make-not-public"}`,
+    rankingData: (editionId: string, rankingId: string, rowId: string) =>
+        `${API_ROOT}/core/ranking/edition/${editionId}/ranking/${rankingId}/ranking-data/${rowId}`,
+    editionWinners: (editionId: string) => `${API_ROOT}/core/ranking/edition/${editionId}/winners`,
+    editionWinner: (editionId: string, tier: "TIER_1" | "TIER_2") =>
+        `${API_ROOT}/core/ranking/edition/${editionId}/winner_${tier === "TIER_1" ? "tier1" : "tier2"}`,
+    winnersPublication: (editionId: string, visible: boolean) =>
+        `${API_ROOT}/core/ranking/edition/${editionId}/winners/${visible ? "make-public" : "make-not-public"}`,
     taskAnswers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/corr`,
     taskSubmissions: (taskId: string) => `${API_ROOT}/core/tasks/submissions/${taskId}`,
     taskReviewProgress: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/review-progress`,

@@ -32,6 +32,7 @@ export interface ApiEdition {
     id: string;
     name: string;
     state: "ACTIVE" | "INACTIVE" | "CLOSED" | string;
+    areWinnersPublic?: boolean;
     teamRegisterOpen: string;
     teamRegisterClose: string;
     createdAt: string;
@@ -66,12 +67,33 @@ export interface ApiTaskAnswer {
 }
 
 export interface ApiRanking {
-    teamName: string;
-    subeditionId: string;
-    totalScore: number;
-    maxScore: number;
+    rankingId: string;
+    editionId: string;
+    name: string;
+    isPublic: boolean;
     tier: "TIER_1" | "TIER_2" | string;
-    latestUpdatedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
+}
+export interface ApiRankingData {
+    id: string;
+    rankingId: string;
+    teamName: string;
+    pointsAchived: number;
+    pointsMax: number;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
+}
+export interface ApiWinner {
+    id: string;
+    editionId: string;
+    teamName: string;
+    tier: string;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
 }
 
 export interface ApiTaskSubmission {

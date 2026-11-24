@@ -1,163 +1,45 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Button from "../../components/Button";
 import KoalaIllustration from "../../components/KoalaIllustration";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import RankingResults from "../../components/RankingResults";
 import SelectListbox from "../../components/SelectListbox";
-import type { ApiEdition, ApiRanking, ApiSubedition } from "../../types/models";
-import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiListRequestResult } from "../../utils/apiFetcher";
-
-type DisplayRanking = Pick<
-    ApiRanking,
-    "teamName" | "totalScore" | "maxScore" | "tier" | "latestUpdatedAt"
->;
+import { useRankingBrowser } from "../../hooks/useRankingBrowser";
+import type { ApiWinner } from "../../types/models";
+import { apiEndpoints } from "../../utils/apiEndpoints";
+import { apiRequestResult } from "../../utils/apiFetcher";
 
 export default function RankingsPublicScreen() {
     const navigate = useNavigate();
-    const [editions, setEditions] = useState<ApiEdition[]>([]);
-    const [editionId, setEditionId] = useState("");
-    const [subeditions, setSubeditions] = useState<ApiSubedition[]>([]);
-    const [subeditionFilter, setSubeditionFilter] = useState("ALL");
-    const [rankings, setRankings] = useState<DisplayRanking[]>([]);
-    const [rankingsBySubedition, setRankingsBySubedition] = useState<
-        Record<string, DisplayRanking[]>
-    >({});
-    const [tier, setTier] = useState("ALL");
-    const [loading, setLoading] = useState(true);
-    const [loadingRankings, setLoadingRankings] = useState(false);
-    const [error, setError] = useState("");
-
+    const browser = useRankingBrowser(true);
+    const [winners, setWinners] = useState<{ editionId: string; items: ApiWinner[] }>({
+        editionId: "",
+        items: [],
+    });
+    const [winnerError, setWinnerError] = useState("");
     useEffect(() => {
+        if (!browser.editionId || !browser.edition?.areWinnersPublic) return;
         let active = true;
-        void apiListRequestResult<ApiEdition>(
-            `${apiEndpoints.editions}?${firstPage}&States=ACTIVE&States=INACTIVE&States=CLOSED`,
+        void apiRequestResult<ApiWinner[]>(
+            apiEndpoints.editionWinners(browser.editionId),
             null,
             "GET",
             navigate
-        ).then(({ data }) => {
+        ).then((result) => {
             if (!active) return;
-            const items = [...(data ?? [])].sort((a, b) => {
-                if (a.state === "ACTIVE" && b.state !== "ACTIVE") return -1;
-                if (b.state === "ACTIVE" && a.state !== "ACTIVE") return 1;
-                const createdDifference = Date.parse(b.createdAt) - Date.parse(a.createdAt);
-                if (Number.isFinite(createdDifference) && createdDifference !== 0)
-                    return createdDifference;
-                return Date.parse(b.teamRegisterClose) - Date.parse(a.teamRegisterClose);
-            });
-            setEditions(items);
-            setEditionId(items.find((item) => item.state === "ACTIVE")?.id ?? items[0]?.id ?? "");
-            if (!data) setError("Nie udało się pobrać edycji.");
-            setLoading(false);
+            setWinners({ editionId: browser.editionId, items: result.data ?? [] });
+            setWinnerError(result.data ? "" : browser.editionId);
         });
         return () => {
             active = false;
         };
-    }, [navigate]);
-
-    useEffect(() => {
-        if (!editionId) {
-            setSubeditions([]);
-            setRankings([]);
-            setRankingsBySubedition({});
-            return;
-        }
-        let active = true;
-        setLoadingRankings(true);
-        setRankings([]);
-        setRankingsBySubedition({});
-        setSubeditionFilter("ALL");
-        setError("");
-        void apiListRequestResult<ApiSubedition>(
-            `${apiEndpoints.subeditions(editionId)}?${firstPage}`,
-            null,
-            "GET",
-            navigate
-        ).then(async ({ data: subeditions }) => {
-            if (!active) return;
-            if (!subeditions) {
-                setError("Nie udało się pobrać etapów edycji.");
-                setLoadingRankings(false);
-                return;
-            }
-            setSubeditions(subeditions);
-
-            const rankingResults = await Promise.all(
-                subeditions.map((subedition) =>
-                    apiListRequestResult<ApiRanking>(
-                        `${apiEndpoints.rankings}?subeditionId=${encodeURIComponent(subedition.id)}&${firstPage}`,
-                        null,
-                        "GET",
-                        navigate
-                    )
-                )
-            );
-            if (!active) return;
-
-            const totals = new Map<string, DisplayRanking>();
-            const maxScoreByTier = new Map<string, number>();
-            const bySubedition: Record<string, DisplayRanking[]> = {};
-            for (const [index, result] of rankingResults.entries()) {
-                const rows = result.data ?? [];
-                const subeditionId = subeditions[index].id;
-                bySubedition[subeditionId] = [...rows].sort(
-                    (a, b) => b.totalScore - a.totalScore || a.teamName.localeCompare(b.teamName)
-                );
-                const stageMaxByTier = new Map<string, number>();
-                for (const row of rows) {
-                    stageMaxByTier.set(
-                        row.tier,
-                        Math.max(stageMaxByTier.get(row.tier) ?? 0, row.maxScore)
-                    );
-                }
-                for (const [stageTier, stageMax] of stageMaxByTier) {
-                    maxScoreByTier.set(stageTier, (maxScoreByTier.get(stageTier) ?? 0) + stageMax);
-                }
-                for (const row of rows) {
-                    const key = `${row.teamName}\u0000${row.tier}`;
-                    const current = totals.get(key);
-                    if (!current) {
-                        totals.set(key, { ...row, maxScore: 0 });
-                        continue;
-                    }
-                    current.totalScore += row.totalScore;
-                    if (
-                        row.latestUpdatedAt &&
-                        (!current.latestUpdatedAt ||
-                            Date.parse(row.latestUpdatedAt) > Date.parse(current.latestUpdatedAt))
-                    ) {
-                        current.latestUpdatedAt = row.latestUpdatedAt;
-                    }
-                }
-            }
-
-            for (const ranking of totals.values()) {
-                ranking.maxScore = maxScoreByTier.get(ranking.tier) ?? ranking.maxScore;
-            }
-
-            setRankings(
-                [...totals.values()].sort(
-                    (a, b) => b.totalScore - a.totalScore || a.teamName.localeCompare(b.teamName)
-                )
-            );
-            setRankingsBySubedition(bySubedition);
-            setLoadingRankings(false);
-        });
-        return () => {
-            active = false;
-        };
-    }, [editionId, navigate]);
-
-    const selectedSubedition = subeditions.find((item) => item.id === subeditionFilter);
-    const displayedRankings =
-        subeditionFilter === "ALL" ? rankings : (rankingsBySubedition[subeditionFilter] ?? []);
-    const visibleRankings = displayedRankings.filter(
-        (item) => tier === "ALL" || item.tier === tier
-    );
+    }, [browser.editionId, browser.edition?.areWinnersPublic, navigate]);
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
-            <main className="app-public-page flex-1">
+            <main className="app-public-page">
                 <header className="mb-8 flex items-start justify-between gap-4 sm:gap-8">
                     <div>
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
@@ -166,159 +48,96 @@ export default function RankingsPublicScreen() {
                         <h1 className="mt-2 text-3xl font-bold text-ink-heading">
                             Rankingi drużyn
                         </h1>
-                        <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Ranking edycji sumuje opublikowane wyniki ze wszystkich jej etapów.
+                        <p className="mt-3 text-ink-secondary">
+                            Wybierz edycję i opublikowany ranking konkursu.
                         </p>
                     </div>
                     <KoalaIllustration
                         src={`${import.meta.env.BASE_URL}images/koala/koala_mis2d.png`}
                     />
                 </header>
-                {error && (
-                    <p
-                        role="status"
-                        className="app-status-warning mb-4 rounded-xl border p-3 text-sm"
-                    >
-                        {error}
-                    </p>
-                )}
-                <section
-                    className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-7"
-                    aria-label="Wybór edycji"
-                >
-                    {loading ? (
-                        <p className="text-sm text-ink-muted">Ładowanie edycji…</p>
-                    ) : editions.length === 0 ? (
-                        <p className="text-sm text-ink-muted">Nie znaleziono edycji.</p>
-                    ) : (
-                        <div className="grid gap-5">
-                            <div className="max-w-xl">
-                                <span
-                                    id="public-ranking-edition-label"
-                                    className="mb-2 block text-sm font-medium text-ink"
-                                >
-                                    Edycja
-                                </span>
-                                <SelectListbox
-                                    ariaLabelledBy="public-ranking-edition-label"
-                                    value={editionId}
-                                    onChange={setEditionId}
-                                    options={editions.map((item) => ({
-                                        value: item.id,
-                                        label: item.name,
-                                    }))}
-                                />
-                            </div>
-                            <div
-                                className="flex flex-wrap items-center gap-2"
-                                aria-label="Filtruj według etapów"
-                            >
-                                <span className="mr-1 text-sm font-medium text-ink">Etap:</span>
-                                {[
-                                    { value: "ALL", label: "Cała edycja" },
-                                    ...subeditions.map((item) => ({
-                                        value: item.id,
-                                        label: item.name,
-                                    })),
-                                ].map((item) => (
-                                    <button
-                                        key={item.value}
-                                        type="button"
-                                        onClick={() => setSubeditionFilter(item.value)}
-                                        aria-pressed={subeditionFilter === item.value}
-                                        className={`rounded-lg px-3 py-2 text-sm font-medium ${subeditionFilter === item.value ? "bg-brand-soft text-brand-text-strong" : "bg-surface-muted text-ink-secondary hover:bg-surface"}`}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                <section className="mb-6 grid gap-4 rounded-2xl border border-line bg-surface p-5 sm:grid-cols-2">
+                    <div>
+                        <p
+                            id="public-ranking-edition"
+                            className="mb-2 text-sm font-semibold text-ink-heading"
+                        >
+                            Edycja
+                        </p>
+                        <SelectListbox
+                            value={browser.editionId}
+                            options={browser.editions.map((e) => ({ value: e.id, label: e.name }))}
+                            onChange={browser.chooseEdition}
+                            ariaLabelledBy="public-ranking-edition"
+                        />
+                    </div>
+                    <div>
+                        <p
+                            id="public-ranking-name"
+                            className="mb-2 text-sm font-semibold text-ink-heading"
+                        >
+                            Ranking
+                        </p>
+                        <SelectListbox
+                            value={browser.rankingId}
+                            options={browser.rankings.map((r) => ({
+                                value: r.rankingId,
+                                label: `${r.name} · ${r.tier === "TIER_1" ? "szkoły podstawowe" : "szkoły ponadpodstawowe"}`,
+                            }))}
+                            onChange={browser.chooseRanking}
+                            ariaLabelledBy="public-ranking-name"
+                        />
+                    </div>
                 </section>
-                {editionId && (
-                    <section className="mt-8" aria-labelledby="published-ranking-title">
-                        <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-                            <div>
-                                <h2
-                                    id="published-ranking-title"
-                                    className="text-xl font-semibold text-ink-heading"
-                                >
-                                    {selectedSubedition
-                                        ? `Ranking: ${selectedSubedition.name}`
-                                        : "Ranking całej edycji"}
-                                </h2>
-                                <p className="mt-1 text-sm text-ink-muted">
-                                    {selectedSubedition
-                                        ? "Wyniki wybranego etapu."
-                                        : "Łączna liczba punktów z opublikowanych rankingów etapów."}
-                                </p>
-                            </div>
-                            <div className="flex gap-2" aria-label="Filtruj według szkoły">
-                                {[
-                                    { value: "ALL", label: "Wszystkie" },
-                                    { value: "TIER_1", label: "Podstawowa" },
-                                    { value: "TIER_2", label: "Średnia" },
-                                ].map((item) => (
-                                    <button
-                                        key={item.value}
-                                        type="button"
-                                        onClick={() => setTier(item.value)}
-                                        aria-pressed={tier === item.value}
-                                        className={`rounded-lg px-3 py-2 text-sm font-medium ${tier === item.value ? "bg-brand-soft text-brand-text-strong" : "bg-surface text-ink-secondary hover:bg-surface-muted"}`}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        {loadingRankings ? (
-                            <p className="rounded-xl border border-line bg-surface p-6 text-sm text-ink-muted">
-                                Ładowanie rankingu…
-                            </p>
-                        ) : visibleRankings.length === 0 ? (
-                            <p className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
-                                {selectedSubedition
-                                    ? "Nie ma jeszcze opublikowanego rankingu dla tego etapu."
-                                    : "Nie ma jeszcze opublikowanych rankingów etapów dla tej edycji."}
-                            </p>
-                        ) : (
-                            <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-surface-muted text-xs uppercase tracking-wide text-ink-secondary">
-                                        <tr>
-                                            <th className="px-4 py-3">Miejsce</th>
-                                            <th className="px-4 py-3">Drużyna</th>
-                                            <th className="px-4 py-3">Szkoła</th>
-                                            <th className="px-4 py-3 text-right">Punkty łącznie</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {visibleRankings.map((item, index) => (
-                                            <tr
-                                                key={`${item.teamName}-${item.tier}`}
-                                                className="border-t border-line"
-                                            >
-                                                <td className="px-4 py-3 font-semibold text-ink-heading">
-                                                    {index + 1}.
-                                                </td>
-                                                <td className="px-4 py-3 font-medium text-ink-heading">
-                                                    {item.teamName}
-                                                </td>
-                                                <td className="px-4 py-3 text-ink-secondary">
-                                                    {item.tier === "TIER_2"
-                                                        ? "Średnia"
-                                                        : "Podstawowa"}
-                                                </td>
-                                                <td className="px-4 py-3 text-right font-semibold text-ink-heading">
-                                                    {item.totalScore} / {item.maxScore}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                {browser.error ? (
+                    <div role="alert" className="app-status-warning mb-6 rounded-xl border p-4">
+                        {browser.error}
+                        <Button text="Spróbuj ponownie" onClick={browser.refresh} />
+                    </div>
+                ) : browser.loading ? (
+                    <p role="status" className="py-6 text-ink-secondary">
+                        Ładowanie wyników…
+                    </p>
+                ) : !browser.ranking ? (
+                    <p className="rounded-xl border border-dashed border-line-strong bg-surface p-8 text-center text-ink-muted">
+                        Brak opublikowanych rankingów w wybranej edycji.
+                    </p>
+                ) : (
+                    <section>
+                        <h2 className="mb-4 text-xl font-semibold text-ink-heading">
+                            {browser.ranking.name}
+                        </h2>
+                        <RankingResults
+                            rows={browser.rows}
+                            total={browser.total}
+                            page={browser.page}
+                            onPage={browser.setPage}
+                        />
                     </section>
+                )}
+                {browser.edition?.areWinnersPublic &&
+                    winners.editionId === browser.editionId &&
+                    winners.items.length > 0 && (
+                        <section className="mt-8 rounded-2xl border border-brand-border bg-brand-soft p-5">
+                            <h2 className="text-xl font-semibold text-ink-heading">
+                                Zwycięzcy edycji
+                            </h2>
+                            <ul className="mt-4 space-y-2">
+                                {winners.items.map((w) => (
+                                    <li key={w.id} className="text-ink">
+                                        <span className="font-semibold">{w.teamName}</span> ·{" "}
+                                        {w.tier === "TIER_1"
+                                            ? "szkoły podstawowe"
+                                            : "szkoły ponadpodstawowe"}
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
+                {browser.edition?.areWinnersPublic && winnerError === browser.editionId && (
+                    <p role="status" className="app-status-warning mt-4 rounded-xl border p-4">
+                        Nie udało się pobrać zwycięzców edycji.
+                    </p>
                 )}
             </main>
             <PublicFooter />
