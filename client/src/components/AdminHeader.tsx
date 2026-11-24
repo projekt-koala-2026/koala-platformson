@@ -36,10 +36,14 @@ const administratorLinks: NavigationLink[] = [
     { label: "Start", path: "/admin" },
     { label: "Użytkownicy", path: "/admin/users" },
     { label: "Edycje", path: "/admin/editions", separatorBefore: true },
-    { label: "Etapy", path: "/admin/subeditions" },
-    { label: "Zadania konkursowe", path: "/admin/competition-tasks" },
-    { label: "Rankingi", path: "/admin/rankings" },
+    { label: "Etapy", path: "/admin/subeditions", indentLevel: 1 },
+    {
+        label: "Zadania konkursowe",
+        path: "/admin/competition-tasks",
+        indentLevel: 2,
+    },
     { label: "Przydzielanie recenzentów", path: "/admin/review-assignments" },
+    { label: "Rankingi", path: "/admin/rankings", indentLevel: 1 },
     ...editorLinks,
     { label: "Szkoły", path: "/admin/schools", separatorBefore: true },
     { label: "Drużyny", path: "/admin/teams" },
@@ -97,6 +101,7 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                             options={links.map((link) => ({
                                 label: link.label,
                                 separatorBefore: link.separatorBefore,
+                                indentLevel: link.indentLevel,
                                 active: location.pathname === link.path,
                                 onClick: () => navigate(link.path),
                             }))}
