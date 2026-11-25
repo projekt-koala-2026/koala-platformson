@@ -1,42 +1,27 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { FaEdit, FaEye, FaEyeSlash, FaLayerGroup, FaPlus, FaRedo, FaTrash } from "react-icons/fa";
+import { useState, type FormEvent } from "react";
+import { FaEye, FaEyeSlash, FaPlus, FaRedo } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
-import EditionWinners from "../../components/EditionWinners";
 import Modal from "../../components/Modal";
 import RankingResults from "../../components/RankingResults";
 import SelectListbox from "../../components/SelectListbox";
 import { useRankingBrowser } from "../../hooks/useRankingBrowser";
-import type { ApiRankingData, ApiSubedition } from "../../types/models";
-import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
-import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
+import type { ApiRankingData } from "../../types/models";
+import { apiEndpoints } from "../../utils/apiEndpoints";
+import { apiRequestResult } from "../../utils/apiFetcher";
 
-type Mode =
-    | "create"
-    | "metadata"
-    | "add-row"
-    | "edit-row"
-    | "merge"
-    | "generate"
-    | "delete-ranking"
-    | "delete-row";
-const tiers = [
-    { value: "TIER_1", label: "Szkoły podstawowe" },
-    { value: "TIER_2", label: "Szkoły ponadpodstawowe" },
-];
+type Mode = "add" | "edit" | "delete" | "generate-series" | "generate-total" | "publish";
+const titles: Record<Mode, string> = {
+    add: "Dodaj wynik drużyny",
+    edit: "Edytuj wynik drużyny",
+    delete: "Usuń wynik drużyny",
+    "generate-series": "Przelicz rankingi serii",
+    "generate-total": "Przelicz sumę I etapu",
+    publish: "Widoczność rankingów",
+};
 const inputClass =
     "mt-1.5 w-full rounded-xl border border-line-strong bg-surface px-3 py-2.5 text-ink-heading outline-none focus:border-brand-focus focus:ring-2 focus:ring-brand-muted";
-const titles: Record<Mode, string> = {
-    create: "Nowy ranking ręczny",
-    metadata: "Edytuj ranking",
-    "add-row": "Dodaj drużynę do rankingu",
-    "edit-row": "Edytuj wynik drużyny",
-    merge: "Połącz rankingi",
-    generate: "Wygeneruj rankingi z etapu",
-    "delete-ranking": "Usuń ranking",
-    "delete-row": "Usuń pozycję rankingu",
-};
 
 export default function RankingsScreen() {
     const browser = useRankingBrowser();
@@ -44,70 +29,41 @@ export default function RankingsScreen() {
     const [mode, setMode] = useState<Mode | null>(null);
     const [busy, setBusy] = useState(false);
     const [notice, setNotice] = useState("");
-    const [name, setName] = useState("");
-    const [tier, setTier] = useState("TIER_1");
     const [row, setRow] = useState<ApiRankingData | null>(null);
+    const [name, setName] = useState("");
     const [points, setPoints] = useState("0");
     const [maximum, setMaximum] = useState("1");
-    const [firstId, setFirstId] = useState("");
-    const [secondId, setSecondId] = useState("");
-    const [stages, setStages] = useState<ApiSubedition[]>([]);
-    const [stageId, setStageId] = useState("");
-    const [stagesLoading, setStagesLoading] = useState(false);
-    const secondOptions = browser.rankings.filter(
-        (r) =>
-            r.rankingId !== firstId &&
-            r.tier === browser.rankings.find((r) => r.rankingId === firstId)?.tier
-    );
-
-    useEffect(() => {
-        if (mode !== "generate" || !browser.editionId) return;
-        let active = true;
-        void apiListRequestResult<ApiSubedition>(
-            `${apiEndpoints.subeditions(browser.editionId)}?${firstPage}`,
-            null,
-            "GET",
-            navigate
-        ).then((result) => {
-            if (!active) return;
-            const closed = (result.data ?? []).filter((s) => s.state === "CLOSED");
-            setStages(closed);
-            setStageId(closed[0]?.id ?? "");
-            setStagesLoading(false);
-            if (!result.data) browser.setError("Nie udało się pobrać etapów.");
-        });
-        return () => {
-            active = false;
-        };
-    }, [mode, browser.editionId, navigate, browser.setError]);
+    const [qualified, setQualified] = useState(false);
+    const [confirmed, setConfirmed] = useState(false);
+    const ranking = browser.ranking;
+    const selectedSeries = browser.series.find((series) => series.id === ranking?.etap1SeriesId);
+    const isSeries = Boolean(ranking?.etap1SeriesId);
+    const allClosed =
+        browser.seriesReady &&
+        browser.series.length > 0 &&
+        browser.series.every((s) => s.state === "CLOSED");
+    const canGenerateSeries =
+        browser.seriesReady &&
+        selectedSeries?.state === "CLOSED" &&
+        browser.edition?.state !== "CLOSED";
+    const disabled = busy || browser.loading;
 
     const open = (next: Mode, item?: ApiRankingData) => {
         browser.setError("");
         setNotice("");
         setRow(item ?? null);
-        setName(next === "metadata" ? (browser.ranking?.name ?? "") : (item?.teamName ?? ""));
-        setTier(browser.ranking?.tier ?? "TIER_1");
+        setName(item?.teamName ?? "");
         setPoints(String(item?.pointsAchived ?? 0));
         setMaximum(String(item?.pointsMax ?? 1));
-        const first = browser.ranking ?? browser.rankings[0];
-        setFirstId(first?.rankingId ?? "");
-        setSecondId(
-            browser.rankings.find((r) => r.rankingId !== first?.rankingId && r.tier === first?.tier)
-                ?.rankingId ?? ""
-        );
-        if (next === "generate") {
-            setStages([]);
-            setStageId("");
-            setStagesLoading(true);
-        }
+        setQualified(item?.hasQualifiedToNextEtap ?? false);
+        setConfirmed(false);
         setMode(next);
     };
     const perform = async (
         url: string,
         method: "POST" | "PUT" | "DELETE",
         body: unknown,
-        message: string,
-        resetSelection = false
+        message: string
     ) => {
         if (busy) return;
         setBusy(true);
@@ -117,42 +73,22 @@ export default function RankingsScreen() {
         if (result.status !== null && result.status >= 200 && result.status < 300) {
             setMode(null);
             setNotice(message);
-            if (resetSelection) browser.chooseRanking("");
             browser.refresh();
         } else
             browser.setError(
-                result.error?.message ?? "Nie udało się zapisać zmian. Spróbuj ponownie."
+                result.error?.message ??
+                    "Nie udało się zapisać zmian. Odśwież wyniki przed ponowną edycją."
             );
         setBusy(false);
     };
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        const e = browser.editionId,
-            r = browser.ranking;
-        if (busy || !mode || !e) return;
-        if (["create", "metadata", "merge", "add-row", "edit-row"].includes(mode) && !name.trim()) {
-            browser.setError("Podaj nazwę.");
-            return;
-        }
-        if (mode === "create")
-            void perform(
-                apiEndpoints.createRanking(e),
-                "POST",
-                { rankingName: name.trim(), rankingTier: tier, rankingData: [] },
-                "Utworzono ranking. Dodaj do niego wyniki drużyn.",
-                true
-            );
-        if (mode === "metadata" && r)
-            void perform(
-                apiEndpoints.ranking(e, r.rankingId),
-                "PUT",
-                { name: name.trim(), tier, version: r.version },
-                "Zapisano dane rankingu."
-            );
-        if ((mode === "add-row" || mode === "edit-row") && r) {
+        if (busy || !mode || !ranking) return;
+        if (mode === "add" || mode === "edit") {
             const achieved = Number(points),
                 max = Number(maximum);
             if (
+                !name.trim() ||
                 !points.trim() ||
                 !maximum.trim() ||
                 !Number.isSafeInteger(achieved) ||
@@ -162,62 +98,61 @@ export default function RankingsScreen() {
                 achieved > max
             ) {
                 browser.setError(
-                    "Punkty muszą być liczbami całkowitymi od zera, a wynik nie może przekraczać maksimum."
+                    "Podaj nazwę oraz całkowite punkty od zera, nieprzekraczające maksimum."
                 );
                 return;
             }
             void perform(
-                apiEndpoints.rankingData(e, r.rankingId, row?.id ?? crypto.randomUUID()),
+                apiEndpoints.rankingData(ranking.rankingId, row?.id ?? crypto.randomUUID()),
                 "PUT",
                 {
                     teamName: name.trim(),
+                    hasQualifiedToNextEtap: qualified,
                     pointsAchived: achieved,
                     pointsMax: max,
                     version: row?.version ?? null,
                 },
                 "Zapisano wynik drużyny."
             );
-        }
-        if (mode === "merge") {
-            if (
-                !firstId ||
-                !secondId ||
-                !secondOptions.some((item) => item.rankingId === secondId)
-            ) {
-                browser.setError("Wybierz dwa różne rankingi tej samej kategorii.");
-                return;
-            }
+        } else if (mode === "delete" && row) {
             void perform(
-                apiEndpoints.mergeRankings(e),
-                "POST",
-                { mergeRankingName: name.trim(), ranking1Id: firstId, ranking2Id: secondId },
-                "Połączono rankingi w nowy, nieopublikowany ranking.",
-                true
-            );
-        }
-        if (mode === "generate" && stageId)
-            void perform(
-                apiEndpoints.generateRanking(e, stageId),
-                "POST",
-                null,
-                "Wygenerowano rankingi obu kategorii. Sprawdź wyniki przed publikacją.",
-                true
-            );
-        if (mode === "delete-ranking" && r)
-            void perform(
-                apiEndpoints.ranking(e, r.rankingId),
+                apiEndpoints.rankingData(ranking.rankingId, row.id),
                 "DELETE",
                 null,
-                "Usunięto ranking.",
-                true
+                "Usunięto wynik drużyny."
             );
-        if (mode === "delete-row" && r && row)
+        } else if (
+            mode === "generate-series" &&
+            ranking.etap1SeriesId &&
+            canGenerateSeries &&
+            confirmed
+        ) {
             void perform(
-                apiEndpoints.rankingData(e, r.rankingId, row.id),
-                "DELETE",
+                apiEndpoints.generateRanking(browser.editionId, ranking.etap1SeriesId),
+                "POST",
                 null,
-                "Usunięto pozycję rankingu."
+                "Przeliczono rankingi obu kategorii tej serii."
             );
+        } else if (mode === "generate-total" && allClosed && confirmed) {
+            void perform(
+                apiEndpoints.generateTotalRanking(browser.editionId),
+                "POST",
+                null,
+                "Przeliczono rankingi sumaryczne obu kategorii I etapu."
+            );
+        } else if (mode === "publish") {
+            const url = ranking.etap1SeriesId
+                ? apiEndpoints.seriesRankingPublication(ranking.etap1SeriesId, !ranking.isPublic)
+                : apiEndpoints.totalRankingPublication(browser.editionId, !ranking.isPublic);
+            void perform(
+                url,
+                "PUT",
+                null,
+                ranking.isPublic
+                    ? "Ukryto rankingi obu kategorii."
+                    : "Opublikowano rankingi obu kategorii."
+            );
+        }
     };
 
     return (
@@ -228,10 +163,10 @@ export default function RankingsScreen() {
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Wyniki konkursu
                     </p>
-                    <h1 className="mt-1 text-3xl font-bold">Rankingi</h1>
+                    <h1 className="mt-1 text-3xl font-bold">Rankingi I etapu</h1>
                     <p className="mt-2 text-ink-secondary">
-                        Twórz rankingi ręcznie lub na podstawie zakończonych etapów. Łącz wyniki i
-                        publikuj je po sprawdzeniu.
+                        Przelicz wyniki serii, przygotuj sumę I etapu i oznacz drużyny awansujące
+                        dalej.
                     </p>
                 </header>
                 {browser.error && !mode && (
@@ -265,130 +200,98 @@ export default function RankingsScreen() {
                         </div>
                         <div>
                             <p id="ranking-label" className="mb-2 text-sm font-semibold">
-                                Ranking
+                                Ranking serii lub suma I etapu
                             </p>
                             <SelectListbox
                                 value={browser.rankingId}
                                 options={browser.rankings.map((r) => ({
                                     value: r.rankingId,
-                                    label: `${r.name} · ${r.tier === "TIER_1" ? "szkoły podstawowe" : "szkoły ponadpodstawowe"} · ${r.isPublic ? "publiczny" : "roboczy"}`,
+                                    label: r.etap1SeriesId
+                                        ? r.name
+                                        : `Suma I etapu · ${r.tier === "TIER_1" ? "szkoły podstawowe" : "szkoły ponadpodstawowe"}`,
                                 }))}
                                 onChange={browser.chooseRanking}
                                 ariaLabelledBy="ranking-label"
                             />
                         </div>
                     </fieldset>
-                    <div className="mt-5 flex flex-wrap gap-3">
-                        <Button
-                            text="Nowy ranking ręczny"
-                            icon={<FaPlus />}
-                            disabled={!browser.editionId || busy}
-                            onClick={() => open("create")}
-                        />
-                        <Button
-                            text="Generuj z etapu"
-                            icon={<FaPlus />}
-                            disabled={
-                                !browser.editionId || busy || browser.edition?.state === "CLOSED"
-                            }
-                            onClick={() => open("generate")}
-                        />
-                        <Button
-                            text="Połącz rankingi"
-                            icon={<FaLayerGroup />}
-                            disabled={browser.rankings.length < 2 || browser.loading || busy}
-                            onClick={() => open("merge")}
-                        />
+                    <div className="mt-4 flex flex-wrap gap-3">
                         <Button
                             text="Odśwież"
                             icon={<FaRedo />}
-                            disabled={busy}
+                            disabled={busy || mode !== null}
                             onClick={browser.refresh}
                         />
+                        <Button
+                            text="Przelicz sumę I etapu"
+                            disabled={disabled || !allClosed || !ranking}
+                            onClick={() => open("generate-total")}
+                        />
                     </div>
-                    {browser.edition?.state === "CLOSED" && (
-                        <p className="mt-3 text-sm text-ink-muted">
-                            Edycja jest zakończona. Możesz zarządzać zapisanymi rankingami lub
-                            utworzyć ranking ręczny.
+                    {!allClosed && browser.editionId && (
+                        <p className="mt-3 text-sm text-ink-secondary">
+                            Sumę I etapu można przeliczyć po zamknięciu wszystkich jego serii.
+                            Najpierw przelicz rankingi każdej serii.
                         </p>
                     )}
                 </section>
-                {browser.edition && (
-                    <EditionWinners key={browser.edition.id} edition={browser.edition} />
-                )}
                 {browser.loading ? (
                     <p role="status" className="py-8 text-ink-secondary">
                         Ładowanie rankingów…
                     </p>
-                ) : !browser.editionId ? (
-                    <p className="py-8 text-ink-muted">Brak edycji konkursu.</p>
-                ) : !browser.ranking ? (
+                ) : !ranking ? (
                     <p className="py-8 text-ink-muted">
-                        Brak rankingów w tej edycji. Utwórz ranking ręczny lub wygeneruj wyniki z
-                        zakończonego etapu.
+                        Brak rankingów w wybranej edycji. Nowe rankingi powstają automatycznie przy
+                        dodawaniu edycji i serii.
                     </p>
                 ) : (
                     <section className="mt-8">
-                        <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+                        <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
                             <div>
-                                <h2 className="text-xl font-semibold">{browser.ranking.name}</h2>
+                                <h2 className="text-xl font-semibold">{ranking.name}</h2>
                                 <p className="mt-1 text-sm text-ink-secondary">
-                                    {browser.ranking.isPublic
-                                        ? "Widoczny na stronie publicznej"
-                                        : "Ranking roboczy — niewidoczny publicznie"}
+                                    {isSeries
+                                        ? "Ranking serii I etapu"
+                                        : "Ranking sumaryczny I etapu"}{" "}
+                                    · {ranking.isPublic ? "opublikowany" : "nieopublikowany"}
                                 </p>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-3">
+                                {isSeries && (
+                                    <Button
+                                        text="Przelicz rankingi serii"
+                                        disabled={disabled || !canGenerateSeries}
+                                        onClick={() => open("generate-series")}
+                                    />
+                                )}
                                 <Button
-                                    text="Dodaj drużynę"
+                                    text="Dodaj wynik"
                                     icon={<FaPlus />}
-                                    disabled={busy}
-                                    onClick={() => open("add-row")}
-                                />
-                                <Button
-                                    text="Edytuj ranking"
-                                    icon={<FaEdit />}
-                                    disabled={busy}
-                                    onClick={() => open("metadata")}
+                                    disabled={disabled}
+                                    onClick={() => open("add")}
                                 />
                                 <Button
                                     text={
-                                        browser.ranking.isPublic
-                                            ? "Ukryj ranking"
-                                            : "Opublikuj ranking"
+                                        ranking.isPublic
+                                            ? "Ukryj obie kategorie"
+                                            : "Opublikuj obie kategorie"
                                     }
-                                    icon={browser.ranking.isPublic ? <FaEyeSlash /> : <FaEye />}
-                                    disabled={
-                                        busy || (!browser.ranking.isPublic && browser.total === 0)
-                                    }
-                                    onClick={() =>
-                                        void perform(
-                                            apiEndpoints.rankingPublication(
-                                                browser.editionId,
-                                                browser.rankingId,
-                                                !browser.ranking!.isPublic
-                                            ),
-                                            "PUT",
-                                            null,
-                                            browser.ranking!.isPublic
-                                                ? "Ukryto ranking."
-                                                : "Opublikowano ranking."
-                                        )
-                                    }
-                                />
-                                <Button
-                                    text="Usuń ranking"
-                                    icon={<FaTrash />}
-                                    disabled={busy}
-                                    className="bg-danger hover:bg-danger-hover"
-                                    onClick={() => open("delete-ranking")}
+                                    icon={ranking.isPublic ? <FaEyeSlash /> : <FaEye />}
+                                    disabled={disabled}
+                                    onClick={() => open("publish")}
                                 />
                             </div>
                         </div>
-                        {browser.ranking.isPublic && (
+                        {isSeries && !canGenerateSeries && (
+                            <p className="mb-4 text-sm text-ink-secondary">
+                                Przeliczanie serii jest dostępne po jej zamknięciu, przed
+                                zakończeniem całej edycji.
+                            </p>
+                        )}
+                        {ranking.isPublic && (
                             <p className="app-status-warning mb-4 rounded-xl border p-3 text-sm">
-                                Zmiany w tym rankingu są od razu widoczne publicznie. Możesz go
-                                ukryć na czas edycji.
+                                Zmiany wyników i awansu są od razu widoczne publicznie. Możesz ukryć
+                                obie kategorie na czas edycji.
                             </p>
                         )}
                         <RankingResults
@@ -396,9 +299,9 @@ export default function RankingsScreen() {
                             total={browser.total}
                             page={browser.page}
                             onPage={browser.setPage}
-                            onEdit={(item) => open("edit-row", item)}
-                            onDelete={(item) => open("delete-row", item)}
-                            disabled={busy}
+                            onEdit={(item) => open("edit", item)}
+                            onDelete={(item) => open("delete", item)}
+                            disabled={disabled}
                         />
                     </section>
                 )}
@@ -421,12 +324,10 @@ export default function RankingsScreen() {
                         </p>
                     )}
                     <fieldset disabled={busy} className="space-y-4">
-                        {mode &&
-                            ["create", "metadata", "merge", "add-row", "edit-row"].includes(
-                                mode
-                            ) && (
+                        {(mode === "add" || mode === "edit") && (
+                            <>
                                 <label className="block text-sm font-medium">
-                                    {mode.includes("row") ? "Nazwa drużyny" : "Nazwa rankingu"}
+                                    Nazwa drużyny
                                     <input
                                         autoFocus
                                         required
@@ -435,168 +336,119 @@ export default function RankingsScreen() {
                                         className={inputClass}
                                     />
                                 </label>
-                            )}
-                        {(mode === "create" || mode === "metadata") && (
-                            <div>
-                                <p id="ranking-tier-label" className="mb-2 text-sm font-medium">
-                                    Kategoria
-                                </p>
-                                <SelectListbox
-                                    value={tier}
-                                    options={tiers}
-                                    onChange={setTier}
-                                    ariaLabelledBy="ranking-tier-label"
-                                />
-                            </div>
-                        )}
-                        {(mode === "add-row" || mode === "edit-row") && (
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <label className="text-sm font-medium">
-                                    Zdobyte punkty
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        step={1}
-                                        required
-                                        value={points}
-                                        onChange={(e) => setPoints(e.target.value)}
-                                        className={inputClass}
-                                    />
-                                </label>
-                                <label className="text-sm font-medium">
-                                    Maksymalna liczba punktów
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        step={1}
-                                        required
-                                        value={maximum}
-                                        onChange={(e) => setMaximum(e.target.value)}
-                                        className={inputClass}
-                                    />
-                                </label>
-                            </div>
-                        )}
-                        {mode === "merge" && (
-                            <>
-                                <p className="text-sm text-ink-secondary">
-                                    Wyniki drużyn o identycznej nazwie zostaną zsumowane. Powstanie
-                                    nowy ranking; źródłowe rankingi pozostaną bez zmian.
-                                </p>
-                                <div>
-                                    <p id="merge-first-label" className="mb-2 text-sm font-medium">
-                                        Pierwszy ranking
-                                    </p>
-                                    <SelectListbox
-                                        value={firstId}
-                                        options={browser.rankings.map((r) => ({
-                                            value: r.rankingId,
-                                            label: r.name,
-                                        }))}
-                                        onChange={(id) => {
-                                            setFirstId(id);
-                                            setSecondId(
-                                                browser.rankings.find(
-                                                    (r) =>
-                                                        r.rankingId !== id &&
-                                                        r.tier ===
-                                                            browser.rankings.find(
-                                                                (first) => first.rankingId === id
-                                                            )?.tier
-                                                )?.rankingId ?? ""
-                                            );
-                                        }}
-                                        ariaLabelledBy="merge-first-label"
-                                    />
-                                </div>
-                                <div>
-                                    <p id="merge-second-label" className="mb-2 text-sm font-medium">
-                                        Drugi ranking tej samej kategorii
-                                    </p>
-                                    <SelectListbox
-                                        value={secondId}
-                                        options={secondOptions.map((r) => ({
-                                            value: r.rankingId,
-                                            label: r.name,
-                                        }))}
-                                        onChange={setSecondId}
-                                        ariaLabelledBy="merge-second-label"
-                                    />
-                                </div>
-                                {!secondOptions.length && (
-                                    <p className="text-sm text-warning-text">
-                                        Brak drugiego rankingu tej samej kategorii.
-                                    </p>
-                                )}
-                            </>
-                        )}
-                        {mode === "generate" && (
-                            <>
-                                {stagesLoading ? (
-                                    <p role="status">Ładowanie etapów…</p>
-                                ) : !stages.length ? (
-                                    <p>Brak zakończonych etapów w tej edycji.</p>
-                                ) : (
-                                    <div>
-                                        <p
-                                            id="generate-stage-label"
-                                            className="mb-2 text-sm font-medium"
-                                        >
-                                            Zakończony etap
-                                        </p>
-                                        <SelectListbox
-                                            value={stageId}
-                                            options={stages.map((s) => ({
-                                                value: s.id,
-                                                label: s.name,
-                                            }))}
-                                            onChange={setStageId}
-                                            ariaLabelledBy="generate-stage-label"
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <label className="block text-sm font-medium">
+                                        Zdobyte punkty
+                                        <input
+                                            required
+                                            type="number"
+                                            min="0"
+                                            step="1"
+                                            value={points}
+                                            onChange={(e) => setPoints(e.target.value)}
+                                            className={inputClass}
                                         />
-                                    </div>
+                                    </label>
+                                    <label className="block text-sm font-medium">
+                                        Maksymalna liczba punktów
+                                        <input
+                                            required
+                                            type="number"
+                                            min="0"
+                                            step="1"
+                                            value={maximum}
+                                            onChange={(e) => setMaximum(e.target.value)}
+                                            className={inputClass}
+                                        />
+                                    </label>
+                                </div>
+                                <label className="flex items-center gap-3">
+                                    <input
+                                        type="checkbox"
+                                        checked={qualified}
+                                        onChange={(e) => setQualified(e.target.checked)}
+                                        className="h-4 w-4 accent-brand"
+                                    />
+                                    Awans do kolejnego etapu
+                                </label>
+                                {isSeries && (
+                                    <p className="text-sm text-ink-secondary">
+                                        Oznaczenie awansu dotyczy tej pozycji. Nie przenosi się
+                                        automatycznie do rankingu sumarycznego.
+                                    </p>
                                 )}
-                                <p className="text-sm text-ink-secondary">
-                                    Wszystkie przesłane odpowiedzi muszą mieć uzgodnione oceny.
-                                    Powstaną dwa rankingi robocze, po jednym dla każdej kategorii
-                                    szkół.
-                                </p>
                             </>
                         )}
-                        {mode === "delete-ranking" && (
+                        {mode === "delete" && (
                             <p>
-                                Usunąć ranking „{browser.ranking?.name}” i wszystkie jego wyniki?
-                                Tej operacji nie można cofnąć.
+                                Usunąć wynik drużyny „{row?.teamName}”? Ponowne przeliczenie może
+                                odtworzyć tę pozycję.
                             </p>
                         )}
-                        {mode === "delete-row" && (
-                            <p>Usunąć wynik drużyny „{row?.teamName}” z rankingu?</p>
+                        {(mode === "generate-series" || mode === "generate-total") && (
+                            <>
+                                <p>
+                                    {mode === "generate-series"
+                                        ? `Przeliczyć obie kategorie serii „${selectedSeries?.name}”?`
+                                        : "Zsumować wyniki wszystkich serii I etapu w obu kategoriach?"}
+                                </p>
+                                <p className="app-status-warning rounded-xl border p-3">
+                                    Przeliczenie zastąpi dotychczasowe wyniki i usunie ich ręczne
+                                    korekty oraz oznaczenia awansu. Widoczność publiczna pozostanie
+                                    bez zmian.
+                                </p>
+                                {mode === "generate-total" && (
+                                    <p className="text-sm text-ink-secondary">
+                                        Upewnij się, że wyniki każdej serii zostały już przeliczone.
+                                        Samo zamknięcie serii nie uruchamia sprawdzania rankingu.
+                                    </p>
+                                )}
+                                <label className="flex items-center gap-3">
+                                    <input
+                                        required
+                                        type="checkbox"
+                                        checked={confirmed}
+                                        onChange={(e) => setConfirmed(e.target.checked)}
+                                        className="h-4 w-4 accent-brand"
+                                    />
+                                    Potwierdzam zastąpienie wyników obu kategorii
+                                </label>
+                            </>
                         )}
-                        <div className="flex justify-end gap-3 pt-2">
+                        {mode === "publish" && (
+                            <p>
+                                {ranking?.isPublic ? "Ukryć" : "Opublikować"} rankingi{" "}
+                                <strong>obu kategorii</strong>{" "}
+                                {isSeries
+                                    ? `serii „${selectedSeries?.name ?? ranking?.name}”`
+                                    : "sumaryczne I etapu"}
+                                ?{" "}
+                                {ranking?.isPublic
+                                    ? ""
+                                    : "Przed publikacją sprawdź wyniki obu kategorii."}
+                            </p>
+                        )}
+                        <div className="flex flex-wrap justify-end gap-3">
                             <Button
                                 text="Anuluj"
-                                className="bg-surface-muted text-ink hover:bg-surface-disabled"
                                 onClick={() => {
                                     setMode(null);
                                     browser.setError("");
                                 }}
                             />
                             <Button
-                                type="submit"
                                 text={
                                     busy
                                         ? "Zapisywanie…"
-                                        : mode?.startsWith("delete")
-                                          ? "Usuń"
-                                          : mode === "generate"
-                                            ? "Generuj"
-                                            : mode === "merge"
-                                              ? "Połącz"
-                                              : "Zapisz"
+                                        : mode === "delete"
+                                          ? "Usuń wynik"
+                                          : "Potwierdź"
                                 }
+                                type="submit"
                                 disabled={
                                     busy ||
-                                    (mode === "generate" && (!stageId || stagesLoading)) ||
-                                    (mode === "merge" && !secondId)
+                                    ((mode === "generate-series" || mode === "generate-total") &&
+                                        !confirmed)
                                 }
                             />
                         </div>

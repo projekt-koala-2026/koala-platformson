@@ -1,3 +1,4 @@
+import { FaEdit, FaTrash } from "react-icons/fa";
 import { rankingPageSize } from "../hooks/useRankingBrowser";
 import type { ApiRankingData } from "../types/models";
 import Button from "./Button";
@@ -33,6 +34,7 @@ export default function RankingResults({
                                 <th className="px-4 py-3">Lp.</th>
                                 <th className="px-4 py-3">Drużyna</th>
                                 <th className="px-4 py-3 text-right">Punkty</th>
+                                <th className="px-4 py-3">Awans do kolejnego etapu</th>
                                 {onEdit && <th className="px-4 py-3">Akcje</th>}
                             </tr>
                         </thead>
@@ -46,16 +48,27 @@ export default function RankingResults({
                                     <td className="whitespace-nowrap px-4 py-3 text-right">
                                         {row.pointsAchived} / {row.pointsMax}
                                     </td>
+                                    <td className="px-4 py-3">
+                                        {row.hasQualifiedToNextEtap ? (
+                                            <span className="font-semibold text-brand-text">
+                                                Tak
+                                            </span>
+                                        ) : (
+                                            "—"
+                                        )}
+                                    </td>
                                     {onEdit && (
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
                                                 <Button
                                                     text="Edytuj"
+                                                    icon={<FaEdit />}
                                                     disabled={disabled}
                                                     onClick={() => onEdit(row)}
                                                 />
                                                 <Button
                                                     text="Usuń"
+                                                    icon={<FaTrash />}
                                                     disabled={disabled}
                                                     onClick={() => onDelete?.(row)}
                                                     className="bg-danger hover:bg-danger-hover"

@@ -68,7 +68,8 @@ export interface ApiTaskAnswer {
 
 export interface ApiRanking {
     rankingId: string;
-    editionId: string;
+    editionId: string | null;
+    etap1SeriesId: string | null;
     name: string;
     isPublic: boolean;
     tier: "TIER_1" | "TIER_2" | string;
@@ -80,6 +81,7 @@ export interface ApiRankingData {
     id: string;
     rankingId: string;
     teamName: string;
+    hasQualifiedToNextEtap: boolean;
     pointsAchived: number;
     pointsMax: number;
     createdAt: string;

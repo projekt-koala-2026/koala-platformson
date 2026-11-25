@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ApiEdition, ApiRanking, ApiRankingData } from "../types/models";
+import type { ApiEdition, ApiRanking, ApiRankingData, ApiSubedition } from "../types/models";
 import { apiEndpoints, firstPage } from "../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../utils/apiFetcher";
 
@@ -11,6 +11,8 @@ export function useRankingBrowser(publicOnly = false) {
     const [editions, setEditions] = useState<ApiEdition[]>([]);
     const [editionId, setEditionId] = useState("");
     const [rankings, setRankings] = useState<ApiRanking[]>([]);
+    const [series, setSeries] = useState<ApiSubedition[]>([]);
+    const [seriesReady, setSeriesReady] = useState(false);
     const [rankingId, setRankingId] = useState("");
     const [page, setPage] = useState(0);
     const [revision, setRevision] = useState(0);
@@ -51,14 +53,30 @@ export function useRankingBrowser(publicOnly = false) {
     useEffect(() => {
         if (!editionId) return;
         let active = true;
-        void apiRequestResult<ApiRanking[]>(
-            apiEndpoints.editionRankings(editionId),
-            null,
-            "GET",
-            navigate
-        ).then((result) => {
+        void Promise.all([
+            apiRequestResult<ApiRanking[]>(
+                apiEndpoints.editionRankings(editionId),
+                null,
+                "GET",
+                navigate
+            ),
+            publicOnly
+                ? Promise.resolve(null)
+                : apiListRequestResult<ApiSubedition>(
+                      `${apiEndpoints.rankingSeries(editionId)}?${firstPage}`,
+                      null,
+                      "GET",
+                      navigate
+                  ),
+        ]).then(([result, seriesResult]) => {
             if (!active) return;
             setCatalogKey(`${editionId}/${revision}`);
+            setSeries(seriesResult?.data ?? []);
+            setSeriesReady(Boolean(seriesResult?.data));
+            if (!publicOnly && !seriesResult?.data)
+                setError(
+                    "Nie udało się pobrać serii I etapu. Generowanie wyników jest niedostępne."
+                );
             if (!result.data) {
                 setRankings([]);
                 setRankingId("");
@@ -67,7 +85,12 @@ export function useRankingBrowser(publicOnly = false) {
             }
             const items = result.data
                 .filter((r) => !publicOnly || r.isPublic)
-                .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+                .sort(
+                    (a, b) =>
+                        Number(Boolean(a.etap1SeriesId)) - Number(Boolean(b.etap1SeriesId)) ||
+                        a.name.localeCompare(b.name, "pl") ||
+                        a.tier.localeCompare(b.tier)
+                );
             setRankings(items);
             setRankingId((current) =>
                 items.some((r) => r.rankingId === current) ? current : (items[0]?.rankingId ?? "")
@@ -81,8 +104,13 @@ export function useRankingBrowser(publicOnly = false) {
     useEffect(() => {
         if (!editionId || !rankingId || catalogKey !== `${editionId}/${revision}`) return;
         let active = true;
+        const selected = rankings.find((r) => r.rankingId === rankingId);
+        if (!selected) return;
+        const url = selected.etap1SeriesId
+            ? apiEndpoints.seriesRanking(selected.etap1SeriesId, rankingId)
+            : apiEndpoints.ranking(editionId, rankingId);
         void apiRequestResult<ApiRankingData[]>(
-            `${apiEndpoints.ranking(editionId, rankingId)}?PageNumber=${page}&PageSize=${rankingPageSize}`,
+            `${url}?PageNumber=${page}&PageSize=${rankingPageSize}`,
             null,
             "GET",
             navigate
@@ -104,13 +132,15 @@ export function useRankingBrowser(publicOnly = false) {
         return () => {
             active = false;
         };
-    }, [editionId, rankingId, page, revision, navigate, key, catalogKey]);
+    }, [editionId, rankingId, page, revision, navigate, key, catalogKey, rankings]);
 
     const chooseEdition = (id: string) => {
         setError("");
         setEditionId(id);
         setRankingId("");
         setRankings([]);
+        setSeries([]);
+        setSeriesReady(false);
         setPage(0);
     };
     const chooseRanking = (id: string) => {
@@ -128,6 +158,8 @@ export function useRankingBrowser(publicOnly = false) {
         editionId,
         chooseEdition,
         rankings,
+        series,
+        seriesReady,
         rankingId,
         chooseRanking,
         edition: editions.find((e) => e.id === editionId),
