@@ -364,7 +364,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow >= activeEdition.TeamRegisterClose)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
@@ -453,7 +453,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow >= activeEdition.TeamRegisterClose)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
@@ -536,7 +536,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow >= activeEdition.TeamRegisterClose)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
@@ -607,7 +607,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow >= activeEdition.TeamRegisterClose)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
