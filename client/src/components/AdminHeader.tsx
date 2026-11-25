@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import { selectAdminHeaderLinks } from "../config/adminHeaderShortcuts";
 import type { NavigationLink } from "../types/ui";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
@@ -49,19 +50,6 @@ const administratorLinks: NavigationLink[] = [
     { label: "Drużyny", path: "/admin/teams" },
 ];
 
-// Top header order, independent of the sidebar. Only links permitted for the role appear.
-const desktopPaths = [
-    "/admin",
-    "/admin/users",
-    "/admin/editions",
-    "/admin/rankings",
-    "/admin/posts",
-    "/admin/history",
-    "/admin/rules",
-    "/admin/problems",
-    "/admin/rodos",
-];
-
 const AdminHeader = ({ navigate }: AdminHeaderProps) => {
     const location = useLocation();
     const [isPasswordOpen, setIsPasswordOpen] = useState(false);
@@ -77,11 +65,20 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
         ...(isModeratorUser
             ? [
                   { label: "Drużyny", path: "/admin/teams" },
+                  { label: "Opiekunowie", path: "/admin/guardians" },
                   { label: "RODO", path: "/admin/rodos" },
               ]
             : []),
     ].filter((link, index, links) => links.findIndex((item) => item.path === link.path) === index);
-    const desktopLinks = desktopPaths.flatMap((path) => links.filter((link) => link.path === path));
+    const desktopLinks = selectAdminHeaderLinks(
+        {
+            ORGANIZATION_ADMIN: isAdminUser,
+            ORGANIZATION_EDITOR: isEditorUser,
+            ORGANIZATION_REVIEWER: isReviewerUser,
+            ORGANIZATION_RODO_MODERATOR: isModeratorUser,
+        },
+        links
+    );
 
     const logout = async () => {
         if (loggingOut) return;

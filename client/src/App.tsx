@@ -255,6 +255,17 @@ export default function App() {
                                 </ProtectedRoute>
                             }
                         />
+                        <Route
+                            path="/admin/guardians"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={rodoModerators}
+                                    redirectTo="/admin/login"
+                                >
+                                    <AdminTeamsScreen view="guardians" />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route path="/" element={<HomeScreen />} />
                         <Route path="/login" element={<LoginScreen />} />
                         <Route path="/register" element={<CompleteRegistrationScreen />} />

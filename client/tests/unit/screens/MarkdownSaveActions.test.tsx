@@ -105,7 +105,7 @@ describe("zapisywanie treści Markdown", () => {
             );
             const { user } = renderWithRouter(<EditPostScreen />);
             const input = await screen.findByRole("textbox", { name: "Treść Markdown" });
-            const save = screen.getByRole("button", { name: "Utwórz wpis" });
+            const save = screen.getByRole("button", { name: "Zapisz zmiany" });
             expect(
                 save.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING
             ).toBeTruthy();

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { FaCheck, FaEye, FaRedo, FaTimes } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
@@ -69,9 +69,10 @@ const personFor = (member: ApiTeamMember, team: ApiTeamDetails) => {
 
 const AdminRodoScreen = () => {
     const navigate = useNavigate();
+    const [params] = useSearchParams();
     const [teams, setTeams] = useState<ApiTeamDetails[]>([]);
     const [rodosByTeam, setRodosByTeam] = useState<Record<string, ApiTeamMember[]>>({});
-    const [query, setQuery] = useState("");
+    const [query, setQuery] = useState(() => params.get("team") ?? "");
     const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
     const [selectedKey, setSelectedKey] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -177,6 +178,9 @@ const AdminRodoScreen = () => {
                 application.personEmail,
                 application.personRole,
                 application.team.name,
+                application.team.teamGuardian?.nameFirst,
+                application.team.teamGuardian?.nameLast,
+                application.team.teamGuardian?.email,
                 application.rodo.teamMemberId,
             ]
                 .filter(Boolean)
@@ -385,7 +389,7 @@ const AdminRodoScreen = () => {
                                                     </td>
                                                     <td className="px-4 py-4">
                                                         <span
-                                                            className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                                                            className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold ${status.className}`}
                                                         >
                                                             {status.label}
                                                         </span>
@@ -477,7 +481,7 @@ const AdminRodoScreen = () => {
                                 </dt>
                                 <dd className="mt-1">
                                     <span
-                                        className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                                        className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold ${
                                             statusFor(selectedApplication.rodo.rodoState).className
                                         }`}
                                     >
@@ -486,6 +490,25 @@ const AdminRodoScreen = () => {
                                 </dd>
                             </div>
                         </dl>
+
+                        <section className="rounded-xl border border-line p-4">
+                            <h3 className="font-semibold text-ink-heading">Opiekun drużyny</h3>
+                            {selectedApplication.team.teamGuardian ? (
+                                <>
+                                    <p className="mt-2 break-words text-ink">
+                                        {selectedApplication.team.teamGuardian.nameFirst}{" "}
+                                        {selectedApplication.team.teamGuardian.nameLast}
+                                    </p>
+                                    <p className="break-all text-sm text-ink-secondary">
+                                        {selectedApplication.team.teamGuardian.email}
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="mt-2 text-sm text-ink-secondary">
+                                    Brak przypisanego opiekuna.
+                                </p>
+                            )}
+                        </section>
 
                         <a
                             href={fileUrlFor(selectedApplication)}

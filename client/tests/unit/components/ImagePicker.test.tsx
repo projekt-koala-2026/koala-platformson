@@ -52,6 +52,8 @@ describe("ImagePicker", () => {
             id: "a",
             title: "Alfa",
             filePath: "/api/koala/content/images/a",
+            createdAt: "2026-01-01T12:00:00Z",
+            description: undefined,
         });
     });
 
