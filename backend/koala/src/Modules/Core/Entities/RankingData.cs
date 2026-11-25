@@ -11,6 +11,8 @@ namespace koala.src.Modules.Core
         public Guid RankingId { get; set; }
         [Column("team_name")]
         public string TeamName { get; set; }
+        [Column("has_qualified_to_next_etap")]
+        public bool HasQualifiedToNextEtap { get; set; }
         [Column("points_achived")]
         public int PointsAchived { get; set; }
         [Column("points_max")]

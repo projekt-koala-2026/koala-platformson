@@ -9,14 +9,8 @@ namespace koala.src.Modules.Core
     {
         [Column("ranking_id")]
         public Guid RankingId { get; set; }
-        [Column("edition_id")]
-        public Guid EditionId { get; set; }
-        [Column("is_public")]
-        public bool IsPublic { get; set; }
         [Column("name")]
         public string Name { get; set; }
-        [Column("tier")]
-        public string Tier { get; set; }
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         [Column("updated_at")]
@@ -25,6 +19,5 @@ namespace koala.src.Modules.Core
         public int Version { get; set; }
 
         public ICollection<RankingData> RankingDatas { get; set; } = new List<RankingData>();
-        public Edition Edition { get; set; } = null!;
     };
 }

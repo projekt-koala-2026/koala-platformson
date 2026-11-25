@@ -97,7 +97,29 @@ namespace koala.src.Modules.Core.Services
                 Version = 1
             };
 
-            _db.Editions.Add(edition);
+            var editionTier1TotalRanking = new Ranking
+            {
+                RankingId = Guid.CreateVersion7(),
+                Name = "Etap1 - ranking suma serii szkoły podstawowe",
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
+            };
+            var editionTier2TotalRanking = new Ranking
+            {
+                RankingId = Guid.CreateVersion7(),
+                Name = "Etap1 - ranking suma serii szkoły ponadpodstawowe",
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
+            };
+
+            edition.AreRankingsPublic = false;
+            edition.Tier1RankingTotalId = editionTier1TotalRanking.RankingId;
+            edition.Tier2RankingTotalId = editionTier2TotalRanking.RankingId;
+
+            await _db.Rankings.AddRangeAsync([editionTier1TotalRanking, editionTier2TotalRanking]);
+            await _db.Editions.AddAsync(edition);
             await _db.SaveChangesAsync();
 
             return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
@@ -374,6 +396,27 @@ namespace koala.src.Modules.Core.Services
                 Version = 1
             };
 
+            var Tier1Ranking = new Ranking
+            {
+                RankingId = Guid.CreateVersion7(),
+                Name = Etap1Series.Name + "- szkoły podstawowe",
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
+            };
+            var Tier2Ranking = new Ranking
+            {
+                RankingId = Guid.CreateVersion7(),
+                Name = Etap1Series.Name + "- szkoły ponad podstawowe",
+                CreatedAt = timeNow,
+                UpdatedAt = timeNow,
+                Version = 1
+            };
+
+            newEtap1Series.AreRankingsPublic = false;
+            newEtap1Series.Tier1RankingId = Tier1Ranking.RankingId;
+            newEtap1Series.Tier2RankingId = Tier2Ranking.RankingId;
+            await _db.Rankings.AddRangeAsync([Tier1Ranking, Tier2Ranking]);
             await _db.Etap1Series.AddAsync(newEtap1Series);
             await _db.SaveChangesAsync();
 
@@ -528,7 +571,10 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var Etap1Series = await _db.Etap1Series.FirstOrDefaultAsync(e => e.Id == Etap1Series_id && e.EditionId == edition_id && e.State == LifecycleStates.STATE_INACTIVE);
+            var Etap1Series = await _db.Etap1Series
+                .Include(e => e.Tier1Ranking)
+                .Include(e => e.Tier2Ranking)
+                .FirstOrDefaultAsync(e => e.Id == Etap1Series_id && e.EditionId == edition_id && e.State == LifecycleStates.STATE_INACTIVE);
 
             if (Etap1Series == null)
             {
@@ -536,6 +582,7 @@ namespace koala.src.Modules.Core.Services
             }
 
             _db.Etap1Series.Remove(Etap1Series);
+            _db.Rankings.RemoveRange(Etap1Series.Tier1Ranking, Etap1Series.Tier2Ranking);
             await _db.SaveChangesAsync();
         }
 

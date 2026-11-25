@@ -7,6 +7,7 @@ using koala.src.Shared;
 using koala.src.Shared.Account;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Crypto.Engines;
 
 namespace koala.src.Modules.Core.Services
 {
@@ -36,7 +37,7 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var Etap1Series = await _db.Etap1Series.Include(se => se.Edition).FirstOrDefaultAsync(se => se.Id == Etap1Series_id && se.EditionId == edition_id);
+            var Etap1Series = await _db.Etap1Series.Include(se => se.Edition).Include(se=> se.Tier1Ranking).Include(se => se.Tier2Ranking).FirstOrDefaultAsync(se => se.Id == Etap1Series_id && se.EditionId == edition_id);
             if (Etap1Series == null)
             {
                 throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Provided Etap1Series does not exist or is not a part of this edition");
@@ -52,6 +53,8 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Not all task submissions have a final score");
             }
+
+            //FIXME: WHEN I UPDATE TASKS MAKE SURE TO COME BACK HERE AND FIX THIS
             var tasks = await _db.TaskItems
                 .Where(t => t.Etap1SeriesId == Etap1Series_id)
                 .ToListAsync();
@@ -63,29 +66,6 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.TaskNotFound, "No tasks have been found for this edition");
             }
 
-            Ranking RankingTier1 = new Ranking
-            {
-                RankingId = Guid.CreateVersion7(),
-                EditionId = edition_id,
-                Name = Etap1Series.Name + "- szkoły podstawowe",
-                IsPublic = false,
-                Tier = CompetitionTiers.TIER_1,
-                CreatedAt = timeNow,
-                UpdatedAt = timeNow,
-                Version = 1
-            };
-            Ranking RankingTier2 = new Ranking
-            {
-                RankingId = Guid.CreateVersion7(),
-                EditionId = edition_id,
-                Name = Etap1Series.Name + "- szkoły ponad podstawowe",
-                IsPublic = false,
-                Tier = CompetitionTiers.TIER_2,
-                CreatedAt = timeNow,
-                UpdatedAt = timeNow,
-                Version = 1
-            };
-
             var submissions = await _db.TaskSubmissions
                 .Include(ts => ts.TaskItem)
                 .Where(ts => ts.TaskItem.Etap1SeriesId == Etap1Series_id)
@@ -95,6 +75,25 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "No teams are registered for this edition");
             }
+
+            var tier1RankingData = await _db.RankingDatas.Where(rd => rd.RankingId == Etap1Series.Tier1RankingId).ToListAsync();
+            var tier2RankingData = await _db.RankingDatas.Where(rd => rd.RankingId == Etap1Series.Tier2RankingId).ToListAsync();
+            _db.RankingDatas.RemoveRange(tier1RankingData);
+            _db.RankingDatas.RemoveRange(tier2RankingData);  
+
+            await _db.SaveChangesAsync();
+
+            tier1RankingData = new List<RankingData>();
+            tier2RankingData = new List<RankingData>();
+
+            
+            Etap1Series.Tier1Ranking.Name = Etap1Series.Name + "- szkoły podstawowe";
+            Etap1Series.Tier1Ranking.UpdatedAt = timeNow;
+            Etap1Series.Tier1Ranking.Version++;
+
+            Etap1Series.Tier2Ranking.Name = Etap1Series.Name + "- szkoły ponad podstawowe";
+            Etap1Series.Tier2Ranking.UpdatedAt = timeNow;
+            Etap1Series.Tier2Ranking.Version++;
 
             var teamRankingsData = submissions.ToLookup(ts => ts.TeamId);
 
@@ -113,8 +112,9 @@ namespace koala.src.Modules.Core.Services
                     var rankingData = new RankingData
                     {
                         Id = Guid.CreateVersion7(),
-                        RankingId = RankingTier1.RankingId,
+                        RankingId = Etap1Series.Tier1Ranking.RankingId,
                         TeamName = teamInfo.Name,
+                        HasQualifiedToNextEtap = false,
                         PointsAchived = teamRankingsData[teamInfo.TeamId].Count(ts => ts.Review1Score == true),
                         PointsMax = tier1TaskCount,
                         CreatedAt = timeNow,
@@ -128,8 +128,9 @@ namespace koala.src.Modules.Core.Services
                     var rankingData = new RankingData
                     {
                         Id = Guid.CreateVersion7(),
-                        RankingId = RankingTier2.RankingId,
+                        RankingId = Etap1Series.Tier2Ranking.RankingId,
                         TeamName = teamInfo.Name,
+                        HasQualifiedToNextEtap = false,
                         PointsAchived = teamRankingsData[teamInfo.TeamId].Count(ts => ts.Review1Score == true),
                         PointsMax = tier1TaskCount + tier2TaskCount,
                         CreatedAt = timeNow,
@@ -140,16 +141,13 @@ namespace koala.src.Modules.Core.Services
                 }
             }
 
-            await _db.Rankings.AddAsync(RankingTier1);
-            await _db.Rankings.AddAsync(RankingTier2);
-
             await _db.RankingDatas.AddRangeAsync(RankingDataTier1);
             await _db.RankingDatas.AddRangeAsync(RankingDataTier2);
 
             await _db.SaveChangesAsync();
         }
 
-        public async Task Merge2RankingsFromEditionAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, RankingMergeRequestDto requestDto)
+        public async Task GenereteEditionTotalRanking(ClaimsPrincipal claimsPrincipal, Guid edition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -164,97 +162,108 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            if (requestDto.Ranking1Id == requestDto.Ranking2Id)
+            var edition = await _db.Editions
+                .Include(e => e.Tier1RankingTotal)
+                .Include(e => e.Tier2RankingTotal)
+
+                .Include(e => e.Etap1Series)
+                .ThenInclude(e1s => e1s.Tier1Ranking)
+                
+                .Include(e => e.Etap1Series)
+                .ThenInclude(e1s => e1s.Tier2Ranking)
+                
+                .FirstOrDefaultAsync(e => e.Id == edition_id);
+
+            if (edition == null)
             {
-                throw new KoalaException(KoalaErrorCodes.RankingCannotMergeTheSameRanking, "Cannot merge a ranking when the same id was provided twice");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition not found");
             }
 
-            var ranking1 = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == requestDto.Ranking1Id && r.EditionId == edition_id);
-            var ranking2 = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == requestDto.Ranking2Id && r.EditionId == edition_id);
-
-            if (ranking1 == null || ranking2 == null)
+            if(!edition.Etap1Series.Any())
             {
-                throw new KoalaException(KoalaErrorCodes.RankingNotFound, "One of the rankings that u try to merge does not exist");
-            }
-
-            if (ranking1.Tier != ranking2.Tier)
-            {
-                throw new KoalaException(KoalaErrorCodes.RankingsTierConflict, "Ranking tiers do not match");
-            }
-
-            if (await _db.Rankings.AnyAsync(r => r.Name == requestDto.MergeRankingName && r.EditionId == edition_id))
-            {
-                throw new KoalaException(KoalaErrorCodes.AlreadyTaken, "This ranking name is already in use in this edition");
+                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Etap1Series not found for this edition");
             }
 
             DateTime timeNow = DateTime.UtcNow;
 
-            Ranking MergeRanking = new Ranking
+
+            var tier1TotalRankingData = await _db.RankingDatas.Where(rd => rd.RankingId == edition.Tier1RankingTotalId).ToListAsync();
+            var tier2TotalRankingData = await _db.RankingDatas.Where(rd => rd.RankingId == edition.Tier2RankingTotalId).ToListAsync();
+            _db.RankingDatas.RemoveRange(tier1TotalRankingData);
+            _db.RankingDatas.RemoveRange(tier2TotalRankingData);  
+
+            await _db.SaveChangesAsync();
+
+            tier1TotalRankingData = new List<RankingData>();
+            tier2TotalRankingData = new List<RankingData>();         
+
+            foreach(var series in edition.Etap1Series)
             {
-                RankingId = Guid.CreateVersion7(),
-                EditionId = edition_id,
-                Name = requestDto.MergeRankingName,
-                IsPublic = false,
-                Tier = ranking1.Tier,
-                CreatedAt = timeNow,
-                UpdatedAt = timeNow,
-                Version = 1
-            };
+                var seriesTier1RankingData = await _db.RankingDatas.Where(rd => rd.RankingId == series.Tier1RankingId).ToListAsync();
+                var seriesTier2RankingData = await _db.RankingDatas.Where(rd => rd.RankingId == series.Tier2RankingId).ToListAsync();
 
-            var ranking1Data = await _db.RankingDatas.Where(rd => rd.RankingId == requestDto.Ranking1Id).OrderByDescending(rd => rd.TeamName).ToListAsync();
-            var ranking2Data = await _db.RankingDatas.Where(rd => rd.RankingId == requestDto.Ranking2Id).OrderByDescending(rd => rd.TeamName).ToListAsync();
-
-            List<RankingData> MergeRankingData = new List<RankingData>();
-
-            foreach (var rd in ranking1Data)
-            {
-                var rankingData = new RankingData
+                foreach(var rd in seriesTier1RankingData)
                 {
-                    Id = Guid.CreateVersion7(),
-                    RankingId = MergeRanking.RankingId,
-                    TeamName = rd.TeamName,
-                    PointsAchived = rd.PointsAchived,
-                    PointsMax = rd.PointsMax,
-                    CreatedAt = timeNow,
-                    UpdatedAt = timeNow,
-                    Version = 1
-                };
-                MergeRankingData.Add(rankingData);
-            }
+                    var existing = tier1TotalRankingData.FirstOrDefault(trd => trd.TeamName == rd.TeamName);
 
-            foreach (var rd in ranking2Data)
-            {
-                var existing = MergeRankingData.FirstOrDefault(mrd => mrd.TeamName == rd.TeamName);
-
-                if (existing != null)
-                {
-                    existing.PointsAchived = existing.PointsAchived + rd.PointsAchived;
-                    existing.PointsMax = existing.PointsMax + rd.PointsMax;
-                }
-                else
-                {
-                    var rankingData = new RankingData
+                    if (existing != null)
                     {
-                        Id = Guid.CreateVersion7(),
-                        RankingId = MergeRanking.RankingId,
-                        TeamName = rd.TeamName,
-                        PointsAchived = rd.PointsAchived,
-                        PointsMax = rd.PointsMax,
-                        CreatedAt = timeNow,
-                        UpdatedAt = timeNow,
-                        Version = 1
-                    };
-                    MergeRankingData.Add(rankingData);
+                        existing.PointsAchived = existing.PointsAchived + rd.PointsAchived;
+                        existing.PointsMax = existing.PointsMax + rd.PointsMax;
+                    }
+                    else
+                    {
+                        var rankingData = new RankingData
+                        {
+                            Id = Guid.CreateVersion7(),
+                            RankingId = edition.Tier1RankingTotalId,
+                            TeamName = rd.TeamName,
+                            HasQualifiedToNextEtap = false,
+                            PointsAchived = rd.PointsAchived,
+                            PointsMax = rd.PointsMax,
+                            CreatedAt = timeNow,
+                            UpdatedAt = timeNow,
+                            Version = 1
+                        };
+                        tier1TotalRankingData.Add(rankingData);
+                    }
+                }
+
+                foreach(var rd in seriesTier2RankingData)
+                {
+                    var existing = tier2TotalRankingData.FirstOrDefault(trd => trd.TeamName == rd.TeamName);
+
+                    if (existing != null)
+                    {
+                        existing.PointsAchived = existing.PointsAchived + rd.PointsAchived;
+                        existing.PointsMax = existing.PointsMax + rd.PointsMax;
+                    }
+                    else
+                    {
+                        var rankingData = new RankingData
+                        {
+                            Id = Guid.CreateVersion7(),
+                            RankingId = edition.Tier2RankingTotalId,
+                            TeamName = rd.TeamName,
+                            HasQualifiedToNextEtap = false,
+                            PointsAchived = rd.PointsAchived,
+                            PointsMax = rd.PointsMax,
+                            CreatedAt = timeNow,
+                            UpdatedAt = timeNow,
+                            Version = 1
+                        };
+                        tier2TotalRankingData.Add(rankingData);
+                    }
                 }
             }
 
-            await _db.RankingDatas.AddRangeAsync(MergeRankingData);
-            await _db.Rankings.AddAsync(MergeRanking);
+            await _db.RankingDatas.AddRangeAsync(tier1TotalRankingData);
+            await _db.RankingDatas.AddRangeAsync(tier2TotalRankingData);
 
             await _db.SaveChangesAsync();
         }
 
-        public async Task CreateRankingManualyAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, RankingCreateDto requestDto)
+        public async Task<RankingDataDto> UpsertRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid ranking_id, Guid ranking_data_id, RankingDataUpsertDto requestDto)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -269,144 +278,7 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.Name == requestDto.RankingName && r.EditionId == edition_id);
-            if (ranking != null)
-            {
-                throw new KoalaException(KoalaErrorCodes.RankingAlreadyExists, "Ranking with this name already exists");
-            }
-
-            DateTime timeNow = DateTime.UtcNow;
-
-            Ranking Ranking = new Ranking
-            {
-                RankingId = Guid.CreateVersion7(),
-                EditionId = edition_id,
-                Name = requestDto.RankingName,
-                IsPublic = false,
-                Tier = requestDto.RankingTier,
-                CreatedAt = timeNow,
-                UpdatedAt = timeNow,
-                Version = 1
-            };
-            List<RankingData> RankingData = new List<RankingData>();
-            RankingData.AddRange(requestDto.RankingData.Select(
-                rd => new RankingData
-                {
-                    Id = Guid.CreateVersion7(),
-                    RankingId = Ranking.RankingId,
-                    TeamName = rd.TeamName,
-                    PointsAchived = rd.PointsAchived,
-                    PointsMax = rd.PointsMax,
-                    CreatedAt = timeNow,
-                    UpdatedAt = timeNow,
-                    Version = 1
-                }));
-
-            await _db.Rankings.AddAsync(Ranking);
-            await _db.RankingDatas.AddRangeAsync(RankingData);
-
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task DeleteRankingAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid ranking_id)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id && r.EditionId == edition_id);
-            if (ranking == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
-            }
-
-            var rankingData = await _db.RankingDatas.Where(rd => rd.RankingId == ranking_id).ToListAsync();
-
-            _db.Rankings.Remove(ranking);
-            _db.RankingDatas.RemoveRange(rankingData);
-
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task<RankingDto> UpdateRankingAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid ranking_id, RankingUpdateDto requestDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id && r.EditionId == edition_id);
-            if (ranking == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
-            }
-
-            if (await _db.Rankings.AnyAsync(r => r.Name == requestDto.Name && r.EditionId == edition_id && r.RankingId != ranking.RankingId))
-            {
-                throw new KoalaException(KoalaErrorCodes.AlreadyTaken, "The ranking name is already in use");
-            }
-            DateTime timeNow = DateTime.UtcNow;
-            if (ranking.Version != requestDto.Version) throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The ranking changed; refresh before saving.");
-            ranking.Name = requestDto.Name;
-            ranking.Tier = requestDto.Tier;
-            ranking.UpdatedAt = timeNow;
-            ranking.Version++;
-
-            try
-            {
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "The data u trying to update undergo changes pls refresh");
-            }
-
-            return new RankingDto
-            (
-                ranking.RankingId,
-                ranking.EditionId,
-                ranking.IsPublic,
-                ranking.Name,
-                ranking.Tier,
-                ranking.CreatedAt,
-                ranking.UpdatedAt,
-                ranking.Version
-            );
-        }
-
-        public async Task<RankingDataDto> UpsertRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid ranking_id, Guid ranking_data_id, RankingDataUpsertDto requestDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id && r.EditionId == edition_id);
+            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id);
             if (ranking == null)
             {
                 throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
@@ -422,6 +294,7 @@ namespace koala.src.Modules.Core.Services
                 }
                 if (rankingData.Version != requestDto.Version) throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The ranking row changed; refresh before saving.");
                 rankingData.TeamName = requestDto.TeamName;
+                rankingData.HasQualifiedToNextEtap = requestDto.HasQualifiedToNextEtap;
                 rankingData.PointsAchived = requestDto.PointsAchived;
                 rankingData.PointsMax = requestDto.PointsMax;
                 rankingData.UpdatedAt = timeNow;
@@ -443,6 +316,7 @@ namespace koala.src.Modules.Core.Services
                     Id = Guid.CreateVersion7(),
                     RankingId = ranking_id,
                     TeamName = requestDto.TeamName,
+                    HasQualifiedToNextEtap = requestDto.HasQualifiedToNextEtap,
                     PointsAchived = requestDto.PointsAchived,
                     PointsMax = requestDto.PointsMax,
                     CreatedAt = timeNow,
@@ -458,6 +332,7 @@ namespace koala.src.Modules.Core.Services
                 rankingData.Id,
                 rankingData.RankingId,
                 rankingData.TeamName,
+                rankingData.HasQualifiedToNextEtap,
                 rankingData.PointsAchived,
                 rankingData.PointsMax,
                 rankingData.CreatedAt,
@@ -466,7 +341,7 @@ namespace koala.src.Modules.Core.Services
             );
         }
 
-        public async Task DeleteRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid ranking_id, Guid ranking_data_id)
+        public async Task DeleteRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid ranking_id, Guid ranking_data_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -481,7 +356,7 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id && r.EditionId == edition_id);
+            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id);
             if (ranking == null)
             {
                 throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
@@ -498,7 +373,7 @@ namespace koala.src.Modules.Core.Services
             _db.RankingDatas.Remove(rankingData);
             await _db.SaveChangesAsync();
         }
-        public async Task MakeRankingPublicAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid ranking_id)
+        public async Task MakeTotalRankingPublicAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -513,17 +388,17 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id && r.EditionId == edition_id);
-            if (ranking == null)
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
+            if (edition == null)
             {
-                throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition not found");
             }
 
-            ranking.IsPublic = true;
+            edition.AreRankingsPublic = true;
             await _db.SaveChangesAsync();
         }
 
-        public async Task MakeRankingNotPublicAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid ranking_id)
+        public async Task MakeTotalRankingNotPublicAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -538,74 +413,269 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var ranking = await _db.Rankings.FirstOrDefaultAsync(r => r.RankingId == ranking_id && r.EditionId == edition_id);
-            if (ranking == null)
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
+            if (edition == null)
             {
-                throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition not found");
             }
 
-            ranking.IsPublic = false;
+            edition.AreRankingsPublic = false;
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task MakeSeriesRankingPublicAsync(ClaimsPrincipal claimsPrincipal, Guid etap1series_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var series = await _db.Etap1Series.FirstOrDefaultAsync(e1s => e1s.Id == etap1series_id);
+            if (series == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Etap1Series not found");
+            }
+
+            series.AreRankingsPublic = true;
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task MakeSeriesRankingNotPublicAsync(ClaimsPrincipal claimsPrincipal, Guid etap1series_id)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var series = await _db.Etap1Series.FirstOrDefaultAsync(e1s => e1s.Id == etap1series_id);
+            if (series == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Etap1Series not found");
+            }
+
+            series.AreRankingsPublic = false;
             await _db.SaveChangesAsync();
         }
 
         public async Task<List<RankingDto>> GetEditionRankingsAsync(ClaimsPrincipal claimsPrincipal, Guid editionId)
         {
-            var query = _db.Rankings.AsNoTracking().AsQueryable();
+            var edition = await _db.Editions
+                .Include(e => e.Tier1RankingTotal)
+                .Include(e => e.Tier2RankingTotal)
+                .Include(e => e.Etap1Series)
+                .ThenInclude(e1s => e1s.Tier1Ranking)
+                .Include(e => e.Etap1Series)
+                .ThenInclude(e1s => e1s.Tier2Ranking)
+                .FirstOrDefaultAsync(e => e.Id == editionId);
 
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isOrganizationAdmin)
+            if(edition == null)
             {
-                query = query.Where(r => r.IsPublic == true);
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition was not found");
             }
 
-            return await query.Where(r => r.EditionId == editionId)
-            .Select(r => new RankingDto
-            (
-                r.RankingId,
-                r.EditionId,
-                r.IsPublic,
-                r.Name,
-                r.Tier,
-                r.CreatedAt,
-                r.UpdatedAt,
-                r.Version
-            )).ToListAsync();
+            List<RankingDto> rankingDtos = new List<RankingDto>();
+
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            if(isOrganizationAdmin || edition.AreRankingsPublic == true)
+            {
+                var tier1Total = new RankingDto
+                (
+                    edition.Tier1RankingTotal.RankingId,
+                    edition.Id,
+                    null,
+                    edition.AreRankingsPublic,
+                    edition.Tier1RankingTotal.Name,
+                    CompetitionTiers.TIER_1,
+                    edition.Tier1RankingTotal.CreatedAt,
+                    edition.Tier1RankingTotal.UpdatedAt,
+                    edition.Tier1RankingTotal.Version
+                );
+                var tier2Total = new RankingDto
+                (
+                    edition.Tier2RankingTotal.RankingId,
+                    edition.Id,
+                    null,
+                    edition.AreRankingsPublic,
+                    edition.Tier2RankingTotal.Name,
+                    CompetitionTiers.TIER_2,
+                    edition.Tier2RankingTotal.CreatedAt,
+                    edition.Tier2RankingTotal.UpdatedAt,
+                    edition.Tier2RankingTotal.Version
+                );
+                rankingDtos.AddRange([tier1Total, tier2Total]);
+            }
+
+            foreach(var series in edition.Etap1Series)
+            {
+                if(isOrganizationAdmin || series.AreRankingsPublic == true)
+                {
+                    var tier1 = new RankingDto
+                    (
+                        series.Tier1Ranking.RankingId,
+                        null,
+                        series.Id,
+                        series.AreRankingsPublic,
+                        series.Tier1Ranking.Name,
+                        CompetitionTiers.TIER_1,
+                        series.Tier1Ranking.CreatedAt,
+                        series.Tier1Ranking.UpdatedAt,
+                        series.Tier1Ranking.Version
+                    );
+                    var tier2 = new RankingDto
+                    (
+                        series.Tier2Ranking.RankingId,
+                        null,
+                        series.Id,
+                        series.AreRankingsPublic,
+                        series.Tier2Ranking.Name,
+                        CompetitionTiers.TIER_2,
+                        series.Tier2Ranking.CreatedAt,
+                        series.Tier2Ranking.UpdatedAt,
+                        series.Tier2Ranking.Version
+                    );
+                    rankingDtos.AddRange([tier1, tier2]);
+                }
+            }
+
+            return rankingDtos;
         }
 
-        public async Task<(List<RankingDataDto>, ApiPagination)> GetEditionRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid editionId, Guid rankingId, PageQueryDto queryDto)
+        public async Task<(List<RankingDataDto>, ApiPagination)> GetEtap1SeriesRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid rankingId, Guid etap1series_id, PageQueryDto queryDto)
         {
-            var query = _db.Rankings.AsNoTracking().AsQueryable();
+            var query = _db.Etap1Series.AsNoTracking().AsQueryable();
 
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
 
-            if (!isOrganizationAdmin)
+            if(!isOrganizationAdmin)
             {
-                query = query.Where(r => r.IsPublic == true);
+                query = query.Where(s => s.AreRankingsPublic);
             }
 
-            var ranking = await query.FirstOrDefaultAsync(r => r.RankingId == rankingId && r.EditionId == editionId);
-            if (ranking == null)
+            var series = await query.FirstOrDefaultAsync(s => s.Id == etap1series_id &&
+                (s.Tier1RankingId == rankingId || s.Tier2RankingId == rankingId));
+            if (series == null)
             {
                 throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
             }
 
-            return (await _db.RankingDatas.Where(r => r.RankingId == ranking.RankingId)
-            .OrderByDescending(rd => rd.PointsAchived).ThenBy(rd => rd.TeamName).ThenBy(rd => rd.Id)
-            .Skip(queryDto.PageSize * queryDto.PageNumber)
-            .Take(queryDto.PageSize)
-            .Select(rd => new RankingDataDto
-            (
-                rd.Id,
-                rd.RankingId,
-                rd.TeamName,
-                rd.PointsAchived,
-                rd.PointsMax,
-                rd.CreatedAt,
-                rd.UpdatedAt,
-                rd.Version
-            )).ToListAsync(),
-            new ApiPagination(queryDto.PageNumber, queryDto.PageSize, await _db.RankingDatas.CountAsync(r => r.RankingId == ranking.RankingId)));
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                return (await _db.RankingDatas.Where(r => r.RankingId == rankingId && r.PointsAchived>0)
+                .OrderByDescending(rd => rd.PointsAchived).ThenBy(rd => rd.TeamName).ThenBy(rd => rd.Id)
+                .Skip(queryDto.PageSize * queryDto.PageNumber)
+                .Take(queryDto.PageSize)
+                .Select(rd => new RankingDataDto
+                (
+                    rd.Id,
+                    rd.RankingId,
+                    rd.TeamName,
+                    rd.HasQualifiedToNextEtap,
+                    rd.PointsAchived,
+                    rd.PointsMax,
+                    rd.CreatedAt,
+                    rd.UpdatedAt,
+                    rd.Version
+                )).ToListAsync(),
+                new ApiPagination(queryDto.PageNumber, queryDto.PageSize, await _db.RankingDatas.CountAsync(r => r.RankingId == rankingId && r.PointsAchived>0)));
+            }
+            {
+                return (await _db.RankingDatas.Where(r => r.RankingId == rankingId)
+                .OrderByDescending(rd => rd.PointsAchived).ThenBy(rd => rd.TeamName).ThenBy(rd => rd.Id)
+                .Skip(queryDto.PageSize * queryDto.PageNumber)
+                .Take(queryDto.PageSize)
+                .Select(rd => new RankingDataDto
+                (
+                    rd.Id,
+                    rd.RankingId,
+                    rd.TeamName,
+                    rd.HasQualifiedToNextEtap,
+                    rd.PointsAchived,
+                    rd.PointsMax,
+                    rd.CreatedAt,
+                    rd.UpdatedAt,
+                    rd.Version
+                )).ToListAsync(),
+                new ApiPagination(queryDto.PageNumber, queryDto.PageSize, await _db.RankingDatas.CountAsync(r => r.RankingId == rankingId)));   
+            }
+        }
+
+        public async Task<(List<RankingDataDto>, ApiPagination)> GetEditionRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid rankingId, Guid edition_id, PageQueryDto queryDto)
+        {
+            var query = _db.Editions.AsNoTracking().AsQueryable();
+
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+
+            if(!isOrganizationAdmin)
+            {
+                query = query.Where(e => e.AreRankingsPublic);
+            }
+
+            var edition = await query.FirstOrDefaultAsync(e => e.Id == edition_id &&
+                (e.Tier1RankingTotalId == rankingId || e.Tier2RankingTotalId == rankingId));
+            if (edition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.RankingNotFound, "Ranking not found");
+            }
+
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                return (await _db.RankingDatas.Where(r => r.RankingId == rankingId && r.PointsAchived>0)
+                .OrderByDescending(rd => rd.PointsAchived).ThenBy(rd => rd.TeamName).ThenBy(rd => rd.Id)
+                .Skip(queryDto.PageSize * queryDto.PageNumber)
+                .Take(queryDto.PageSize)
+                .Select(rd => new RankingDataDto
+                (
+                    rd.Id,
+                    rd.RankingId,
+                    rd.TeamName,
+                    rd.HasQualifiedToNextEtap,
+                    rd.PointsAchived,
+                    rd.PointsMax,
+                    rd.CreatedAt,
+                    rd.UpdatedAt,
+                    rd.Version
+                )).ToListAsync(),
+                new ApiPagination(queryDto.PageNumber, queryDto.PageSize, await _db.RankingDatas.CountAsync(r => r.RankingId == rankingId && r.PointsAchived>0)));
+            }
+            {
+                return (await _db.RankingDatas.Where(r => r.RankingId == rankingId)
+                .OrderByDescending(rd => rd.PointsAchived).ThenBy(rd => rd.TeamName).ThenBy(rd => rd.Id)
+                .Skip(queryDto.PageSize * queryDto.PageNumber)
+                .Take(queryDto.PageSize)
+                .Select(rd => new RankingDataDto
+                (
+                    rd.Id,
+                    rd.RankingId,
+                    rd.TeamName,
+                    rd.HasQualifiedToNextEtap,
+                    rd.PointsAchived,
+                    rd.PointsMax,
+                    rd.CreatedAt,
+                    rd.UpdatedAt,
+                    rd.Version
+                )).ToListAsync(),
+                new ApiPagination(queryDto.PageNumber, queryDto.PageSize, await _db.RankingDatas.CountAsync(r => r.RankingId == rankingId)));   
+            }
         }
 
 

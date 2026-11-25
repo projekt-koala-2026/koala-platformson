@@ -23,8 +23,10 @@ namespace koala.src.Modules.Core.Data
         {
             modelBuilder.HasDefaultSchema("core");
 
-            modelBuilder.Entity<Edition>().ToTable("editions");
-            modelBuilder.Entity<Etap1Series>().ToTable("etap1series");
+            modelBuilder.Entity<Edition>().ToTable("editions", table =>
+                table.HasCheckConstraint("CK_editions_distinct_total_rankings", "tier1_ranking_total_id <> tier2_ranking_total_id"));
+            modelBuilder.Entity<Etap1Series>().ToTable("etap1series", table =>
+                table.HasCheckConstraint("CK_etap1series_distinct_rankings", "tier1_ranking_id <> tier2_ranking_id"));
             modelBuilder.Entity<TaskItem>().ToTable("tasks");
             modelBuilder.Entity<TaskAnswer>().ToTable("task_answers");
             modelBuilder.Entity<TaskSubmission>().ToTable("task_submissions");
@@ -36,6 +38,17 @@ namespace koala.src.Modules.Core.Data
             // EDITIONS CONFIG
             modelBuilder.Entity<Edition>()
                 .HasKey(e => e.Id);
+            modelBuilder.Entity<Edition>()
+                .HasOne(e => e.Tier1RankingTotal)
+                .WithOne()
+                .HasForeignKey<Edition>(e => e.Tier1RankingTotalId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Edition>()
+                .HasOne(e => e.Tier2RankingTotal)
+                .WithOne()
+                .HasForeignKey<Edition>(e => e.Tier2RankingTotalId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
 
             // Etap1Series CONFIG
             modelBuilder.Entity<Etap1Series>()
@@ -45,6 +58,16 @@ namespace koala.src.Modules.Core.Data
                 .WithMany(e => e.Etap1Series)
                 .HasForeignKey(s => s.EditionId)
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Etap1Series>()
+                .HasOne(e => e.Tier1Ranking)
+                .WithOne()
+                .HasForeignKey<Etap1Series>(e => e.Tier1RankingId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Etap1Series>()
+                .HasOne(e => e.Tier2Ranking)
+                .WithOne()
+                .HasForeignKey<Etap1Series>(e => e.Tier2RankingId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             //TASKS CONFIG
             modelBuilder.Entity<TaskItem>()
@@ -92,11 +115,6 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<Ranking>()
                 .Property(rd => rd.Version)
                 .IsConcurrencyToken();
-            modelBuilder.Entity<Ranking>()
-                .HasOne(r => r.Edition)
-                .WithMany(e => e.Rankings)
-                .HasForeignKey(r => r.EditionId)
-                .OnDelete(DeleteBehavior.Cascade);
 
             // RANKING DATA CONFIG
             modelBuilder.Entity<RankingData>()

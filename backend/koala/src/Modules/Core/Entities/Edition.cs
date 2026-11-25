@@ -14,6 +14,14 @@ namespace koala.src.Modules.Core.Entities
         public DateTime TeamRegisterOpen { get; set; }
         [Column("team_register_close")]
         public DateTime TeamRegisterClose { get; set; }
+
+        [Column("tier1_ranking_total_id")]
+        public Guid Tier1RankingTotalId { get; set; }
+        [Column("tier2_ranking_total_id")]
+        public Guid Tier2RankingTotalId { get; set; }
+        [Column("are_rankings_public")]
+        public bool AreRankingsPublic { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         [Column("updated_at")]
@@ -21,6 +29,7 @@ namespace koala.src.Modules.Core.Entities
         [Column("version")]
         public int Version { get; set; }
         public ICollection<Etap1Series> Etap1Series { get; set; } = new List<Etap1Series>();
-        public ICollection<Ranking> Rankings { get; set; } = new List<Ranking>();
+        public Ranking Tier1RankingTotal { get; set; } = null!;
+        public Ranking Tier2RankingTotal { get; set; } = null!;
     };
 }

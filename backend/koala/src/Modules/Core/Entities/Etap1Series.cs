@@ -22,10 +22,17 @@ namespace koala.src.Modules.Core.Entities
         public DateTime UpdatedAt { get; set; }
         [Column("version")]
         public int Version { get; set; }
-        [Column("ranking_published")]
-        public bool RankingPublished { get; set; }
+        
+        [Column("tier1_ranking_id")]
+        public Guid Tier1RankingId { get; set; }
+        [Column("tier2_ranking_id")]
+        public Guid Tier2RankingId { get; set; }
+        [Column("are_rankings_public")]
+        public bool AreRankingsPublic { get; set; }
+
         public Edition Edition { get; set; } = null!;
         public ICollection<TaskItem> TaskItems { get; set; } = new List<TaskItem>();
-        public ICollection<Ranking> Rankings { get; set; } = new List<Ranking>();
+        public Ranking Tier1Ranking { get; set; } = null!;
+        public Ranking Tier2Ranking { get; set; } = null!;
     }
 }

@@ -2,7 +2,8 @@ namespace koala.src.Modules.Core.Dtos
 {
     public record RankingDto(
         Guid RankingId,
-        Guid EditionId,
+        Guid? EditionId,
+        Guid? Etap1SeriesId,
         bool IsPublic,
         string Name,
         string Tier,
