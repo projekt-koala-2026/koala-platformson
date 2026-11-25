@@ -399,7 +399,7 @@ namespace koala.src.Modules.Core.Services
             var Tier1Ranking = new Ranking
             {
                 RankingId = Guid.CreateVersion7(),
-                Name = Etap1Series.Name + "- szkoły podstawowe",
+                Name = newEtap1Series.Name + "- szkoły podstawowe",
                 CreatedAt = timeNow,
                 UpdatedAt = timeNow,
                 Version = 1
@@ -407,7 +407,7 @@ namespace koala.src.Modules.Core.Services
             var Tier2Ranking = new Ranking
             {
                 RankingId = Guid.CreateVersion7(),
-                Name = Etap1Series.Name + "- szkoły ponad podstawowe",
+                Name = newEtap1Series.Name + "- szkoły ponad podstawowe",
                 CreatedAt = timeNow,
                 UpdatedAt = timeNow,
                 Version = 1

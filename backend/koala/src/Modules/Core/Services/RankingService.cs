@@ -184,6 +184,11 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Etap1Series not found for this edition");
             }
 
+            if (edition.Etap1Series.Any(s => s.State != LifecycleStates.STATE_CLOSED))
+            {
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Close all first-stage series before generating the total ranking");
+            }
+
             DateTime timeNow = DateTime.UtcNow;
 
 
