@@ -1035,14 +1035,14 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamPlayer && !isTeamAdmin && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team members and admin can view the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a team captain or guardian can view their own team, or an organization RODO moderator can view any team");
             }
 
             bool isTeamMember = await _db.Teams.AnyAsync(tm => tm.Id == teamId && (tm.CaptainId == userId || tm.GuardianId == userId));
 
             if (!isTeamMember && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team members and admin can view the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a team captain or guardian can view their own team, or an organization RODO moderator can view any team");
             }
 
             var team = await _db.Teams.AsNoTracking().Include(t => t.Captain).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(t => t.Guardian).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(t => t.Id == teamId);
@@ -1128,7 +1128,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only admin can view all the teams");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only an organization RODO moderator can view all team details");
             }
 
             var query = _db.Teams
