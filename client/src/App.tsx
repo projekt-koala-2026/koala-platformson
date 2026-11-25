@@ -9,6 +9,7 @@ import { getAuthArea, getOrganizationHomePath, getUserRoles } from "./utils/auth
 const AdminLoginScreen = lazy(() => import("./screens/admin/AdminLoginScreen"));
 const AdminRodoScreen = lazy(() => import("./screens/admin/AdminRodoScreen"));
 const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));
+const EmailsScreen = lazy(() => import("./screens/admin/EmailsScreen"));
 const EditionsScreen = lazy(() => import("./screens/admin/EditEditionScreen"));
 const SubeditionsScreen = lazy(() => import("./screens/admin/SubeditionsScreen"));
 const CompetitionTasksScreen = lazy(() => import("./screens/admin/CompetitionTasksScreen"));
@@ -241,6 +242,14 @@ export default function App() {
                                     redirectTo="/admin/login"
                                 >
                                     <AdminTeamsScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/emails"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <EmailsScreen />
                                 </ProtectedRoute>
                             }
                         />

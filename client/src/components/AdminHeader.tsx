@@ -36,6 +36,7 @@ const editorLinks: NavigationLink[] = [
 const administratorLinks: NavigationLink[] = [
     { label: "Start", path: "/admin" },
     { label: "Użytkownicy", path: "/admin/users" },
+    { label: "Wiadomości", path: "/admin/emails" },
     { label: "Edycje", path: "/admin/editions", separatorBefore: true },
     { label: "Etapy", path: "/admin/subeditions", indentLevel: 1 },
     {

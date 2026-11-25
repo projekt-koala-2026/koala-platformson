@@ -4,6 +4,8 @@ export const apiEndpoints = {
     sessions: `${API_ROOT}/account/sessions`,
     links: `${API_ROOT}/account/links`,
     users: `${API_ROOT}/account/users`,
+    bulkEmails: (group: "schools" | "captains" | "guardians") =>
+        `${API_ROOT}/account/emails/${group}`,
     teams: `${API_ROOT}/account/teams`,
     adminTeams: `${API_ROOT}/account/teams/as-admin`,
     teamRodos: (teamId: string) => `${API_ROOT}/account/teams/${teamId}/rodos`,
