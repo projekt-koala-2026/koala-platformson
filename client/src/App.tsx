@@ -7,6 +7,7 @@ import type { Role } from "./types/models";
 import { getAuthArea, getOrganizationHomePath, getUserRoles } from "./utils/authService";
 
 const AdminLoginScreen = lazy(() => import("./screens/admin/AdminLoginScreen"));
+const SessionsScreen = lazy(() => import("./screens/SessionsScreen"));
 const AdminRodoScreen = lazy(() => import("./screens/admin/AdminRodoScreen"));
 const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));
 const EmailsScreen = lazy(() => import("./screens/admin/EmailsScreen"));
@@ -74,6 +75,30 @@ export default function App() {
                 <Suspense fallback={<RouteFallback />}>
                     <Routes>
                         <Route path="/admin/login" element={<AdminLoginScreen />} />
+                        <Route
+                            path="/admin/sessions"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={[
+                                        "ORGANIZATION_ADMIN",
+                                        "ORGANIZATION_EDITOR",
+                                        "ORGANIZATION_REVIEWER",
+                                        "ORGANIZATION_RODO_MODERATOR",
+                                    ]}
+                                    redirectTo="/admin/login"
+                                >
+                                    <SessionsScreen area="organization" />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/sessions"
+                            element={
+                                <ProtectedRoute allowedRoles={teamMembers} redirectTo="/login">
+                                    <SessionsScreen area="team" />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route
                             path="/admin/review-assignments"
                             element={

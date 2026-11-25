@@ -28,7 +28,8 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const [isPasswordOpen, setIsPasswordOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const roles = useMemo(() => getUserRoles(), []);
-    const isOrganizationUser = roles.isAdmin || roles.isEditor || roles.isReviewer;
+    const isOrganizationUser =
+        roles.isAdmin || roles.isEditor || roles.isReviewer || roles.isRodoModerator;
     const isTeamAccount = roles.isCaptain || roles.isGuardian;
     const isCaptain = roles.isCaptain;
     const isLoggedIn = isOrganizationUser || isTeamAccount;
@@ -152,6 +153,13 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                               },
                                           ]
                                         : []),
+                                    {
+                                        label: "Moje sesje",
+                                        onClick: () =>
+                                            navigate(
+                                                isOrganizationUser ? "/admin/sessions" : "/sessions"
+                                            ),
+                                    },
                                     {
                                         label: loggingOut ? "Wylogowywanie…" : "Wyloguj",
                                         onClick: () => void logout(),

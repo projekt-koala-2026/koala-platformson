@@ -152,6 +152,10 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                                     onClick: () => setIsPasswordOpen(true),
                                 },
                                 {
+                                    label: "Moje sesje",
+                                    onClick: () => navigate("/admin/sessions"),
+                                },
+                                {
                                     label: loggingOut ? "Wylogowywanie…" : "Wyloguj",
                                     onClick: () => void logout(),
                                     disabled: loggingOut,

@@ -2,6 +2,10 @@ const API_ROOT = "/api/koala";
 
 export const apiEndpoints = {
     sessions: `${API_ROOT}/account/sessions`,
+    activeSessions: `${API_ROOT}/account/sessions/active`,
+    session: (id: string) => `${API_ROOT}/account/sessions/${id}`,
+    deactivateSession: (id: string) => `${API_ROOT}/account/sessions/${id}/deactivate`,
+    allSessions: `${API_ROOT}/account/sessions/all`,
     links: `${API_ROOT}/account/links`,
     users: `${API_ROOT}/account/users`,
     bulkEmails: (group: "schools" | "captains" | "guardians") =>

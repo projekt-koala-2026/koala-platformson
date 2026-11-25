@@ -6,6 +6,15 @@ export type Role =
     | "TEAM_CAPTAIN"
     | "TEAM_GUARDIAN";
 
+export interface ApiSession {
+    sessionId: string;
+    userId: string;
+    state: string;
+    createdAt: string;
+    updatedAt: string;
+    expiresAt: string;
+}
+
 export interface User {
     id: string;
     email: string;
