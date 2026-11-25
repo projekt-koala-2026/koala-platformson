@@ -42,11 +42,6 @@ export const apiEndpoints = {
         `${API_ROOT}/core/ranking/etap1series/${seriesId}/ranking-make-${visible ? "public" : "not-public"}`,
     rankingData: (rankingId: string, rowId: string) =>
         `${API_ROOT}/core/ranking/ranking/${rankingId}/ranking-data/${rowId}`,
-    editionWinners: (editionId: string) => `${API_ROOT}/core/ranking/edition/${editionId}/winners`,
-    editionWinner: (editionId: string, tier: "TIER_1" | "TIER_2") =>
-        `${API_ROOT}/core/ranking/edition/${editionId}/winner_${tier === "TIER_1" ? "tier1" : "tier2"}`,
-    winnersPublication: (editionId: string, visible: boolean) =>
-        `${API_ROOT}/core/ranking/edition/${editionId}/winners/${visible ? "make-public" : "make-not-public"}`,
     taskAnswers: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/corr`,
     taskSubmissions: (taskId: string) => `${API_ROOT}/core/tasks/submissions/${taskId}`,
     taskReviewProgress: (taskId: string) => `${API_ROOT}/core/tasks/${taskId}/review-progress`,

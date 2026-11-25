@@ -32,7 +32,6 @@ export interface ApiEdition {
     id: string;
     name: string;
     state: "ACTIVE" | "INACTIVE" | "CLOSED" | string;
-    areWinnersPublic?: boolean;
     teamRegisterOpen: string;
     teamRegisterClose: string;
     createdAt: string;
@@ -84,15 +83,6 @@ export interface ApiRankingData {
     hasQualifiedToNextEtap: boolean;
     pointsAchived: number;
     pointsMax: number;
-    createdAt: string;
-    updatedAt: string;
-    version: number;
-}
-export interface ApiWinner {
-    id: string;
-    editionId: string;
-    teamName: string;
-    tier: string;
     createdAt: string;
     updatedAt: string;
     version: number;

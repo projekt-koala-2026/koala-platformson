@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import KoalaIllustration from "../../components/KoalaIllustration";
@@ -7,35 +6,10 @@ import PublicHeader from "../../components/PublicHeader";
 import RankingResults from "../../components/RankingResults";
 import SelectListbox from "../../components/SelectListbox";
 import { useRankingBrowser } from "../../hooks/useRankingBrowser";
-import type { ApiWinner } from "../../types/models";
-import { apiEndpoints } from "../../utils/apiEndpoints";
-import { apiRequestResult } from "../../utils/apiFetcher";
 
 export default function RankingsPublicScreen() {
     const navigate = useNavigate();
     const browser = useRankingBrowser(true);
-    const [winners, setWinners] = useState<{ editionId: string; items: ApiWinner[] }>({
-        editionId: "",
-        items: [],
-    });
-    const [winnerError, setWinnerError] = useState("");
-    useEffect(() => {
-        if (!browser.editionId || !browser.edition?.areWinnersPublic) return;
-        let active = true;
-        void apiRequestResult<ApiWinner[]>(
-            apiEndpoints.editionWinners(browser.editionId),
-            null,
-            "GET",
-            navigate
-        ).then((result) => {
-            if (!active) return;
-            setWinners({ editionId: browser.editionId, items: result.data ?? [] });
-            setWinnerError(result.data ? "" : browser.editionId);
-        });
-        return () => {
-            active = false;
-        };
-    }, [browser.editionId, browser.edition?.areWinnersPublic, navigate]);
     return (
         <div className="flex min-h-screen flex-col bg-canvas">
             <PublicHeader navigate={navigate} />
@@ -49,7 +23,7 @@ export default function RankingsPublicScreen() {
                             Rankingi drużyn
                         </h1>
                         <p className="mt-3 text-ink-secondary">
-                            Wybierz edycję i opublikowany ranking konkursu.
+                            Sprawdź wyniki poszczególnych serii i sumę I etapu konkursu.
                         </p>
                     </div>
                     <KoalaIllustration
@@ -76,13 +50,15 @@ export default function RankingsPublicScreen() {
                             id="public-ranking-name"
                             className="mb-2 text-sm font-semibold text-ink-heading"
                         >
-                            Ranking
+                            Ranking serii lub suma I etapu
                         </p>
                         <SelectListbox
                             value={browser.rankingId}
                             options={browser.rankings.map((r) => ({
                                 value: r.rankingId,
-                                label: `${r.name} · ${r.tier === "TIER_1" ? "szkoły podstawowe" : "szkoły ponadpodstawowe"}`,
+                                label: r.etap1SeriesId
+                                    ? r.name
+                                    : `Suma I etapu · ${r.tier === "TIER_1" ? "szkoły podstawowe" : "szkoły ponadpodstawowe"}`,
                             }))}
                             onChange={browser.chooseRanking}
                             ariaLabelledBy="public-ranking-name"
@@ -104,9 +80,16 @@ export default function RankingsPublicScreen() {
                     </p>
                 ) : (
                     <section>
-                        <h2 className="mb-4 text-xl font-semibold text-ink-heading">
+                        <h2 className="text-xl font-semibold text-ink-heading">
                             {browser.ranking.name}
                         </h2>
+                        <p className="mb-4 mt-2 text-sm text-ink-secondary">
+                            {browser.ranking.etap1SeriesId
+                                ? "Wyniki serii I etapu."
+                                : "Łączne wyniki serii I etapu."}{" "}
+                            Kolumna awansu pokazuje kwalifikację oznaczoną przez organizatorów w tym
+                            rankingu.
+                        </p>
                         <RankingResults
                             rows={browser.rows}
                             total={browser.total}
@@ -114,30 +97,6 @@ export default function RankingsPublicScreen() {
                             onPage={browser.setPage}
                         />
                     </section>
-                )}
-                {browser.edition?.areWinnersPublic &&
-                    winners.editionId === browser.editionId &&
-                    winners.items.length > 0 && (
-                        <section className="mt-8 rounded-2xl border border-brand-border bg-brand-soft p-5">
-                            <h2 className="text-xl font-semibold text-ink-heading">
-                                Zwycięzcy edycji
-                            </h2>
-                            <ul className="mt-4 space-y-2">
-                                {winners.items.map((w) => (
-                                    <li key={w.id} className="text-ink">
-                                        <span className="font-semibold">{w.teamName}</span> ·{" "}
-                                        {w.tier === "TIER_1"
-                                            ? "szkoły podstawowe"
-                                            : "szkoły ponadpodstawowe"}
-                                    </li>
-                                ))}
-                            </ul>
-                        </section>
-                    )}
-                {browser.edition?.areWinnersPublic && winnerError === browser.editionId && (
-                    <p role="status" className="app-status-warning mt-4 rounded-xl border p-4">
-                        Nie udało się pobrać zwycięzców edycji.
-                    </p>
                 )}
             </main>
             <PublicFooter />
