@@ -150,7 +150,7 @@ export default function ReviewerTasksScreen() {
                 .filter(({ subedition }) =>
                     flatTasks.some(
                         ({ task }) =>
-                            task.subEditionId === subedition.id && assignedTaskIds.has(task.id)
+                            task.etap1SeriesId === subedition.id && assignedTaskIds.has(task.id)
                     )
                 )
                 .sort(
@@ -162,7 +162,7 @@ export default function ReviewerTasksScreen() {
                 allSubs.find(({ subedition }) =>
                     flatTasks.some(
                         ({ task }) =>
-                            task.subEditionId === subedition.id && assignedTaskIds.has(task.id)
+                            task.etap1SeriesId === subedition.id && assignedTaskIds.has(task.id)
                     )
                 );
             // Keep edition and stage together when refreshing or losing an assignment.

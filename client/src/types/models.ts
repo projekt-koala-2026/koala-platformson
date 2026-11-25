@@ -51,7 +51,7 @@ export interface ApiSubedition {
 
 export interface ApiCompetitionTask {
     id: string;
-    subEditionId: string;
+    etap1SeriesId: string;
     name: string;
     tier: "TIER_1" | "TIER_2";
     contentJson: string;

@@ -36,7 +36,7 @@ const subedition = {
 };
 const task = {
     id: "task-1",
-    subEditionId: subedition.id,
+    etap1SeriesId: subedition.id,
     name: "Zadanie pierwsze",
     tier: "TIER_1",
     contentJson: JSON.stringify({ version: 1, body_pl: "Treść", extra: "zachowaj" }),
