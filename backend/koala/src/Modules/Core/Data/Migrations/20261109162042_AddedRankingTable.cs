@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -17,7 +17,7 @@ namespace koala.src.Modules.Core.Data.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    subedition_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Etap1Series_id = table.Column<Guid>(type: "uuid", nullable: false),
                     team_name = table.Column<string>(type: "text", nullable: false),
                     tier = table.Column<string>(type: "text", nullable: false),
                     points = table.Column<int>(type: "integer", nullable: false),
@@ -30,19 +30,19 @@ namespace koala.src.Modules.Core.Data.Migrations
                 {
                     table.PrimaryKey("PK_rankings", x => x.id);
                     table.ForeignKey(
-                        name: "FK_rankings_subeditions_subedition_id",
-                        column: x => x.subedition_id,
+                        name: "FK_rankings_Etap1Series_Etap1Series_id",
+                        column: x => x.Etap1Series_id,
                         principalSchema: "core",
-                        principalTable: "subeditions",
+                        principalTable: "Etap1Series",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_rankings_subedition_id",
+                name: "IX_rankings_Etap1Series_id",
                 schema: "core",
                 table: "rankings",
-                column: "subedition_id");
+                column: "Etap1Series_id");
         }
 
         /// <inheritdoc />

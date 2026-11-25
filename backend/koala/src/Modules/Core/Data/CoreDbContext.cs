@@ -12,20 +12,19 @@ namespace koala.src.Modules.Core.Data
         }
 
         public DbSet<Edition> Editions => Set<Edition>();
-        public DbSet<SubEdition> SubEditions => Set<SubEdition>();
+        public DbSet<Etap1Series> Etap1Series => Set<Etap1Series>();
         public DbSet<TaskItem> TaskItems => Set<TaskItem>();
         public DbSet<TaskAnswer> TaskAnswers => Set<TaskAnswer>();
         public DbSet<TaskSubmission> TaskSubmissions => Set<TaskSubmission>();
         public DbSet<School> Schools => Set<School>();
         public DbSet<Ranking> Rankings => Set<Ranking>();
-        public DbSet<Winner> Winners => Set<Winner>();
         public DbSet<RankingData> RankingDatas => Set<RankingData>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("core");
 
             modelBuilder.Entity<Edition>().ToTable("editions");
-            modelBuilder.Entity<SubEdition>().ToTable("subeditions");
+            modelBuilder.Entity<Etap1Series>().ToTable("etap1series");
             modelBuilder.Entity<TaskItem>().ToTable("tasks");
             modelBuilder.Entity<TaskAnswer>().ToTable("task_answers");
             modelBuilder.Entity<TaskSubmission>().ToTable("task_submissions");
@@ -33,28 +32,17 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<Ranking>().ToTable("rankings");
 
             modelBuilder.Entity<RankingData>().ToTable("ranking_datas");
-            modelBuilder.Entity<Winner>().ToTable("winners");
 
             // EDITIONS CONFIG
             modelBuilder.Entity<Edition>()
                 .HasKey(e => e.Id);
-            modelBuilder.Entity<Edition>()
-                .HasOne(e => e.WinnerTier1)
-                .WithOne()
-                .HasForeignKey<Edition>(e => e.WinnerTier1Id)
-                .OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.Entity<Edition>()
-                .HasOne(e => e.WinnerTier2)
-                .WithOne()
-                .HasForeignKey<Edition>(e => e.WinnerTier2Id)
-                .OnDelete(DeleteBehavior.SetNull);
 
-            // SUBEDITIONS CONFIG
-            modelBuilder.Entity<SubEdition>()
+            // Etap1Series CONFIG
+            modelBuilder.Entity<Etap1Series>()
                 .HasKey(s => s.Id);
-            modelBuilder.Entity<SubEdition>()
+            modelBuilder.Entity<Etap1Series>()
                 .HasOne(s => s.Edition)
-                .WithMany(e => e.SubEditions)
+                .WithMany(e => e.Etap1Series)
                 .HasForeignKey(s => s.EditionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -62,11 +50,11 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<TaskItem>()
                 .HasKey(t => t.Id);
 
-            // SUBEDITION-TASK CONFIG
+            // Etap1Series-TASK CONFIG
             modelBuilder.Entity<TaskItem>()
-                .HasOne(t => t.SubEdition)
+                .HasOne(t => t.Etap1Series)
                 .WithMany(s => s.TaskItems)
-                .HasForeignKey(t => t.SubEditionId)
+                .HasForeignKey(t => t.Etap1SeriesId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             //TASKANSWERS CONFIG
@@ -109,13 +97,6 @@ namespace koala.src.Modules.Core.Data
                 .WithMany(e => e.Rankings)
                 .HasForeignKey(r => r.EditionId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // WINNER CONFIG
-            modelBuilder.Entity<Winner>()
-                .HasKey(w => w.Id);
-            modelBuilder.Entity<Winner>()
-                .Property(w => w.Version)
-                .IsConcurrencyToken();
 
             // RANKING DATA CONFIG
             modelBuilder.Entity<RankingData>()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace koala.src.Modules.Core.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class SubeditionAdd : Migration
+    public partial class Etap1SeriesAdd : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "subeditions",
+                name: "Etap1Series",
                 schema: "core",
                 columns: table => new
                 {
@@ -26,9 +26,9 @@ namespace koala.src.Modules.Core.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_subeditions", x => x.id);
+                    table.PrimaryKey("PK_Etap1Series", x => x.id);
                     table.ForeignKey(
-                        name: "FK_subeditions_editions_edition_id",
+                        name: "FK_Etap1Series_editions_edition_id",
                         column: x => x.edition_id,
                         principalSchema: "core",
                         principalTable: "editions",
@@ -37,9 +37,9 @@ namespace koala.src.Modules.Core.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_subeditions_edition_id",
+                name: "IX_Etap1Series_edition_id",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 column: "edition_id");
         }
 
@@ -47,7 +47,7 @@ namespace koala.src.Modules.Core.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "subeditions",
+                name: "Etap1Series",
                 schema: "core");
         }
     }

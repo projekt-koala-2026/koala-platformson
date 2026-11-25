@@ -30,10 +30,6 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<bool>("AreWinnersPublic")
-                        .HasColumnType("boolean")
-                        .HasColumnName("are_winners_public");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -64,26 +60,12 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("version");
 
-                    b.Property<Guid?>("WinnerTier1Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("winner_tier1_id");
-
-                    b.Property<Guid?>("WinnerTier2Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("winner_tier2_id");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("WinnerTier1Id")
-                        .IsUnique();
-
-                    b.HasIndex("WinnerTier2Id")
-                        .IsUnique();
 
                     b.ToTable("editions", "core");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEdition", b =>
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.Etap1Series", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -132,7 +114,7 @@ namespace koala.src.Modules.Core.Data.Migrations
 
                     b.HasIndex("EditionId");
 
-                    b.ToTable("subeditions", "core");
+                    b.ToTable("etap1series", "core");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskAnswer", b =>
@@ -185,6 +167,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid>("Etap1SeriesId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("Etap1Series_id");
+
                     b.Property<Guid?>("ImageId")
                         .HasColumnType("uuid")
                         .HasColumnName("image_id");
@@ -197,10 +183,6 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
-
-                    b.Property<Guid>("SubEditionId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("subedition_id");
 
                     b.Property<string>("Tier")
                         .IsRequired()
@@ -217,7 +199,7 @@ namespace koala.src.Modules.Core.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SubEditionId");
+                    b.HasIndex("Etap1SeriesId");
 
                     b.ToTable("tasks", "core");
                 });
@@ -282,41 +264,6 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.ToTable("task_submissions", "core");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.Winner", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("EditionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("TeamName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("team_name");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer")
-                        .HasColumnName("version");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EditionId");
-
-                    b.ToTable("winners", "core");
-                });
-
             modelBuilder.Entity("koala.src.Modules.Core.Ranking", b =>
                 {
                     b.Property<Guid>("RankingId")
@@ -332,6 +279,9 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("edition_id");
 
+                    b.Property<Guid?>("Etap1SeriesId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsPublic")
                         .HasColumnType("boolean")
                         .HasColumnName("is_public");
@@ -340,9 +290,6 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
-
-                    b.Property<Guid?>("SubEditionId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Tier")
                         .IsRequired()
@@ -362,7 +309,7 @@ namespace koala.src.Modules.Core.Data.Migrations
 
                     b.HasIndex("EditionId");
 
-                    b.HasIndex("SubEditionId");
+                    b.HasIndex("Etap1SeriesId");
 
                     b.ToTable("rankings", "core");
                 });
@@ -485,27 +432,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.ToTable("schools", "core");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.Edition", b =>
-                {
-                    b.HasOne("koala.src.Modules.Core.Entities.Winner", "WinnerTier1")
-                        .WithOne()
-                        .HasForeignKey("koala.src.Modules.Core.Entities.Edition", "WinnerTier1Id")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("koala.src.Modules.Core.Entities.Winner", "WinnerTier2")
-                        .WithOne()
-                        .HasForeignKey("koala.src.Modules.Core.Entities.Edition", "WinnerTier2Id")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("WinnerTier1");
-
-                    b.Navigation("WinnerTier2");
-                });
-
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEdition", b =>
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.Etap1Series", b =>
                 {
                     b.HasOne("koala.src.Modules.Core.Entities.Edition", "Edition")
-                        .WithMany("SubEditions")
+                        .WithMany("Etap1Series")
                         .HasForeignKey("EditionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -526,13 +456,13 @@ namespace koala.src.Modules.Core.Data.Migrations
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItem", b =>
                 {
-                    b.HasOne("koala.src.Modules.Core.Entities.SubEdition", "SubEdition")
+                    b.HasOne("koala.src.Modules.Core.Entities.Etap1Series", "Etap1Series")
                         .WithMany("TaskItems")
-                        .HasForeignKey("SubEditionId")
+                        .HasForeignKey("Etap1SeriesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("SubEdition");
+                    b.Navigation("Etap1Series");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskSubmission", b =>
@@ -546,17 +476,6 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.Navigation("TaskItem");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.Winner", b =>
-                {
-                    b.HasOne("koala.src.Modules.Core.Entities.Edition", "Edition")
-                        .WithMany()
-                        .HasForeignKey("EditionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Edition");
-                });
-
             modelBuilder.Entity("koala.src.Modules.Core.Ranking", b =>
                 {
                     b.HasOne("koala.src.Modules.Core.Entities.Edition", "Edition")
@@ -565,9 +484,9 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("koala.src.Modules.Core.Entities.SubEdition", null)
+                    b.HasOne("koala.src.Modules.Core.Entities.Etap1Series", null)
                         .WithMany("Rankings")
-                        .HasForeignKey("SubEditionId");
+                        .HasForeignKey("Etap1SeriesId");
 
                     b.Navigation("Edition");
                 });
@@ -585,12 +504,12 @@ namespace koala.src.Modules.Core.Data.Migrations
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.Edition", b =>
                 {
-                    b.Navigation("Rankings");
+                    b.Navigation("Etap1Series");
 
-                    b.Navigation("SubEditions");
+                    b.Navigation("Rankings");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.SubEdition", b =>
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.Etap1Series", b =>
                 {
                     b.Navigation("Rankings");
 

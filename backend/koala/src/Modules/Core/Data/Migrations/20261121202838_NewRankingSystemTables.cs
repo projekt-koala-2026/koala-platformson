@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -12,7 +12,7 @@ namespace koala.src.Modules.Core.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_rankings_subeditions_subedition_id",
+                name: "FK_rankings_Etap1Series_Etap1Series_id",
                 schema: "core",
                 table: "rankings");
 
@@ -32,10 +32,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                 table: "rankings");
 
             migrationBuilder.RenameColumn(
-                name: "subedition_id",
+                name: "Etap1Series_id",
                 schema: "core",
                 table: "rankings",
-                newName: "SubEditionId");
+                newName: "Etap1SeriesId");
 
             migrationBuilder.RenameColumn(
                 name: "team_name",
@@ -50,13 +50,13 @@ namespace koala.src.Modules.Core.Data.Migrations
                 newName: "edition_id");
 
             migrationBuilder.RenameIndex(
-                name: "IX_rankings_subedition_id",
+                name: "IX_rankings_Etap1Series_id",
                 schema: "core",
                 table: "rankings",
-                newName: "IX_rankings_SubEditionId");
+                newName: "IX_rankings_Etap1SeriesId");
 
             migrationBuilder.AlterColumn<Guid>(
-                name: "SubEditionId",
+                name: "Etap1SeriesId",
                 schema: "core",
                 table: "rankings",
                 type: "uuid",
@@ -221,12 +221,12 @@ namespace koala.src.Modules.Core.Data.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_rankings_subeditions_SubEditionId",
+                name: "FK_rankings_Etap1Series_Etap1SeriesId",
                 schema: "core",
                 table: "rankings",
-                column: "SubEditionId",
+                column: "Etap1SeriesId",
                 principalSchema: "core",
-                principalTable: "subeditions",
+                principalTable: "Etap1Series",
                 principalColumn: "id");
         }
 
@@ -249,7 +249,7 @@ namespace koala.src.Modules.Core.Data.Migrations
                 table: "rankings");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_rankings_subeditions_SubEditionId",
+                name: "FK_rankings_Etap1Series_Etap1SeriesId",
                 schema: "core",
                 table: "rankings");
 
@@ -307,10 +307,10 @@ namespace koala.src.Modules.Core.Data.Migrations
                 table: "editions");
 
             migrationBuilder.RenameColumn(
-                name: "SubEditionId",
+                name: "Etap1SeriesId",
                 schema: "core",
                 table: "rankings",
-                newName: "subedition_id");
+                newName: "Etap1Series_id");
 
             migrationBuilder.RenameColumn(
                 name: "name",
@@ -325,13 +325,13 @@ namespace koala.src.Modules.Core.Data.Migrations
                 newName: "id");
 
             migrationBuilder.RenameIndex(
-                name: "IX_rankings_SubEditionId",
+                name: "IX_rankings_Etap1SeriesId",
                 schema: "core",
                 table: "rankings",
-                newName: "IX_rankings_subedition_id");
+                newName: "IX_rankings_Etap1Series_id");
 
             migrationBuilder.AlterColumn<Guid>(
-                name: "subedition_id",
+                name: "Etap1Series_id",
                 schema: "core",
                 table: "rankings",
                 type: "uuid",
@@ -364,12 +364,12 @@ namespace koala.src.Modules.Core.Data.Migrations
                 column: "id");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_rankings_subeditions_subedition_id",
+                name: "FK_rankings_Etap1Series_Etap1Series_id",
                 schema: "core",
                 table: "rankings",
-                column: "subedition_id",
+                column: "Etap1Series_id",
                 principalSchema: "core",
-                principalTable: "subeditions",
+                principalTable: "Etap1Series",
                 principalColumn: "id",
                 onDelete: ReferentialAction.Cascade);
         }

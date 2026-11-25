@@ -6,8 +6,8 @@ namespace koala.src.Modules.Core.Entities
     {
         [Column("id")]
         public Guid Id { get; set; }
-        [Column("subedition_id")]
-        public Guid SubEditionId { get; set; }
+        [Column("Etap1Series_id")]
+        public Guid Etap1SeriesId { get; set; }
         [Column("image_id")]
         public Guid? ImageId { get; set; }
         [Column("image_type")]
@@ -24,7 +24,7 @@ namespace koala.src.Modules.Core.Entities
         public DateTime UpdatedAt { get; set; }
         [Column("version")]
         public int Version { get; set; }
-        public SubEdition SubEdition { get; set; } = null!;
+        public Etap1Series Etap1Series { get; set; } = null!;
         public ICollection<TaskAnswer> TaskAnswers { get; set; } = new List<TaskAnswer>();
         public ICollection<TaskSubmission> TaskSubmissions { get; set; } = new List<TaskSubmission>();
     }

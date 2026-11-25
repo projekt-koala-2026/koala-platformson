@@ -21,7 +21,7 @@ namespace koala.src.Modules.Core.Services
             _accountModule = accountModule;
         }
 
-        public async Task CreateRankingsFromSubEditionAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid sub_edition_id)
+        public async Task CreateRankingsFromEtap1SeriesAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id, Guid Etap1Series_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -36,24 +36,24 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var subedition = await _db.SubEditions.Include(se => se.Edition).FirstOrDefaultAsync(se => se.Id == sub_edition_id && se.EditionId == edition_id);
-            if (subedition == null)
+            var Etap1Series = await _db.Etap1Series.Include(se => se.Edition).FirstOrDefaultAsync(se => se.Id == Etap1Series_id && se.EditionId == edition_id);
+            if (Etap1Series == null)
             {
-                throw new KoalaException(KoalaErrorCodes.SubEditionNotFound, "Provided subedition does not exist or is not a part of this edition");
+                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Provided Etap1Series does not exist or is not a part of this edition");
             }
             DateTime timeNow = DateTime.UtcNow;
-            if (subedition.State != LifecycleStates.STATE_CLOSED)
+            if (Etap1Series.State != LifecycleStates.STATE_CLOSED)
             {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Rankings can only be generated for a closed subedition");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Rankings can only be generated for a closed Etap1Series");
             }
-            if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.SubEditionId == sub_edition_id &&
+            if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.Etap1SeriesId == Etap1Series_id &&
                 (ts.Reviewer1Id == null || ts.Reviewer2Id == null || ts.Reviewer1Id == ts.Reviewer2Id ||
                 ts.Review1Score == null || ts.Review2Score == null || ts.Review1Score != ts.Review2Score)))
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Not all task submissions have a final score");
             }
             var tasks = await _db.TaskItems
-                .Where(t => t.SubEditionId == sub_edition_id)
+                .Where(t => t.Etap1SeriesId == Etap1Series_id)
                 .ToListAsync();
             int tier1TaskCount = tasks.Count(t => t.Tier == CompetitionTiers.TIER_1);
             int tier2TaskCount = tasks.Count(t => t.Tier == CompetitionTiers.TIER_2);
@@ -67,7 +67,7 @@ namespace koala.src.Modules.Core.Services
             {
                 RankingId = Guid.CreateVersion7(),
                 EditionId = edition_id,
-                Name = subedition.Name + "- szkoły podstawowe",
+                Name = Etap1Series.Name + "- szkoły podstawowe",
                 IsPublic = false,
                 Tier = CompetitionTiers.TIER_1,
                 CreatedAt = timeNow,
@@ -78,7 +78,7 @@ namespace koala.src.Modules.Core.Services
             {
                 RankingId = Guid.CreateVersion7(),
                 EditionId = edition_id,
-                Name = subedition.Name + "- szkoły ponad podstawowe",
+                Name = Etap1Series.Name + "- szkoły ponad podstawowe",
                 IsPublic = false,
                 Tier = CompetitionTiers.TIER_2,
                 CreatedAt = timeNow,
@@ -88,9 +88,9 @@ namespace koala.src.Modules.Core.Services
 
             var submissions = await _db.TaskSubmissions
                 .Include(ts => ts.TaskItem)
-                .Where(ts => ts.TaskItem.SubEditionId == sub_edition_id)
+                .Where(ts => ts.TaskItem.Etap1SeriesId == Etap1Series_id)
                 .ToListAsync();
-            var teams = await _accountModule.Internal_GetTeamsForEditionAsync(subedition.EditionId);
+            var teams = await _accountModule.Internal_GetTeamsForEditionAsync(Etap1Series.EditionId);
             if (teams.Count == 0)
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "No teams are registered for this edition");
@@ -608,237 +608,6 @@ namespace koala.src.Modules.Core.Services
             new ApiPagination(queryDto.PageNumber, queryDto.PageSize, await _db.RankingDatas.CountAsync(r => r.RankingId == ranking.RankingId)));
         }
 
-        public async Task<List<WinnerDto>> GetEditionWinners(ClaimsPrincipal claimsPrincipal, Guid edition_id)
-        {
-            if (!await _db.Editions.AnyAsync(e => e.Id == edition_id))
-            {
-                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Provided edition does not exist");
-            }
 
-            var query = _db.Editions.AsNoTracking().AsQueryable().Include(e => e.WinnerTier1).Include(e => e.WinnerTier2).Where(e => e.Id == edition_id);
-
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-            if (!isOrganizationAdmin)
-            {
-                query = query.Where(e => e.AreWinnersPublic == true);
-            }
-
-            var edition = await query.FirstOrDefaultAsync();
-            if (edition == null)
-            {
-                return [];
-            }
-            var winners = new List<WinnerDto>();
-            
-            if(edition.WinnerTier1!= null && edition.WinnerTier1Id != null)
-            {
-                
-                winners.Add(new WinnerDto
-                (
-                    edition.WinnerTier1.Id,
-                    edition.Id,
-                    edition.WinnerTier1.TeamName,
-                    CompetitionTiers.TIER_1,
-                    edition.WinnerTier1.CreatedAt,
-                    edition.WinnerTier1.UpdatedAt,
-                    edition.WinnerTier1.Version
-                ));
-            }
-            if(edition.WinnerTier2!= null && edition.WinnerTier2Id != null){
-                winners.Add(new WinnerDto
-                (
-                    edition.WinnerTier2.Id,
-                    edition.Id,
-                    edition.WinnerTier2.TeamName,
-                    CompetitionTiers.TIER_2,
-                    edition.WinnerTier2.CreatedAt,
-                    edition.WinnerTier2.UpdatedAt,
-                    edition.WinnerTier2.Version
-                ));
-            }
-            return winners;
-        }
-            
-        public async Task MakeEditionWinnersPublicAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
-            if (edition == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition not found");
-            }
-
-            edition.AreWinnersPublic = true;
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task MakeEditionWinnersNotPublicAsync(ClaimsPrincipal claimsPrincipal, Guid edition_id)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
-            if (edition == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition not found");
-            }
-
-            edition.AreWinnersPublic = false;
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task<WinnerDto> UpsertEditionWinnerTier1Async(ClaimsPrincipal claimsPrincipal, Guid edition_id, WinnerUpserDto requestDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var edition = await _db.Editions.Include(e => e.WinnerTier1).FirstOrDefaultAsync(e => e.Id == edition_id);
-            if (edition == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition not found");
-            }
-
-            DateTime timeNow = DateTime.UtcNow;
-            if (edition.WinnerTier1Id == null || edition.WinnerTier1 == null)
-            {
-                Winner newWinner = new Winner
-                {
-                    Id = Guid.CreateVersion7(),
-                    Edition = edition,
-                    TeamName = requestDto.TeamName,
-                    CreatedAt = timeNow,
-                    UpdatedAt = timeNow,
-                    Version = 1
-                };
-                edition.WinnerTier1Id = newWinner.Id;
-                edition.WinnerTier1 = newWinner;
-                await _db.Winners.AddAsync(newWinner);
-            }
-            else
-            {
-                if (edition.WinnerTier1.Version != requestDto.Version) throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The winner changed; refresh before saving.");
-                edition.WinnerTier1.TeamName = requestDto.TeamName;
-                edition.WinnerTier1.UpdatedAt = timeNow;
-                edition.WinnerTier1.Version++;
-            }
-
-            try
-            {
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Winner data changed refresh your data");
-            }
-
-            return new WinnerDto
-            (
-                edition.WinnerTier1.Id,
-                edition.Id,
-                edition.WinnerTier1.TeamName,
-                CompetitionTiers.TIER_1,
-                edition.WinnerTier1.CreatedAt,
-                edition.WinnerTier1.UpdatedAt,
-                edition.WinnerTier1.Version
-            );
-        }
-
-        public async Task<WinnerDto> UpsertEditionWinnerTier2Async(ClaimsPrincipal claimsPrincipal, Guid edition_id, WinnerUpserDto requestDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var edition = await _db.Editions.Include(e => e.WinnerTier2).FirstOrDefaultAsync(e => e.Id == edition_id);
-            if (edition == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Edition not found");
-            }
-
-            DateTime timeNow = DateTime.UtcNow;
-            if (edition.WinnerTier2Id == null || edition.WinnerTier2 == null)
-            {
-                Winner newWinner = new Winner
-                {
-                    Id = Guid.CreateVersion7(),
-                    Edition = edition,
-                    TeamName = requestDto.TeamName,
-                    CreatedAt = timeNow,
-                    UpdatedAt = timeNow,
-                    Version = 1
-                };
-                edition.WinnerTier2Id = newWinner.Id;
-                edition.WinnerTier2 = newWinner;
-                await _db.Winners.AddAsync(newWinner);
-            }
-            else
-            {
-                if (edition.WinnerTier2.Version != requestDto.Version) throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "The winner changed; refresh before saving.");
-                edition.WinnerTier2.TeamName = requestDto.TeamName;
-                edition.WinnerTier2.UpdatedAt = timeNow;
-                edition.WinnerTier2.Version++;
-            }
-
-            try
-            {
-                await _db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Winner data changed refresh your data");
-            }
-
-            return new WinnerDto
-            (
-                edition.WinnerTier2.Id,
-                edition.Id,
-                edition.WinnerTier2.TeamName,
-                CompetitionTiers.TIER_2,
-                edition.WinnerTier2.CreatedAt,
-                edition.WinnerTier2.UpdatedAt,
-                edition.WinnerTier2.Version
-            );
-        }
     }
 }

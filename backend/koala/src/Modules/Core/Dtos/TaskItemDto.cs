@@ -4,7 +4,7 @@ namespace koala.src.Modules.Core.Dtos
     public record TaskItemDto
     (
         Guid Id,
-        Guid SubEditionId,
+        Guid Etap1SeriesId,
         string Name,
         string Tier,
         string ContentJson,

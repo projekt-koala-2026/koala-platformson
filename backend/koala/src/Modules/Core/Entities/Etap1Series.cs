@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core.Entities
 {
-    public class SubEdition
+    public class Etap1Series
     {
         [Column("id")]
         public Guid Id { get; set; }

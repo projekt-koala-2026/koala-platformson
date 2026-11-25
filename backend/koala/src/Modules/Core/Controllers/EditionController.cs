@@ -70,134 +70,134 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("{edition_id}/subeditions")]
-        public async Task<IActionResult> CreateSubEdition([FromRoute] Guid edition_id, [FromBody] SubEditionCreateDto createSubEditionDto)
+        [HttpPost("{edition_id}/Etap1Series")]
+        public async Task<IActionResult> CreateEtap1Series([FromRoute] Guid edition_id, [FromBody] Etap1SeriesCreateDto createEtap1SeriesDto)
         {
-            var response = await _editionService.CreateSubEditionAsync(User, edition_id, createSubEditionDto);
+            var response = await _editionService.CreateEtap1SeriesAsync(User, edition_id, createEtap1SeriesDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/subeditions/{subedition_id}")]
-        public async Task<IActionResult> UpdateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] SubEditionUpdateDto updateSubEditionDto)
+        [HttpPut("{edition_id}/Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> UpdateEtap1Series([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromBody] Etap1SeriesUpdateDto updateEtap1SeriesDto)
         {
-            var response = await _editionService.UpdateSubEditionAsync(User, edition_id, subedition_id, updateSubEditionDto);
+            var response = await _editionService.UpdateEtap1SeriesAsync(User, edition_id, Etap1Series_id, updateEtap1SeriesDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [AllowAnonymous]
-        [HttpGet("{edition_id}/subeditions/{subedition_id}")]
-        public async Task<IActionResult> GetSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> GetEtap1Series([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id)
         {
-            var response = await _editionService.GetSubEditionAsync(User, edition_id, subedition_id);
+            var response = await _editionService.GetEtap1SeriesAsync(User, edition_id, Etap1Series_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [AllowAnonymous]
-        [HttpGet("{edition_id}/subeditions")]
-        public async Task<IActionResult> GetSubEditions([FromRoute] Guid edition_id, [FromQuery] PageQueryDto pageQueryDto)
+        [HttpGet("{edition_id}/Etap1Series")]
+        public async Task<IActionResult> GetEtap1Series([FromRoute] Guid edition_id, [FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _editionService.GetSubEditionsAsync(User, edition_id, pageQueryDto);
+            (var responseData, var responsePagination) = await _editionService.GetEtap1SeriesAsync(User, edition_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/activate_subedition/{subedition_id}")]
-        public async Task<IActionResult> ActivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        [HttpPut("{edition_id}/activate_Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> ActivateEtap1Series([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id)
         {
-            var response = await _editionService.ActivateSubEditionAsync(User, edition_id, subedition_id);
+            var response = await _editionService.ActivateEtap1SeriesAsync(User, edition_id, Etap1Series_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/close_subedition/{subedition_id}")]
-        public async Task<IActionResult> DeactivateSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        [HttpPut("{edition_id}/close_Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> DeactivateEtap1Series([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id)
         {
-            var response = await _editionService.CloseSubEditionAsync(User, edition_id, subedition_id);
+            var response = await _editionService.CloseEtap1SeriesAsync(User, edition_id, Etap1Series_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpDelete("{edition_id}/subeditions/{subedition_id}")]
-        public async Task<IActionResult> DeleteSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id)
+        [HttpDelete("{edition_id}/Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> DeleteEtap1Series([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id)
         {
-            await _editionService.DeleteSubEditionAsync(User, edition_id, subedition_id);
+            await _editionService.DeleteEtap1SeriesAsync(User, edition_id, Etap1Series_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
-        [HttpPost("{edition_id}/subeditions/{subedition_id}/tasks")]
-        public async Task<IActionResult> CreateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromBody] TaskItemCreateDto createTaskDto)
+        [HttpPost("{edition_id}/Etap1Series/{Etap1Series_id}/tasks")]
+        public async Task<IActionResult> CreateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromBody] TaskItemCreateDto createTaskDto)
         {
-            var response = await _editionService.CreateTaskItemAsync(User, edition_id, subedition_id, createTaskDto);
+            var response = await _editionService.CreateTaskItemAsync(User, edition_id, Etap1Series_id, createTaskDto);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
-        public async Task<IActionResult> UpdateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] TaskItemUpdateDto updateTaskDto)
+        [HttpPut("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}")]
+        public async Task<IActionResult> UpdateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id, [FromBody] TaskItemUpdateDto updateTaskDto)
         {
-            var response = await _editionService.UpdateTaskItemAsync(User, edition_id, subedition_id, task_id, updateTaskDto);
+            var response = await _editionService.UpdateTaskItemAsync(User, edition_id, Etap1Series_id, task_id, updateTaskDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskItemDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpDelete("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
-        public async Task<IActionResult> DeleteTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
+        [HttpDelete("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}")]
+        public async Task<IActionResult> DeleteTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id)
         {
-            await _editionService.DeleteTaskItemAsync(User, edition_id, subedition_id, task_id);
+            await _editionService.DeleteTaskItemAsync(User, edition_id, Etap1Series_id, task_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
-        [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}")]
-        public async Task<IActionResult> GetTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
+        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}")]
+        public async Task<IActionResult> GetTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id)
         {
-            var response = await _editionService.GetTaskItemAsync(User, edition_id, subedition_id, task_id);
+            var response = await _editionService.GetTaskItemAsync(User, edition_id, Etap1Series_id, task_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskItemDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpDelete("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}/image")]
-        public async Task<IActionResult> DeleteTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
+        [HttpDelete("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}/image")]
+        public async Task<IActionResult> DeleteTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id)
         {
-            await _editionService.DeleteTaskItemImageAsync(User, edition_id, subedition_id, task_id);
+            await _editionService.DeleteTaskItemImageAsync(User, edition_id, Etap1Series_id, task_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
-        [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}/image")]
-        public async Task<IActionResult> GetTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id)
+        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}/image")]
+        public async Task<IActionResult> GetTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id)
         {
-            var physicalPath = await _editionService.GetTaskItemImageAsync(User, edition_id, subedition_id, task_id);
+            var physicalPath = await _editionService.GetTaskItemImageAsync(User, edition_id, Etap1Series_id, task_id);
             var provider = new FileExtensionContentTypeProvider();
             provider.TryGetContentType(physicalPath, out var contentType);
             return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/subeditions/{subedition_id}/tasks/{task_id}/image")]
-        public async Task<IActionResult> UpsertTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromForm] TaskItemImageUpsertDto request)
+        [HttpPut("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}/image")]
+        public async Task<IActionResult> UpsertTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id, [FromForm] TaskItemImageUpsertDto request)
         {
-            var physicalPath = await _editionService.UpsertTaskItemImageAsync(User, edition_id, subedition_id, task_id, request);
+            var physicalPath = await _editionService.UpsertTaskItemImageAsync(User, edition_id, Etap1Series_id, task_id, request);
             var provider = new FileExtensionContentTypeProvider();
             provider.TryGetContentType(physicalPath, out var contentType);
             return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
         }
 
         [Authorize]
-        [HttpGet("{edition_id}/subeditions/{subedition_id}/tasks")]
-        public async Task<IActionResult> GetTaskItems([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromQuery] PageQueryDto pageQueryDto)
+        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}/tasks")]
+        public async Task<IActionResult> GetTaskItems([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _editionService.GetTaskItemsAsync(User, edition_id, subedition_id, pageQueryDto);
+            (var responseData, var responsePagination) = await _editionService.GetTaskItemsAsync(User, edition_id, Etap1Series_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
         [Authorize]
-        [HttpGet("{edition_id}/subeditions/{subedition_id}/task/active/{team_id}")]
-        public async Task<IActionResult> GetTasksActive([FromRoute] Guid edition_id, [FromRoute] Guid subedition_id, [FromRoute] Guid team_id, [FromQuery] PageQueryDto pageQueryDto)
+        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}/task/active/{team_id}")]
+        public async Task<IActionResult> GetTasksActive([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid team_id, [FromQuery] PageQueryDto pageQueryDto)
         {
-            (var responseData, var responsePagination) = await _editionService.GetTasksActiveAsync(User, edition_id, subedition_id, team_id, pageQueryDto);
+            (var responseData, var responsePagination) = await _editionService.GetTasksActiveAsync(User, edition_id, Etap1Series_id, team_id, pageQueryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 

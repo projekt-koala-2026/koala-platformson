@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -12,55 +12,55 @@ namespace koala.src.Modules.Core.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_subeditions_editions_edition_id",
+                name: "FK_Etap1Series_editions_edition_id",
                 schema: "core",
-                table: "subeditions");
+                table: "Etap1Series");
 
             migrationBuilder.DropIndex(
-                name: "IX_subeditions_edition_id",
+                name: "IX_Etap1Series_edition_id",
                 schema: "core",
-                table: "subeditions");
+                table: "Etap1Series");
 
             migrationBuilder.DropColumn(
                 name: "edition_id",
                 schema: "core",
-                table: "subeditions");
+                table: "Etap1Series");
 
             migrationBuilder.RenameColumn(
                 name: "data_start",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 newName: "date_start");
 
             migrationBuilder.RenameColumn(
                 name: "data_end",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 newName: "date_end");
 
             migrationBuilder.CreateTable(
-                name: "edition_subeditions",
+                name: "edition_Etap1Series",
                 schema: "core",
                 columns: table => new
                 {
                     edition_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    subedition_id = table.Column<Guid>(type: "uuid", nullable: false)
+                    Etap1Series_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_edition_subeditions", x => new { x.edition_id, x.subedition_id });
+                    table.PrimaryKey("PK_edition_Etap1Series", x => new { x.edition_id, x.Etap1Series_id });
                     table.ForeignKey(
-                        name: "FK_edition_subeditions_editions_edition_id",
+                        name: "FK_edition_Etap1Series_editions_edition_id",
                         column: x => x.edition_id,
                         principalSchema: "core",
                         principalTable: "editions",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_edition_subeditions_subeditions_subedition_id",
-                        column: x => x.subedition_id,
+                        name: "FK_edition_Etap1Series_Etap1Series_Etap1Series_id",
+                        column: x => x.Etap1Series_id,
                         principalSchema: "core",
-                        principalTable: "subeditions",
+                        principalTable: "Etap1Series",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -94,25 +94,25 @@ namespace koala.src.Modules.Core.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "subedition_tasks",
+                name: "Etap1Series_tasks",
                 schema: "core",
                 columns: table => new
                 {
-                    subedition_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Etap1Series_id = table.Column<Guid>(type: "uuid", nullable: false),
                     task_id = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_subedition_tasks", x => new { x.subedition_id, x.task_id });
+                    table.PrimaryKey("PK_Etap1Series_tasks", x => new { x.Etap1Series_id, x.task_id });
                     table.ForeignKey(
-                        name: "FK_subedition_tasks_subeditions_subedition_id",
-                        column: x => x.subedition_id,
+                        name: "FK_Etap1Series_tasks_Etap1Series_Etap1Series_id",
+                        column: x => x.Etap1Series_id,
                         principalSchema: "core",
-                        principalTable: "subeditions",
+                        principalTable: "Etap1Series",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_subedition_tasks_tasks_task_id",
+                        name: "FK_Etap1Series_tasks_tasks_task_id",
                         column: x => x.task_id,
                         principalSchema: "core",
                         principalTable: "tasks",
@@ -148,16 +148,16 @@ namespace koala.src.Modules.Core.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_edition_subeditions_subedition_id",
+                name: "IX_edition_Etap1Series_Etap1Series_id",
                 schema: "core",
-                table: "edition_subeditions",
-                column: "subedition_id",
+                table: "edition_Etap1Series",
+                column: "Etap1Series_id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_subedition_tasks_task_id",
+                name: "IX_Etap1Series_tasks_task_id",
                 schema: "core",
-                table: "subedition_tasks",
+                table: "Etap1Series_tasks",
                 column: "task_id",
                 unique: true);
 
@@ -173,11 +173,11 @@ namespace koala.src.Modules.Core.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "edition_subeditions",
+                name: "edition_Etap1Series",
                 schema: "core");
 
             migrationBuilder.DropTable(
-                name: "subedition_tasks",
+                name: "Etap1Series_tasks",
                 schema: "core");
 
             migrationBuilder.DropTable(
@@ -195,33 +195,33 @@ namespace koala.src.Modules.Core.Data.Migrations
             migrationBuilder.RenameColumn(
                 name: "date_start",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 newName: "data_start");
 
             migrationBuilder.RenameColumn(
                 name: "date_end",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 newName: "data_end");
 
             migrationBuilder.AddColumn<Guid>(
                 name: "edition_id",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 type: "uuid",
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
 
             migrationBuilder.CreateIndex(
-                name: "IX_subeditions_edition_id",
+                name: "IX_Etap1Series_edition_id",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 column: "edition_id");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_subeditions_editions_edition_id",
+                name: "FK_Etap1Series_editions_edition_id",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 column: "edition_id",
                 principalSchema: "core",
                 principalTable: "editions",

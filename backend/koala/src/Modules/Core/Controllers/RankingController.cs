@@ -3,7 +3,6 @@ using koala.src.Modules.Core.Dtos;
 using koala.src.Modules.Core.Services;
 using koala.src.Shared;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace koala.src.Modules.Core.Controllers
@@ -20,10 +19,10 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("edition/{edition_id}/generete/{sub_edition_id}")]
-        public async Task<IActionResult> CreateRankingsFromSubEdition([FromRoute] Guid edition_id, [FromRoute] Guid sub_edition_id)
+        [HttpPost("edition/{edition_id}/generete/{Etap1Series_id}")]
+        public async Task<IActionResult> CreateRankingsFromEtap1Series([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id)
         {
-            await _rankingService.CreateRankingsFromSubEditionAsync(User, edition_id, sub_edition_id);
+            await _rankingService.CreateRankingsFromEtap1SeriesAsync(User, edition_id, Etap1Series_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
@@ -106,47 +105,6 @@ namespace koala.src.Modules.Core.Controllers
         {
             (var result, var pagination) = await _rankingService.GetEditionRankingDataAsync(User, edition_id, ranking_id, queryDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<RankingDataDto>>(true, DateTime.UtcNow, null, pagination, result));
-        }
-
-        [AllowAnonymous]
-        [HttpGet("edition/{edition_id}/winners")]
-        public async Task<IActionResult> GetEditionWinners([FromRoute] Guid edition_id)
-        {
-            var result = await _rankingService.GetEditionWinners(User, edition_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<WinnerDto>>(true, DateTime.UtcNow, null, null, result));
-        }
-
-        [Authorize]
-        [HttpPut("edition/{edition_id}/winners/make-public")]
-        public async Task<IActionResult> EditionWinnersMakePublic([FromRoute] Guid edition_id)
-        {
-            await _rankingService.MakeEditionWinnersPublicAsync(User, edition_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
-        }
-
-        [Authorize]
-        [HttpPut("edition/{edition_id}/winners/make-not-public")]
-        public async Task<IActionResult> EditionWinnersMakeNotPublic([FromRoute] Guid edition_id)
-        {
-            await _rankingService.MakeEditionWinnersNotPublicAsync(User, edition_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
-        }
-
-
-        [Authorize]
-        [HttpPut("edition/{edition_id}/winner_tier2")]
-        public async Task<IActionResult> UpsertEditionWinnerTier2([FromRoute] Guid edition_id, [FromBody] WinnerUpserDto requestDto)
-        {
-            var result = await _rankingService.UpsertEditionWinnerTier2Async(User, edition_id, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<WinnerDto>(true, DateTime.UtcNow, null, null, result));
-        }
-
-        [Authorize]
-        [HttpPut("edition/{edition_id}/winner_tier1")]
-        public async Task<IActionResult> UpsertEditionWinnerTier1([FromRoute] Guid edition_id, [FromBody] WinnerUpserDto requestDto)
-        {
-            var result = await _rankingService.UpsertEditionWinnerTier1Async(User, edition_id, requestDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<WinnerDto>(true, DateTime.UtcNow, null, null, result));
         }
 
     }

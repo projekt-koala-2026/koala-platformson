@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -14,7 +14,7 @@ namespace koala.src.Modules.Core.Data.Migrations
             migrationBuilder.AddColumn<bool>(
                 name: "ranking_published",
                 schema: "core",
-                table: "subeditions",
+                table: "Etap1Series",
                 type: "boolean",
                 nullable: false,
                 defaultValue: false);
@@ -33,7 +33,7 @@ namespace koala.src.Modules.Core.Data.Migrations
             migrationBuilder.DropColumn(
                 name: "ranking_published",
                 schema: "core",
-                table: "subeditions");
+                table: "Etap1Series");
 
             migrationBuilder.DropColumn(
                 name: "team_id",

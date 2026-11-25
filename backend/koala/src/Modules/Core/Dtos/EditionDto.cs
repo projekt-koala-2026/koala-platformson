@@ -5,7 +5,6 @@ namespace koala.src.Modules.Core.Dtos
         Guid Id,
         string Name,
         string State,
-        bool AreWinnersPublic,
         DateTime TeamRegisterOpen,
         DateTime TeamRegisterClose,
         DateTime CreatedAt,

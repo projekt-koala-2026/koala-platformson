@@ -99,6 +99,8 @@ namespace koala.src.Shared
 
         public const string SubEditionNotFound = "KOALA_SUB_EDITION_NOT_FOUND";
         public const string SubEditionAlreadyExists = "KOALA_SUB_EDITION_ALREADY_EXISTS";
+        public const string Etap1SeriesNotFound = SubEditionNotFound;
+        public const string Etap1SeriesAlreadyExists = SubEditionAlreadyExists;
 
         public const string ActiveSubEditionNotFound = "KOALA_ACTIVE_SUB_EDITION_NOT_FOUND";
         public const string ActiveSubEditionAlreadyExists = "KOALA_ACTIVE_SUB_EDITION_ALREADY_EXISTS";

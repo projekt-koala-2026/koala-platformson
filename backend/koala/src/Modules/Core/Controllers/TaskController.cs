@@ -60,34 +60,34 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{task_id}/team/{team_id}/subedition/{subedition_id}")]
-        public async Task<IActionResult> UpsertTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertTaskSubmissionDto submitTaskSubmissionDto)
+        [HttpPut("{task_id}/team/{team_id}/Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> UpsertTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid Etap1Series_id, [FromBody] UpsertTaskSubmissionDto submitTaskSubmissionDto)
         {
-            var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, subedition_id, task_id, team_id, submitTaskSubmissionDto);
+            var response = await _taskService.UpdateTaskSubmissionTeamAsync(User, Etap1Series_id, task_id, team_id, submitTaskSubmissionDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpGet("{task_id}/team/{team_id}/subedition/{subedition_id}")]
-        public async Task<IActionResult> GetTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id)
+        [HttpGet("{task_id}/team/{team_id}/Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> GetTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid Etap1Series_id)
         {
-            var response = await _taskService.GetTaskSubmissionTeamAsync(User, subedition_id, task_id, team_id);
+            var response = await _taskService.GetTaskSubmissionTeamAsync(User, Etap1Series_id, task_id, team_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpGet("subedition/{subedition_id}/autocheck-progress")]
-        public async Task<IActionResult> GetSubeditionAutoCheckProgressAsync([FromRoute] Guid subedition_id)
+        [HttpGet("Etap1Series/{Etap1Series_id}/autocheck-progress")]
+        public async Task<IActionResult> GetEtap1SeriesAutoCheckProgressAsync([FromRoute] Guid Etap1Series_id)
         {
-            var response = await _taskService.GetSubeditionAutoCheckProgressAsync(User, subedition_id);
+            var response = await _taskService.GetEtap1SeriesAutoCheckProgressAsync(User, Etap1Series_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<AutoCheckProgressDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("subedition/{subedition_id}/autocheck")]
-        public async Task<IActionResult> AutoCheckSubeditionSubmissionsAsync([FromRoute] Guid subedition_id)
+        [HttpPut("Etap1Series/{Etap1Series_id}/autocheck")]
+        public async Task<IActionResult> AutoCheckEtap1SeriesubmissionsAsync([FromRoute] Guid Etap1Series_id)
         {
-            await _taskService.AutoCheckSubeditionSubmissionsAsync(User, subedition_id);
+            await _taskService.AutoCheckEtap1SeriesubmissionsAsync(User, Etap1Series_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
@@ -116,10 +116,10 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("review/me/submission/{task_id}/team/{team_id}/subedition/{subedition_id}")]
-        public async Task<IActionResult> UpsertScoreByReviewer([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid subedition_id, [FromBody] UpsertReviewDto upsertReviewDto)
+        [HttpPut("review/me/submission/{task_id}/team/{team_id}/Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> UpsertScoreByReviewer([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid Etap1Series_id, [FromBody] UpsertReviewDto upsertReviewDto)
         {
-            var response = await _taskService.UpsertScoreByReviewerAsync(User, ClaimsHelper.GetUserGuid(User), task_id, team_id, subedition_id, upsertReviewDto);
+            var response = await _taskService.UpsertScoreByReviewerAsync(User, ClaimsHelper.GetUserGuid(User), task_id, team_id, Etap1Series_id, upsertReviewDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
@@ -140,18 +140,18 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPut("{subedition_id}/assign-reviewers/task/{task_id}")]
-        public async Task<IActionResult> AssignReviewers([FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] AssignReviewersDto requestDto)
+        [HttpPut("{Etap1Series_id}/assign-reviewers/task/{task_id}")]
+        public async Task<IActionResult> AssignReviewers([FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id, [FromBody] AssignReviewersDto requestDto)
         {
-            await _taskService.AssignReviewersAsync(User, subedition_id, task_id, requestDto);
+            await _taskService.AssignReviewersAsync(User, Etap1Series_id, task_id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
-        [HttpPut("{subedition_id}/updated-assign-reviewer/task/{task_id}")]
-        public async Task<IActionResult> UpdateAssignedReviewer([FromRoute] Guid subedition_id, [FromRoute] Guid task_id, [FromBody] AdminUpdateReviewersDto requestDto)
+        [HttpPut("{Etap1Series_id}/updated-assign-reviewer/task/{task_id}")]
+        public async Task<IActionResult> UpdateAssignedReviewer([FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id, [FromBody] AdminUpdateReviewersDto requestDto)
         {
-            await _taskService.UpdateAssignedReviewer(User, subedition_id, task_id, requestDto);
+            await _taskService.UpdateAssignedReviewer(User, Etap1Series_id, task_id, requestDto);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
     }
