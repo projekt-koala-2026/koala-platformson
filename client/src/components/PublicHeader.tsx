@@ -32,6 +32,7 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
         roles.isAdmin || roles.isEditor || roles.isReviewer || roles.isRodoModerator;
     const isTeamAccount = roles.isCaptain || roles.isGuardian;
     const isCaptain = roles.isCaptain;
+    const isGuardian = roles.isGuardian;
     const isLoggedIn = isOrganizationUser || isTeamAccount;
     const organizationHomePath = getOrganizationHomePath(roles);
     const links: NavigationLink[] = isTeamAccount

@@ -219,6 +219,7 @@ const CaptainHomeScreen = () => {
     );
 
     const isCaptain = team?.teamCaptain?.id === currentUserId;
+    const isGuardian = team?.teamGuardian?.id === currentUserId;
 
     const submitTeam = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -593,10 +594,34 @@ const CaptainHomeScreen = () => {
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                             Panel drużyn
                         </p>
-                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
-                        <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
-                        </p>
+                        {isCaptain && (
+                            <>
+                                <h1 className="mt-2 text-3xl font-bold text-ink-heading">
+                                    Twoja drużyna
+                                </h1>
+                                <p className="mt-3 max-w-2xl text-ink-secondary">
+                                    Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem
+                                    dołączenia.
+                                </p>
+                            </>
+                        )}
+                        {isGuardian && (
+                            <>
+                                <h1 className="mt-2 text-3xl font-bold text-ink-heading">
+                                    Twoje drużyny
+                                </h1>
+                                <p className="mt-3 max-w-2xl text-ink-secondary">
+                                    Otrzymaj kod dołączenia od kapitana i użyj go, aby zaopiekować
+                                    się drużyną. Po dołączeniu będziesz mógł zarządzać dokumentami
+                                    RODO jej członków.
+                                </p>
+                                <h4 className="mt-3 max-w-2xl text-sm text-ink-secondary">
+                                    Kod dołączenia ma ograniczony czas ważności, więc jeśli nie
+                                    możesz dołączyć do drużyny, poproś kapitana o wygenerowanie
+                                    nowego kodu.
+                                </h4>
+                            </>
+                        )}
                     </div>
                     <KoalaIllustration
                         src={`${import.meta.env.BASE_URL}images/koala/koala_mis2b.png`}
@@ -628,9 +653,7 @@ const CaptainHomeScreen = () => {
                         onSubmit={joinTeam}
                         className="mb-6 rounded-2xl border border-line bg-surface p-5 shadow-sm"
                     >
-                        <h2 className="font-semibold text-ink-heading">
-                            Dołącz do kolejnej drużyny
-                        </h2>
+                        <h2 className="font-semibold text-ink-heading">Zaopiekuj się drużyną</h2>
                         <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                             <input
                                 value={joinCode}
@@ -642,7 +665,7 @@ const CaptainHomeScreen = () => {
                             />
                             <Button
                                 type="submit"
-                                text={saving ? "Dołączanie…" : "Dołącz"}
+                                text={saving ? "Zaopiekowanie…" : "Zaopiekuj się"}
                                 disabled={saving}
                             />
                         </div>
