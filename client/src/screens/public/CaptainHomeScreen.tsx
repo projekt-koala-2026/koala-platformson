@@ -757,29 +757,67 @@ const CaptainHomeScreen = () => {
                         </section>
                         <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-ink-heading">
-                                Kod dołączenia
+                                {roles.isGuardian
+                                    ? "Kontakt do kapitana"
+                                    : team.teamGuardian
+                                      ? "Opiekun drużyny"
+                                      : "Kod dołączenia"}
                             </h2>
-                            {team.joinCode ? (
-                                <div className="mt-4 rounded-xl bg-brand-soft p-4 text-center">
-                                    <p className="font-mono text-2xl font-bold tracking-widest text-brand-text-strong">
-                                        {team.joinCode.joinCode}
+                            {roles.isGuardian ? (
+                                <div className="mt-4 rounded-xl bg-brand-soft p-4">
+                                    <p className="font-semibold text-brand-text-strong">
+                                        {[team.teamCaptain?.nameFirst, team.teamCaptain?.nameLast]
+                                            .filter(Boolean)
+                                            .join(" ")}
                                     </p>
-                                    <p className="mt-2 text-xs text-brand-text">
-                                        Ważny do{" "}
-                                        {new Date(team.joinCode.expiresAt).toLocaleString("pl-PL")}
+                                    <p className="mt-1 break-all text-sm text-brand-text">
+                                        {team.teamCaptain?.email ?? "Brak adresu e-mail kapitana."}
+                                    </p>
+                                </div>
+                            ) : team.teamGuardian ? (
+                                <div className="mt-4 rounded-xl bg-brand-soft p-4">
+                                    <p className="font-semibold text-brand-text-strong">
+                                        {[team.teamGuardian.nameFirst, team.teamGuardian.nameLast]
+                                            .filter(Boolean)
+                                            .join(" ")}
+                                    </p>
+                                    <p className="mt-1 break-all text-sm text-brand-text">
+                                        {team.teamGuardian.email}
                                     </p>
                                 </div>
                             ) : (
-                                <p className="mt-3 text-sm text-ink-muted">Brak aktywnego kodu.</p>
-                            )}
-                            {isCaptain && (
-                                <Button
-                                    text={team.joinCode ? "Wygeneruj nowy kod" : "Wygeneruj kod"}
-                                    icon={<FaSyncAlt />}
-                                    onClick={() => void generateJoinCode()}
-                                    disabled={saving}
-                                    className="mt-4"
-                                />
+                                <>
+                                    {team.joinCode ? (
+                                        <div className="mt-4 rounded-xl bg-brand-soft p-4 text-center">
+                                            <p className="font-mono text-2xl font-bold tracking-widest text-brand-text-strong">
+                                                {team.joinCode.joinCode}
+                                            </p>
+                                            <p className="mt-2 text-xs text-brand-text">
+                                                Ważny do{" "}
+                                                {new Date(team.joinCode.expiresAt).toLocaleString(
+                                                    "pl-PL"
+                                                )}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <p className="mt-3 text-sm text-ink-muted">
+                                            Brak aktywnego kodu.
+                                        </p>
+                                    )}
+                                    {isCaptain && (
+                                        <Button
+                                            text={
+                                                team.joinCode
+                                                    ? "Wygeneruj nowy kod"
+                                                    : "Wygeneruj kod"
+                                            }
+                                            icon={<FaSyncAlt />}
+                                            onClick={() => void generateJoinCode()}
+                                            disabled={saving}
+                                            className="mt-4"
+                                        />
+                                    )}
+                                </>
                             )}
                         </section>
                         <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm lg:col-span-2">
@@ -1044,35 +1082,6 @@ const CaptainHomeScreen = () => {
                                             )}
                                     </li>
                                 ))}
-                                {team.teamGuardian &&
-                                    team.teamGuardian.id !== team.teamCaptain?.id && (
-                                        <li className="flex flex-wrap items-center justify-between gap-3 py-3">
-                                            <div>
-                                                <p className="font-mono text-sm text-ink">
-                                                    {team.teamGuardian?.nameFirst}{" "}
-                                                    {team.teamGuardian?.nameLast}
-                                                </p>
-                                                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
-                                                    Opiekun drużyny
-                                                </p>
-                                            </div>
-                                            {isCaptain && (
-                                                <button
-                                                    type="button"
-                                                    // Brakuje endpointu do usuwania opiekuna drużyny, więc przycisk jest disabled
-                                                    disabled
-                                                    onClick={() =>
-                                                        void removeMember(
-                                                            team.teamGuardian?.id ?? ""
-                                                        )
-                                                    }
-                                                    className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
-                                                >
-                                                    <FaTrash aria-hidden="true" /> Usuń z drużyny
-                                                </button>
-                                            )}
-                                        </li>
-                                    )}
                             </ul>
                             {isCaptain && (
                                 <Button
