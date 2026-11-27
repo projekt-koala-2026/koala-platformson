@@ -7,6 +7,7 @@ using koala.src.Shared;
 using koala.src.Shared.Account;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Org.BouncyCastle.Crypto.Engines;
 
 namespace koala.src.Modules.Core.Services
@@ -54,19 +55,20 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Not all task submissions have a final score");
             }
 
-            var tasksPrimarySchool = await _db.TaskItems
-                .Where(t => t.Etap1SeriesId == Etap1Series_id && t.IsPrimarySchoolTask == true)
+            var eligibleTasks = await _db.TaskItems
+                .Include(t => t.TaskParts)
+                .Where(t => t.Etap1SeriesId == Etap1Series_id &&
+                    (t.IsPrimarySchoolTask == true || t.IsSecondarySchoolTask == true))
                 .ToListAsync();
-            var tasksSecondarySchool = await _db.TaskItems
-                .Where(t => t.Etap1SeriesId == Etap1Series_id && t.IsSecondarySchoolTask == true)
-                .ToListAsync();
-            int tier1TaskCount = tasksPrimarySchool.Count();
-            int tier2TaskCount = tasksSecondarySchool.Count();
+            var tier1Tasks = eligibleTasks.Where(t => t.IsPrimarySchoolTask == true).ToList();
+            var tier2Tasks = eligibleTasks.Where(t => t.IsPrimarySchoolTask == true || t.IsSecondarySchoolTask == true).ToList();
 
-            if (tier1TaskCount == 0 ||  tier2TaskCount == 0)
+            if (tier1Tasks.Count == 0 || tier2Tasks.Count == 0)
             {
                 throw new KoalaException(KoalaErrorCodes.TaskNotFound, "No tasks have been found for primary school or secondary school in this edition");
             }
+            if (eligibleTasks.Any(t => !t.TaskParts.Any()))
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Every task used for ranking must have at least one task part");
 
             var submissions = await _db.TaskSubmissions
                 .Include(ts => ts.TaskPart)
@@ -81,13 +83,6 @@ namespace koala.src.Modules.Core.Services
 
             var tier1RankingData = await _db.RankingDatas.Where(rd => rd.RankingId == Etap1Series.Tier1RankingId).ToListAsync();
             var tier2RankingData = await _db.RankingDatas.Where(rd => rd.RankingId == Etap1Series.Tier2RankingId).ToListAsync();
-            _db.RankingDatas.RemoveRange(tier1RankingData);
-            _db.RankingDatas.RemoveRange(tier2RankingData);  
-
-            await _db.SaveChangesAsync();
-
-            tier1RankingData = new List<RankingData>();
-            tier2RankingData = new List<RankingData>();
 
             
             Etap1Series.Tier1Ranking.Name = Etap1Series.Name + "- szkoły podstawowe";
@@ -98,23 +93,7 @@ namespace koala.src.Modules.Core.Services
             Etap1Series.Tier2Ranking.UpdatedAt = timeNow;
             Etap1Series.Tier2Ranking.Version++;
 
-            var teamRankingsData = submissions.ToLookup(ts => ts.TeamId);
-
-            var teamScores = teamRankingsData.ToDictionary(
-                team => team.Key,
-                team => team
-                    .GroupBy(s => s.TaskPart.TaskItemId)
-                    .Sum(taskGroup =>
-                    {
-                        var expectedParts = taskGroup
-                            .Select(s => s.TaskPart.TaskItemId)
-                            .Distinct()
-                            .Count();
-
-                        return taskGroup.Count() == expectedParts &&
-                               taskGroup.All(s => s.Review1Score == true) ? 1 : 0;
-                    })
-            );
+            var submissionsByTeamAndPart = submissions.ToLookup(ts => (ts.TeamId, ts.TaskPartId));
 
             List<RankingData> RankingDataTier1 = new List<RankingData>();
             List<RankingData> RankingDataTier2 = new List<RankingData>();
@@ -134,8 +113,8 @@ namespace koala.src.Modules.Core.Services
                         RankingId = Etap1Series.Tier1Ranking.RankingId,
                         TeamName = teamInfo.Name,
                         HasQualifiedToNextEtap = false,
-                        PointsAchived = teamRankingsData[teamInfo.TeamId].Count(ts => ts.Review1Score == true),
-                        PointsMax = tier1TaskCount,
+                        PointsAchived = ScoreTasks(teamInfo.TeamId, tier1Tasks, submissionsByTeamAndPart),
+                        PointsMax = tier1Tasks.Count,
                         CreatedAt = timeNow,
                         UpdatedAt = timeNow,
                         Version = 1
@@ -150,8 +129,8 @@ namespace koala.src.Modules.Core.Services
                         RankingId = Etap1Series.Tier2Ranking.RankingId,
                         TeamName = teamInfo.Name,
                         HasQualifiedToNextEtap = false,
-                        PointsAchived = teamRankingsData[teamInfo.TeamId].Count(ts => ts.Review1Score == true),
-                        PointsMax = tier1TaskCount + tier2TaskCount,
+                        PointsAchived = ScoreTasks(teamInfo.TeamId, tier2Tasks, submissionsByTeamAndPart),
+                        PointsMax = tier2Tasks.Count,
                         CreatedAt = timeNow,
                         UpdatedAt = timeNow,
                         Version = 1
@@ -160,10 +139,20 @@ namespace koala.src.Modules.Core.Services
                 }
             }
 
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            _db.RankingDatas.RemoveRange(tier1RankingData);
+            _db.RankingDatas.RemoveRange(tier2RankingData);
             await _db.RankingDatas.AddRangeAsync(RankingDataTier1);
             await _db.RankingDatas.AddRangeAsync(RankingDataTier2);
 
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+
+        private static int ScoreTasks(Guid teamId, IEnumerable<TaskItem> tasks, ILookup<(Guid TeamId, Guid TaskPartId), TaskPartSubmission> submissions)
+        {
+            return tasks.Count(task => task.TaskParts.All(part =>
+                submissions[(teamId, part.Id)].Any(s => s.Review1Score == true && s.Review2Score == true)));
         }
 
         public async Task GenereteEditionTotalRanking(ClaimsPrincipal claimsPrincipal, Guid edition_id)
@@ -213,11 +202,8 @@ namespace koala.src.Modules.Core.Services
 
             var tier1TotalRankingData = await _db.RankingDatas.Where(rd => rd.RankingId == edition.Tier1RankingTotalId).ToListAsync();
             var tier2TotalRankingData = await _db.RankingDatas.Where(rd => rd.RankingId == edition.Tier2RankingTotalId).ToListAsync();
-            _db.RankingDatas.RemoveRange(tier1TotalRankingData);
-            _db.RankingDatas.RemoveRange(tier2TotalRankingData);  
-
-            await _db.SaveChangesAsync();
-
+            var previousTier1TotalRankingData = tier1TotalRankingData;
+            var previousTier2TotalRankingData = tier2TotalRankingData;
             tier1TotalRankingData = new List<RankingData>();
             tier2TotalRankingData = new List<RankingData>();         
 
@@ -281,10 +267,14 @@ namespace koala.src.Modules.Core.Services
                 }
             }
 
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            _db.RankingDatas.RemoveRange(previousTier1TotalRankingData);
+            _db.RankingDatas.RemoveRange(previousTier2TotalRankingData);
             await _db.RankingDatas.AddRangeAsync(tier1TotalRankingData);
             await _db.RankingDatas.AddRangeAsync(tier2TotalRankingData);
 
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
         }
 
         public async Task<RankingDataDto> UpsertRankingDataAsync(ClaimsPrincipal claimsPrincipal, Guid ranking_id, Guid ranking_data_id, RankingDataUpsertDto requestDto)

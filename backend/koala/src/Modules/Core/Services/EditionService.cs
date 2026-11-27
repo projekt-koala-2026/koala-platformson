@@ -847,9 +847,9 @@ namespace koala.src.Modules.Core.Services
             {
                 await _db.SaveChangesAsync();
             }
-            catch
+            catch(DbUpdateConcurrencyException)
             {
-                
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Edition data was updated refresh your data and try agein");
             }
 
             return new EditionDto(

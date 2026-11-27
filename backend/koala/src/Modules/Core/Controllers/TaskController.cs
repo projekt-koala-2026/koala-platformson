@@ -44,10 +44,10 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpGet("etap1series/{etap1series_id}/task_item/{task_item_id}")]
-        public async Task<IActionResult> GetTaskItem([FromRoute] Guid etap1series_id, [FromRoute] Guid task_item_id, [FromBody] TaskItemUpdateDto request)
+        public async Task<IActionResult> GetTaskItem([FromRoute] Guid etap1series_id, [FromRoute] Guid task_item_id)
         {
             var response = await _taskService.GetTaskItemAsync(User, etap1series_id, task_item_id);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
@@ -69,9 +69,9 @@ namespace koala.src.Modules.Core.Controllers
 
         [Authorize]
         [HttpPost("task_item/{task_item_id}/task_part")]
-        public async Task<IActionResult> CreateTaskPart([FromRoute] Guid task_part_id, [FromBody] TaskPartCreateDto request)
+        public async Task<IActionResult> CreateTaskPart([FromRoute] Guid task_item_id, [FromBody] TaskPartCreateDto request)
         {
-            var response = await _taskService.CreateTaskPartAsync(User, task_part_id, request);
+            var response = await _taskService.CreateTaskPartAsync(User, task_item_id, request);
             return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<TaskPartDto>(true, DateTime.UtcNow, null, null, response));
         }
 
@@ -140,10 +140,10 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpGet("{task_id}/team/{team_id}/Etap1Series/{Etap1Series_id}")]
-        public async Task<IActionResult> GetTaskSubmissionTeam([FromRoute] Guid task_id, [FromRoute] Guid team_id, [FromRoute] Guid Etap1Series_id)
+        [HttpGet("{task_part_id}/team/{team_id}/Etap1Series/{Etap1Series_id}")]
+        public async Task<IActionResult> GetTaskSubmissionTeam([FromRoute] Guid task_part_id, [FromRoute] Guid team_id, [FromRoute] Guid Etap1Series_id)
         {
-            var response = await _taskService.GetTaskSubmissionTeamAsync(User, Etap1Series_id, task_id, team_id);
+            var response = await _taskService.GetTaskSubmissionTeamAsync(User, Etap1Series_id, task_part_id, team_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskSubmissionDto>(true, DateTime.UtcNow, null, null, response));
         }
 

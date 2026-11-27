@@ -48,6 +48,22 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("state");
 
+                    b.Property<string>("TaskFileExtension")
+                        .HasColumnType("text")
+                        .HasColumnName("task_file_extension");
+
+                    b.Property<Guid?>("TaskFileId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_file_id");
+
+                    b.Property<DateTime?>("TaskPdfFileClose")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("task_file_close");
+
+                    b.Property<DateTime?>("TaskPdfFileOpen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("task_file_open");
+
                     b.Property<DateTime>("TeamRegisterClose")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("team_register_close");
@@ -155,51 +171,12 @@ namespace koala.src.Modules.Core.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskAnswer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Answer")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("answer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("TaskItemId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("task_item_id");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int>("Version")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TaskItemId");
-
-                    b.ToTable("task_answers", "core");
-                });
-
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<string>("ContentJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("content_json");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -209,23 +186,18 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("Etap1Series_id");
 
-                    b.Property<Guid?>("ImageId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("image_id");
+                    b.Property<bool>("IsPrimarySchoolTask")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_primary_school_task");
 
-                    b.Property<string>("ImageType")
-                        .HasColumnType("text")
-                        .HasColumnName("image_type");
+                    b.Property<bool>("IsSecondarySchoolTask")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_secondary_school_task");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("name");
-
-                    b.Property<string>("Tier")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("tier");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -242,15 +214,93 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.ToTable("tasks", "core");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskSubmission", b =>
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskPart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<int>("MaxSubmissionLength")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_submission_length");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TaskItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_item_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskItemId");
+
+                    b.ToTable("task_parts", "core");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskPartAnswer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("answer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("TaskPartId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_part_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskPartId");
+
+                    b.ToTable("task_answers", "core");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskPartSubmission", b =>
                 {
                     b.Property<Guid>("TeamId")
                         .HasColumnType("uuid")
                         .HasColumnName("team_id");
 
-                    b.Property<Guid>("TaskId")
+                    b.Property<Guid>("TaskPartId")
                         .HasColumnType("uuid")
-                        .HasColumnName("task_id");
+                        .HasColumnName("task_part_id");
 
                     b.Property<bool?>("AutoReviewState")
                         .HasColumnType("boolean")
@@ -295,9 +345,9 @@ namespace koala.src.Modules.Core.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("version");
 
-                    b.HasKey("TeamId", "TaskId");
+                    b.HasKey("TeamId", "TaskPartId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("TaskPartId");
 
                     b.ToTable("task_submissions", "core");
                 });
@@ -500,17 +550,6 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.Navigation("Tier2Ranking");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskAnswer", b =>
-                {
-                    b.HasOne("koala.src.Modules.Core.Entities.TaskItem", "TaskItem")
-                        .WithMany("TaskAnswers")
-                        .HasForeignKey("TaskItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TaskItem");
-                });
-
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItem", b =>
                 {
                     b.HasOne("koala.src.Modules.Core.Entities.Etap1Series", "Etap1Series")
@@ -522,15 +561,37 @@ namespace koala.src.Modules.Core.Data.Migrations
                     b.Navigation("Etap1Series");
                 });
 
-            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskSubmission", b =>
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskPart", b =>
                 {
                     b.HasOne("koala.src.Modules.Core.Entities.TaskItem", "TaskItem")
-                        .WithMany("TaskSubmissions")
-                        .HasForeignKey("TaskId")
+                        .WithMany("TaskParts")
+                        .HasForeignKey("TaskItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("TaskItem");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskPartAnswer", b =>
+                {
+                    b.HasOne("koala.src.Modules.Core.Entities.TaskPart", "TaskPart")
+                        .WithMany("TaskAnswers")
+                        .HasForeignKey("TaskPartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaskPart");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskPartSubmission", b =>
+                {
+                    b.HasOne("koala.src.Modules.Core.Entities.TaskPart", "TaskPart")
+                        .WithMany("TaskSubmissions")
+                        .HasForeignKey("TaskPartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaskPart");
                 });
 
             modelBuilder.Entity("koala.src.Modules.Core.RankingData", b =>
@@ -555,6 +616,11 @@ namespace koala.src.Modules.Core.Data.Migrations
                 });
 
             modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskItem", b =>
+                {
+                    b.Navigation("TaskParts");
+                });
+
+            modelBuilder.Entity("koala.src.Modules.Core.Entities.TaskPart", b =>
                 {
                     b.Navigation("TaskAnswers");
 

@@ -59,6 +59,7 @@ namespace koala.src.Modules.Core.Services
             var task = new TaskItem
             {
                 Id = Guid.CreateVersion7(),
+                Etap1SeriesId = etap1series_id,
                 Name = request.Name,
                 IsPrimarySchoolTask = request.IsPrimarySchoolTask,
                 IsSecondarySchoolTask = request.IsSecondarySchoolTask,
@@ -179,6 +180,7 @@ namespace koala.src.Modules.Core.Services
             task.Name = request.Name;
             task.IsPrimarySchoolTask = request.IsPrimarySchoolTask;
             task.IsSecondarySchoolTask = request.IsSecondarySchoolTask;
+            task.UpdatedAt = timeNow;
             task.Version++;
 
             try
@@ -471,18 +473,21 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var task = await _db.TaskItems.Include(ti => ti.TaskParts).FirstOrDefaultAsync(ti => ti.Id == task_item_id && ti.TaskParts.All(tp => tp.Name != request.Name));
+            var task = await _db.TaskItems.Include(ti => ti.TaskParts).Include(ti => ti.Etap1Series).FirstOrDefaultAsync(ti => ti.Id == task_item_id && ti.TaskParts.All(tp => tp.Name != request.Name));
 
             if (task == null)
             {
                 throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task item with this id does not exist or it already has a task part with this name");
             }
+            if (task.Etap1Series.State == LifecycleStates.STATE_CLOSED)
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot modify task parts in a closed Etap1Series");
 
             DateTime timeNow = DateTime.UtcNow;
 
             var taskPart = new TaskPart
             {
                 Id = Guid.CreateVersion7(),
+                TaskItemId = task_item_id,
                 Name = request.Name,
                 Description = request.Description,
                 MaxSubmissionLength = request.MaxSubmissionLength,
@@ -557,8 +562,9 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task part with this id does not exist");
             }
+            await EnsureTaskPartSeriesIsOpenAsync(task_part_id);
 
-            if(await _db.TaskParts.AnyAsync(tp => tp.Name == request.Name && tp.Id != task_part_id))
+            if(await _db.TaskParts.AnyAsync(tp => tp.TaskItemId == task_item_id && tp.Name == request.Name && tp.Id != task_part_id))
             {
                 throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task part with this name already exists cannot update the curent one");
             }
@@ -574,7 +580,7 @@ namespace koala.src.Modules.Core.Services
             try{
                 await _db.SaveChangesAsync();
             }
-            catch
+            catch(DbUpdateConcurrencyException)
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "This task part was updated refresh ur data and try agein");
             }
@@ -624,6 +630,7 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task part with this id does not exist");
             }
+            await EnsureTaskPartSeriesIsOpenAsync(task_part_id);
 
             _db.TaskParts.Remove(taskPart);
 
@@ -653,6 +660,7 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.TaskAnswerNotFound, "Task part of provided id does not exist");
             }
+            await EnsureTaskPartSeriesIsOpenAsync(task_part_id);
 
             var newTaskAnswer = await _db.TaskAnswers.FirstOrDefaultAsync(tc => tc.Answer == createTaskAnswerDto.Answer && tc.TaskPart.Id == task_part_id);
 
@@ -707,6 +715,7 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task part of provided id does not exist");
             }
+            await EnsureTaskPartSeriesIsOpenAsync(task_part_id);
 
             var TaskAnswerWithThisNameExists = await _db.TaskAnswers.FirstOrDefaultAsync(tc => tc.Answer == updateTaskAnswerDto.Answer && tc.TaskPartId == task_part_id && tc.Id != task_answer_id);
 
@@ -721,6 +730,7 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.TaskAnswerNotFound, "Task answer of provided task_answer_id and task_part_id does not exist");
             }
+            await EnsureTaskPartSeriesIsOpenAsync(task_part_id);
 
             if (TaskAnswer.Version != updateTaskAnswerDto.Version)
             {
@@ -765,6 +775,7 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.TaskAnswerNotFound, "Task answer of provided id does not exist");
             }
+            await EnsureTaskPartSeriesIsOpenAsync(task_part_id);
 
             _db.TaskAnswers.Remove(TaskAnswer);
 
@@ -895,8 +906,8 @@ namespace koala.src.Modules.Core.Services
             }
 
             if (task.TaskItem.Etap1Series.State != LifecycleStates.STATE_ACTIVE ||
-                (((task.TaskItem.IsPrimarySchoolTask == true) && (teamInfo.Tier != CompetitionTiers.TIER_1)) ||
-                ((task.TaskItem.IsSecondarySchoolTask == true) && (teamInfo.Tier != CompetitionTiers.TIER_2))))
+                !((task.TaskItem.IsPrimarySchoolTask == true && (teamInfo.Tier == CompetitionTiers.TIER_1 || teamInfo.Tier == CompetitionTiers.TIER_2)) ||
+                  (task.TaskItem.IsSecondarySchoolTask == true && teamInfo.Tier == CompetitionTiers.TIER_2)))
             {
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "This task is not available to the team");
             }
@@ -908,7 +919,7 @@ namespace koala.src.Modules.Core.Services
             }
             if (teamInfo.Tier == CompetitionTiers.TIER_2)
             {
-                submission = await _db.TaskSubmissions.Include(e => e.TaskPart).ThenInclude(t => t.TaskItem).FirstOrDefaultAsync(e => e.TaskPartId == task_part_id && e.TaskPart.TaskItem.IsSecondarySchoolTask && e.TeamId == team_id);
+                submission = await _db.TaskSubmissions.Include(e => e.TaskPart).ThenInclude(t => t.TaskItem).FirstOrDefaultAsync(e => e.TaskPartId == task_part_id && (e.TaskPart.TaskItem.IsPrimarySchoolTask || e.TaskPart.TaskItem.IsSecondarySchoolTask) && e.TeamId == team_id);
             }
 
             if (submission == null)
@@ -946,7 +957,7 @@ namespace koala.src.Modules.Core.Services
             return new TaskSubmissionDto
             (
                 submission.TeamId,
-                submission.TaskPart.TaskItemId,
+                task.TaskItemId,
                 submission.TaskPartId,
                 null,
                 null,
@@ -979,7 +990,7 @@ namespace koala.src.Modules.Core.Services
                     s.TaskPart.TaskItem.Etap1Series.State == LifecycleStates.STATE_ACTIVE &&
                     s.TaskPart.TaskItem.Etap1Series.Edition.State == LifecycleStates.STATE_ACTIVE &&
                     s.TaskPart.TaskItem.Etap1Series.AnswerOpen <= timeNow && s.TaskPart.TaskItem.Etap1Series.AnswerClose >= timeNow &&
-                    (((s.TaskPart.TaskItem.IsPrimarySchoolTask == true) && (team.Tier == CompetitionTiers.TIER_1)) ||
+                    (((s.TaskPart.TaskItem.IsPrimarySchoolTask == true) && (team.Tier == CompetitionTiers.TIER_1 || team.Tier == CompetitionTiers.TIER_2)) ||
                     ((s.TaskPart.TaskItem.IsSecondarySchoolTask == true) && (team.Tier == CompetitionTiers.TIER_2))));
             if (submission == null)
                 throw new KoalaException(KoalaErrorCodes.TaskSubmissionNotFound, "Submission for this team and task does not exist");
@@ -1006,7 +1017,7 @@ namespace koala.src.Modules.Core.Services
                 s.TaskPart.TaskItem.Etap1Series.State == LifecycleStates.STATE_ACTIVE &&
                 s.TaskPart.TaskItem.Etap1Series.Edition.State == LifecycleStates.STATE_ACTIVE &&
                 s.TaskPart.TaskItem.Etap1Series.AnswerOpen <= timeNow && s.TaskPart.TaskItem.Etap1Series.AnswerClose >= timeNow &&
-                (((s.TaskPart.TaskItem.IsPrimarySchoolTask == true) && (team.Tier == CompetitionTiers.TIER_1)) ||
+                (((s.TaskPart.TaskItem.IsPrimarySchoolTask == true) && (team.Tier == CompetitionTiers.TIER_1 || team.Tier == CompetitionTiers.TIER_2)) ||
                 ((s.TaskPart.TaskItem.IsSecondarySchoolTask == true) && (team.Tier == CompetitionTiers.TIER_2))));
             var sCount = await query.CountAsync();
             var submissions = await query.OrderBy(e => e.TaskPart.TaskItemId)
@@ -1346,6 +1357,18 @@ namespace koala.src.Modules.Core.Services
             }).ToList();
 
             return (TaskSubmissions, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
+        }
+
+        private async Task EnsureTaskPartSeriesIsOpenAsync(Guid taskPartId)
+        {
+            var isClosed = await _db.TaskParts
+                .Include(tp => tp.TaskItem)
+                .ThenInclude(ti => ti.Etap1Series)
+                .Where(tp => tp.Id == taskPartId)
+                .Select(tp => tp.TaskItem.Etap1Series.State == LifecycleStates.STATE_CLOSED)
+                .FirstAsync();
+            if (isClosed)
+                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Cannot modify task parts or answers in a closed Etap1Series");
         }
 
         private record ReviewGroup(Guid? Reviewer1Id, Guid? Reviewer2Id, int Total, int Reviewer1Reviewed, int Reviewer2Reviewed, int PendingSubmissions);
