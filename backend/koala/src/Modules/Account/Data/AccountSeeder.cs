@@ -47,6 +47,7 @@ namespace koala.src.Modules.Account.Data
                     Verified = true,
                     AcceptedRodo = true,
                     AcceptedRules = true,
+                    DeclaredAtLeast18 = true,
                     CreatedAt = DateTime.UtcNow
                 };
 

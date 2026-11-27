@@ -90,7 +90,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamAdmin)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only the team's guardian can manage RODO documents");
             }
 
 
@@ -98,7 +98,7 @@ namespace koala.src.Modules.Account.Services
 
             if (!isUserTeamAdmin)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only the guardian of this team can manage its RODO documents");
             }
 
             var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId == null);
@@ -203,14 +203,14 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamAdmin)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only the team's guardian can manage RODO documents");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
             if (!isUserTeamAdmin)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only the guardian of this team can manage its RODO documents");
             }
 
             var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
@@ -321,14 +321,14 @@ namespace koala.src.Modules.Account.Services
 
             if (!isTeamAdmin)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only the team's guardian can manage RODO documents");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
             if (!isUserTeamAdmin)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only the guardian of this team can manage its RODO documents");
             }
 
             var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
@@ -402,19 +402,19 @@ namespace koala.src.Modules.Account.Services
             }
 
             bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-            if (!isTeamAdmin && !isOrganizationAdmin)
+            if (!isTeamAdmin && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a team guardian or organization RODO moderator can view RODO documents");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
-            if (!isUserTeamAdmin && !isOrganizationAdmin)
+            if (!isUserTeamAdmin && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only this team's guardian or an organization RODO moderator can view its RODO documents");
             }
 
             var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
@@ -453,19 +453,19 @@ namespace koala.src.Modules.Account.Services
             }
 
             bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-            if (!isTeamAdmin && !isOrganizationAdmin)
+            if (!isTeamAdmin && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a team guardian or organization RODO moderator can view RODO documents");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
-            if (!isUserTeamAdmin && !isOrganizationAdmin)
+            if (!isUserTeamAdmin && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only this team's guardian or an organization RODO moderator can view its RODO documents");
             }
 
             var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId && tm.RodoId != null);
@@ -491,19 +491,19 @@ namespace koala.src.Modules.Account.Services
             }
 
             bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-            if (!isTeamAdmin && !isOrganizationAdmin)
+            if (!isTeamAdmin && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a team guardian or organization RODO moderator can view RODO documents");
             }
 
             bool isUserTeamAdmin = await _db.Teams.AsNoTracking().AnyAsync(tm => tm.Id == teamId && tm.GuardianId == userId);
 
-            if (!isUserTeamAdmin && !isOrganizationAdmin)
+            if (!isUserTeamAdmin && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin that is a member of this team and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only this team's guardian or an organization RODO moderator can view its RODO documents");
             }
 
             var query = _db.TeamMembers
@@ -543,11 +543,11 @@ namespace koala.src.Modules.Account.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
 
-            if (!isOrganizationAdmin)
+            if (!isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team admin and organization admin can view the rodos");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only an organization RODO moderator can change RODO status");
             }
 
             var teamMember = await _db.TeamMembers.Include(tm => tm.Rodo).Include(tm => tm.Team).ThenInclude(t => t.Captain).FirstOrDefaultAsync(x => x.TeamId == teamId && x.Id == teamMemberId && x.RodoId!= null);

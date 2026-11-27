@@ -11,9 +11,9 @@ const desktopQuery = "(min-width: 1280px)";
 
 const desktopMenuIsOpen = () => {
     try {
-        return sessionStorage.getItem(desktopMenuKey) === "true";
+        return sessionStorage.getItem(desktopMenuKey) !== "false";
     } catch {
-        return false;
+        return true;
     }
 };
 
@@ -168,7 +168,7 @@ const Hamburger = ({ options }: HamburgerProps) => {
                                                 if (!isWide) changeOpen(false);
                                                 void option.onClick();
                                             }}
-                                            className={`block w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50 ${option.active ? "bg-brand-soft text-brand-text-strong" : "text-ink-strong hover:bg-brand-soft hover:text-brand-text-strong active:bg-brand-muted"}`}
+                                            className={`block w-full rounded-lg py-3 pr-4 ${option.indentLevel === 2 ? "pl-12" : option.indentLevel === 1 ? "pl-8" : "pl-4"} text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-focus disabled:cursor-not-allowed disabled:opacity-50 ${option.active ? "bg-brand-soft text-brand-text-strong" : "text-ink-strong hover:bg-brand-soft hover:text-brand-text-strong active:bg-brand-muted"}`}
                                         >
                                             {option.label}
                                         </button>

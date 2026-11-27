@@ -27,6 +27,22 @@ namespace koala.src.Modules.Cms.Controllers
         }
 
         [Authorize]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateFileMetadata([FromRoute] Guid id, [FromBody] UpdatePublicFileRequestDto requestDto)
+        {
+            var result = await _publicFileService.UpdateFileMetaDataAsync(User,id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<PublicFileDto>(true, DateTime.UtcNow, null, null, result));
+        }
+
+        [Authorize]
+        [HttpPut("{id}/file")]
+        public async Task<IActionResult> UpdateFile([FromRoute] Guid id, [FromBody] CreatePublicFileRequestDto requestDto)
+        {
+            var result = await _publicFileService.UpdateFileAsync(User,id, requestDto);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<PublicFileDto>(true, DateTime.UtcNow, null, null, result));
+        }
+
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFile([FromRoute] Guid id)
         {

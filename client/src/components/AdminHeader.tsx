@@ -1,10 +1,18 @@
 import { useMemo, useState } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import { selectAdminHeaderLinks } from "../config/adminHeaderShortcuts";
 import type { NavigationLink } from "../types/ui";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
-import { clearStoredSession, isAdmin, isEditor, isReviewer } from "../utils/authService";
+import {
+    clearStoredSession,
+    getOrganizationHomePath,
+    isAdmin,
+    isEditor,
+    isReviewer,
+    isRodoModerator,
+} from "../utils/authService";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
@@ -21,35 +29,26 @@ const editorLinks: NavigationLink[] = [
     { label: "Regulamin", path: "/admin/rules" },
     { label: "Sponsorzy", path: "/admin/sponsors" },
     { label: "Koalicjanci", path: "/admin/koalicjants" },
-    { label: "Pliki archiwalne", path: "/admin/problems", separatorBefore: true },
+    { label: "Poprzednie zadania", path: "/admin/problems", separatorBefore: true },
     { label: "Zdjęcia", path: "/admin/images" },
 ];
 
 const administratorLinks: NavigationLink[] = [
     { label: "Start", path: "/admin" },
     { label: "Użytkownicy", path: "/admin/users" },
+    { label: "Wiadomości", path: "/admin/emails" },
     { label: "Edycje", path: "/admin/editions", separatorBefore: true },
-    { label: "Etapy", path: "/admin/subeditions" },
-    { label: "Zadania konkursowe", path: "/admin/competition-tasks" },
-    { label: "Rankingi", path: "/admin/rankings" },
+    { label: "Etapy", path: "/admin/subeditions", indentLevel: 1 },
+    {
+        label: "Zadania konkursowe",
+        path: "/admin/competition-tasks",
+        indentLevel: 2,
+    },
     { label: "Przydzielanie recenzentów", path: "/admin/review-assignments" },
+    { label: "Rankingi", path: "/admin/rankings", indentLevel: 1 },
     ...editorLinks,
     { label: "Szkoły", path: "/admin/schools", separatorBefore: true },
     { label: "Drużyny", path: "/admin/teams" },
-    { label: "RODO", path: "/admin/rodos" },
-];
-
-// Top header order, independent of the sidebar. Only links permitted for the role appear.
-const desktopPaths = [
-    "/admin",
-    "/admin/users",
-    "/admin/editions",
-    "/admin/rankings",
-    "/admin/posts",
-    "/admin/history",
-    "/admin/rules",
-    "/admin/problems",
-    "/admin/rodos",
 ];
 
 const AdminHeader = ({ navigate }: AdminHeaderProps) => {
@@ -59,12 +58,28 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
     const isAdminUser = useMemo(() => isAdmin(), []);
     const isEditorUser = useMemo(() => isEditor(), []);
     const isReviewerUser = useMemo(() => isReviewer(), []);
-    const homePath = isAdminUser ? "/admin" : isEditorUser ? "/admin/posts" : "/admin/reviews";
+    const isModeratorUser = useMemo(() => isRodoModerator(), []);
+    const homePath = getOrganizationHomePath();
     const links = [
         ...(isAdminUser ? administratorLinks : isEditorUser ? editorLinks : []),
         ...(isReviewerUser ? [{ label: "Moje recenzje", path: "/admin/reviews" }] : []),
-    ];
-    const desktopLinks = desktopPaths.flatMap((path) => links.filter((link) => link.path === path));
+        ...(isModeratorUser
+            ? [
+                  { label: "Drużyny", path: "/admin/teams" },
+                  { label: "Opiekunowie", path: "/admin/guardians" },
+                  { label: "RODO", path: "/admin/rodos" },
+              ]
+            : []),
+    ].filter((link, index, links) => links.findIndex((item) => item.path === link.path) === index);
+    const desktopLinks = selectAdminHeaderLinks(
+        {
+            ORGANIZATION_ADMIN: isAdminUser,
+            ORGANIZATION_EDITOR: isEditorUser,
+            ORGANIZATION_REVIEWER: isReviewerUser,
+            ORGANIZATION_RODO_MODERATOR: isModeratorUser,
+        },
+        links
+    );
 
     const logout = async () => {
         if (loggingOut) return;
@@ -84,6 +99,7 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                             options={links.map((link) => ({
                                 label: link.label,
                                 separatorBefore: link.separatorBefore,
+                                indentLevel: link.indentLevel,
                                 active: location.pathname === link.path,
                                 onClick: () => navigate(link.path),
                             }))}
@@ -134,6 +150,10 @@ const AdminHeader = ({ navigate }: AdminHeaderProps) => {
                                 {
                                     label: "Zmień hasło",
                                     onClick: () => setIsPasswordOpen(true),
+                                },
+                                {
+                                    label: "Moje sesje",
+                                    onClick: () => navigate("/admin/sessions"),
                                 },
                                 {
                                     label: loggingOut ? "Wylogowywanie…" : "Wyloguj",

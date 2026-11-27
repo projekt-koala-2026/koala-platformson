@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import KoalaIllustration from "../../components/KoalaIllustration";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import RecordDates from "../../components/RecordDates";
 import type { ApiEdition, ApiStaticPage, Edition, ProblemsByEdition } from "../../types/models";
 import { adaptEdition, staticPageProblems } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -14,6 +15,7 @@ const ProblemsPublicScreen = () => {
     const [editions, setEditions] = useState<Edition[]>([]);
     const [selectedEditionId, setSelectedEditionId] = useState("");
     const [problemsData, setProblemsData] = useState<ProblemsByEdition>({});
+    const [problemsUpdatedAt, setProblemsUpdatedAt] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
 
@@ -39,6 +41,7 @@ const ProblemsPublicScreen = () => {
             setEditions(sortedEditions);
             setSelectedEditionId(sortedEditions[0]?.id ?? "");
             setProblemsData(staticPageProblems(taskPage));
+            setProblemsUpdatedAt(taskPage?.updatedAt ?? null);
             setHasError(!editionData || !taskPage);
             setLoading(false);
         });
@@ -63,11 +66,12 @@ const ProblemsPublicScreen = () => {
                             Materiały konkursowe
                         </p>
                         <h1 className="mt-2 text-3xl font-bold text-ink-heading">
-                            Pliki archiwalne
+                            Poprzednie zadania
                         </h1>
                         <p className="mt-3 max-w-2xl text-ink-secondary">
                             Wybierz edycję i pobierz oficjalne zestawy zadań oraz dokumentację.
                         </p>
+                        <RecordDates updatedAt={problemsUpdatedAt} className="mb-5" dateOnly />
                     </div>
                     <KoalaIllustration
                         src={`${import.meta.env.BASE_URL}images/koala/koala_mysli.webp`}
@@ -126,19 +130,6 @@ const ProblemsPublicScreen = () => {
                                         key={stage}
                                         aria-labelledby={`stage-${selectedEditionId}-${stageIndex}`}
                                     >
-                                        <div className="mb-3 flex flex-wrap items-center gap-3">
-                                            <h2
-                                                id={`stage-${selectedEditionId}-${stageIndex}`}
-                                                className="text-xl font-semibold text-ink-heading"
-                                            >
-                                                {stage}
-                                            </h2>
-                                            {selectedEdition && (
-                                                <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-text-strong">
-                                                    {selectedEdition.title}
-                                                </span>
-                                            )}
-                                        </div>
                                         <div className="space-y-3">
                                             {files.map((file) => (
                                                 <a
@@ -155,7 +146,7 @@ const ProblemsPublicScreen = () => {
                                                                 {file.title}
                                                             </span>
                                                             <span className="mt-1 block text-sm text-ink-muted">
-                                                                Dokument PDF
+                                                                {file.description || "Dokument PDF"}
                                                             </span>
                                                         </span>
                                                     </span>

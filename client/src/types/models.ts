@@ -2,8 +2,18 @@ export type Role =
     | "ORGANIZATION_ADMIN"
     | "ORGANIZATION_EDITOR"
     | "ORGANIZATION_REVIEWER"
+    | "ORGANIZATION_RODO_MODERATOR"
     | "TEAM_CAPTAIN"
     | "TEAM_GUARDIAN";
+
+export interface ApiSession {
+    sessionId: string;
+    userId: string;
+    state: string;
+    createdAt: string;
+    updatedAt: string;
+    expiresAt: string;
+}
 
 export interface User {
     id: string;
@@ -46,6 +56,8 @@ export interface ApiSubedition {
     answerOpen: string;
     answerClose: string;
     state: "ACTIVE" | "INACTIVE" | "CLOSED";
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -55,6 +67,8 @@ export interface ApiCompetitionTask {
     name: string;
     tier: "TIER_1" | "TIER_2";
     contentJson: string;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -62,6 +76,8 @@ export interface ApiTaskAnswer {
     id: string;
     taskItemId: string;
     answer: string;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -83,6 +99,8 @@ export interface ApiTaskSubmission {
     review1Score: boolean | null;
     review2Score: boolean | null;
     submission: string;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -102,6 +120,8 @@ export interface ApiSponsor {
     name: string;
     contentJson: string;
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -112,6 +132,8 @@ export interface ApiKoalicjant {
     email: string;
     contentJson: string;
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 
@@ -171,6 +193,22 @@ export type ApiTeam = {
     teamMembers: ApiTeamMember[];
     joinCode: ApiTeamJoinCode | null;
 };
+/*export type ApiAdminTeam = Omit<
+    ApiTeam,
+    "teamCaptain" | "teamGuardian" | "teamMembers" | "joinCode"
+>;*/
+
+export interface ApiAdminTeam {
+    id: string;
+    editionId: string;
+    schoolId: string;
+    name: string;
+    tier: string;
+    isCensored: boolean;
+    createdAt: string;
+    updatedAt: string;
+    version: number;
+}
 
 export interface ApiTeamUser {
     id: string;
@@ -260,6 +298,8 @@ export interface School {
     city: string;
     type: string;
     addres: string;
+    createdAt: string;
+    updatedAt: string;
 }
 export interface Edition {
     id: string;
@@ -267,6 +307,8 @@ export interface Edition {
     startDate: string;
     endDate: string;
     state: ApiEdition["state"];
+    createdAt: string;
+    updatedAt: string;
     version: number;
 }
 export interface Post {
@@ -275,8 +317,10 @@ export interface Post {
     markdownBody: string;
     editionId: string;
     createdAt: string;
+    updatedAt: string;
     isVisible: boolean;
 }
+export type SponsorType = "organizer" | "sponsor" | "patron";
 export interface Sponsor {
     id: string;
     name: string;
@@ -284,6 +328,9 @@ export interface Sponsor {
     logoUrl?: string;
     description?: string;
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
+    type: SponsorType;
 }
 export interface Koalicjant {
     id: string;
@@ -291,16 +338,21 @@ export interface Koalicjant {
     profilePicture: string;
     description?: string;
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 export interface ManagedFile {
     id: string;
     title: string;
     filePath: string;
     url?: string;
+    description?: string;
+    createdAt?: string;
 }
 export interface ApiPublicFile {
     id: string;
     name: string;
+    description?: string | null;
     path: string;
     type: string;
     createdAt: string;
@@ -311,6 +363,7 @@ export interface ProblemFile {
     title: string;
     fileName: string;
     url: string;
+    description?: string;
 }
 export type ProblemsByEdition = Record<string, Record<string, ProblemFile[]>>;
 export interface MarkdownStaticPage {
@@ -320,6 +373,7 @@ export interface UserRoles {
     isAdmin: boolean;
     isEditor: boolean;
     isReviewer: boolean;
+    isRodoModerator: boolean;
     isGuardian: boolean;
     isCaptain: boolean;
 }

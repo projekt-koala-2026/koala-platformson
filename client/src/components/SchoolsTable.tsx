@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from "react";
 import { useMemo, useState } from "react";
 import type { School } from "../types/models";
+import RecordDates from "./RecordDates";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -8,9 +9,9 @@ const columns = [
     { key: "rspo", label: "RSPO", width: "w-28" },
     { key: "name", label: "Pełna nazwa szkoły", width: "min-w-72" },
     { key: "nameShort", label: "Nazwa skrócona", width: "min-w-48" },
+    { key: "type", label: "Typ placówki", width: "min-w-44" },
     { key: "state", label: "Województwo", width: "min-w-40" },
     { key: "city", label: "Miejscowość", width: "min-w-40" },
-    { key: "type", label: "Typ placówki", width: "min-w-44" },
     { key: "addres", label: "Adres", width: "min-w-56" },
 ] as const;
 
@@ -21,9 +22,9 @@ const emptyFilters: SchoolFilters = {
     rspo: "",
     name: "",
     nameShort: "",
+    type: "",
     state: "",
     city: "",
-    type: "",
     addres: "",
 };
 
@@ -190,19 +191,24 @@ const SchoolsTable = ({
                                             {school.rspo}
                                         </td>
                                         <td className="px-3 py-3 font-medium text-ink-heading">
-                                            {school.name}
+                                            <div>{school.name}</div>
+                                            <RecordDates
+                                                createdAt={school.createdAt}
+                                                updatedAt={school.updatedAt}
+                                                className="mt-1"
+                                            />
                                         </td>
                                         <td className="px-3 py-3 text-ink-secondary">
                                             {school.nameShort || "—"}
+                                        </td>
+                                        <td className="px-3 py-3 text-ink-secondary">
+                                            {school.type}
                                         </td>
                                         <td className="px-3 py-3 text-ink-secondary">
                                             {school.state}
                                         </td>
                                         <td className="px-3 py-3 text-ink-secondary">
                                             {school.city}
-                                        </td>
-                                        <td className="px-3 py-3 text-ink-secondary">
-                                            {school.type}
                                         </td>
                                         <td className="px-3 py-3 text-ink-secondary">
                                             {school.addres}

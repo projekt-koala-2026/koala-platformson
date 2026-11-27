@@ -5,6 +5,7 @@ import type { NavigationLink } from "../types/ui";
 import { apiEndpoints } from "../utils/apiEndpoints";
 import { apiRequestResult } from "../utils/apiFetcher";
 import { clearStoredSession, getOrganizationHomePath, getUserRoles } from "../utils/authService";
+import ChangeNameModal from "./ChangeNameModal";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Hamburger from "./Hamburger";
 import ProfileButton from "./ProfileButton";
@@ -16,7 +17,7 @@ interface PublicHeaderProps {
 
 const baseLinks: NavigationLink[] = [
     { label: "Aktualności", path: "/" },
-    { label: "Pliki archiwalne", path: "/problems" },
+    { label: "Poprzednie zadania", path: "/problems" },
     { label: "Regulamin", path: "/rules" },
     { label: "Historia", path: "/history" },
     { label: "Rankingi", path: "/rankings" },
@@ -26,11 +27,14 @@ const baseLinks: NavigationLink[] = [
 const PublicHeader = ({ navigate }: PublicHeaderProps) => {
     const location = useLocation();
     const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+    const [isNameOpen, setIsNameOpen] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
     const roles = useMemo(() => getUserRoles(), []);
-    const isOrganizationUser = roles.isAdmin || roles.isEditor || roles.isReviewer;
+    const isOrganizationUser =
+        roles.isAdmin || roles.isEditor || roles.isReviewer || roles.isRodoModerator;
     const isTeamAccount = roles.isCaptain || roles.isGuardian;
     const isCaptain = roles.isCaptain;
+    const isGuardian = roles.isGuardian;
     const isLoggedIn = isOrganizationUser || isTeamAccount;
     const organizationHomePath = getOrganizationHomePath(roles);
     const links: NavigationLink[] = isTeamAccount
@@ -136,6 +140,14 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                               },
                                           ]
                                         : []),
+                                    ...(isGuardian
+                                        ? [
+                                              {
+                                                  label: "Zmień swoje dane",
+                                                  onClick: () => setIsNameOpen(true),
+                                              },
+                                          ]
+                                        : []),
                                     ...(isOrganizationUser && organizationHomePath !== "/"
                                         ? [
                                               {
@@ -152,6 +164,13 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                                               },
                                           ]
                                         : []),
+                                    {
+                                        label: "Moje sesje",
+                                        onClick: () =>
+                                            navigate(
+                                                isOrganizationUser ? "/admin/sessions" : "/sessions"
+                                            ),
+                                    },
                                     {
                                         label: loggingOut ? "Wylogowywanie…" : "Wyloguj",
                                         onClick: () => void logout(),
@@ -172,6 +191,7 @@ const PublicHeader = ({ navigate }: PublicHeaderProps) => {
                 </div>
             </header>
             <ChangePasswordModal isOpen={isPasswordOpen} onClose={() => setIsPasswordOpen(false)} />
+            <ChangeNameModal isOpen={isNameOpen} onClose={() => setIsNameOpen(false)} />
         </>
     );
 };

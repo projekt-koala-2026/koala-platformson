@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type { ApiEdition, Edition } from "../../types/models";
 import { adaptEdition } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -331,6 +332,11 @@ const EditEditionScreen = () => {
                                                     </>
                                                 )}
                                             </p>
+                                            <RecordDates
+                                                createdAt={edition.createdAt}
+                                                updatedAt={edition.updatedAt}
+                                                className="mt-2"
+                                            />
                                         </div>
                                         <div className="flex shrink-0 gap-2">
                                             <Button

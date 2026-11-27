@@ -42,6 +42,8 @@ export const adaptPublicFile = (file: ApiPublicFile): ManagedFile => ({
     id: file.id,
     title: file.name,
     filePath: `/api/koala/content/${file.path}`,
+    description: file.description ?? undefined,
+    createdAt: file.createdAt,
 });
 
 export const staticPageProblems = (page: ApiStaticPage | undefined): ProblemsByEdition => {
@@ -68,6 +70,8 @@ export const adaptEdition = (edition: ApiEdition): Edition => ({
     startDate: edition.teamRegisterOpen,
     endDate: edition.teamRegisterClose,
     state: edition.state,
+    createdAt: edition.createdAt,
+    updatedAt: edition.updatedAt,
     version: edition.version,
 });
 
@@ -80,6 +84,8 @@ export const adaptSchool = (school: ApiSchool): School => ({
     city: school.city,
     type: school.type,
     addres: [school.road, school.building].filter(Boolean).join(" "),
+    createdAt: school.createdAt,
+    updatedAt: school.updatedAt,
 });
 
 export const adaptPost = (post: ApiPost): Post => {
@@ -94,6 +100,7 @@ export const adaptPost = (post: ApiPost): Post => {
             stringField(content.content) ||
             post.contentJson,
         createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
         isVisible: post.isVisible,
     };
 };
@@ -103,13 +110,19 @@ export const adaptSponsor = (sponsor: ApiSponsor): Sponsor => {
     return {
         id: sponsor.id,
         name: sponsor.name,
-        websiteUrl: stringField(content.sponsor_web_url) || stringField(content.websiteUrl) || "#",
+        websiteUrl: stringField(content.sponsor_web_url) || stringField(content.websiteUrl),
         logoUrl:
             stringField(content.sponsor_logo_image_url) ||
             stringField(content.logoUrl) ||
             undefined,
         description: stringField(content.body_pl) || stringField(content.description) || undefined,
         isVisible: sponsor.isVisible,
+        createdAt: sponsor.createdAt,
+        updatedAt: sponsor.updatedAt,
+        type:
+            content.sponsor_type === "organizer" || content.sponsor_type === "patron"
+                ? content.sponsor_type
+                : "sponsor",
     };
 };
 
@@ -126,5 +139,7 @@ export const adaptKoalicjant = (person: ApiKoalicjant): Koalicjant => {
             stringField(content.description) ||
             stringField(content.markdownBody),
         isVisible: person.isVisible,
+        createdAt: person.createdAt,
+        updatedAt: person.updatedAt,
     };
 };

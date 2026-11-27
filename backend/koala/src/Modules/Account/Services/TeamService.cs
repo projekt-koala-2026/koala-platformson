@@ -26,6 +26,7 @@ namespace koala.src.Modules.Account.Services
         public Task<(List<TeamDto>, ApiPagination)> GetMyTeamsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, TeamQueryDto teamQueryDto);
         public Task<TeamDto> GetTeamAsync(ClaimsPrincipal? claimsPrincipal, Guid teamId);
         public Task<(List<TeamDto>, ApiPagination)> GetTeamsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, TeamQueryDto teamQueryDto, TeamMemberQueryDto teamMemberQueryDto);
+        public Task<(List<AdminTeamDto>, ApiPagination)> AdminGetTeamNamesAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, AdminTeamQueryDto teamQueryDto);
     }
     public class TeamService : ITeamService
     {
@@ -363,7 +364,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow >= activeEdition.TeamRegisterClose)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
@@ -452,7 +453,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow >= activeEdition.TeamRegisterClose)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
@@ -535,7 +536,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow >= activeEdition.TeamRegisterClose)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
@@ -606,7 +607,7 @@ namespace koala.src.Modules.Account.Services
 
             DateTime timeNow = DateTime.UtcNow;
 
-            if (timeNow < activeEdition.TeamRegisterOpen || timeNow > activeEdition.TeamRegisterClose)
+            if (timeNow < activeEdition.TeamRegisterOpen || timeNow >= activeEdition.TeamRegisterClose)
             {
                 throw new KoalaException(KoalaErrorCodes.TeamChangesWindowClosed, "Time span for team changes no longer permited");
             }
@@ -1029,19 +1030,19 @@ namespace koala.src.Modules.Account.Services
 
             bool isTeamPlayer = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
             bool isTeamAdmin = ClaimsHelper.IsRoleGuardian(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-            if (!isTeamPlayer && !isTeamAdmin && !isOrganizationAdmin)
+            if (!isTeamPlayer && !isTeamAdmin && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team members and admin can view the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a team captain or guardian can view their own team, or an organization RODO moderator can view any team");
             }
 
             bool isTeamMember = await _db.Teams.AnyAsync(tm => tm.Id == teamId && (tm.CaptainId == userId || tm.GuardianId == userId));
 
-            if (!isTeamMember && !isOrganizationAdmin)
+            if (!isTeamMember && !isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only team members and admin can view the team");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a team captain or guardian can view their own team, or an organization RODO moderator can view any team");
             }
 
             var team = await _db.Teams.AsNoTracking().Include(t => t.Captain).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(t => t.Guardian).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(t => t.Id == teamId);
@@ -1122,12 +1123,12 @@ namespace koala.src.Modules.Account.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
             }
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            bool isOrganizationRodoModerator = ClaimsHelper.IsRoleOrganizationRodoModerator(claimsPrincipal);
             Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
 
-            if (!isOrganizationAdmin)
+            if (!isOrganizationRodoModerator)
             {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only admin can view all the teams");
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only an organization RODO moderator can view all team details");
             }
 
             var query = _db.Teams
@@ -1232,6 +1233,52 @@ namespace koala.src.Modules.Account.Services
                 .ToListAsync();
 
             return (teamDtos, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, queryResults.Count));
+        }
+
+        public async Task<(List<AdminTeamDto>, ApiPagination)> AdminGetTeamNamesAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, AdminTeamQueryDto teamQueryDto)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User is not logged in.");
+            }
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+            Guid userId = ClaimsHelper.GetUserGuid(claimsPrincipal);
+
+            if (!isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only admin can view all the teams");
+            }
+
+            var query = _db.Teams
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (teamQueryDto.EditionId != null)
+            {
+                query = query.Where(t => t.EditionId == teamQueryDto.EditionId);
+            }
+
+            if (teamQueryDto.SchoolId != null)
+            {
+                query = query.Where(t => t.SchoolId == teamQueryDto.SchoolId);
+            }
+
+            if (!string.IsNullOrEmpty(teamQueryDto.Name))
+            {
+                query = query.Where(t => t.Name == teamQueryDto.Name);
+            }
+
+            var teamCount = await query.CountAsync();
+            var teams = await query
+            .OrderBy(t => t.Name)
+            .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
+            .Take(pageQueryDto.PageSize)
+            .Select(t => new AdminTeamDto(t.Id, t.EditionId, t.SchoolId, t.Name, t.Tier, t.NameAccepted, t.CreatedAt, t.UpdatedAt, t.Version))
+            .ToListAsync();
+
+            return (teams, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, teamCount));
         }
 
     }

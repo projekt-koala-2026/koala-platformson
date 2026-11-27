@@ -9,6 +9,7 @@ import AdminHeader from "./AdminHeader";
 import Button from "./Button";
 import MarkdownEditor from "./MarkdownEditor";
 import MarkdownRenderer from "./MarkdownRenderer";
+import RecordDates from "./RecordDates";
 
 interface StaticPageEditorProps {
     title: string;
@@ -136,6 +137,7 @@ const StaticPageEditor = ({ title, description, pageName }: StaticPageEditorProp
                             <p className="mb-5 mt-1 text-sm text-ink-muted">
                                 Zmiany są widoczne w podglądzie po prawej stronie.
                             </p>
+                            <RecordDates updatedAt={page?.updatedAt} className="mb-4" />
                             <MarkdownEditor
                                 initialValue={markdownBody}
                                 onChange={setMarkdownBody}

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type { Role, User } from "../../types/models";
 import { apiEndpoints } from "../../utils/apiEndpoints";
 import { apiListRequestResult, apiRequestResult } from "../../utils/apiFetcher";
@@ -13,11 +14,13 @@ const editableRoles = [
     "ORGANIZATION_ADMIN",
     "ORGANIZATION_EDITOR",
     "ORGANIZATION_REVIEWER",
+    "ORGANIZATION_RODO_MODERATOR",
 ] as const satisfies readonly Role[];
 const roleLabels: Partial<Record<Role, string>> = {
     ORGANIZATION_ADMIN: "administrator",
     ORGANIZATION_EDITOR: "edytor",
     ORGANIZATION_REVIEWER: "recenzent",
+    ORGANIZATION_RODO_MODERATOR: "moderator RODO",
 };
 const organizationUsersQuery = new URLSearchParams({
     PageNumber: "0",
@@ -30,11 +33,26 @@ const inputClass =
 type Feedback = { tone: "success" | "error"; message: string } | null;
 const sortUsers = (users: User[]) =>
     [...users].sort((first, second) => first.email.localeCompare(second.email, "pl"));
+const fullName = (user: User) => [user.nameFirst, user.nameLast].filter(Boolean).join(" ").trim();
+const normalizeSearch = (value: string) =>
+    value
+        .toLocaleLowerCase("pl")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/ł/g, "l");
 
 const UsersScreen = () => {
     const navigate = useNavigate();
     const currentUserId = useMemo(() => localStorage.getItem("userId"), []);
     const [users, setUsers] = useState<User[]>([]);
+    const [search, setSearch] = useState("");
+    const filteredUsers = useMemo(() => {
+        const terms = normalizeSearch(search).trim().split(/\s+/).filter(Boolean);
+        return users.filter((user) => {
+            const text = normalizeSearch(`${fullName(user)} ${user.email}`);
+            return terms.every((term) => text.includes(term));
+        });
+    }, [users, search]);
     const [loading, setLoading] = useState(true);
     const [feedback, setFeedback] = useState<Feedback>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -236,16 +254,39 @@ const UsersScreen = () => {
                 )}
 
                 <section className="mt-8 space-y-4">
+                    <div className="rounded-2xl border border-line bg-surface p-5">
+                        <label
+                            htmlFor="user-search"
+                            className="block text-sm font-semibold text-ink"
+                        >
+                            Szukaj użytkownika
+                        </label>
+                        <input
+                            id="user-search"
+                            type="search"
+                            placeholder="Imię, nazwisko lub e-mail"
+                            className={inputClass}
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                        />
+                        {!loading && (
+                            <p aria-live="polite" className="mt-2 text-sm text-ink-secondary">
+                                Wyświetlono {filteredUsers.length} z {users.length} użytkowników.
+                            </p>
+                        )}
+                    </div>
                     {loading ? (
                         <div className="rounded-2xl border border-line bg-surface p-8 text-center text-sm text-ink-muted shadow-sm">
                             Ładowanie użytkowników…
                         </div>
-                    ) : users.length === 0 ? (
+                    ) : filteredUsers.length === 0 ? (
                         <p className="rounded-2xl border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-ink-muted">
-                            Brak użytkowników do wyświetlenia.
+                            {users.length === 0
+                                ? "Brak użytkowników do wyświetlenia."
+                                : "Brak użytkowników pasujących do wyszukiwania."}
                         </p>
                     ) : (
-                        users.map((user) => {
+                        filteredUsers.map((user) => {
                             const isCurrentUser = user.id === currentUserId;
                             return (
                                 <article
@@ -255,8 +296,8 @@ const UsersScreen = () => {
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                         <div className="min-w-0">
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <h2 className="truncate text-lg font-semibold">
-                                                    {user.email}
+                                                <h2 className="break-words text-lg font-semibold [overflow-wrap:anywhere]">
+                                                    {fullName(user) || user.email}
                                                 </h2>
                                                 {isCurrentUser && (
                                                     <span className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-ink-secondary">
@@ -264,6 +305,16 @@ const UsersScreen = () => {
                                                     </span>
                                                 )}
                                             </div>
+                                            {fullName(user) && (
+                                                <p className="mt-1 break-words text-sm text-ink-secondary [overflow-wrap:anywhere]">
+                                                    {user.email}
+                                                </p>
+                                            )}
+                                            <RecordDates
+                                                createdAt={user.createdAt}
+                                                updatedAt={user.updatedAt}
+                                                className="mt-3"
+                                            />
                                             <div className="mt-3 flex flex-wrap gap-2">
                                                 {user.roles.map((role) => (
                                                     <span
@@ -277,12 +328,12 @@ const UsersScreen = () => {
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="flex shrink-0 gap-2">
+                                        <div className="flex shrink-0 flex-wrap gap-2">
                                             <Button
                                                 text={
                                                     <>
-                                                        <FaEdit />
-                                                        <span className="sr-only">Edytuj role</span>
+                                                        <span>Edytuj</span>
+                                                        <FaEdit aria-hidden="true" />
                                                     </>
                                                 }
                                                 disabled={isCurrentUser || updatingRoles}
@@ -297,10 +348,8 @@ const UsersScreen = () => {
                                             <Button
                                                 text={
                                                     <>
-                                                        <FaTrash />
-                                                        <span className="sr-only">
-                                                            Usuń użytkownika
-                                                        </span>
+                                                        <span>Usuń</span>
+                                                        <FaTrash aria-hidden="true" />
                                                     </>
                                                 }
                                                 disabled={isCurrentUser || deletingId === user.id}

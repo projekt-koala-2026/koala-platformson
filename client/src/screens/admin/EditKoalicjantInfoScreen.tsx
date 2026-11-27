@@ -6,6 +6,7 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import ImagePicker from "../../components/ImagePicker";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type { ApiKoalicjant, Koalicjant, ManagedFile } from "../../types/models";
 import { adaptKoalicjant } from "../../utils/apiAdapters";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -227,6 +228,11 @@ const EditKoalicjantInfo = () => {
                                         >
                                             {person.isVisible ? "Widoczny" : "Ukryty"}
                                         </span>
+                                        <RecordDates
+                                            createdAt={person.createdAt}
+                                            updatedAt={person.updatedAt}
+                                            className="mt-2"
+                                        />
                                         <p className="mt-2 line-clamp-4 text-sm leading-6 text-ink-secondary">
                                             {person.description || "Brak opisu."}
                                         </p>

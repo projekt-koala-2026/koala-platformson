@@ -4,6 +4,7 @@ import KoalaIllustration from "../../components/KoalaIllustration";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import RecordDates from "../../components/RecordDates";
 import type { ApiStaticPage } from "../../types/models";
 import { staticPageMarkdown } from "../../utils/apiAdapters";
 import { apiEndpoints } from "../../utils/apiEndpoints";
@@ -12,6 +13,7 @@ import { apiListRequest } from "../../utils/apiFetcher";
 const RuleScreen = () => {
     const navigate = useNavigate();
     const [rules, setRules] = useState("");
+    const [updatedAt, setUpdatedAt] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
 
@@ -21,8 +23,10 @@ const RuleScreen = () => {
             (data) => {
                 if (!active) return;
                 const page = data?.find((item) => item.name === "RULES_PAGE");
-                if (page) setRules(staticPageMarkdown(page));
-                else setHasError(true);
+                if (page) {
+                    setRules(staticPageMarkdown(page));
+                    setUpdatedAt(page.updatedAt);
+                } else setHasError(true);
                 setLoading(false);
             }
         );
@@ -44,6 +48,7 @@ const RuleScreen = () => {
                         <p className="mt-3 max-w-2xl text-ink-secondary">
                             Zasady uczestnictwa, przebieg konkursu i sposób oceniania drużyn.
                         </p>
+                        <RecordDates updatedAt={updatedAt} className="mb-5" dateOnly />
                     </div>
                     <KoalaIllustration
                         src={`${import.meta.env.BASE_URL}images/koala/koala_mis2a.png`}

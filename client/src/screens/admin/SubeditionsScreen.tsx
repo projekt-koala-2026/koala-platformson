@@ -5,6 +5,7 @@ import AdminHeader from "../../components/AdminHeader";
 import AutoCheckNotice from "../../components/AutoCheckNotice";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import SelectListbox from "../../components/SelectListbox";
 import type { ApiEdition, ApiSubedition } from "../../types/models";
 import { apiEndpoints, firstPage } from "../../utils/apiEndpoints";
@@ -319,6 +320,11 @@ export default function SubeditionsScreen() {
                                                         "pl-PL"
                                                     )}
                                                 </p>
+                                                <RecordDates
+                                                    createdAt={item.createdAt}
+                                                    updatedAt={item.updatedAt}
+                                                    className="mt-2"
+                                                />
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {item.state !== "CLOSED" &&

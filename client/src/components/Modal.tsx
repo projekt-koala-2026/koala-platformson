@@ -63,12 +63,7 @@ const Modal = ({ children, isOpen, onClose, title, maxWidth = "lg", footer }: Mo
     if (!isOpen) return null;
 
     return createPortal(
-        <div
-            className="fixed inset-0 z-50 flex h-dvh items-center justify-center overflow-hidden bg-backdrop/45 p-3 backdrop-blur-sm sm:p-4"
-            onMouseDown={(event) => {
-                if (event.target === event.currentTarget) onClose();
-            }}
-        >
+        <div className="fixed inset-0 z-50 flex h-dvh items-center justify-center overflow-hidden bg-backdrop/45 p-3 backdrop-blur-sm sm:p-4">
             <section
                 ref={dialogRef}
                 role="dialog"

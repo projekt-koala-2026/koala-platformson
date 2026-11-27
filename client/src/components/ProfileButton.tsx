@@ -45,6 +45,7 @@ const ProfileButton = ({ options }: ProfileButtonProps) => {
         ORGANIZATION_ADMIN: "Administrator",
         ORGANIZATION_EDITOR: "Edytor",
         ORGANIZATION_REVIEWER: "Recenzent",
+        ORGANIZATION_RODO_MODERATOR: "Moderator RODO",
         TEAM_CAPTAIN: "Kapitan",
         TEAM_GUARDIAN: "Opiekun",
     };

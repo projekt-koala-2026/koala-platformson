@@ -511,7 +511,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var (service, _, _) = await SetupTestEnvironment();
 
             var exception = await Assert.ThrowsAsync<KoalaException>(() => service.GetTeamAsync(
-                Principal(TestDataSeeder.ID_USER_1, TestDataSeeder.NAME_ROLE_1), Guid.NewGuid()));
+                Principal(TestDataSeeder.ID_USER_1, RoleNames.NAME_ORGANIZATION_RODO_MODERATOR), Guid.NewGuid()));
 
             Assert.Equal(KoalaErrorCodes.TeamNotFound, exception.ErrorCode);
         }
@@ -594,7 +594,7 @@ namespace koala.src.Modules.Account.Tests.UnitTests
 
             var captainResult = await service.GetTeamAsync(Principal(TestDataSeeder.ID_USER_10, TestDataSeeder.NAME_ROLE_5), TestDataSeeder.ID_TEAM_1);
             var guardianResult = await service.GetTeamAsync(Principal(TestDataSeeder.ID_USER_8, TestDataSeeder.NAME_ROLE_4), TestDataSeeder.ID_TEAM_1);
-            var adminResult = await service.GetTeamAsync(Principal(TestDataSeeder.ID_USER_1, TestDataSeeder.NAME_ROLE_1), TestDataSeeder.ID_TEAM_1);
+            var adminResult = await service.GetTeamAsync(Principal(TestDataSeeder.ID_USER_1, RoleNames.NAME_ORGANIZATION_RODO_MODERATOR), TestDataSeeder.ID_TEAM_1);
 
             Assert.Equal(TestDataSeeder.ID_TEAM_1, captainResult.Id);
             Assert.Equal(TestDataSeeder.ID_TEAM_1, guardianResult.Id);
@@ -607,12 +607,170 @@ namespace koala.src.Modules.Account.Tests.UnitTests
             var (service, _, _) = await SetupTestEnvironment();
 
             var (teams, pagination) = await service.GetTeamsAsync(
-                Principal(TestDataSeeder.ID_USER_1, TestDataSeeder.NAME_ROLE_1),
+                Principal(TestDataSeeder.ID_USER_1, RoleNames.NAME_ORGANIZATION_RODO_MODERATOR),
                 new PageQueryDto { PageNumber = 0, PageSize = 10 },
                 new TeamQueryDto(null, null, null, null, null), new TeamMemberQueryDto(null));
 
             Assert.Equal(2, teams.Count);
             Assert.Equal(2, pagination.TotalNumber);
+        }
+
+        [Fact]
+        public async Task AdminGetTeamNames_AppliesOptionalFiltersAndReturnsCensorState()
+        {
+            var (service, _, _) = await SetupTestEnvironment();
+            var (allTeams, _) = await service.AdminGetTeamNamesAsync(
+                Principal(TestDataSeeder.ID_USER_1, TestDataSeeder.NAME_ROLE_1),
+                new PageQueryDto { PageNumber = 0, PageSize = 10 }, new AdminTeamQueryDto(null, null, null));
+            var team = Assert.Single(allTeams, item => item.Id == TestDataSeeder.ID_TEAM_1);
+            Assert.Equal(TestDataSeeder.MOCK_ID_SCHOOL_1, team.SchoolId);
+            Assert.True(team.IsCensored);
+
+            var (filtered, pagination) = await service.AdminGetTeamNamesAsync(
+                Principal(TestDataSeeder.ID_USER_1, TestDataSeeder.NAME_ROLE_1),
+                new PageQueryDto { PageNumber = 0, PageSize = 10 },
+                new AdminTeamQueryDto(team.EditionId, team.SchoolId, team.Name));
+
+            Assert.Single(filtered);
+            Assert.Equal(1, pagination.TotalNumber);
+            Assert.Equal(team.Id, filtered[0].Id);
+        }
+
+        public static TheoryData<Guid?, Guid?, string?, Guid?, int> AdminTeamFilterMatrix
+        {
+            get
+            {
+                var data = new TheoryData<Guid?, Guid?, string?, Guid?, int>();
+                var teams = new[]
+                {
+                    (TestDataSeeder.ID_TEAM_1, TestDataSeeder.MOCK_ID_SCHOOL_1, TestDataSeeder.NAME_TEAM_1),
+                    (TestDataSeeder.ID_TEAM_2, TestDataSeeder.MOCK_ID_SCHOOL_2, TestDataSeeder.NAME_TEAM_2)
+                };
+
+                // Each independently supported filter and each meaningful combination has a matching row.
+                data.Add(TestDataSeeder.MOCK_ID_EDITION_1, null, null, TestDataSeeder.ID_TEAM_1, 2);
+                foreach (var team in teams)
+                {
+                    data.Add(null, team.Item2, null, team.Item1, 1);
+                    data.Add(TestDataSeeder.MOCK_ID_EDITION_1, team.Item2, null, team.Item1, 1);
+                    data.Add(null, null, team.Item3, team.Item1, 1);
+                    data.Add(TestDataSeeder.MOCK_ID_EDITION_1, null, team.Item3, team.Item1, 1);
+                    data.Add(null, team.Item2, team.Item3, team.Item1, 1);
+                    data.Add(TestDataSeeder.MOCK_ID_EDITION_1, team.Item2, team.Item3, team.Item1, 1);
+                }
+
+                // Twenty-seven distinct misses exercise wrong IDs, case-sensitive names and combined filters.
+                for (var i = 0; i < 27; i++)
+                {
+                    var edition = i % 3 == 0 ? Guid.CreateVersion7() : (Guid?)null;
+                    var school = i % 3 == 1 ? Guid.CreateVersion7() : (Guid?)null;
+                    var name = i % 3 == 2 ? TestDataSeeder.NAME_TEAM_1.ToLowerInvariant() : $"No matching team {i:D2}";
+                    data.Add(edition, school, name, null, 0);
+                }
+                return data;
+            }
+        }
+
+        public static IEnumerable<object[]> AdminTeamPaginationMatrix
+        {
+            get
+            {
+                for (var pageNumber = 0; pageNumber < 40; pageNumber++)
+                {
+                    var pageSize = pageNumber % 2 == 0 ? 1 : 2;
+                    var expected = pageNumber == 0 && pageSize == 1
+                        ? new[] { TestDataSeeder.ID_TEAM_1 }
+                        : pageNumber == 0 && pageSize == 2
+                            ? new[] { TestDataSeeder.ID_TEAM_1, TestDataSeeder.ID_TEAM_2 }
+                            : pageNumber == 1 && pageSize == 1
+                                ? new[] { TestDataSeeder.ID_TEAM_2 }
+                                : Array.Empty<Guid>();
+                    yield return [pageNumber, pageSize, expected];
+                }
+            }
+        }
+
+        public static IEnumerable<object[]> AdminTeamRoleMatrix
+        {
+            get
+            {
+                var cases = new (string[] Roles, bool IsAuthenticated, bool CanRead)[]
+                {
+                    ([RoleNames.NAME_ORGANIZATION_ADMIN], true, true),
+                    ([RoleNames.NAME_ORGANIZATION_RODO_MODERATOR], true, false),
+                    ([RoleNames.NAME_ORGANIZATION_EDITOR], true, false),
+                    ([RoleNames.NAME_ORGANIZATION_REVIEWER], true, false),
+                    ([RoleNames.NAME_TEAM_CAPTAIN], true, false),
+                    ([RoleNames.NAME_TEAM_GUARDIAN], true, false),
+                    (["UNKNOWN_ROLE"], true, false),
+                    ([], true, false),
+                    ([RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_ORGANIZATION_RODO_MODERATOR], true, true),
+                    ([RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_ORGANIZATION_EDITOR], true, true),
+                    ([RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_ORGANIZATION_REVIEWER], true, true),
+                    ([RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_TEAM_CAPTAIN], true, true),
+                    ([RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_TEAM_GUARDIAN], true, true),
+                    ([RoleNames.NAME_ORGANIZATION_RODO_MODERATOR, RoleNames.NAME_ORGANIZATION_EDITOR], true, false),
+                    ([RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_ORGANIZATION_REVIEWER], true, false),
+                    ([RoleNames.NAME_TEAM_CAPTAIN, RoleNames.NAME_TEAM_GUARDIAN], true, false),
+                    ([RoleNames.NAME_ORGANIZATION_REVIEWER, RoleNames.NAME_TEAM_GUARDIAN], true, false),
+                    ([RoleNames.NAME_ORGANIZATION_RODO_MODERATOR, RoleNames.NAME_TEAM_CAPTAIN], true, false),
+                    ([RoleNames.NAME_ORGANIZATION_ADMIN, RoleNames.NAME_ORGANIZATION_EDITOR, RoleNames.NAME_TEAM_GUARDIAN], true, true),
+                    ([], false, false)
+                };
+                foreach (var testCase in cases)
+                    yield return [testCase.Roles, testCase.IsAuthenticated, testCase.CanRead];
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(AdminTeamFilterMatrix))]
+        public async Task AdminGetTeamNames_FiltersEveryOptionalQueryCombination(Guid? editionId, Guid? schoolId, string? name, Guid? expectedTeamId, int expectedTotal)
+        {
+            var (service, _, _) = await SetupTestEnvironment();
+            var (teams, pagination) = await service.AdminGetTeamNamesAsync(
+                Principal(TestDataSeeder.ID_USER_1, RoleNames.NAME_ORGANIZATION_ADMIN),
+                new PageQueryDto { PageNumber = 0, PageSize = 10 }, new AdminTeamQueryDto(editionId, schoolId, name));
+
+            Assert.Equal(expectedTotal, pagination.TotalNumber);
+            if (expectedTeamId.HasValue)
+                Assert.Contains(teams, team => team.Id == expectedTeamId.Value);
+            else
+                Assert.Empty(teams);
+        }
+
+        [Theory]
+        [MemberData(nameof(AdminTeamPaginationMatrix))]
+        public async Task AdminGetTeamNames_PaginatesInNameOrder(int pageNumber, int pageSize, Guid[] expectedIds)
+        {
+            var (service, _, _) = await SetupTestEnvironment();
+            var (teams, pagination) = await service.AdminGetTeamNamesAsync(
+                Principal(TestDataSeeder.ID_USER_1, RoleNames.NAME_ORGANIZATION_ADMIN),
+                new PageQueryDto { PageNumber = pageNumber, PageSize = pageSize }, new AdminTeamQueryDto(null, null, null));
+
+            Assert.Equal(2, pagination.TotalNumber);
+            Assert.Equal(expectedIds, teams.Select(team => team.Id).ToArray());
+        }
+
+        [Theory]
+        [MemberData(nameof(AdminTeamRoleMatrix))]
+        public async Task AdminGetTeamNames_AllowsOnlyOrganizationAdmins(string[] roles, bool isAuthenticated, bool canRead)
+        {
+            var (service, _, _) = await SetupTestEnvironment();
+            ClaimsPrincipal? principal = isAuthenticated ? Principal(TestDataSeeder.ID_USER_1, roles) : null;
+
+            if (canRead)
+            {
+                var (teams, pagination) = await service.AdminGetTeamNamesAsync(principal,
+                    new PageQueryDto { PageNumber = 0, PageSize = 10 }, new AdminTeamQueryDto(null, null, null));
+                Assert.Equal(2, teams.Count);
+                Assert.Equal(2, pagination.TotalNumber);
+            }
+            else
+            {
+                var error = await Assert.ThrowsAsync<KoalaException>(() => service.AdminGetTeamNamesAsync(principal,
+                    new PageQueryDto { PageNumber = 0, PageSize = 10 }, new AdminTeamQueryDto(null, null, null)));
+                Assert.Equal(isAuthenticated ? KoalaErrorCodes.Forbidden : KoalaErrorCodes.Unauthenticated, error.ErrorCode);
+            }
         }
 
         [Theory]
@@ -813,3 +971,4 @@ namespace koala.src.Modules.Account.Tests.UnitTests
         }
     }
 }
+

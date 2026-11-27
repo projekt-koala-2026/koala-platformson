@@ -5,6 +5,7 @@ namespace koala.src.Shared;
 public static class RoleNames
 {
     public const string NAME_ORGANIZATION_ADMIN = "ORGANIZATION_ADMIN";
+    public const string NAME_ORGANIZATION_RODO_MODERATOR = "ORGANIZATION_RODO_MODERATOR";
     public const string NAME_ORGANIZATION_EDITOR = "ORGANIZATION_EDITOR";
     public const string NAME_ORGANIZATION_REVIEWER = "ORGANIZATION_REVIEWER";
     public const string NAME_TEAM_CAPTAIN = "TEAM_CAPTAIN";

@@ -16,6 +16,7 @@ import KoalaIllustration from "../../components/KoalaIllustration";
 import Modal from "../../components/Modal";
 import PublicFooter from "../../components/PublicFooter";
 import PublicHeader from "../../components/PublicHeader";
+import RecordDates from "../../components/RecordDates";
 import SchoolsTable from "../../components/SchoolsTable";
 import type {
     ApiSchool,
@@ -218,6 +219,7 @@ const CaptainHomeScreen = () => {
     );
 
     const isCaptain = team?.teamCaptain?.id === currentUserId;
+    const isGuardian = team?.teamGuardian?.id === currentUserId;
 
     const submitTeam = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -592,10 +594,34 @@ const CaptainHomeScreen = () => {
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                             Panel drużyn
                         </p>
-                        <h1 className="mt-2 text-3xl font-bold text-ink-heading">Twoje drużyny</h1>
-                        <p className="mt-3 max-w-2xl text-ink-secondary">
-                            Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem dołączenia.
-                        </p>
+                        {isCaptain && (
+                            <>
+                                <h1 className="mt-2 text-3xl font-bold text-ink-heading">
+                                    Twoja drużyna
+                                </h1>
+                                <p className="mt-3 max-w-2xl text-ink-secondary">
+                                    Utwórz drużynę, zarządzaj jej nazwą, członkami oraz kodem
+                                    dołączenia.
+                                </p>
+                            </>
+                        )}
+                        {isGuardian && (
+                            <>
+                                <h1 className="mt-2 text-3xl font-bold text-ink-heading">
+                                    Twoje drużyny
+                                </h1>
+                                <p className="mt-3 max-w-2xl text-ink-secondary">
+                                    Otrzymaj kod dołączenia od kapitana i użyj go, aby zaopiekować
+                                    się drużyną. Po dołączeniu będziesz mógł zarządzać dokumentami
+                                    RODO jej członków.
+                                </p>
+                                <h4 className="mt-3 max-w-2xl text-sm text-ink-secondary">
+                                    Kod dołączenia ma ograniczony czas ważności, więc jeśli nie
+                                    możesz dołączyć do drużyny, poproś kapitana o wygenerowanie
+                                    nowego kodu.
+                                </h4>
+                            </>
+                        )}
                     </div>
                     <KoalaIllustration
                         src={`${import.meta.env.BASE_URL}images/koala/koala_mis2b.png`}
@@ -627,9 +653,7 @@ const CaptainHomeScreen = () => {
                         onSubmit={joinTeam}
                         className="mb-6 rounded-2xl border border-line bg-surface p-5 shadow-sm"
                     >
-                        <h2 className="font-semibold text-ink-heading">
-                            Dołącz do kolejnej drużyny
-                        </h2>
+                        <h2 className="font-semibold text-ink-heading">Zaopiekuj się drużyną</h2>
                         <div className="mt-3 flex flex-col gap-3 sm:flex-row">
                             <input
                                 value={joinCode}
@@ -641,7 +665,7 @@ const CaptainHomeScreen = () => {
                             />
                             <Button
                                 type="submit"
-                                text={saving ? "Dołączanie…" : "Dołącz"}
+                                text={saving ? "Zaopiekowanie…" : "Zaopiekuj się"}
                                 disabled={saving}
                             />
                         </div>
@@ -733,29 +757,67 @@ const CaptainHomeScreen = () => {
                         </section>
                         <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-ink-heading">
-                                Kod dołączenia
+                                {roles.isGuardian
+                                    ? "Kontakt do kapitana"
+                                    : team.teamGuardian
+                                      ? "Opiekun drużyny"
+                                      : "Kod dołączenia"}
                             </h2>
-                            {team.joinCode ? (
-                                <div className="mt-4 rounded-xl bg-brand-soft p-4 text-center">
-                                    <p className="font-mono text-2xl font-bold tracking-widest text-brand-text-strong">
-                                        {team.joinCode.joinCode}
+                            {roles.isGuardian ? (
+                                <div className="mt-4 rounded-xl bg-brand-soft p-4">
+                                    <p className="font-semibold text-brand-text-strong">
+                                        {[team.teamCaptain?.nameFirst, team.teamCaptain?.nameLast]
+                                            .filter(Boolean)
+                                            .join(" ")}
                                     </p>
-                                    <p className="mt-2 text-xs text-brand-text">
-                                        Ważny do{" "}
-                                        {new Date(team.joinCode.expiresAt).toLocaleString("pl-PL")}
+                                    <p className="mt-1 break-all text-sm text-brand-text">
+                                        {team.teamCaptain?.email ?? "Brak adresu e-mail kapitana."}
+                                    </p>
+                                </div>
+                            ) : team.teamGuardian ? (
+                                <div className="mt-4 rounded-xl bg-brand-soft p-4">
+                                    <p className="font-semibold text-brand-text-strong">
+                                        {[team.teamGuardian.nameFirst, team.teamGuardian.nameLast]
+                                            .filter(Boolean)
+                                            .join(" ")}
+                                    </p>
+                                    <p className="mt-1 break-all text-sm text-brand-text">
+                                        {team.teamGuardian.email}
                                     </p>
                                 </div>
                             ) : (
-                                <p className="mt-3 text-sm text-ink-muted">Brak aktywnego kodu.</p>
-                            )}
-                            {isCaptain && (
-                                <Button
-                                    text={team.joinCode ? "Wygeneruj nowy kod" : "Wygeneruj kod"}
-                                    icon={<FaSyncAlt />}
-                                    onClick={() => void generateJoinCode()}
-                                    disabled={saving}
-                                    className="mt-4"
-                                />
+                                <>
+                                    {team.joinCode ? (
+                                        <div className="mt-4 rounded-xl bg-brand-soft p-4 text-center">
+                                            <p className="font-mono text-2xl font-bold tracking-widest text-brand-text-strong">
+                                                {team.joinCode.joinCode}
+                                            </p>
+                                            <p className="mt-2 text-xs text-brand-text">
+                                                Ważny do{" "}
+                                                {new Date(team.joinCode.expiresAt).toLocaleString(
+                                                    "pl-PL"
+                                                )}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <p className="mt-3 text-sm text-ink-muted">
+                                            Brak aktywnego kodu.
+                                        </p>
+                                    )}
+                                    {isCaptain && (
+                                        <Button
+                                            text={
+                                                team.joinCode
+                                                    ? "Wygeneruj nowy kod"
+                                                    : "Wygeneruj kod"
+                                            }
+                                            icon={<FaSyncAlt />}
+                                            onClick={() => void generateJoinCode()}
+                                            disabled={saving}
+                                            className="mt-4"
+                                        />
+                                    )}
+                                </>
                             )}
                         </section>
                         <section className="rounded-2xl border border-line bg-surface p-6 shadow-sm lg:col-span-2">
@@ -907,6 +969,12 @@ const CaptainHomeScreen = () => {
                                                 {member.nameFist} {member.nameLast}
                                             </p>
                                             <p className="text-xs text-ink-muted">Uczestnik</p>
+                                            <RecordDates
+                                                createdAt={member.createdAt}
+                                                updatedAt={member.updatedAt}
+                                                className="mt-1"
+                                                dateOnly
+                                            />
                                         </div>
                                         <div className="text-center">
                                             {roles.isGuardian &&
@@ -1014,35 +1082,6 @@ const CaptainHomeScreen = () => {
                                             )}
                                     </li>
                                 ))}
-                                {team.teamGuardian &&
-                                    team.teamGuardian.id !== team.teamCaptain?.id && (
-                                        <li className="flex flex-wrap items-center justify-between gap-3 py-3">
-                                            <div>
-                                                <p className="font-mono text-sm text-ink">
-                                                    {team.teamGuardian?.nameFirst}{" "}
-                                                    {team.teamGuardian?.nameLast}
-                                                </p>
-                                                <p className="text-xs font-semibold uppercase tracking-wide text-brand-text">
-                                                    Opiekun drużyny
-                                                </p>
-                                            </div>
-                                            {isCaptain && (
-                                                <button
-                                                    type="button"
-                                                    // Brakuje endpointu do usuwania opiekuna drużyny, więc przycisk jest disabled
-                                                    disabled
-                                                    onClick={() =>
-                                                        void removeMember(
-                                                            team.teamGuardian?.id ?? ""
-                                                        )
-                                                    }
-                                                    className="inline-flex items-center gap-2 rounded-lg bg-danger-soft px-3 py-2 text-xs font-semibold text-danger-text hover:bg-danger-muted disabled:opacity-50"
-                                                >
-                                                    <FaTrash aria-hidden="true" /> Usuń z drużyny
-                                                </button>
-                                            )}
-                                        </li>
-                                    )}
                             </ul>
                             {isCaptain && (
                                 <Button

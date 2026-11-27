@@ -5,6 +5,7 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import MarkdownRenderer from "../../components/MarkdownRenderer";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type {
     ApiCompetitionTask,
     ApiEdition,
@@ -383,6 +384,11 @@ export default function ReviewerTasksScreen() {
                                                         "Oceniona"
                                                     )}
                                                 </p>
+                                                <RecordDates
+                                                    createdAt={item.createdAt}
+                                                    updatedAt={item.updatedAt}
+                                                    className="mt-2"
+                                                />
                                             </div>
                                             <Button
                                                 text={

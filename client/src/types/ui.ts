@@ -4,6 +4,7 @@ export interface NavigationOption {
     label: string;
     onClick: () => void | Promise<void>;
     disabled?: boolean;
+    indentLevel?: 1 | 2;
 }
 
 export interface NavigationLink {
@@ -11,6 +12,7 @@ export interface NavigationLink {
     path: string;
     /** Draw a sidebar separator above this link (except when it is first). */
     separatorBefore?: boolean;
+    indentLevel?: 1 | 2;
 }
 
 export interface ModalProps {

@@ -7,8 +7,10 @@ import type { Role } from "./types/models";
 import { getAuthArea, getOrganizationHomePath, getUserRoles } from "./utils/authService";
 
 const AdminLoginScreen = lazy(() => import("./screens/admin/AdminLoginScreen"));
+const SessionsScreen = lazy(() => import("./screens/SessionsScreen"));
 const AdminRodoScreen = lazy(() => import("./screens/admin/AdminRodoScreen"));
 const AdminTeamsScreen = lazy(() => import("./screens/admin/AdminTeamsScreen"));
+const EmailsScreen = lazy(() => import("./screens/admin/EmailsScreen"));
 const EditionsScreen = lazy(() => import("./screens/admin/EditEditionScreen"));
 const SubeditionsScreen = lazy(() => import("./screens/admin/SubeditionsScreen"));
 const CompetitionTasksScreen = lazy(() => import("./screens/admin/CompetitionTasksScreen"));
@@ -40,6 +42,8 @@ const RuleScreen = lazy(() => import("./screens/public/RuleScreen"));
 const PublicRankingsScreen = lazy(() => import("./screens/public/RankingsPublicScreen"));
 
 const adminOnly: Role[] = ["ORGANIZATION_ADMIN"];
+const teamViewers: Role[] = ["ORGANIZATION_ADMIN", "ORGANIZATION_RODO_MODERATOR"];
+const rodoModerators: Role[] = ["ORGANIZATION_RODO_MODERATOR"];
 const reviewersOnly: Role[] = ["ORGANIZATION_REVIEWER"];
 const contentEditors: Role[] = ["ORGANIZATION_ADMIN", "ORGANIZATION_EDITOR"];
 const teamMembers: Role[] = ["TEAM_CAPTAIN", "TEAM_GUARDIAN"];
@@ -71,6 +75,30 @@ export default function App() {
                 <Suspense fallback={<RouteFallback />}>
                     <Routes>
                         <Route path="/admin/login" element={<AdminLoginScreen />} />
+                        <Route
+                            path="/admin/sessions"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={[
+                                        "ORGANIZATION_ADMIN",
+                                        "ORGANIZATION_EDITOR",
+                                        "ORGANIZATION_REVIEWER",
+                                        "ORGANIZATION_RODO_MODERATOR",
+                                    ]}
+                                    redirectTo="/admin/login"
+                                >
+                                    <SessionsScreen area="organization" />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/sessions"
+                            element={
+                                <ProtectedRoute allowedRoles={teamMembers} redirectTo="/login">
+                                    <SessionsScreen area="team" />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route
                             path="/admin/review-assignments"
                             element={
@@ -234,16 +262,41 @@ export default function App() {
                         <Route
                             path="/admin/teams"
                             element={
-                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                <ProtectedRoute
+                                    allowedRoles={teamViewers}
+                                    redirectTo="/admin/login"
+                                >
                                     <AdminTeamsScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/emails"
+                            element={
+                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                    <EmailsScreen />
                                 </ProtectedRoute>
                             }
                         />
                         <Route
                             path="/admin/rodos"
                             element={
-                                <ProtectedRoute allowedRoles={adminOnly} redirectTo="/admin/login">
+                                <ProtectedRoute
+                                    allowedRoles={rodoModerators}
+                                    redirectTo="/admin/login"
+                                >
                                     <AdminRodoScreen />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/admin/guardians"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={rodoModerators}
+                                    redirectTo="/admin/login"
+                                >
+                                    <AdminTeamsScreen view="guardians" />
                                 </ProtectedRoute>
                             }
                         />

@@ -5,6 +5,7 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import MarkdownEditor from "../../components/MarkdownEditor";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import SelectListbox from "../../components/SelectListbox";
 import TaskAnswersModal from "../../components/TaskAnswersModal";
 import type {
@@ -503,6 +504,11 @@ export default function CompetitionTasksScreen() {
                                                             ? "Kategoria I"
                                                             : "Kategoria II"}
                                                     </p>
+                                                    <RecordDates
+                                                        createdAt={task.createdAt}
+                                                        updatedAt={task.updatedAt}
+                                                        className="mt-2"
+                                                    />
                                                 </div>
                                                 <div className="flex flex-wrap gap-2">
                                                     <Button

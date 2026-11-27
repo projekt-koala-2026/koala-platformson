@@ -5,6 +5,7 @@ import AdminHeader from "../../components/AdminHeader";
 import Button from "../../components/Button";
 import FileUploader from "../../components/FileUploader";
 import Modal from "../../components/Modal";
+import RecordDates from "../../components/RecordDates";
 import type {
     ApiEdition,
     ApiStaticPage,
@@ -29,7 +30,7 @@ type Feedback = { tone: "success" | "warning" | "error"; message: string } | nul
 const validatePdf = (file: File) => {
     if (file.size === 0) return "Wybrany plik jest pusty.";
     const hasPdfExtension = file.name.toLowerCase().endsWith(".pdf");
-    const hasPdfMime = !file.type || file.type === "application/pdf";
+    const hasPdfMime = file.type === "application/pdf";
     if (!hasPdfExtension || !hasPdfMime) return "Dozwolone są wyłącznie pliki PDF.";
     if (file.size > MAX_PDF_SIZE) return "Plik przekracza maksymalny rozmiar 10 MB.";
     return null;
@@ -42,7 +43,8 @@ const EditProblemsScreen = () => {
     const [selectedEditionId, setSelectedEditionId] = useState("");
     const [allProblemsData, setAllProblemsData] = useState<ProblemsByEdition>({});
     const [taskPage, setTaskPage] = useState<ApiStaticPage | null>(null);
-    const [subpointInputValue, setSubpointInputValue] = useState("");
+    const [titleInputValue, setTitleInputValue] = useState("");
+    const [descriptionInputValue, setDescriptionInputValue] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
@@ -103,7 +105,8 @@ const EditProblemsScreen = () => {
     };
 
     const resetUploadForm = () => {
-        setSubpointInputValue("");
+        setTitleInputValue("");
+        setDescriptionInputValue("");
         setSelectedFile(null);
     };
 
@@ -122,19 +125,20 @@ const EditProblemsScreen = () => {
 
     const addEntry = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        const subpoint = subpointInputValue.trim();
+        const subpoint = titleInputValue.trim();
         if (!selectedEditionId) {
             setFeedback({ tone: "error", message: "Wybierz edycję konkursu." });
             return;
         }
         if (!subpoint) {
-            setFeedback({ tone: "error", message: "Wpisz nazwę sekcji dokumentów." });
+            setFeedback({ tone: "error", message: "Wpisz nazwę dokumentu." });
             return;
         }
         if (!selectedFile) {
             setFeedback({ tone: "error", message: "Wybierz plik PDF." });
             return;
         }
+        const description = descriptionInputValue.trim();
         const validationError = validatePdf(selectedFile);
         if (validationError) {
             setFeedback({ tone: "error", message: validationError });
@@ -145,9 +149,10 @@ const EditProblemsScreen = () => {
         setFeedback(null);
         const uploadedFile = await uploadFile(
             selectedFile,
-            selectedFile.name,
+            subpoint,
             "problems",
-            navigate
+            navigate,
+            description || undefined
         );
         if (!uploadedFile) {
             setFeedback({ tone: "error", message: "Nie udało się wysłać pliku na serwer." });
@@ -161,9 +166,10 @@ const EditProblemsScreen = () => {
             `/api/koala/content/${uploadedFile.id}.pdf`;
         const newProblem: ProblemFile = {
             id: uploadedFile.id,
-            title: selectedFile.name,
+            title: uploadedFile.title,
             fileName: fileUrl.split("/").pop() || selectedFile.name,
             url: fileUrl,
+            description: uploadedFile.description || description || undefined,
         };
         const editionData = allProblemsData[selectedEditionId] ?? {};
         const updatedData: ProblemsByEdition = {
@@ -251,10 +257,12 @@ const EditProblemsScreen = () => {
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand-text">
                         Materiały konkursowe
                     </p>
-                    <h1 className="mt-1 text-3xl font-bold tracking-tight">Pliki archiwalne</h1>
+                    <h1 className="mt-1 text-3xl font-bold tracking-tight">Poprzednie zadania</h1>
                     <p className="mt-2 max-w-3xl text-sm text-ink-secondary">
-                        Porządkuj pliki w sekcje osobno dla każdej edycji konkursu.
+                        Porządkuj pliki dla każdej edycji konkursu.
                     </p>
+                    <br />
+                    <RecordDates updatedAt={taskPage?.updatedAt} />
                 </div>
 
                 {feedback && (
@@ -280,7 +288,7 @@ const EditProblemsScreen = () => {
                     <div className="space-y-6">
                         <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:flex sm:items-end sm:justify-between sm:gap-6 sm:p-6">
                             <label className="flex min-w-0 flex-1 flex-col gap-2 text-sm font-medium text-ink">
-                                <span>Dokumenty dla edycji</span>
+                                <h2 className="text-xl font-semibold">Dokumenty dla edycji</h2>
                                 <select
                                     value={selectedEditionId}
                                     disabled={uploading || deletingId !== null}
@@ -300,7 +308,11 @@ const EditProblemsScreen = () => {
                             <div className="mt-4 flex shrink-0 items-center justify-between gap-4 sm:mt-0 sm:justify-end">
                                 <p className="text-sm text-ink-muted">
                                     {documentCount}{" "}
-                                    {documentCount === 1 ? "dokument" : "dokumentów"}
+                                    {documentCount === 1
+                                        ? "dokument"
+                                        : documentCount < 5 && documentCount > 0
+                                          ? "dokumenty"
+                                          : "dokumentów"}
                                 </p>
                                 <Button
                                     text="Dodaj dokument"
@@ -312,15 +324,6 @@ const EditProblemsScreen = () => {
                         </section>
 
                         <section>
-                            <div className="mb-4 flex items-end justify-between gap-4">
-                                <div>
-                                    <h2 className="text-xl font-semibold">Dokumentacja edycji</h2>
-                                    <p className="mt-1 text-sm text-ink-muted">
-                                        {selectedEdition?.title ?? "Nie wybrano edycji"}
-                                    </p>
-                                </div>
-                            </div>
-
                             {Object.keys(currentEditionData).length === 0 ? (
                                 <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center text-sm text-ink-muted">
                                     Brak dokumentów dla wybranej edycji.
@@ -334,10 +337,6 @@ const EditProblemsScreen = () => {
                                         >
                                             <div className="border-b border-line-subtle bg-canvas px-5 py-4">
                                                 <h3 className="font-semibold">{subpoint}</h3>
-                                                <p className="mt-0.5 text-xs text-ink-muted">
-                                                    {files.length}{" "}
-                                                    {files.length === 1 ? "plik" : "plików"}
-                                                </p>
                                             </div>
                                             <ul className="divide-y divide-line-subtle">
                                                 {files.map((pdf) => (
@@ -352,8 +351,15 @@ const EditProblemsScreen = () => {
                                                             className="group flex min-w-0 items-center gap-3 text-sm font-medium text-ink hover:text-brand-text"
                                                         >
                                                             <FaFilePdf className="shrink-0 text-xl text-danger-icon" />
-                                                            <span className="truncate group-hover:underline">
-                                                                {pdf.title}
+                                                            <span className="min-w-0">
+                                                                <span className="block truncate group-hover:underline">
+                                                                    {pdf.title || pdf.fileName}
+                                                                </span>
+                                                                {pdf.description && (
+                                                                    <span className="mt-1 block truncate text-xs font-normal text-ink-muted">
+                                                                        {pdf.description}
+                                                                    </span>
+                                                                )}
                                                             </span>
                                                         </a>
                                                         <Button
@@ -408,18 +414,29 @@ const EditProblemsScreen = () => {
                     )}
 
                     <label className="block text-sm font-medium text-ink">
-                        Nazwa sekcji
+                        Nazwa pliku
                         <input
                             type="text"
-                            value={subpointInputValue}
-                            onChange={(event) => setSubpointInputValue(event.target.value)}
+                            value={titleInputValue}
+                            onChange={(event) => setTitleInputValue(event.target.value)}
                             placeholder="np. Etap szkolny"
                             autoFocus
                             disabled={uploading}
                             className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted"
+                            required
                         />
                     </label>
-
+                    <label className="block text-sm font-medium text-ink">
+                        Opis pliku (opcjonalnie)
+                        <input
+                            type="text"
+                            value={descriptionInputValue}
+                            onChange={(event) => setDescriptionInputValue(event.target.value)}
+                            placeholder="np. Zadania z etapu zdalnego dla szkół ponadpodstawowych"
+                            disabled={uploading}
+                            className="mt-2 w-full rounded-xl border border-line-strong px-3 py-2.5 shadow-sm outline-none transition focus:border-brand-focus focus:ring-2 focus:ring-brand-muted disabled:cursor-not-allowed disabled:bg-surface-muted"
+                        />
+                    </label>
                     <div className="mt-5">
                         <p className="mb-2 text-sm font-medium text-ink">Plik PDF</p>
                         <FileUploader
