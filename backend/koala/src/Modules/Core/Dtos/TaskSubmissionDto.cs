@@ -4,7 +4,8 @@ namespace koala.src.Modules.Core.Dtos
     public record TaskSubmissionDto
     (
         Guid TeamId,
-        Guid TaskId,
+        Guid TaskItemId,
+        Guid TaskPartId,
         Guid? Reviewer1Id,
         Guid? Reviewer2Id,
         bool? AutoReviewState,

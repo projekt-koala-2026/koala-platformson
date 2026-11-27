@@ -47,28 +47,31 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Rankings can only be generated for a closed Etap1Series");
             }
-            if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.Etap1SeriesId == Etap1Series_id &&
+            if (await _db.TaskSubmissions.Include(ts=> ts.TaskPart).ThenInclude(tp => tp.TaskItem).AnyAsync(ts => ts.TaskPart.TaskItem.Etap1SeriesId == Etap1Series_id &&
                 (ts.Reviewer1Id == null || ts.Reviewer2Id == null || ts.Reviewer1Id == ts.Reviewer2Id ||
                 ts.Review1Score == null || ts.Review2Score == null || ts.Review1Score != ts.Review2Score)))
             {
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Not all task submissions have a final score");
             }
 
-            //FIXME: WHEN I UPDATE TASKS MAKE SURE TO COME BACK HERE AND FIX THIS
-            var tasks = await _db.TaskItems
-                .Where(t => t.Etap1SeriesId == Etap1Series_id)
+            var tasksPrimarySchool = await _db.TaskItems
+                .Where(t => t.Etap1SeriesId == Etap1Series_id && t.IsPrimarySchoolTask == true)
                 .ToListAsync();
-            int tier1TaskCount = tasks.Count(t => t.Tier == CompetitionTiers.TIER_1);
-            int tier2TaskCount = tasks.Count(t => t.Tier == CompetitionTiers.TIER_2);
+            var tasksSecondarySchool = await _db.TaskItems
+                .Where(t => t.Etap1SeriesId == Etap1Series_id && t.IsSecondarySchoolTask == true)
+                .ToListAsync();
+            int tier1TaskCount = tasksPrimarySchool.Count();
+            int tier2TaskCount = tasksSecondarySchool.Count();
 
-            if (tier1TaskCount + tier2TaskCount == 0)
+            if (tier1TaskCount == 0 ||  tier2TaskCount == 0)
             {
-                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "No tasks have been found for this edition");
+                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "No tasks have been found for primary school or secondary school in this edition");
             }
 
             var submissions = await _db.TaskSubmissions
-                .Include(ts => ts.TaskItem)
-                .Where(ts => ts.TaskItem.Etap1SeriesId == Etap1Series_id)
+                .Include(ts => ts.TaskPart)
+                .ThenInclude(tp => tp.TaskItem)
+                .Where(ts => ts.TaskPart.TaskItem.Etap1SeriesId == Etap1Series_id)
                 .ToListAsync();
             var teams = await _accountModule.Internal_GetTeamsForEditionAsync(Etap1Series.EditionId);
             if (teams.Count == 0)
@@ -96,6 +99,22 @@ namespace koala.src.Modules.Core.Services
             Etap1Series.Tier2Ranking.Version++;
 
             var teamRankingsData = submissions.ToLookup(ts => ts.TeamId);
+
+            var teamScores = teamRankingsData.ToDictionary(
+                team => team.Key,
+                team => team
+                    .GroupBy(s => s.TaskPart.TaskItemId)
+                    .Sum(taskGroup =>
+                    {
+                        var expectedParts = taskGroup
+                            .Select(s => s.TaskPart.TaskItemId)
+                            .Distinct()
+                            .Count();
+
+                        return taskGroup.Count() == expectedParts &&
+                               taskGroup.All(s => s.Review1Score == true) ? 1 : 0;
+                    })
+            );
 
             List<RankingData> RankingDataTier1 = new List<RankingData>();
             List<RankingData> RankingDataTier2 = new List<RankingData>();

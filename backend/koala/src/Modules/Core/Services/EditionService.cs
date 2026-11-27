@@ -263,10 +263,6 @@ namespace koala.src.Modules.Core.Services
             var edition = await _db.Editions
                 .Include(e => e.Etap1Series)
                 .ThenInclude(se => se.TaskItems)
-                .ThenInclude(ti => ti.TaskAnswers)
-                .Include(e => e.Etap1Series)
-                .ThenInclude(se => se.TaskItems)
-                .ThenInclude(ti => ti.TaskSubmissions)
                 .FirstOrDefaultAsync(e => e.Id == id && e.State == LifecycleStates.STATE_ACTIVE);
 
             if (edition == null)
@@ -281,38 +277,9 @@ namespace koala.src.Modules.Core.Services
 
             if (edition != null)
             {
-                foreach (var Etap1Series in edition.Etap1Series)
+                foreach(var e1s in edition.Etap1Series)
                 {
-                    foreach (var taskItem in Etap1Series.TaskItems)
-                    {
-                        if (taskItem.TaskAnswers != null && taskItem.TaskAnswers.Any())
-                        {
-                            _db.TaskAnswers.RemoveRange(taskItem.TaskAnswers);
-                        }
-
-                        if (taskItem.TaskSubmissions != null && taskItem.TaskSubmissions.Any())
-                        {
-                            _db.TaskSubmissions.RemoveRange(taskItem.TaskSubmissions);
-                        }
-
-                        if (taskItem.ImageId != null && taskItem.ImageType != null)
-                        {
-                            var physicalPath = Path.Combine(_privateFilesPath, $"{taskItem.ImageId}{taskItem.ImageType}");
-
-                            try
-                            {
-                                if (_fileOperations.Exists(physicalPath))
-                                {
-                                    _fileOperations.Delete(physicalPath);
-                                }
-                            }
-                            catch
-                            {
-
-                            }
-                        }
-                        _db.TaskItems.Remove(taskItem);
-                    }
+                    _db.TaskItems.RemoveRange(e1s.TaskItems);
                 }
             }
 
@@ -712,7 +679,7 @@ namespace koala.src.Modules.Core.Services
             if (DateTime.UtcNow <= Etap1Series.AnswerClose)
                 throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot close the Etap1Series before the answer deadline");
 
-            if (await _db.TaskSubmissions.AnyAsync(ts => ts.TaskItem.Etap1SeriesId == Etap1Series_id &&
+            if (await _db.TaskSubmissions.Include(ts => ts.TaskPart).ThenInclude(tp => tp.TaskItem).AnyAsync(ts => ts.TaskPart.TaskItem.Etap1SeriesId == Etap1Series_id &&
                 (ts.Reviewer1Id == null || ts.Reviewer2Id == null || ts.Reviewer1Id == ts.Reviewer2Id ||
                  ts.Review1Score == null || ts.Review2Score == null || ts.Review1Score != ts.Review2Score ||
                  ts.AutoReviewState == null)))
