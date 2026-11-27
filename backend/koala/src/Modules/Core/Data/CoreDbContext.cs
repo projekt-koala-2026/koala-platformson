@@ -14,8 +14,9 @@ namespace koala.src.Modules.Core.Data
         public DbSet<Edition> Editions => Set<Edition>();
         public DbSet<Etap1Series> Etap1Series => Set<Etap1Series>();
         public DbSet<TaskItem> TaskItems => Set<TaskItem>();
-        public DbSet<TaskAnswer> TaskAnswers => Set<TaskAnswer>();
-        public DbSet<TaskSubmission> TaskSubmissions => Set<TaskSubmission>();
+        public DbSet<TaskPart> TaskParts => Set<TaskPart>();
+        public DbSet<TaskPartAnswer> TaskAnswers => Set<TaskPartAnswer>();
+        public DbSet<TaskPartSubmission> TaskSubmissions => Set<TaskPartSubmission>();
         public DbSet<School> Schools => Set<School>();
         public DbSet<Ranking> Rankings => Set<Ranking>();
         public DbSet<RankingData> RankingDatas => Set<RankingData>();
@@ -28,8 +29,9 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<Etap1Series>().ToTable("etap1series", table =>
                 table.HasCheckConstraint("CK_etap1series_distinct_rankings", "tier1_ranking_id <> tier2_ranking_id"));
             modelBuilder.Entity<TaskItem>().ToTable("tasks");
-            modelBuilder.Entity<TaskAnswer>().ToTable("task_answers");
-            modelBuilder.Entity<TaskSubmission>().ToTable("task_submissions");
+            modelBuilder.Entity<TaskPart>().ToTable("task_parts");
+            modelBuilder.Entity<TaskPartAnswer>().ToTable("task_answers");
+            modelBuilder.Entity<TaskPartSubmission>().ToTable("task_submissions");
             modelBuilder.Entity<School>().ToTable("schools");
             modelBuilder.Entity<Ranking>().ToTable("rankings");
 
@@ -73,6 +75,15 @@ namespace koala.src.Modules.Core.Data
             modelBuilder.Entity<TaskItem>()
                 .HasKey(t => t.Id);
 
+            //TASK PARTS CONFIG
+            modelBuilder.Entity<TaskPart>()
+                .HasKey(t => t.Id);
+            modelBuilder.Entity<TaskPart>()
+                .HasOne(tp => tp.TaskItem)
+                .WithMany(ti => ti.TaskParts)
+                .HasForeignKey(tp => tp.TaskItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Etap1Series-TASK CONFIG
             modelBuilder.Entity<TaskItem>()
                 .HasOne(t => t.Etap1Series)
@@ -81,28 +92,28 @@ namespace koala.src.Modules.Core.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             //TASKANSWERS CONFIG
-            modelBuilder.Entity<TaskAnswer>()
+            modelBuilder.Entity<TaskPartAnswer>()
                 .HasKey(ta => ta.Id);
 
             // TASKITEM-TASKANSWER CONFIG
-            modelBuilder.Entity<TaskAnswer>()
-                .HasOne(t => t.TaskItem)
+            modelBuilder.Entity<TaskPartAnswer>()
+                .HasOne(t => t.TaskPart)
                 .WithMany(ta => ta.TaskAnswers)
-                .HasForeignKey(t => t.TaskItemId)
+                .HasForeignKey(t => t.TaskPartId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             //TASKSUBMISSIONS CONFIG
-            modelBuilder.Entity<TaskSubmission>()
-                .HasKey(ts => new { ts.TeamId, ts.TaskId });
+            modelBuilder.Entity<TaskPartSubmission>()
+                .HasKey(ts => new { ts.TeamId, ts.TaskPartId });
 
-            modelBuilder.Entity<TaskSubmission>()
+            modelBuilder.Entity<TaskPartSubmission>()
                 .Property(ts => ts.Version)
                 .IsConcurrencyToken();
 
-            modelBuilder.Entity<TaskSubmission>()
-                .HasOne(ts => ts.TaskItem)
+            modelBuilder.Entity<TaskPartSubmission>()
+                .HasOne(ts => ts.TaskPart)
                 .WithMany(t => t.TaskSubmissions)
-                .HasForeignKey(ts => ts.TaskId)
+                .HasForeignKey(ts => ts.TaskPartId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // SCHOOLS CONFIG

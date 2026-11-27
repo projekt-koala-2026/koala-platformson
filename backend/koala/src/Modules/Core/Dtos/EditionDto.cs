@@ -9,6 +9,9 @@ namespace koala.src.Modules.Core.Dtos
         DateTime TeamRegisterClose,
         DateTime CreatedAt,
         DateTime UpdatedAt,
+        bool HasTaskFile,
+        DateTime? TaskFileTimeWindowOpen,
+        DateTime? TaskFileTimeWindowClose,
         int Version
     );
 }

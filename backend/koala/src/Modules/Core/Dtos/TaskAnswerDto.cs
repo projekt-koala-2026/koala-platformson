@@ -4,7 +4,7 @@ namespace koala.src.Modules.Core.Dtos
     public record TaskAnswerDto
     (
         Guid Id,
-        Guid TaskItemId,
+        Guid TaskPartId,
         string Answer,
         DateTime CreatedAt,
         DateTime UpdatedAt,

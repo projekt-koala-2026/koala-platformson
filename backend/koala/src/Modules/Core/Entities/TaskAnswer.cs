@@ -2,12 +2,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core.Entities
 {
-    public class TaskAnswer
+    public class TaskPartAnswer
     {
         [Column("id")]
         public Guid Id { get; set; }
-        [Column("task_item_id")]
-        public Guid TaskItemId { get; set; }
+        [Column("task_part_id")]
+        public Guid TaskPartId { get; set; }
         [Column("answer")]
         public string Answer { get; set; }
         [Column("created_at")]
@@ -15,6 +15,6 @@ namespace koala.src.Modules.Core.Entities
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
         public int Version { get; set; }
-        public TaskItem TaskItem { get; set; } = null!;
+        public TaskPart TaskPart { get; set; } = null!;
     }
 }

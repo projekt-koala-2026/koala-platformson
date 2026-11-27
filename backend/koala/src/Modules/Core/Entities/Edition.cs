@@ -22,6 +22,16 @@ namespace koala.src.Modules.Core.Entities
         [Column("are_rankings_public")]
         public bool AreRankingsPublic { get; set; }
 
+        [Column("task_file_open")]
+        public DateTime? TaskPdfFileOpen { get; set; }
+        [Column("task_file_close")]
+        public DateTime? TaskPdfFileClose { get; set; }
+
+        [Column("task_file_id")]
+        public Guid? TaskFileId {get; set;}
+        [Column("task_file_extension")]
+        public string? TaskFileExtension {get; set;}
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
         [Column("updated_at")]

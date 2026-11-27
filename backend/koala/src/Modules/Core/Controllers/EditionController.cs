@@ -126,79 +126,39 @@ namespace koala.src.Modules.Core.Controllers
         }
 
         [Authorize]
-        [HttpPost("{edition_id}/Etap1Series/{Etap1Series_id}/tasks")]
-        public async Task<IActionResult> CreateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromBody] TaskItemCreateDto createTaskDto)
+        [HttpPut("{edition_id}/tasks/file/window-time")]
+        public async Task<IActionResult> UpdateEditionTaskFileWindowTime([FromRoute] Guid edition_id, [FromBody] EditionTaskFileUpserTimeWindoDto request)
         {
-            var response = await _editionService.CreateTaskItemAsync(User, edition_id, Etap1Series_id, createTaskDto);
-            return StatusCode(StatusCodes.Status201Created, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, response));
+            var response = await _editionService.UpsertEditionTaskFileTimeWindowAsync(User, edition_id, request);
+            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<EditionDto>(true, DateTime.UtcNow, null, null, response));
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}")]
-        public async Task<IActionResult> UpdateTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id, [FromBody] TaskItemUpdateDto updateTaskDto)
+        [HttpDelete("{edition_id}/tasks/file")]
+        public async Task<IActionResult> DeleteEditionTasksFile([FromRoute] Guid edition_id)
         {
-            var response = await _editionService.UpdateTaskItemAsync(User, edition_id, Etap1Series_id, task_id, updateTaskDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskItemDto>(true, DateTime.UtcNow, null, null, response));
-        }
-
-        [Authorize]
-        [HttpDelete("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}")]
-        public async Task<IActionResult> DeleteTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id)
-        {
-            await _editionService.DeleteTaskItemAsync(User, edition_id, Etap1Series_id, task_id);
+            await _editionService.DeleteEditionTaskFileAsync(User, edition_id);
             return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
         }
 
         [Authorize]
-        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}")]
-        public async Task<IActionResult> GetTaskItem([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id)
+        [HttpGet("{edition_id}/tasks/file")]
+        public async Task<IActionResult> GetEditionTasksFile([FromRoute] Guid edition_id)
         {
-            var response = await _editionService.GetTaskItemAsync(User, edition_id, Etap1Series_id, task_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<TaskItemDto>(true, DateTime.UtcNow, null, null, response));
-        }
-
-        [Authorize]
-        [HttpDelete("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}/image")]
-        public async Task<IActionResult> DeleteTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id)
-        {
-            await _editionService.DeleteTaskItemImageAsync(User, edition_id, Etap1Series_id, task_id);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, null, null));
-        }
-
-        [Authorize]
-        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}/image")]
-        public async Task<IActionResult> GetTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id)
-        {
-            var physicalPath = await _editionService.GetTaskItemImageAsync(User, edition_id, Etap1Series_id, task_id);
+            var physicalPath = await _editionService.GetEditionTaskFileAsync(User, edition_id);
             var provider = new FileExtensionContentTypeProvider();
             provider.TryGetContentType(physicalPath, out var contentType);
             return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
         }
 
         [Authorize]
-        [HttpPut("{edition_id}/Etap1Series/{Etap1Series_id}/tasks/{task_id}/image")]
-        public async Task<IActionResult> UpsertTaskItemImage([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid task_id, [FromForm] TaskItemImageUpsertDto request)
+        [HttpPut("{edition_id}/tasks/file")]
+        public async Task<IActionResult> UpsertEditionTasksFile([FromRoute] Guid edition_id, [FromForm] EditionTaskFileUpserDto request)
         {
-            var physicalPath = await _editionService.UpsertTaskItemImageAsync(User, edition_id, Etap1Series_id, task_id, request);
+            var physicalPath = await _editionService.UpsertEditionTaskFileAsync(User, edition_id, request);
             var provider = new FileExtensionContentTypeProvider();
             provider.TryGetContentType(physicalPath, out var contentType);
             return PhysicalFile(physicalPath, contentType ?? "application/octet-stream");
-        }
-
-        [Authorize]
-        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}/tasks")]
-        public async Task<IActionResult> GetTaskItems([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromQuery] PageQueryDto pageQueryDto)
-        {
-            (var responseData, var responsePagination) = await _editionService.GetTaskItemsAsync(User, edition_id, Etap1Series_id, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<List<TaskItemDto>>(true, DateTime.UtcNow, null, responsePagination, responseData));
-        }
-
-        [Authorize]
-        [HttpGet("{edition_id}/Etap1Series/{Etap1Series_id}/task/active/{team_id}")]
-        public async Task<IActionResult> GetTasksActive([FromRoute] Guid edition_id, [FromRoute] Guid Etap1Series_id, [FromRoute] Guid team_id, [FromQuery] PageQueryDto pageQueryDto)
-        {
-            (var responseData, var responsePagination) = await _editionService.GetTasksActiveAsync(User, edition_id, Etap1Series_id, team_id, pageQueryDto);
-            return StatusCode(StatusCodes.Status200OK, new ApiResponseWrapper<object>(true, DateTime.UtcNow, null, responsePagination, responseData));
         }
 
     }

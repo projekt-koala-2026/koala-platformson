@@ -2,13 +2,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace koala.src.Modules.Core.Entities
 {
-    public class TaskSubmission
+    public class TaskPartSubmission
     {
 
         [Column("team_id")]
         public Guid TeamId { get; set; }
-        [Column("task_id")]
-        public Guid TaskId { get; set; }
+        [Column("task_part_id")]
+        public Guid TaskPartId { get; set; }
         [Column("reviewer_1_id")]
         public Guid? Reviewer1Id { get; set; }
         [Column("reviewer_2_id")]
@@ -30,6 +30,6 @@ namespace koala.src.Modules.Core.Entities
         [Column("version")]
         public int Version { get; set; }
 
-        public TaskItem TaskItem { get; set; } = null!;
+        public TaskPart TaskPart { get; set; } = null!;
     }
 }

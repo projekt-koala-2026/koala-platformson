@@ -122,7 +122,19 @@ namespace koala.src.Modules.Core.Services
             await _db.Editions.AddAsync(edition);
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(
+                edition.Id,
+                edition.Name,
+                edition.State,
+                edition.TeamRegisterOpen,
+                edition.TeamRegisterClose,
+                edition.CreatedAt,
+                edition.UpdatedAt,
+                edition.TaskFileId != null &&edition.TaskFileExtension != null ? true : false,
+                edition.TaskPdfFileOpen,
+                edition.TaskPdfFileClose,
+                edition.Version
+            );
         }
 
         public async Task<EditionDto> UpdateEditionAsync(ClaimsPrincipal? claimsPrincipal, Guid id, EditionUpdateDto editionUpdateDto)
@@ -171,7 +183,19 @@ namespace koala.src.Modules.Core.Services
             edition.Version++;
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(
+                edition.Id,
+                edition.Name,
+                edition.State,
+                edition.TeamRegisterOpen,
+                edition.TeamRegisterClose,
+                edition.CreatedAt,
+                edition.UpdatedAt,
+                edition.TaskFileId != null &&edition.TaskFileExtension != null ? true : false,
+                edition.TaskPdfFileOpen,
+                edition.TaskPdfFileClose,
+                edition.Version
+            );
         }
         public async Task<EditionDto> EditionActivateAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id)
         {
@@ -207,7 +231,19 @@ namespace koala.src.Modules.Core.Services
             edition.UpdatedAt = timeNow;
             await _db.SaveChangesAsync();
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(
+                edition.Id,
+                edition.Name,
+                edition.State,
+                edition.TeamRegisterOpen,
+                edition.TeamRegisterClose,
+                edition.CreatedAt,
+                edition.UpdatedAt,
+                edition.TaskFileId != null &&edition.TaskFileExtension != null ? true : false,
+                edition.TaskPdfFileOpen,
+                edition.TaskPdfFileClose,
+                edition.Version
+            );
         }
         public async Task<EditionDto> EditionCloseAsync(ClaimsPrincipal? claimsPrincipal, Guid id)
         {
@@ -283,7 +319,19 @@ namespace koala.src.Modules.Core.Services
             await _db.SaveChangesAsync();
             await _accountModule.Internal_DeleteUserAndTeamDataAfterEditionCloses(id);
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(
+                edition.Id,
+                edition.Name,
+                edition.State,
+                edition.TeamRegisterOpen,
+                edition.TeamRegisterClose,
+                edition.CreatedAt,
+                edition.UpdatedAt,
+                edition.TaskFileId != null &&edition.TaskFileExtension != null ? true : false,
+                edition.TaskPdfFileOpen,
+                edition.TaskPdfFileClose,
+                edition.Version
+            );
         }
 
         public async Task<(List<EditionDto>, ApiPagination)> GetEditionsAsync(ClaimsPrincipal? claimsPrincipal, PageQueryDto pageQueryDto, EditionQueryDto editionQueryDto)
@@ -312,8 +360,7 @@ namespace koala.src.Modules.Core.Services
             var editions = queryResult
                 .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
                 .Take(pageQueryDto.PageSize)
-                .Select(e => new EditionDto
-                (
+                .Select(e => new EditionDto(
                     e.Id,
                     e.Name,
                     e.State,
@@ -321,6 +368,9 @@ namespace koala.src.Modules.Core.Services
                     e.TeamRegisterClose,
                     e.CreatedAt,
                     e.UpdatedAt,
+                    e.TaskFileId != null && e.TaskFileExtension != null ? true : false,
+                    e.TaskPdfFileOpen,
+                    e.TaskPdfFileClose,
                     e.Version
                 ))
                 .ToList();
@@ -337,7 +387,19 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.EditionNotFound, "There is no current active edition at the moment");
             }
 
-            return new EditionDto(edition.Id, edition.Name, edition.State, edition.TeamRegisterOpen, edition.TeamRegisterClose, edition.CreatedAt, edition.UpdatedAt, edition.Version);
+            return new EditionDto(
+                edition.Id,
+                edition.Name,
+                edition.State,
+                edition.TeamRegisterOpen,
+                edition.TeamRegisterClose,
+                edition.CreatedAt,
+                edition.UpdatedAt,
+                edition.TaskFileId != null &&edition.TaskFileExtension != null ? true : false,
+                edition.TaskPdfFileOpen,
+                edition.TaskPdfFileClose,
+                edition.Version
+            );
         }
 
         public async Task<Etap1SeriesDto> CreateEtap1SeriesAsync(ClaimsPrincipal? claimsPrincipal, Guid id, Etap1SeriesCreateDto createEtap1SeriesDto)
@@ -674,72 +736,7 @@ namespace koala.src.Modules.Core.Services
                 Etap1Series.Version
             );
         }
-
-        public async Task<TaskItemDto> CreateTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, TaskItemCreateDto createTaskDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var Etap1Series = await _db.Etap1Series.Include(e => e.Edition).FirstOrDefaultAsync(e => e.Id == Etap1Series_id && e.EditionId == edition_id);
-
-            if (Etap1Series == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Etap1Series of provided id does not exist or is not a part of the this edition");
-            }
-
-            if (Etap1Series.State == LifecycleStates.STATE_CLOSED || Etap1Series.Edition.State == LifecycleStates.STATE_CLOSED)
-            {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed Etap1Series");
-            }
-
-            var newTask = await _db.TaskItems.FirstOrDefaultAsync(t => t.Name == createTaskDto.Name && t.Etap1SeriesId == Etap1Series_id);
-
-            if (newTask != null)
-            {
-                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "Task with this name already exists");
-            }
-
-            DateTime timeNow = DateTime.UtcNow;
-
-            newTask = new TaskItem
-            {
-                Id = Guid.CreateVersion7(),
-                Etap1SeriesId = Etap1Series_id,
-                Name = createTaskDto.Name,
-                ContentJson = createTaskDto.ContentJson,
-                Tier = createTaskDto.Tier,
-                CreatedAt = timeNow,
-                UpdatedAt = timeNow,
-                Version = 1
-            };
-
-
-            await _db.TaskItems.AddAsync(newTask);
-            await _db.SaveChangesAsync();
-
-            return new TaskItemDto
-            (
-                newTask.Id,
-                newTask.Etap1SeriesId,
-                newTask.Name,
-                newTask.Tier,
-                newTask.ContentJson,
-                (newTask.ImageId == null || newTask.ImageType == null) ? false : true,
-                newTask.CreatedAt,
-                newTask.UpdatedAt,
-                newTask.Version
-            );
-        }
+        
         private void TryDeletePhysicalFile(string path)
         {
             try
@@ -755,7 +752,7 @@ namespace koala.src.Modules.Core.Services
             }
         }
 
-        public async Task DeleteTaskItemImageAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, Guid taskItem_id)
+        public async Task DeleteEditionTaskFileAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -770,32 +767,25 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var Etap1Series = await _db.Etap1Series.Include(e => e.Edition).FirstOrDefaultAsync(e => e.Id == Etap1Series_id && e.EditionId == edition_id);
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
 
-            if (Etap1Series == null)
+            if (edition == null)
             {
                 throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Etap1Series of provided id does not exist or is not a part of the this edition");
             }
 
-            if (Etap1Series.State == LifecycleStates.STATE_CLOSED || Etap1Series.Edition.State == LifecycleStates.STATE_CLOSED)
+            if (edition.State == LifecycleStates.STATE_CLOSED)
             {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed Etap1Series");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks file to a closed edition");
             }
 
-            var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.Etap1SeriesId == Etap1Series_id);
-
-            if (taskItem == null)
+            if (edition.TaskFileId == null && edition.TaskFileExtension == null)
             {
-                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task not found");
+                throw new KoalaException(KoalaErrorCodes.FileNotFound, "This edition does not have a task file");
             }
 
-            if (taskItem.ImageId == null && taskItem.ImageType == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.FileNotFound, "This task item has no image to display");
-            }
-
-            var id = taskItem.ImageId;
-            var extension = taskItem.ImageType;
+            var id = edition.TaskFileId;
+            var extension = edition.TaskFileExtension;
             var path = $"{id}{extension}";
             var physicalPath = Path.Combine(_privateFilesPath, path);
             try
@@ -809,63 +799,46 @@ namespace koala.src.Modules.Core.Services
             {
                 throw new KoalaException(KoalaErrorCodes.FileNotFound, "Error deleting the physical file from disk");
             }
-            taskItem.UpdatedAt = DateTime.UtcNow;
-            taskItem.ImageId = null;
-            taskItem.ImageType = null;
+            edition.UpdatedAt = DateTime.UtcNow;
+            edition.TaskFileId = null;
+            edition.TaskFileExtension = null;
             await _db.SaveChangesAsync();
         }
-        public async Task<string> GetTaskItemImageAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, Guid taskItem_id)
+        public async Task<string> GetEditionTaskFileAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
             bool isReviewer = ClaimsHelper.IsRoleOrganizationReviewer(claimsPrincipal);
             bool isCaptain = ClaimsHelper.IsRoleCaptain(claimsPrincipal);
 
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
 
-            if (!isOrganizationAdmin && !isCaptain && !isReviewer)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var Etap1Series = await _db.Etap1Series.Include(e => e.Edition).FirstOrDefaultAsync(e => e.Id == Etap1Series_id && e.EditionId == edition_id);
-
-            if (Etap1Series == null)
+            if (edition == null)
             {
                 throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Etap1Series of provided id does not exist or is not a part of the this edition");
             }
 
-            if (Etap1Series.State == LifecycleStates.STATE_CLOSED || Etap1Series.Edition.State == LifecycleStates.STATE_CLOSED)
+            if (edition.State == LifecycleStates.STATE_CLOSED)
             {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot view task image of a closed Etap1Series");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot view task file of a closed edition try finding it in archived files");
             }
 
             DateTime timeNow = DateTime.UtcNow;
-            if (isCaptain && (Etap1Series.AnswerOpen > timeNow || timeNow > Etap1Series.AnswerClose))
+            if (!(isOrganizationAdmin || isReviewer) && (edition.TaskPdfFileOpen > timeNow || timeNow > edition.TaskPdfFileClose))
             {
-                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Captain can only view image while window for answers is open");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "Can only view task file while window for viewing it is open");
             }
 
-            var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.Etap1SeriesId == Etap1Series_id);
-
-            if (taskItem == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task not found");
-            }
-
-            if (taskItem.ImageId == null && taskItem.ImageType == null)
+            if (edition.TaskFileId == null && edition.TaskFileExtension == null)
             {
                 throw new KoalaException(KoalaErrorCodes.FileNotFound, "This task item has no image to display");
             }
-            var id = taskItem.ImageId;
-            var extension = taskItem.ImageType;
+            var id = edition.TaskFileId;
+            var extension = edition.TaskFileExtension;
             var path = $"{id}{extension}";
             return Path.Combine(_privateFilesPath, path);
         }
-        public async Task<string> UpsertTaskItemImageAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, Guid taskItem_id, TaskItemImageUpsertDto request)
+        public async Task<EditionDto> UpsertEditionTaskFileTimeWindowAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, EditionTaskFileUpserTimeWindoDto request)
         {
             bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
             bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
@@ -880,23 +853,77 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
             }
 
-            var Etap1Series = await _db.Etap1Series.Include(e => e.Edition).FirstOrDefaultAsync(e => e.Id == Etap1Series_id && e.EditionId == edition_id);
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
 
-            if (Etap1Series == null)
+            if (edition == null)
             {
-                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Etap1Series of provided id does not exist or is not a part of the this edition");
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "edition of provided id does not exist");
             }
 
-            if (Etap1Series.State == LifecycleStates.STATE_CLOSED || Etap1Series.Edition.State == LifecycleStates.STATE_CLOSED)
+            if (edition.State == LifecycleStates.STATE_CLOSED)
             {
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot add tasks to a closed Etap1Series");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot upsert task file time window for a close edition");
             }
 
-            var taskItem = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == taskItem_id && t.Etap1SeriesId == Etap1Series_id);
-
-            if (taskItem == null)
+            if (edition.TaskFileId == null && edition.TaskFileExtension == null)
             {
-                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task not found");
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot upsert task file time window for a edition without a task file");
+            }
+
+            DateTime timeNow = DateTime.UtcNow;
+
+            edition.UpdatedAt = timeNow;
+            edition.TaskPdfFileOpen = request.WindowOpen;
+            edition.TaskPdfFileClose = request.WindowClose;
+            edition.Version++;
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch
+            {
+                
+            }
+
+            return new EditionDto(
+                edition.Id,
+                edition.Name,
+                edition.State,
+                edition.TeamRegisterOpen,
+                edition.TeamRegisterClose,
+                edition.CreatedAt,
+                edition.UpdatedAt,
+                edition.TaskFileId != null &&edition.TaskFileExtension != null ? true : false,
+                edition.TaskPdfFileOpen,
+                edition.TaskPdfFileClose,
+                edition.Version
+            );
+        }
+        public async Task<string> UpsertEditionTaskFileAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, EditionTaskFileUpserDto request)
+        {
+            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
+            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
+
+            if (!isAuthenticated)
+            {
+                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
+            }
+
+            if (!isOrganizationAdmin)
+            {
+                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
+            }
+
+            var edition = await _db.Editions.FirstOrDefaultAsync(e => e.Id == edition_id);
+
+            if (edition == null)
+            {
+                throw new KoalaException(KoalaErrorCodes.EditionNotFound, "edition of provided id does not exist");
+            }
+
+            if (edition.State == LifecycleStates.STATE_CLOSED)
+            {
+                throw new KoalaException(KoalaErrorCodes.Conflict, "Cannot upsert task file for a close edition");
             }
 
             DateTime timeNow = DateTime.UtcNow;
@@ -910,12 +937,12 @@ namespace koala.src.Modules.Core.Services
                 throw new KoalaException(KoalaErrorCodes.FolderCreationFailure, "Error when creating a folder holding private files");
             }
 
-            if (taskItem.Version != request.Version)
+            if (edition.Version != request.Version)
             {
                 throw new KoalaException(KoalaErrorCodes.ResourceVersionConflict, "Error make sure u have fresh data versions does not match");
             }
 
-            if (taskItem.ImageId == null && taskItem.ImageType == null)
+            if (edition.TaskFileId == null && edition.TaskFileExtension == null)
             {
                 try
                 {
@@ -941,9 +968,12 @@ namespace koala.src.Modules.Core.Services
                 }
                 try
                 {
-                    taskItem.ImageId = id;
-                    taskItem.ImageType = extension;
-                    taskItem.UpdatedAt = timeNow;
+                    edition.TaskFileId = id;
+                    edition.TaskFileExtension = extension;
+                    edition.UpdatedAt = timeNow;
+                    edition.TaskPdfFileOpen = request.WindowOpen;
+                    edition.TaskPdfFileClose = request.WindowClose;
+                    edition.Version++;
                     await _db.SaveChangesAsync();
                 }
                 catch
@@ -957,8 +987,8 @@ namespace koala.src.Modules.Core.Services
             else
             {
                 var temp_id = Guid.CreateVersion7();
-                var id = taskItem.ImageId;
-                var oldExtension = taskItem.ImageType;
+                var id = edition.TaskFileId;
+                var oldExtension = edition.TaskFileExtension;
                 var newExtension = Path.GetExtension(request.File.FileName);
 
                 var oldPhysicalPath = Path.Combine(_privateFilesPath, $"{id}{oldExtension}");
@@ -977,9 +1007,12 @@ namespace koala.src.Modules.Core.Services
 
                 try
                 {
-                    taskItem.ImageId = id;
-                    taskItem.ImageType = newExtension;
-                    taskItem.UpdatedAt = timeNow;
+                    edition.TaskFileId = id;
+                    edition.TaskFileExtension = newExtension;
+                    edition.UpdatedAt = timeNow;
+                    edition.TaskPdfFileOpen = request.WindowOpen;
+                    edition.TaskPdfFileClose = request.WindowClose;
+                    edition.Version++;
                     await _db.SaveChangesAsync();
                 }
                 catch
@@ -1008,223 +1041,6 @@ namespace koala.src.Modules.Core.Services
             }
 
 
-        }
-
-        public async Task<TaskItemDto> UpdateTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, Guid task_id, TaskItemUpdateDto request)
-        {
-            if (!ClaimsHelper.IsAuthenticated(claimsPrincipal))
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            if (!ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal))
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only administrators can update tasks");
-            if (string.IsNullOrWhiteSpace(request.Name) || (request.Tier != CompetitionTiers.TIER_1 && request.Tier != CompetitionTiers.TIER_2))
-                throw new KoalaException(KoalaErrorCodes.BadRequest, "Task name and a valid tier are required");
-            try { using var content = System.Text.Json.JsonDocument.Parse(request.ContentJson); }
-            catch (System.Text.Json.JsonException) { throw new KoalaException(KoalaErrorCodes.BadRequest, "Task content must be valid JSON"); }
-
-            var task = await _db.TaskItems.AsNoTracking().FirstOrDefaultAsync(t => t.Id == task_id && t.Etap1SeriesId == Etap1Series_id && t.Etap1Series.EditionId == edition_id);
-            if (task == null)
-                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task does not exist in the specified Etap1Series");
-            if (await _db.TaskItems.AnyAsync(t => t.Etap1SeriesId == Etap1Series_id && t.Name == request.Name && t.Id != task_id))
-                throw new KoalaException(KoalaErrorCodes.TaskAlreadyExists, "A task with this name already exists in the Etap1Series");
-            var now = DateTime.UtcNow;
-            var updated = await _db.TaskItems.Where(t => t.Id == task_id && t.Etap1SeriesId == Etap1Series_id &&
-                    t.Etap1Series.EditionId == edition_id && t.Etap1Series.State != LifecycleStates.STATE_CLOSED &&
-                    t.Version == request.Version && !_db.TaskSubmissions.Any(s => s.TaskId == task_id))
-                .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.Name, request.Name)
-                    .SetProperty(t => t.Tier, request.Tier).SetProperty(t => t.ContentJson, request.ContentJson)
-                    .SetProperty(t => t.UpdatedAt, now).SetProperty(t => t.Version, t => t.Version + 1));
-            if (updated == 0)
-                throw new KoalaException(KoalaErrorCodes.Conflict, "The task changed, is closed, or already has submissions");
-            return new TaskItemDto(task.Id, task.Etap1SeriesId, request.Name, request.Tier, request.ContentJson, (task.ImageId == null || task.ImageType == null) ? false : true, task.CreatedAt, now, request.Version + 1);
-        }
-
-        public async Task DeleteTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, Guid task_id)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var task = await _db.TaskItems.FirstOrDefaultAsync(e => e.Id == task_id && e.Etap1SeriesId == Etap1Series_id && e.Etap1Series.EditionId == edition_id);
-
-            if (task == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task of provided id does not exist");
-            }
-
-            var deleted = await _db.TaskItems.Where(t => t.Id == task_id && t.Etap1SeriesId == Etap1Series_id &&
-                t.Etap1Series.EditionId == edition_id && t.Etap1Series.State != LifecycleStates.STATE_CLOSED &&
-                !_db.TaskSubmissions.Any(s => s.TaskId == task_id)).ExecuteDeleteAsync();
-            if (deleted == 0)
-                throw new KoalaException(KoalaErrorCodes.Conflict, "Task is closed or already has submissions");
-        }
-
-        public async Task<TaskItemDto> GetTaskItemAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, Guid task_id)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationRevier = ClaimsHelper.IsRoleOrganizationReviewer(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin && !isOrganizationRevier)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var task = await _db.TaskItems
-                .AsNoTracking()
-                .Include(e => e.Etap1Series)
-                .ThenInclude(e => e.Edition)
-                .FirstOrDefaultAsync(e => e.Id == task_id && e.Etap1SeriesId == Etap1Series_id && e.Etap1Series.EditionId == edition_id);
-
-            if (task == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.TaskNotFound, "Task of provided id does not exist");
-            }
-
-            return new TaskItemDto
-            (
-                task.Id,
-                task.Etap1SeriesId,
-                task.Name,
-                task.Tier,
-                task.ContentJson,
-                (task.ImageId == null || task.ImageType == null) ? false : true,
-                task.CreatedAt,
-                task.UpdatedAt,
-                task.Version
-            );
-        }
-
-        public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTaskItemsAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, PageQueryDto pageQueryDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isOrganizationAdmin = ClaimsHelper.IsRoleOrganizationAdmin(claimsPrincipal);
-            bool isOrganizationRevier = ClaimsHelper.IsRoleOrganizationReviewer(claimsPrincipal);
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isOrganizationAdmin && !isOrganizationRevier)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var query = _db.TaskItems.AsNoTracking()
-                .Where(e => e.Etap1SeriesId == Etap1Series_id && e.Etap1Series.EditionId == edition_id);
-
-            var totalCount = await query.CountAsync();
-            var entities = await query
-                .Include(e => e.Etap1Series)
-                .ThenInclude(e => e.Edition)
-                .OrderBy(e => e.Id)
-                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
-                .Take(pageQueryDto.PageSize)
-                .ToListAsync();
-
-            var TaskItems = entities.Where(e => e.Etap1Series.Id == Etap1Series_id && e.Etap1Series.Edition.Id == edition_id).Select(e => new TaskItemDto
-            (
-                e.Id,
-                e.Etap1SeriesId,
-                e.Name,
-                e.Tier,
-                e.ContentJson,
-                (e.ImageId == null || e.ImageType == null) ? false : true,
-                e.CreatedAt,
-                e.UpdatedAt,
-                e.Version
-            )).ToList();
-
-            return (TaskItems, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
-        }
-
-        public async Task<(List<TaskItemDto> Data, ApiPagination Pagination)> GetTasksActiveAsync(ClaimsPrincipal? claimsPrincipal, Guid edition_id, Guid Etap1Series_id, Guid team_id, PageQueryDto pageQueryDto)
-        {
-            bool isAuthenticated = ClaimsHelper.IsAuthenticated(claimsPrincipal);
-            bool isCaptain = claimsPrincipal?.IsInRole(RoleNames.NAME_TEAM_CAPTAIN) == true;
-
-            if (!isAuthenticated)
-            {
-                throw new KoalaException(KoalaErrorCodes.Unauthenticated, "User not logged in");
-            }
-
-            if (!isCaptain)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "User does not have permission to perform this operation on resource");
-            }
-
-            var teamInfo = await _accountModule.Internal_GetTeamInfo(team_id);
-            if (teamInfo == null || teamInfo.CaptainId != ClaimsHelper.GetUserGuid(claimsPrincipal))
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "Only a Team Player that is a captain can use this endpoint");
-            }
-
-            if (teamInfo.EditionId != edition_id)
-            {
-                throw new KoalaException(KoalaErrorCodes.Forbidden, "The team does not belong to this edition");
-            }
-
-            var Etap1Series = await _db.Etap1Series.FirstOrDefaultAsync(se => se.Id == Etap1Series_id);
-            if (Etap1Series == null)
-            {
-                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Provided Etap1Series does not exist");
-            }
-
-            DateTime timeNow = DateTime.UtcNow;
-            if (Etap1Series.AnswerOpen > timeNow || timeNow > Etap1Series.AnswerClose)
-            {
-                throw new KoalaException(KoalaErrorCodes.Etap1SeriesNotFound, "Teams cant in this time answer/view tasks");
-            }
-
-            var query = _db.TaskItems.AsNoTracking()
-                .Where(e => e.Etap1SeriesId == Etap1Series_id
-                        && e.Etap1Series.State == "ACTIVE"
-                        && e.Etap1Series.EditionId == edition_id
-                        && e.Etap1Series.Edition.State == "ACTIVE");
-
-            if (teamInfo.Tier == CompetitionTiers.TIER_1)
-            {
-                query = query.Where(e => e.Tier == CompetitionTiers.TIER_1);
-            }
-            if (teamInfo.Tier == CompetitionTiers.TIER_2)
-            {
-                query = query.Where(e => e.Tier == CompetitionTiers.TIER_1 || e.Tier == CompetitionTiers.TIER_2);
-            }
-
-            var totalCount = await query.CountAsync();
-
-            var taskItems = await query
-                .OrderBy(e => e.CreatedAt)
-                .Skip(pageQueryDto.PageSize * pageQueryDto.PageNumber)
-                .Take(pageQueryDto.PageSize)
-                .Select(e => new TaskItemDto(
-                    e.Id,
-                    e.Etap1SeriesId,
-                    e.Name,
-                    e.Tier,
-                    e.ContentJson,
-                    (e.ImageId == null || e.ImageType == null) ? false : true,
-                    e.CreatedAt,
-                    e.UpdatedAt,
-                    e.Version
-                ))
-                .ToListAsync();
-
-            return (taskItems, new ApiPagination(pageQueryDto.PageNumber, pageQueryDto.PageSize, totalCount));
         }
     }
 }
